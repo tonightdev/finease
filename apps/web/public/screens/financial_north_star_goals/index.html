@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinEase - North Star Goals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-x-hidden min-h-screen">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm px-10 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8 rounded bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">account_balance_wallet</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">FinEase</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-slate-500 dark:text-slate-400 flex border-none bg-white dark:bg-slate-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-white dark:bg-slate-800 focus:border-none h-full placeholder:text-slate-500 dark:placeholder:text-slate-400 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search goals, assets..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden lg:flex items-center gap-9">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Dashboard</a>
+<a class="text-primary text-sm font-bold leading-normal" href="#">Goals</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Investments</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Reports</a>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">help</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-slate-200 dark:border-slate-700" data-alt="User profile picture showing a professional man smiling" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCr8345GQMB501KJhCJ8OpTIOZlihTak3f9s0-0Zuk96KJZWTgKdmbXlA4TH6JE1wck54La2THRAHRnp0tA7xp_TDSW6tjIsnn_a8zjtNwl5WevgeuDH_VXgGjEeflzcuPzDhIAhd_XH8hn-TgKdKLYj8mPS9nzK-2iWhDUe1OTUzso8HCk0HGYAW_DE6Uyx6qgWAp2mr74RVwkB6Y0ZTvSrdCOQJpZJFZpNPMC23Qn4KHzQ7l23rmwhomNdAwSB-sSHzr6KpwSlmiU");'></div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex justify-center py-8 px-4 sm:px-8">
+<div class="w-full max-w-[1200px] flex flex-col gap-6">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 px-1">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary text-sm font-medium leading-normal" href="#">Home</a>
+<span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">/</span>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary text-sm font-medium leading-normal" href="#">Goals</a>
+<span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">/</span>
+<span class="text-slate-900 dark:text-white text-sm font-medium leading-normal">North Star Goals</span>
+</div>
+<!-- Page Title & Actions -->
+<div class="flex flex-wrap justify-between items-end gap-4 px-1">
+<div class="flex flex-col gap-2">
+<h1 class="text-slate-900 dark:text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.033em]">North Star Goals</h1>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal max-w-2xl">Track your progress towards your most critical financial milestones. You are currently saving <span class="text-primary font-bold">₹45,000/mo</span> towards these targets.</p>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-primary/25">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+<span>Edit Goals</span>
+</button>
+</div>
+<!-- High Level Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Stat 1 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-4 opacity-5 dark:opacity-10 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary text-8xl">account_balance</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Portfolio Value</p>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">₹45,20,000</p>
+<div class="flex items-center text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded text-xs font-bold">
+<span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+<span>5.2%</span>
+</div>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-4 opacity-5 dark:opacity-10 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary text-8xl">trending_up</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Monthly Goal Surplus</p>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">₹12,500</p>
+<div class="flex items-center text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded text-xs font-bold">
+<span>On Track</span>
+</div>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-4 opacity-5 dark:opacity-10 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary text-8xl">pie_chart</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Overall Achievement</p>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">68%</p>
+<div class="flex items-center text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded text-xs font-bold">
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span>
+<span>4%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Primary Milestones / North Star Goals Section -->
+<div class="flex flex-col gap-6 mt-4">
+<h2 class="text-slate-900 dark:text-white text-xl font-bold">Active Goals</h2>
+<!-- Goal Card 1: Home Downpayment -->
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Icon & Info -->
+<div class="flex gap-4 min-w-[200px]">
+<div class="size-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-2xl">home</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg">Dream Home in Pune</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Target: Dec 2026</p>
+<div class="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs font-bold w-fit">
+<span class="material-symbols-outlined" style="font-size: 14px;">warning</span>
+<span>Gap: ₹5,000/mo</span>
+</div>
+</div>
+</div>
+<!-- Progress Bars Area -->
+<div class="flex-1 flex flex-col justify-center gap-6">
+<!-- Main Progress -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Progress</span>
+<span class="text-slate-900 dark:text-white font-bold text-xl">₹35,00,000 <span class="text-sm text-slate-400 font-normal">/ ₹80,00,000</span></span>
+</div>
+<span class="text-primary font-bold text-xl">43%</span>
+</div>
+<!-- Progress Bar Container -->
+<div class="relative h-4 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<!-- Filled Bar -->
+<div class="absolute h-full bg-primary rounded-full transition-all duration-1000" style="width: 43%"></div>
+<!-- Pace Marker (Where they should be) -->
+<div class="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-80 shadow-[0_0_4px_rgba(0,0,0,0.5)] h-full" style="left: 48%" title="Required Pace: 48%"></div>
+<!-- Striped overlay for visual texture -->
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8cGF0aCBkPSJNMCAwTDggOFpNOCAwTDAgOFoiIHN0cm9rZT0ibm9uZSIgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjEiLz48L3N2Zz4=')] opacity-20 pointer-events-none"></div>
+</div>
+<div class="flex justify-between text-xs mt-1">
+<span class="text-slate-400">Started: Jan 2022</span>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+<div class="size-2 rounded-full bg-primary"></div> Actual
+                                            </span>
+<span class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+<div class="w-0.5 h-3 bg-slate-400"></div> Target Pace
+                                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action -->
+<div class="flex flex-col justify-center items-end min-w-[120px] border-l border-slate-100 dark:border-slate-700 pl-4 lg:pl-8">
+<button class="w-full py-2 px-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-semibold transition-colors mb-2">
+                                    Top Up
+                                </button>
+<button class="w-full py-2 px-4 rounded-lg text-primary hover:bg-primary/10 text-sm font-semibold transition-colors">
+                                    Details
+                                </button>
+</div>
+</div>
+</div>
+<!-- Goal Card 2: Children's Education -->
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Icon & Info -->
+<div class="flex gap-4 min-w-[200px]">
+<div class="size-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-2xl">school</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg">Aarav's Higher Ed</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Target: Aug 2032</p>
+<div class="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold w-fit">
+<span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+<span>On Track</span>
+</div>
+</div>
+</div>
+<!-- Progress Bars Area -->
+<div class="flex-1 flex flex-col justify-center gap-6">
+<!-- Main Progress -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Progress</span>
+<span class="text-slate-900 dark:text-white font-bold text-xl">₹12,40,000 <span class="text-sm text-slate-400 font-normal">/ ₹50,00,000</span></span>
+</div>
+<span class="text-purple-600 dark:text-purple-400 font-bold text-xl">24.8%</span>
+</div>
+<!-- Progress Bar Container -->
+<div class="relative h-4 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<!-- Filled Bar -->
+<div class="absolute h-full bg-purple-600 dark:bg-purple-500 rounded-full transition-all duration-1000" style="width: 24.8%"></div>
+<!-- Pace Marker (Where they should be - Slightly behind actual, meaning they are ahead) -->
+<div class="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-80 shadow-[0_0_4px_rgba(0,0,0,0.5)] h-full" style="left: 22%" title="Required Pace: 22%"></div>
+</div>
+<div class="flex justify-between text-xs mt-1">
+<span class="text-slate-400">Started: Jun 2020</span>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+<div class="size-2 rounded-full bg-purple-600 dark:bg-purple-500"></div> Actual
+                                            </span>
+<span class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+<div class="w-0.5 h-3 bg-slate-400"></div> Target Pace
+                                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action -->
+<div class="flex flex-col justify-center items-end min-w-[120px] border-l border-slate-100 dark:border-slate-700 pl-4 lg:pl-8">
+<button class="w-full py-2 px-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-semibold transition-colors mb-2">
+                                    Top Up
+                                </button>
+<button class="w-full py-2 px-4 rounded-lg text-primary hover:bg-primary/10 text-sm font-semibold transition-colors">
+                                    Details
+                                </button>
+</div>
+</div>
+</div>
+<!-- Goal Card 3: Retirement Corpus -->
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm opacity-90">
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Icon & Info -->
+<div class="flex gap-4 min-w-[200px]">
+<div class="size-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-2xl">beach_access</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg">Retirement Freedom</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Target: Mar 2045</p>
+<div class="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold w-fit">
+<span class="material-symbols-outlined" style="font-size: 14px;">auto_mode</span>
+<span>Auto-SIP Active</span>
+</div>
+</div>
+</div>
+<!-- Progress Bars Area -->
+<div class="flex-1 flex flex-col justify-center gap-6">
+<!-- Main Progress -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Progress</span>
+<span class="text-slate-900 dark:text-white font-bold text-xl">₹85,00,000 <span class="text-sm text-slate-400 font-normal">/ ₹5,00,00,000</span></span>
+</div>
+<span class="text-teal-600 dark:text-teal-400 font-bold text-xl">17%</span>
+</div>
+<!-- Progress Bar Container -->
+<div class="relative h-4 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<!-- Filled Bar -->
+<div class="absolute h-full bg-teal-600 dark:bg-teal-500 rounded-full transition-all duration-1000" style="width: 17%"></div>
+<!-- Pace Marker -->
+<div class="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-80 shadow-[0_0_4px_rgba(0,0,0,0.5)] h-full" style="left: 17%" title="Required Pace: 17%"></div>
+</div>
+</div>
+</div>
+<!-- Action -->
+<div class="flex flex-col justify-center items-end min-w-[120px] border-l border-slate-100 dark:border-slate-700 pl-4 lg:pl-8">
+<button class="w-full py-2 px-4 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-semibold transition-colors mb-2">
+                                    Top Up
+                                </button>
+<button class="w-full py-2 px-4 rounded-lg text-primary hover:bg-primary/10 text-sm font-semibold transition-colors">
+                                    Details
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Monthly Breakdown / Gap Analysis -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Monthly Savings Breakdown</h3>
+<button class="text-primary text-sm font-medium hover:underline">View Report</button>
+</div>
+<div class="flex flex-col gap-4 mt-2">
+<!-- Item -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-background-light dark:bg-background-dark/50">
+<div class="flex items-center gap-3">
+<div class="size-2 rounded-full bg-blue-500"></div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Home Downpayment</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">₹25,000</span>
+</div>
+<!-- Item -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-background-light dark:bg-background-dark/50">
+<div class="flex items-center gap-3">
+<div class="size-2 rounded-full bg-purple-500"></div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Education</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">₹15,000</span>
+</div>
+<!-- Item -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-background-light dark:bg-background-dark/50">
+<div class="flex items-center gap-3">
+<div class="size-2 rounded-full bg-teal-500"></div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Retirement</span>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">₹10,000</span>
+</div>
+<div class="h-px bg-slate-200 dark:bg-slate-700 my-1"></div>
+<div class="flex items-center justify-between px-3">
+<span class="text-base font-bold text-slate-900 dark:text-white">Total Allocated</span>
+<span class="text-base font-bold text-primary">₹50,000</span>
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-br from-primary/90 to-blue-700 rounded-xl p-6 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+<div class="relative z-10">
+<h3 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined">savings</span>
+                                Smart Insight
+                            </h3>
+<p class="mt-2 text-blue-100 leading-relaxed">
+                                To close the gap on your <strong>Home Downpayment</strong> goal by Dec 2026, consider increasing your monthly SIP by <span class="font-bold text-white">₹5,000</span>.
+                            </p>
+</div>
+<div class="mt-8 relative z-10">
+<div class="flex justify-between text-sm text-blue-200 mb-2">
+<span>Current Savings Rate</span>
+<span>Target Rate</span>
+</div>
+<div class="h-2 bg-blue-900/40 rounded-full overflow-hidden mb-6">
+<div class="h-full bg-white w-[85%] rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+</div>
+<button class="w-full bg-white text-primary font-bold py-3 rounded-lg hover:bg-blue-50 transition-colors shadow-lg">
+                                Adjust SIP Allocation
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinEase - Comprehensive Financial Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#135bec",
+                        "primary-dark": "#0e45b5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0f1115",
+                        "surface-dark": "#181b21",
+                        "surface-darker": "#131519",
+                        "border-dark": "#2a2f3a",
+                        "success": "#10b981",
+                        "danger": "#ef4444",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-body text-slate-900 dark:text-slate-100 overflow-hidden h-screen flex">
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-surface-dark border-r border-slate-200 dark:border-border-dark hidden md:flex flex-col">
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-border-dark">
+<div class="flex items-center gap-2">
+<div class="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">FinEase</span>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+                Assets &amp; Liabilities
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium bg-primary/10 text-primary dark:text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined fill-1">bar_chart</span>
+                Reports &amp; Analytics
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">flag</span>
+                Goals
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+                Cards
+            </a>
+<div class="pt-4 mt-4 border-t border-slate-200 dark:border-border-dark">
+<div class="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Settings</div>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    General
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-darker hover:text-primary dark:hover:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">shield</span>
+                    Security
+                </a>
+</div>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-border-dark">
+<div class="flex items-center gap-3">
+<div class="size-9 rounded-full bg-gradient-to-tr from-primary to-emerald-400 flex items-center justify-center text-white font-bold text-sm">
+                    RA
+                </div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Rohan Agarwal</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Pro Plan</span>
+</div>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<header class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-border-dark bg-white/50 dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-20">
+<div class="flex items-center gap-4 md:hidden">
+<button class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="text-lg font-bold text-slate-900 dark:text-white">FinEase</span>
+</div>
+<div class="hidden md:flex items-center gap-4">
+<h1 class="text-lg font-semibold text-slate-900 dark:text-white">Financial Reports</h1>
+<span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-border-dark text-slate-500 border border-slate-200 dark:border-border-dark">Oct 2023</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+</span>
+<input class="pl-10 pr-4 py-1.5 w-64 rounded-lg text-sm bg-slate-50 dark:bg-surface-dark border-slate-200 dark:border-border-dark text-slate-900 dark:text-slate-200 focus:ring-primary focus:border-primary placeholder:text-slate-400" placeholder="Search transactions..." type="text"/>
+</div>
+<button class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-6 scrollbar-hide">
+<div class="max-w-7xl mx-auto space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-5 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Net Worth</span>
+<span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
+<span class="material-symbols-outlined text-lg">trending_up</span>
+</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white">₹ 42,50,000</h2>
+<span class="text-sm font-semibold text-emerald-500">+12.4%</span>
+</div>
+<p class="mt-1 text-xs text-slate-400">vs last month</p>
+</div>
+<div class="p-5 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly Cash Flow</span>
+<span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-500">
+<span class="material-symbols-outlined text-lg">payments</span>
+</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white">₹ 1,24,000</h2>
+<span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Inflow</span>
+</div>
+<div class="mt-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5">
+<div class="bg-blue-500 h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<p class="mt-2 text-xs text-slate-400 flex justify-between">
+<span>Outflow: ₹ 45,000</span>
+<span>Savings: 64%</span>
+</p>
+</div>
+<div class="p-5 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">Portfolio Growth</span>
+<div class="flex gap-2">
+<button class="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">Total</button>
+<button class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 px-2 py-1">Organic</button>
+</div>
+</div>
+<div class="flex items-center gap-8 mt-2">
+<div>
+<div class="text-xs text-slate-500 mb-1">Total Return</div>
+<div class="text-2xl font-bold text-slate-900 dark:text-white">₹ 8.4L</div>
+<div class="text-xs text-emerald-500 mt-1">↑ 18.2% XIRR</div>
+</div>
+<div class="h-10 w-px bg-slate-200 dark:bg-border-dark"></div>
+<div>
+<div class="text-xs text-slate-500 mb-1">Organic Return</div>
+<div class="text-2xl font-bold text-slate-900 dark:text-white">₹ 5.2L</div>
+<div class="text-xs text-emerald-500 mt-1">↑ 12.5%</div>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 p-6 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Cash Flow Trends</h3>
+<select class="bg-slate-50 dark:bg-surface-darker border-slate-200 dark:border-border-dark text-xs rounded-lg px-2 py-1 focus:ring-primary focus:border-primary text-slate-700 dark:text-slate-300">
+<option>Last 6 Months</option>
+<option>Year to Date</option>
+<option>Last Year</option>
+</select>
+</div>
+<div class="relative h-64 w-full">
+<div class="absolute inset-0 flex flex-col justify-between text-xs text-slate-400 pointer-events-none">
+<div class="border-b border-slate-100 dark:border-border-dark/50 w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">2.5L</span></div>
+<div class="border-b border-slate-100 dark:border-border-dark/50 w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">2.0L</span></div>
+<div class="border-b border-slate-100 dark:border-border-dark/50 w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">1.5L</span></div>
+<div class="border-b border-slate-100 dark:border-border-dark/50 w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">1.0L</span></div>
+<div class="border-b border-slate-100 dark:border-border-dark/50 w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">0.5L</span></div>
+<div class="border-b border-slate-200 dark:border-border-dark w-full h-0 flex items-center"><span class="bg-white dark:bg-surface-dark pr-2">0</span></div>
+</div>
+<div class="absolute inset-0 flex items-end justify-between pl-8 pt-6 pb-0">
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-500/80 rounded-t-sm h-[40%] transition-all hover:bg-emerald-400"></div>
+<div class="w-3 bg-red-500/80 rounded-t-sm h-[30%] transition-all hover:bg-red-400"></div>
+<div class="absolute -bottom-6 text-xs text-slate-500">May</div>
+</div>
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-500/80 rounded-t-sm h-[45%] transition-all hover:bg-emerald-400"></div>
+<div class="w-3 bg-red-500/80 rounded-t-sm h-[35%] transition-all hover:bg-red-400"></div>
+<div class="absolute -bottom-6 text-xs text-slate-500">Jun</div>
+</div>
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-500/80 rounded-t-sm h-[38%] transition-all hover:bg-emerald-400"></div>
+<div class="w-3 bg-red-500/80 rounded-t-sm h-[25%] transition-all hover:bg-red-400"></div>
+<div class="absolute -bottom-6 text-xs text-slate-500">Jul</div>
+</div>
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-500/80 rounded-t-sm h-[60%] transition-all hover:bg-emerald-400"></div>
+<div class="w-3 bg-red-500/80 rounded-t-sm h-[40%] transition-all hover:bg-red-400"></div>
+<div class="absolute -bottom-6 text-xs text-slate-500">Aug</div>
+</div>
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-500/80 rounded-t-sm h-[55%] transition-all hover:bg-emerald-400"></div>
+<div class="w-3 bg-red-500/80 rounded-t-sm h-[32%] transition-all hover:bg-red-400"></div>
+<div class="absolute -bottom-6 text-xs text-slate-500">Sep</div>
+</div>
+<div class="w-full flex justify-center gap-1 h-full items-end group relative">
+<div class="w-3 bg-emerald-400 rounded-t-sm h-[75%] shadow-[0_0_10px_rgba(52,211,153,0.3)]"></div>
+<div class="w-3 bg-red-400 rounded-t-sm h-[28%] shadow-[0_0_10px_rgba(248,113,113,0.3)]"></div>
+<div class="absolute -bottom-6 text-xs font-bold text-slate-200">Oct</div>
+<div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-surface-darker border border-border-dark text-xs p-2 rounded shadow-xl whitespace-nowrap z-10 hidden group-hover:block">
+<div class="flex items-center gap-2"><div class="size-2 rounded-full bg-emerald-400"></div> In: ₹ 1.85L</div>
+<div class="flex items-center gap-2 mt-1"><div class="size-2 rounded-full bg-red-400"></div> Out: ₹ 0.65L</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 flex justify-center gap-6">
+<div class="flex items-center gap-2 text-xs text-slate-400">
+<span class="size-3 rounded-sm bg-emerald-500"></span> Income
+                            </div>
+<div class="flex items-center gap-2 text-xs text-slate-400">
+<span class="size-3 rounded-sm bg-red-500"></span> Expenses
+                            </div>
+</div>
+</div>
+<div class="lg:col-span-1 p-6 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Spending Heatmap</h3>
+<button class="text-primary text-xs font-medium hover:underline">View All</button>
+</div>
+<div class="space-y-4">
+<div class="group">
+<div class="flex items-center justify-between mb-1 text-sm">
+<span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">home</span> Housing
+                                    </span>
+<span class="font-semibold text-slate-900 dark:text-white">₹ 24,000</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-surface-darker rounded-full h-2">
+<div class="bg-indigo-500 h-2 rounded-full w-[45%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex items-center justify-between mb-1 text-sm">
+<span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">restaurant</span> Food &amp; Dining
+                                    </span>
+<span class="font-semibold text-slate-900 dark:text-white">₹ 12,500</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-surface-darker rounded-full h-2">
+<div class="bg-orange-500 h-2 rounded-full w-[25%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex items-center justify-between mb-1 text-sm">
+<span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">directions_car</span> Transport
+                                    </span>
+<span class="font-semibold text-slate-900 dark:text-white">₹ 8,200</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-surface-darker rounded-full h-2">
+<div class="bg-blue-500 h-2 rounded-full w-[15%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex items-center justify-between mb-1 text-sm">
+<span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">shopping_bag</span> Shopping
+                                    </span>
+<span class="font-semibold text-slate-900 dark:text-white">₹ 5,100</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-surface-darker rounded-full h-2">
+<div class="bg-pink-500 h-2 rounded-full w-[10%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex items-center justify-between mb-1 text-sm">
+<span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+<span class="material-symbols-outlined text-base">health_and_safety</span> Health
+                                    </span>
+<span class="font-semibold text-slate-900 dark:text-white">₹ 3,200</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-surface-darker rounded-full h-2">
+<div class="bg-emerald-500 h-2 rounded-full w-[5%]"></div>
+</div>
+</div>
+</div>
+<div class="mt-6 p-4 rounded-lg bg-surface-darker border border-border-dark">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-yellow-500 mt-0.5">lightbulb</span>
+<div>
+<h4 class="text-sm font-semibold text-slate-200">Spending Insight</h4>
+<p class="text-xs text-slate-400 mt-1">Your dining expenses are 15% higher than last month. Consider cooking at home on weekends to save approx ₹ 2,000.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-border-dark flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Detailed Report</h3>
+<div class="flex gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-darker transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter
+                            </button>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-darker transition-colors">
+<span class="material-symbols-outlined text-sm">download</span> Export
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+<thead class="bg-slate-50 dark:bg-surface-darker text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
+<tr>
+<th class="px-6 py-4">Category</th>
+<th class="px-6 py-4">Budgeted</th>
+<th class="px-6 py-4">Actual</th>
+<th class="px-6 py-4">Difference</th>
+<th class="px-6 py-4">Trend</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-border-dark">
+<tr class="hover:bg-slate-50 dark:hover:bg-surface-darker transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white flex items-center gap-2">
+<div class="size-2 rounded-full bg-indigo-500"></div> Housing
+                                    </td>
+<td class="px-6 py-4">₹ 25,000</td>
+<td class="px-6 py-4">₹ 24,000</td>
+<td class="px-6 py-4 text-emerald-500">+ ₹ 1,000</td>
+<td class="px-6 py-4">
+<div class="w-20 h-1 bg-emerald-500/20 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 w-[96%]"></div>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-surface-darker transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white flex items-center gap-2">
+<div class="size-2 rounded-full bg-orange-500"></div> Food &amp; Dining
+                                    </td>
+<td class="px-6 py-4">₹ 10,000</td>
+<td class="px-6 py-4">₹ 12,500</td>
+<td class="px-6 py-4 text-red-500">- ₹ 2,500</td>
+<td class="px-6 py-4">
+<div class="w-20 h-1 bg-red-500/20 rounded-full overflow-hidden">
+<div class="h-full bg-red-500 w-[125%]"></div>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-surface-darker transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white flex items-center gap-2">
+<div class="size-2 rounded-full bg-blue-500"></div> Transport
+                                    </td>
+<td class="px-6 py-4">₹ 8,000</td>
+<td class="px-6 py-4">₹ 8,200</td>
+<td class="px-6 py-4 text-red-500">- ₹ 200</td>
+<td class="px-6 py-4">
+<div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-blue-500 w-[102%]"></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<footer class="mt-12 mb-6 border-t border-slate-200 dark:border-border-dark pt-6 text-center text-xs text-slate-400">
+<p>FinEase Reports • Generated on Oct 24, 2023 • Data secure &amp; encrypted</p>
+</footer>
+</main>
+</div>
+
+</body></html>

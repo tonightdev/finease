@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unified Dashboard - Light Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1c2333", 
+                        "surface-border": "#282e39"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-background-light text-slate-900 font-display antialiased min-h-screen flex flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 md:px-10 py-3 shadow-sm">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-900">
+<div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white shadow-md shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+</div>
+<h2 class="text-slate-900 text-lg font-bold leading-tight tracking-[-0.015em]">FinEase</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input block w-full rounded-lg border-0 bg-slate-100 py-1.5 pl-10 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 transition-all hover:bg-slate-50" placeholder="Search transactions..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-4 md:gap-8 items-center">
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-primary text-sm font-bold leading-normal transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Net Worth</a>
+<a class="text-slate-500 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Goals</a>
+<a class="text-slate-500 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-lg shadow-primary/30">
+<span class="truncate">Add Transaction</span>
+</button>
+<div class="relative group cursor-pointer">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-transparent group-hover:ring-primary transition-all shadow-sm" data-alt="User profile photo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBgajA6jhvEy3z0NzC5vIYSGEMuGVsiRvIltwD83-RzzrAnHzyDYLjWkbdjIax7G-Ju2E2H0WdiLQKLK0xxDNewqzXktNKATHFtlOIrO7DuKybIzYdXBRMT3nAIAqG45kGRWE_EW6AxEcYDLYVLKlyKOPGU1yrxk1HxfxlgJdigh2TRt9yTpyLnsvDkbTXxAw_XB1Gzalac4qsi2zeiX5jsd5qi87E7ZixHRgDt1CPss7q_WER6MCRjxQm6yGNRF48xM0-0WfULO2rf");'></div>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-white rounded-full"></div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex justify-center py-8 px-4 md:px-10">
+<div class="flex flex-col max-w-[1280px] w-full gap-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-slate-900 tracking-tight text-[32px] font-bold leading-tight">Financial Command Center</h1>
+<p class="text-slate-500 mt-1">Welcome back, Rahul. Here is your wealth overview.</p>
+</div>
+<div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+<button class="px-3 py-1.5 rounded text-xs font-semibold bg-slate-100 text-slate-900 shadow-sm border border-slate-200">Organic</button>
+<button class="px-3 py-1.5 rounded text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">Total Growth</button>
+</div>
+</div>
+<div class="w-full bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Net Worth Trend (₹)</p>
+<div class="flex items-baseline gap-3">
+<p class="text-slate-900 text-4xl font-bold tracking-tight">₹1,24,50,000</p>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span>
+                            +12.5%
+                        </span>
+</div>
+</div>
+<div class="flex gap-2">
+<select class="bg-slate-50 border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-2 cursor-pointer shadow-sm">
+<option>This Year</option>
+<option>All Time</option>
+<option>Last 5 Years</option>
+</select>
+</div>
+</div>
+<div class="relative w-full h-[240px] overflow-hidden">
+<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 300">
+<defs>
+<linearGradient id="gradientArea" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#10b981" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#10b981" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<line class="opacity-100" stroke="#e2e8f0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="1000" y1="225" y2="225"></line>
+<line class="opacity-100" stroke="#e2e8f0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="1000" y1="150" y2="150"></line>
+<line class="opacity-100" stroke="#e2e8f0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="1000" y1="75" y2="75"></line>
+<path d="M0,250 C100,240 150,200 250,210 C350,220 400,150 500,140 C600,130 650,90 750,70 C850,50 900,60 1000,20 V300 H0 Z" fill="url(#gradientArea)"></path>
+<path d="M0,250 C100,240 150,200 250,210 C350,220 400,150 500,140 C600,130 650,90 750,70 C850,50 900,60 1000,20" fill="none" stroke="#10b981" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute top-[40px] left-[74%] bg-white border border-slate-200 rounded-lg p-3 shadow-xl transform -translate-x-1/2 hidden md:block z-10">
+<p class="text-[10px] text-slate-500 uppercase font-semibold">Oct 2023</p>
+<p class="text-sm font-bold text-slate-900 mt-0.5">₹1.18 Cr</p>
+<div class="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white border-b border-r border-slate-200 rotate-45"></div>
+</div>
+<div class="absolute top-[66px] left-[74%] w-3 h-3 bg-[#10b981] rounded-full border-2 border-white shadow-sm transform -translate-x-1/2 hidden md:block z-20"></div>
+</div>
+<div class="flex justify-between mt-2 px-2 text-slate-400 text-xs font-medium">
+<span>Jan</span>
+<span>Mar</span>
+<span>May</span>
+<span>Jul</span>
+<span>Sep</span>
+<span>Nov</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-slate-900 font-bold text-lg">Asset Allocation</h3>
+<button class="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-slate-50">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex flex-col items-center justify-center flex-1 gap-6">
+<div class="relative w-48 h-48 rounded-full shadow-inner" style="background: conic-gradient(#135bec 0deg 220deg, #10b981 220deg 300deg, #f59e0b 300deg 340deg, #ef4444 340deg 360deg);">
+<div class="absolute inset-4 rounded-full bg-white flex flex-col items-center justify-center z-10 shadow-sm">
+<span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Net Assets</span>
+<span class="text-slate-900 text-xl font-bold mt-0.5">₹1.2 Cr</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-x-8 gap-y-4 w-full px-2">
+<div class="flex items-start gap-3">
+<div class="w-3 h-3 mt-1 rounded-full bg-primary shadow-sm"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 font-medium">Equity (61%)</span>
+<span class="text-sm font-bold text-slate-900">₹76.5L</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="w-3 h-3 mt-1 rounded-full bg-emerald-500 shadow-sm"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 font-medium">Debt (22%)</span>
+<span class="text-sm font-bold text-slate-900">₹27.8L</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="w-3 h-3 mt-1 rounded-full bg-amber-500 shadow-sm"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 font-medium">Gold (11%)</span>
+<span class="text-sm font-bold text-slate-900">₹13.9L</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="w-3 h-3 mt-1 rounded-full bg-red-500 shadow-sm"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 font-medium">Liquid (6%)</span>
+<span class="text-sm font-bold text-slate-900">₹6.3L</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-slate-900 font-bold text-lg">Active Goals</h3>
+<a class="text-primary text-sm font-bold hover:underline" href="#">View All</a>
+</div>
+<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100">
+<span class="material-symbols-outlined text-[20px]">beach_access</span>
+</div>
+<div>
+<p class="text-slate-900 text-sm font-bold">Retirement</p>
+<p class="text-xs text-slate-500 font-medium">Target: ₹5 Cr by 2045</p>
+</div>
+</div>
+<span class="text-slate-900 text-sm font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">65%</span>
+</div>
+<div class="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+<div class="absolute h-full bg-indigo-500 rounded-full" style="width: 65%"></div>
+<div class="absolute h-full w-1 bg-red-400 z-10 top-0 ring-2 ring-white" style="left: 62%" title="Expected Pace"></div>
+</div>
+<div class="flex justify-between text-xs font-medium">
+<span class="text-slate-500">Saved: ₹3.25 Cr</span>
+<span class="text-emerald-600 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                Ahead of schedule
+                            </span>
+</div>
+</div>
+<div class="flex flex-col gap-3 pt-4 border-t border-slate-100">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-pink-50 rounded-lg text-pink-600 border border-pink-100">
+<span class="material-symbols-outlined text-[20px]">school</span>
+</div>
+<div>
+<p class="text-slate-900 text-sm font-bold">Child Education</p>
+<p class="text-xs text-slate-500 font-medium">Target: ₹50L by 2030</p>
+</div>
+</div>
+<span class="text-slate-900 text-sm font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">42%</span>
+</div>
+<div class="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+<div class="absolute h-full bg-pink-500 rounded-full" style="width: 42%"></div>
+<div class="absolute h-full w-1 bg-red-400 z-10 top-0 ring-2 ring-white" style="left: 48%" title="Expected Pace"></div>
+</div>
+<div class="flex justify-between text-xs font-medium">
+<span class="text-slate-500">Saved: ₹21L</span>
+<span class="text-red-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                Behind by 6%
+                            </span>
+</div>
+</div>
+<div class="flex flex-col gap-3 pt-4 border-t border-slate-100">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-blue-50 rounded-lg text-blue-600 border border-blue-100">
+<span class="material-symbols-outlined text-[20px]">directions_car</span>
+</div>
+<div>
+<p class="text-slate-900 text-sm font-bold">New Car</p>
+<p class="text-xs text-slate-500 font-medium">Target: ₹20L by 2025</p>
+</div>
+</div>
+<span class="text-slate-900 text-sm font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">85%</span>
+</div>
+<div class="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+<div class="absolute h-full bg-blue-500 rounded-full" style="width: 85%"></div>
+<div class="absolute h-full w-1 bg-red-400 z-10 top-0 ring-2 ring-white" style="left: 85%" title="Expected Pace"></div>
+</div>
+<div class="flex justify-between text-xs font-medium">
+<span class="text-slate-500">Saved: ₹17L</span>
+<span class="text-emerald-600 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                On Track
+                            </span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-6 h-full">
+<div class="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex-1 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-[0.03]">
+<span class="material-symbols-outlined text-[120px] text-slate-900">sync_alt</span>
+</div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h3 class="text-slate-900 font-bold text-lg">Reconciliation</h3>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+</span>
+</div>
+<p class="text-xs text-slate-500 mb-5 font-medium">Sync banks &amp; verify transactions</p>
+<div class="bg-white rounded-lg p-3 mb-4 border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-amber-500 text-[20px]">warning</span>
+<span class="text-sm font-bold text-slate-800">Unmatched Items</span>
+</div>
+<span class="bg-amber-50 text-amber-700 text-xs font-bold px-2 py-0.5 rounded border border-amber-100">3 Pending</span>
+</div>
+<div class="flex justify-between text-xs text-slate-500 pl-7 font-medium border-t border-slate-100 pt-2 mt-2">
+<span>Total Value</span>
+<span class="text-slate-700">₹12,450.00</span>
+</div>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-primary border border-primary/20 hover:border-primary/50 rounded-lg py-2.5 text-sm font-bold transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                            Reconcile Now
+                        </button>
+</div>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-900">Cash Flow</h4>
+<p class="text-xs text-slate-500 font-medium">This Month</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 font-medium">Inflow</span>
+<span class="text-emerald-600 font-bold bg-emerald-50 px-1.5 rounded">+₹2.4L</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 font-medium">Outflow</span>
+<span class="text-slate-900 font-bold">₹1.1L</span>
+</div>
+<div class="h-2 w-full bg-slate-100 rounded-full mt-2 overflow-hidden shadow-inner">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 65%"></div>
+</div>
+<p class="text-xs text-right text-slate-500 font-medium mt-1">45% Saved</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

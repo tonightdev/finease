@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinEase Mobile Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-dark": "#0b46be",
+                        "accent-emerald": "#0bda5e",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1a2130",
+                        "surface-light": "#ffffff",
+                        "text-secondary": "#9da6b9",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #282e39;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b4354;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex justify-center items-center min-h-screen font-display">
+<!-- Mobile Container Simulation -->
+<div class="relative flex h-full max-h-[900px] w-full max-w-[400px] flex-col overflow-hidden bg-background-light dark:bg-background-dark shadow-2xl sm:rounded-2xl border border-gray-800">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-800 px-5 py-4 bg-surface-light dark:bg-background-dark z-20 sticky top-0">
+<div class="flex items-center gap-2 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined !text-[24px]">savings</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">FinEase</h2>
+</div>
+<button class="flex items-center justify-center rounded-full size-8 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-white !text-[20px]">light_mode</span>
+</button>
+</header>
+<!-- Main Scrollable Content -->
+<div class="flex-1 overflow-y-auto pb-24 scroll-smooth">
+<!-- User Profile Snippet -->
+<div class="px-5 pt-6 pb-2">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12 border-2 border-primary" data-alt="Portrait of a young professional woman" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXiW3NHShMtldoUYfClGI_u96iVthh6_92_q5sVjQwGROS7ruxFldApLuDcDiUGWrEdDQxtIvGIPIWxhRBSMWoiaoQQPHJmWliUaWAtYP5-BCeN-bdoXgWW5BQWj2KN46VrpgvPhPK9X6q6cOTelyXXUsNc3B4DQrAZfWzOZjaUmOYmHS8P3vnUvy7OyMkEp1vtsthMJjQ9n1G3N-422npKj1lw3xR5m7mhcHnkUl_fChDj_TYEBoWXqhA9TykmChfNiL11PGKX2Cm");'></div>
+<div class="flex flex-col">
+<p class="text-text-secondary text-xs font-medium uppercase tracking-wider">Welcome back</p>
+<h1 class="text-slate-900 dark:text-white text-xl font-bold leading-tight">Priya Sharma</h1>
+</div>
+</div>
+</div>
+<!-- Net Worth Card -->
+<div class="px-5 py-4">
+<div class="flex flex-col gap-4 rounded-2xl bg-surface-light dark:bg-surface-dark p-5 shadow-sm border border-gray-100 dark:border-gray-800/50">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<p class="text-text-secondary text-sm font-medium">Net Worth Trend</p>
+<p class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">₹45,20,000</p>
+</div>
+<div class="flex items-center gap-1 bg-accent-emerald/10 px-2 py-1 rounded text-accent-emerald">
+<span class="material-symbols-outlined !text-[16px]">trending_up</span>
+<span class="text-xs font-bold">+12.5%</span>
+</div>
+</div>
+<p class="text-text-secondary text-xs">Last 6 Months vs Previous Period</p>
+<!-- Chart Area -->
+<div class="w-full h-[160px] relative mt-2">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 300 100">
+<!-- Gradient Defs -->
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#135bec" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#135bec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Area Path -->
+<path d="M0,80 C30,75 50,60 80,55 C110,50 130,65 160,45 C190,25 220,35 250,20 L300,10 V100 H0 Z" fill="url(#chartGradient)"></path>
+<!-- Stroke Path -->
+<path d="M0,80 C30,75 50,60 80,55 C110,50 130,65 160,45 C190,25 220,35 250,20 L300,10" fill="none" stroke="#135bec" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<!-- Dots for data points -->
+<circle class="fill-surface-light dark:fill-surface-dark stroke-primary" cx="80" cy="55" r="3" stroke-width="2"></circle>
+<circle class="fill-surface-light dark:fill-surface-dark stroke-primary" cx="160" cy="45" r="3" stroke-width="2"></circle>
+<circle class="fill-surface-light dark:fill-surface-dark stroke-primary" cx="250" cy="20" r="3" stroke-width="2"></circle>
+</svg>
+<!-- X Axis Labels -->
+<div class="flex justify-between text-text-secondary text-[10px] font-medium mt-2 px-1">
+<span>Jan</span>
+<span>Feb</span>
+<span>Mar</span>
+<span>Apr</span>
+<span>May</span>
+<span>Jun</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="px-5 pb-4">
+<div class="grid grid-cols-4 gap-4">
+<button class="flex flex-col items-center gap-2 group">
+<div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">add</span>
+</div>
+<span class="text-[11px] font-medium text-text-secondary">Add</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">send</span>
+</div>
+<span class="text-[11px] font-medium text-text-secondary">Send</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+</div>
+<span class="text-[11px] font-medium text-text-secondary">Scan</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">more_horiz</span>
+</div>
+<span class="text-[11px] font-medium text-text-secondary">More</span>
+</button>
+</div>
+</div>
+<!-- Goals Section -->
+<div class="px-5 py-2">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg">Your Goals</h3>
+<button class="text-primary text-sm font-medium">See All</button>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Goal Card 1 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-gray-100 dark:border-gray-800/50">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined">beach_access</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white font-medium text-sm">Retirement</p>
+<p class="text-text-secondary text-xs">Target: 2045</p>
+</div>
+</div>
+<span class="text-slate-900 dark:text-white font-bold text-sm">65%</span>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+<div class="bg-primary h-2 rounded-full" style="width: 65%"></div>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">₹1.3Cr saved</span>
+<span class="text-slate-900 dark:text-white font-medium">₹2Cr goal</span>
+</div>
+</div>
+<!-- Goal Card 2 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-gray-100 dark:border-gray-800/50">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-3">
+<div class="bg-accent-emerald/20 p-2 rounded-lg text-accent-emerald">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white font-medium text-sm">New Home</p>
+<p class="text-text-secondary text-xs">Target: 2026</p>
+</div>
+</div>
+<span class="text-slate-900 dark:text-white font-bold text-sm">40%</span>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+<div class="bg-accent-emerald h-2 rounded-full" style="width: 40%"></div>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">₹20L saved</span>
+<span class="text-slate-900 dark:text-white font-medium">₹50L goal</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Investment Breakdown (Mini) -->
+<div class="px-5 py-4 mb-4">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg mb-3">Portfolio</h3>
+<div class="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+<div class="min-w-[140px] bg-surface-light dark:bg-surface-dark p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-blue-500"></div>
+<span class="text-xs text-text-secondary">Mutual Funds</span>
+</div>
+<p class="text-slate-900 dark:text-white font-bold">₹22.5L</p>
+</div>
+<div class="min-w-[140px] bg-surface-light dark:bg-surface-dark p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-purple-500"></div>
+<span class="text-xs text-text-secondary">Stocks</span>
+</div>
+<p class="text-slate-900 dark:text-white font-bold">₹15.2L</p>
+</div>
+<div class="min-w-[140px] bg-surface-light dark:bg-surface-dark p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-yellow-500"></div>
+<span class="text-xs text-text-secondary">Gold</span>
+</div>
+<p class="text-slate-900 dark:text-white font-bold">₹5.0L</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-[#1a2130] border-t border-gray-200 dark:border-gray-800 px-6 py-3 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-primary group-hover:text-primary transition-colors">home</span>
+<span class="text-[10px] font-medium text-primary">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white transition-colors">currency_rupee</span>
+<span class="text-[10px] font-medium text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white">Transact</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white transition-colors">track_changes</span>
+<span class="text-[10px] font-medium text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white">Goals</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white transition-colors">trending_up</span>
+<span class="text-[10px] font-medium text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white">Invest</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white transition-colors">description</span>
+<span class="text-[10px] font-medium text-text-secondary group-hover:text-slate-900 dark:group-hover:text-white">Reports</span>
+</button>
+</nav>
+</div>
+</body></html>

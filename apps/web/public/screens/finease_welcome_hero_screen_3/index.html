@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinEase - Financial Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#135bec",
+                        "primary-dark": "#0e45b5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0f1115", // Deep dark background
+                        "surface-dark": "#181b21", // Slightly lighter for cards
+                        "border-dark": "#2a2f3a",
+                        "modal-bg": "#12151c",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-body text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-primary selection:text-white relative">
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+<div class="absolute inset-0 bg-background-dark/60 backdrop-blur-sm transition-opacity"></div>
+<div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-modal-bg border border-border-dark shadow-2xl transition-all">
+<div class="border-b border-border-dark px-6 py-4 flex items-center justify-between bg-surface-dark/50">
+<h3 class="text-lg font-semibold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">add_card</span>
+                Link New Account
+            </h3>
+<button class="text-slate-400 hover:text-white transition-colors rounded-lg p-1 hover:bg-white/5">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-6 pb-2">
+<div class="flex p-1 rounded-xl bg-surface-dark border border-border-dark mb-6">
+<button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium bg-primary text-white shadow-sm transition-all">
+                    Bank Account
+                </button>
+<button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                    Credit/Debit Card
+                </button>
+</div>
+</div>
+<div class="px-6 pb-6 space-y-5">
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5" for="bank-name">Bank Name</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-500 text-[20px]">account_balance</span>
+</div>
+<input class="block w-full rounded-lg border-border-dark bg-surface-dark pl-10 text-white placeholder-slate-500 focus:border-primary focus:ring-primary sm:text-sm" id="bank-name" placeholder="e.g. HDFC Bank, SBI" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5" for="account-number">Account Number</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-500 text-[20px]">numbers</span>
+</div>
+<input class="block w-full rounded-lg border-border-dark bg-surface-dark pl-10 text-white placeholder-slate-500 focus:border-primary focus:ring-primary sm:text-sm" id="account-number" placeholder="XXXX-XXXX-XXXX" type="text"/>
+</div>
+<p class="mt-1 text-xs text-slate-500">Enter your 11-16 digit account number</p>
+</div>
+<div class="grid grid-cols-2 gap-5">
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5" for="account-type">Account Type</label>
+<select class="block w-full rounded-lg border-border-dark bg-surface-dark text-white focus:border-primary focus:ring-primary sm:text-sm" id="account-type">
+<option>Savings</option>
+<option>Current</option>
+<option>Overdraft</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5" for="balance">Current Balance</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="text-slate-500 font-sans">₹</span>
+</div>
+<input class="block w-full rounded-lg border-border-dark bg-surface-dark pl-8 text-white placeholder-slate-500 focus:border-primary focus:ring-primary sm:text-sm" id="balance" placeholder="0.00" type="text"/>
+</div>
+</div>
+</div>
+<div class="relative my-6">
+<div aria-hidden="true" class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-border-dark"></div>
+</div>
+<div class="relative flex justify-center">
+<span class="bg-modal-bg px-2 text-xs text-slate-500 uppercase">Or connect via</span>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 rounded-lg border border-border-dark bg-surface-dark px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-[#1f232b] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-modal-bg" type="button">
+<span class="material-symbols-outlined text-[20px] text-emerald-500">qr_code_scanner</span>
+                Link via UPI ID
+            </button>
+<div class="pt-2">
+<button class="w-full flex justify-center rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-modal-bg transition-all" type="button">
+                    Connect Account
+                </button>
+<p class="mt-3 text-center text-[10px] text-slate-500">
+<span class="material-symbols-outlined align-middle text-[12px] mr-0.5">lock</span>
+                    Your data is encrypted and secure.
+                </p>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="relative flex min-h-screen w-full flex-col blur-[2px] pointer-events-none select-none">
+<header class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-border-dark bg-white/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-2">
+<div class="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">FinEase</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Goals</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Cards</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="hidden text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-white sm:block" href="#">Log in</a>
+<button class="flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+                        Get Started
+                    </button>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<section class="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-32 lg:pb-40">
+<div class="absolute inset-0 -z-10">
+<div class="absolute inset-0 bg-gradient-to-br from-background-dark via-[#111827] to-[#0f172a]"></div>
+<div class="absolute top-0 right-0 -mr-20 -mt-20 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[100px]"></div>
+<div class="absolute bottom-0 left-0 -ml-20 -mb-20 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[100px]"></div>
+</div>
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
+<div class="lg:col-span-6 text-center lg:text-left">
+<div class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-6">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                                Now available in India
+                            </div>
+<h1 class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl md:text-6xl lg:leading-tight">
+                                Financial Command <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">Center</span>
+</h1>
+<p class="mt-6 text-lg leading-relaxed text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0">
+                                Comprehensive wealth management and goal tracking tailored for the modern Indian investor. Track your INR assets, investments, and expenses in one secure place.
+                            </p>
+<div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+<button class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+                                    Start Your Journey
+                                    <span class="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
+</button>
+<button class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 dark:border-border-dark dark:bg-surface-dark dark:text-white dark:hover:bg-border-dark dark:focus:ring-offset-background-dark">
+                                    View Demo
+                                </button>
+</div>
+<div class="mt-10 flex items-center justify-center lg:justify-start gap-6 text-slate-400 text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-500" style="font-size: 20px;">check_circle</span>
+<span>No credit card required</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-500" style="font-size: 20px;">check_circle</span>
+<span>14-day free trial</span>
+</div>
+</div>
+</div>
+<div class="relative mt-16 lg:col-span-6 lg:mt-0">
+<div class="absolute -inset-4 bg-gradient-to-r from-primary to-emerald-500 rounded-2xl opacity-20 blur-lg"></div>
+<div class="relative rounded-2xl border border-border-dark bg-surface-dark shadow-2xl overflow-hidden aspect-[4/3] group">
+<div class="absolute top-0 left-0 right-0 h-8 bg-[#1f232b] border-b border-border-dark flex items-center px-4 gap-2">
+<div class="size-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+<div class="size-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+<div class="size-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+</div>
+<div class="mt-8 h-full w-full bg-cover bg-center" data-alt="Dashboard showing financial graphs and data analytics on a dark screen" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAb97QReAYR817cSYRcSVwYx-riLHGzPkpxq_3hhtgOb814-NMF9vUZHrj2D4JaxinEnNLl0BXKF7Jt2mWOB5NUEQwZoHrXFDz1BnnLcRknAaNcriqpUkKkF73CNHdf7c5em6rgrUDqnSTIMBOqdcVn1nyL3n7fMP9KqBDhh1KuYggoOoj9upr3OPu6D1KN4HTB2BGgFqJJr491m5KX-UMr80Y18DP_KCYld3CQeHcKvujTNnKtBksSKysbysd2EkmnJXh6HrkC85R4');"></div>
+<div class="absolute bottom-6 left-6 right-6 p-4 bg-background-dark/90 backdrop-blur-md border border-border-dark rounded-xl shadow-xl transform transition-transform group-hover:-translate-y-2">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-medium text-slate-400">Total Balance</span>
+<span class="text-xs font-bold text-emerald-400 flex items-center"><span class="material-symbols-outlined text-sm mr-1">trending_up</span> +12.5%</span>
+</div>
+<div class="text-2xl font-bold text-white mb-3">₹ 24,50,000</div>
+<div class="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-emerald-400 w-3/4"></div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-slate-500">
+<span>Monthly Goal</span>
+<span>75% Achieved</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white dark:bg-[#0b0d11]">
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="text-center max-w-3xl mx-auto mb-16">
+<h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                            Why Choose FinEase?
+                        </h2>
+<p class="mt-4 text-lg text-slate-600 dark:text-slate-400">
+                            Designed specifically for the nuances of the Indian financial ecosystem, giving you control over your future.
+                        </p>
+</div>
+<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+<div class="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
+<div class="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">track_changes</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Goal Tracking</h3>
+<p class="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                                Set specific financial milestones like buying a home or retirement. We calculate the monthly SIP needed to get you there.
+                            </p>
+</div>
+<div class="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
+<div class="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Smart Insights</h3>
+<p class="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                                AI-driven analysis of your spending habits. Get personalized recommendations to save tax and optimize investments.
+                            </p>
+</div>
+<div class="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
+<div class="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Secure &amp; Private</h3>
+<p class="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                                Bank-grade 256-bit encryption. Your financial data is encrypted locally and never sold to third-party advertisers.
+                            </p>
+</div>
+</div>
+</div>
+</section>
+<section class="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+<div class="absolute inset-0 bg-primary/5 dark:bg-surface-dark"></div>
+<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+<div class="mx-auto max-w-4xl relative text-center">
+<h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl mb-6">
+                        Ready to master your finances?
+                    </h2>
+<p class="text-lg text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
+                        Join thousands of Indian investors who are taking control of their wealth with FinEase. Start your free trial today.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-base font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+                            Get Started Free
+                        </button>
+<button class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-transparent px-8 py-3 text-base font-semibold text-slate-700 dark:text-white dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                            Contact Sales
+                        </button>
+</div>
+</div>
+</section>
+</main>
+<footer class="border-t border-slate-200 bg-white dark:bg-background-dark dark:border-border-dark">
+<div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+<div class="flex flex-col items-center justify-between gap-6 sm:flex-row">
+<div class="flex items-center gap-2">
+<div class="flex size-6 items-center justify-center rounded bg-primary text-white text-xs">
+<span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">FinEase</span>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Privacy Policy</a>
+<a class="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Terms of Service</a>
+<a class="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Contact Us</a>
+</div>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="sr-only">Twitter</span>
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
+</a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="sr-only">LinkedIn</span>
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path></svg>
+</a>
+</div>
+</div>
+<div class="mt-8 text-center text-sm text-slate-500 dark:text-slate-500">
+                    © 2023 FinEase. All rights reserved.
+                </div>
+</div>
+</footer>
+</div>
+</body></html>

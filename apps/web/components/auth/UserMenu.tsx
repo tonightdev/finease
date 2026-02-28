@@ -2,6 +2,7 @@
 
 import { useAuth } from "./AuthProvider";
 import { LogIn, LogOut, User as UserIcon } from "lucide-react";
+import Link from "next/link";
 
 export function UserMenu() {
   const { user, loginWithGoogle, logout, loading } = useAuth();
@@ -12,13 +13,10 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <button 
-        onClick={loginWithGoogle}
-        className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-lg transition-all"
-      >
+      <Link href="/login" className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-lg transition-all">
         <LogIn className="w-4 h-4" />
         <span className="hidden sm:inline">Sign In</span>
-      </button>
+      </Link>
     );
   }
 

@@ -1,8 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+
+interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -18,21 +23,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    // Check local storage for mock auth state
+    const storedUser = localStorage.getItem("mock_finease_user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
   }, []);
 
   const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const mockUser: User = {
+      uid: "local-mock-uid",
+      email: "mockuser@example.com",
+      displayName: "Mock User",
+      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=mockuser",
+    };
+    setUser(mockUser);
+    localStorage.setItem("mock_finease_user", JSON.stringify(mockUser));
   };
 
   const logout = async () => {
-    await signOut(auth);
+    setUser(null);
+    localStorage.removeItem("mock_finease_user");
   };
 
   return (

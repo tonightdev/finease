@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinEase - Transaction Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#135bec",
+                        "primary-dark": "#0e45b5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0f1115",
+                        "surface-dark": "#181b21",
+                        "border-dark": "#2a2f3a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light font-body text-slate-900 overflow-x-hidden selection:bg-primary selection:text-white">
+<div class="relative flex min-h-screen w-full flex-col">
+<header class="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-md">
+<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-2">
+<div class="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900">FinEase</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-sm font-medium text-primary" href="#">Transactions</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Goals</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Investments</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 hover:bg-slate-50 transition-colors">
+<img alt="User Avatar" class="size-8 rounded-full bg-slate-200 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFUV9p8B8N3M7S1HgwA9233Le6tajaRMxGKe_S2qo1zfTfiljmLEIfHnCHdtx42IWm4WLoS24dFwxohFq3Zanxdszu51aVyng5mc0m9a8xcaiCrzadR0AUk8ifYX1yBFLT3xG8UxS3sn9NofLImHtGu-tuV0_q1bF6m_QIS7vP3VPvG0zwsgXY7dY9jza7k758mHeUB9DO3N0zT0d1eeG9nPn74a3vTX85bzzFDR_MwPeAh3N8nBloOH9F2S7DzhkwwNvdNgdc9J-f"/>
+<span class="text-sm font-medium text-slate-700">Arjun K.</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div>
+<h1 class="text-2xl font-bold text-slate-900">Transaction Management</h1>
+<p class="text-sm text-slate-500 mt-1">Manage your cash flow and track recurring payments.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined mr-2 text-[20px]">filter_list</span>
+                        Filters
+                    </button>
+<button class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined mr-2 text-[20px]">upload_file</span>
+                        Import Statement
+                    </button>
+</div>
+</div>
+<div class="mb-6 border-b border-slate-200">
+<nav aria-label="Tabs" class="-mb-px flex space-x-8">
+<a class="border-primary text-primary whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold inline-flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                    Actual Transactions
+                    <span class="hidden rounded-full bg-primary/10 py-0.5 px-2.5 text-xs font-medium text-primary md:inline-block">124</span>
+</a>
+<a class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium inline-flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">autorenew</span>
+                    Automated Movements
+                    <span class="hidden rounded-full bg-slate-100 py-0.5 px-2.5 text-xs font-medium text-slate-600 md:inline-block">8</span>
+</a>
+</nav>
+</div>
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
+<div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+<dt>
+<div class="absolute rounded-md bg-emerald-50 p-3">
+<span class="material-symbols-outlined text-emerald-600">arrow_downward</span>
+</div>
+<p class="ml-16 truncate text-sm font-medium text-slate-500">Total Income</p>
+</dt>
+<dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
+<p class="text-2xl font-semibold text-slate-900">₹ 2,45,000</p>
+<p class="ml-2 flex items-baseline text-sm font-semibold text-emerald-600">
+<span class="sr-only">Increased by</span>
+                        +12%
+                    </p>
+</dd>
+</div>
+<div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+<dt>
+<div class="absolute rounded-md bg-rose-50 p-3">
+<span class="material-symbols-outlined text-rose-600">arrow_upward</span>
+</div>
+<p class="ml-16 truncate text-sm font-medium text-slate-500">Total Expenses</p>
+</dt>
+<dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
+<p class="text-2xl font-semibold text-slate-900">₹ 84,200</p>
+<p class="ml-2 flex items-baseline text-sm font-semibold text-rose-600">
+<span class="sr-only">Increased by</span>
+                        +4.5%
+                    </p>
+</dd>
+</div>
+<div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+<dt>
+<div class="absolute rounded-md bg-blue-50 p-3">
+<span class="material-symbols-outlined text-primary">savings</span>
+</div>
+<p class="ml-16 truncate text-sm font-medium text-slate-500">Net Savings</p>
+</dt>
+<dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
+<p class="text-2xl font-semibold text-slate-900">₹ 1,60,800</p>
+</dd>
+</div>
+</div>
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+<div class="border-b border-slate-200 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
+<h3 class="text-base font-semibold leading-6 text-slate-900">October 2023</h3>
+<div class="flex items-center gap-2 text-sm text-slate-500">
+<span>Sort by:</span>
+<button class="font-medium text-slate-700 hover:text-primary flex items-center">Date <span class="material-symbols-outlined text-sm ml-1">arrow_drop_down</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="min-w-full divide-y divide-slate-200 text-left text-sm whitespace-nowrap">
+<thead class="bg-slate-50">
+<tr>
+<th class="px-6 py-3 font-semibold text-slate-900" scope="col">Date</th>
+<th class="px-6 py-3 font-semibold text-slate-900" scope="col">Description</th>
+<th class="px-6 py-3 font-semibold text-slate-900" scope="col">Category</th>
+<th class="px-6 py-3 font-semibold text-slate-900" scope="col">Status</th>
+<th class="px-6 py-3 font-semibold text-slate-900 text-right" scope="col">Amount</th>
+<th class="px-6 py-3 text-right" scope="col"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 bg-white">
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 24, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">Amazon India</div>
+<div class="text-xs text-slate-500">HDFC Bank •••• 4242</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">Shopping</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Cleared</span>
+</td>
+<td class="px-6 py-4 font-medium text-slate-900 text-right">
+                                    - ₹ 4,599.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 22, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+<span class="material-symbols-outlined">work</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">Tech Solutions Pvt Ltd</div>
+<div class="text-xs text-slate-500">ICICI Bank •••• 8899</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Salary</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Cleared</span>
+</td>
+<td class="px-6 py-4 font-medium text-emerald-600 text-right">
+                                    + ₹ 1,45,000.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 20, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+<span class="material-symbols-outlined">movie</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">Netflix Subscription</div>
+<div class="text-xs text-slate-500">HDFC Bank •••• 4242</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">Entertainment</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Pending</span>
+</td>
+<td class="px-6 py-4 font-medium text-slate-900 text-right">
+                                    - ₹ 649.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 18, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-teal-100 text-teal-600">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">Swiggy</div>
+<div class="text-xs text-slate-500">UPI Transaction</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">Food &amp; Dining</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Cleared</span>
+</td>
+<td class="px-6 py-4 font-medium text-slate-900 text-right">
+                                    - ₹ 450.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 15, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">Rent Payment</div>
+<div class="text-xs text-slate-500">Bank Transfer</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 ring-1 ring-inset ring-rose-700/10">Housing</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Cleared</span>
+</td>
+<td class="px-6 py-4 font-medium text-slate-900 text-right">
+                                    - ₹ 22,000.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4 text-slate-500">
+                                    Oct 12, 2023
+                                </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="flex size-10 flex-none items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+<span class="material-symbols-outlined">trending_up</span>
+</div>
+<div>
+<div class="font-medium text-slate-900">SIP Investment</div>
+<div class="text-xs text-slate-500">Axis Bluechip Fund</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">Investment</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Cleared</span>
+</td>
+<td class="px-6 py-4 font-medium text-slate-900 text-right">
+                                    - ₹ 10,000.00
+                                </td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+<div class="flex flex-1 justify-between sm:hidden">
+<a class="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="#">Previous</a>
+<a class="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="#">Next</a>
+</div>
+<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+<div>
+<p class="text-sm text-slate-700">
+                            Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">124</span> results
+                        </p>
+</div>
+<div>
+<nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+<a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</a>
+<a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">1</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">2</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">3</a>
+<span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 focus:outline-offset-0">...</span>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">12</a>
+<a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>
