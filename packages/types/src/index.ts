@@ -8,7 +8,7 @@ export interface User {
   createdAt: string;
 }
 
-export type AccountType = "bank" | "cash" | "loan" | "investment";
+export type AccountType = "bank" | "cash" | "loan" | "investment" | "card";
 
 export interface Account {
   id: string;
@@ -17,6 +17,10 @@ export interface Account {
   type: AccountType;
   assetType: string;
   balance: number;
+  investedAmount?: number;
+  initialAmount?: number;
+  paidAmount?: number;
+  interestPaid?: number;
   currency: string;
   institutionName?: string;
   lastSyncedAt: string;
@@ -43,6 +47,7 @@ export interface Transaction {
   accountId: string;
   toAccountId?: string; // For transfers
   amount: number;
+  interestAmount?: number;
   date: string;
   description: string;
   category: string;

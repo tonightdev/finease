@@ -7,10 +7,16 @@ export class AnalyticsService {
    * Formats raw Firestore transaction and asset data into Recharts-friendly JSON
    */
   async getDashboardStats(userId: string): Promise<DashboardStats> {
+    // Simulate async network request
+    await Promise.resolve();
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+
     // In a real implementation, this would fetch from Firestore:
     // const assets = await this.firestore.collection('users').doc(userId).collection('assets').get();
     // const liabilities = await this.firestore.collection('users').doc(userId).collection('liabilities').get();
-    
+
     // Logic for "Net Worth" over time
     const netWorthHistory = [
       { month: 'Jan', value: 95000 },
@@ -21,52 +27,41 @@ export class AnalyticsService {
       { month: 'Jun', value: 125430 },
     ];
 
-    // Logic for "Asset vs Liability Split"
-    const assetLiabilitySplit = [
-      { name: 'Bank Accounts', value: 85000, type: 'asset' as const },
-      { name: 'Real Estate', value: 450000, type: 'asset' as const },
-      { name: 'Mortgage', value: 380000, type: 'liability' as const },
-      { name: 'Car Loan', value: 15000, type: 'liability' as const },
+    // Mock properties matching DashboardStats interface
+    const assetAllocation = [
+      { name: 'Equity', value: 7650000, color: '#135bec' },
+      { name: 'Debt', value: 2780000, color: '#10b981' },
+      { name: 'Gold', value: 1390000, color: '#f59e0b' },
+      { name: 'Liquid', value: 630000, color: '#ef4444' },
     ];
 
-    // Logic for "Goal Progress" with Pace Lines
-    const goalProgress = [
+    const goalPacing = [
       {
-        goalId: 'goal_1',
-        percentageSaved: 65,
-        expectedPercentage: 70, // Behind pace
+        goalId: 'goal-1',
+        goalName: 'Retirement',
+        actualPercentage: 65,
+        expectedPercentage: 62,
+        status: 'ahead' as const,
       },
       {
-        goalId: 'goal_2',
-        percentageSaved: 40,
-        expectedPercentage: 35, // Ahead of pace
-      }
+        goalId: 'goal-2',
+        goalName: 'Child Education',
+        actualPercentage: 42,
+        expectedPercentage: 48,
+        status: 'behind' as const,
+      },
     ];
 
-    // Logic for "Expense Categories" with Bounce Toggle flag
-    const expenseCategories = [
-      { category: 'Rent', amount: 2000, isBounce: false },
-      { category: 'Groceries', amount: 600, isBounce: false },
-      { category: 'Emergency Car Repair', amount: 1200, isBounce: true },
-      { category: 'Bonus Shopping', amount: 500, isBounce: true },
-    ];
-
-    const totalAssets = assetLiabilitySplit
-      .filter(i => i.type === 'asset')
-      .reduce((sum, i) => sum + i.value, 0);
-      
-    const totalLiabilities = assetLiabilitySplit
-      .filter(i => i.type === 'liability')
-      .reduce((sum, i) => sum + i.value, 0);
+    const MOCK_TOTAL_ASSETS = 13250000;
+    const MOCK_TOTAL_LIABILITIES = 800000;
 
     return {
-      netWorth: totalAssets - totalLiabilities,
-      totalAssets,
-      totalLiabilities,
+      netWorth: MOCK_TOTAL_ASSETS - MOCK_TOTAL_LIABILITIES,
+      totalAssets: MOCK_TOTAL_ASSETS,
+      totalLiabilities: MOCK_TOTAL_LIABILITIES,
       netWorthHistory,
-      assetLiabilitySplit,
-      goalProgress,
-      expenseCategories,
+      assetAllocation,
+      goalPacing,
     };
   }
 }

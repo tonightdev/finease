@@ -10,7 +10,7 @@ export default function ReportsPageClient() {
   const transactions = useSelector((state: RootState) => state.transactions.items);
   const categories = useSelector((state: RootState) => state.categories.items);
 
-  const netWorth = accounts.reduce((sum: number, acc: any) => acc.type !== 'loan' ? sum + acc.balance : sum - acc.balance, 0);
+  const netWorth = accounts.reduce((sum: number, acc: { type: string, balance: number }) => acc.type !== 'loan' ? sum + acc.balance : sum - acc.balance, 0);
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -29,13 +29,13 @@ export default function ReportsPageClient() {
   }, {} as Record<string, number>);
 
   const expenseBreakdown = Object.entries(categoryTotals)
-    .sort((a: [string, any], b: [string, any]) => (b[1] as number) - (a[1] as number))
-    .map(([category, amount]: [string, any]) => {
-      const catSettings = categories.find((c: any) => c.name === category);
+    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
+    .map(([category, amount]: [string, number]) => {
+      const catSettings = categories.find((c: { name: string; color?: string }) => c.name === category);
       return {
         category,
-        amount: amount as number,
-        percent: outflow > 0 ? ((amount as number) / outflow) * 100 : 0,
+        amount: amount,
+        percent: outflow > 0 ? (amount / outflow) * 100 : 0,
         color: catSettings?.color || "bg-slate-500"
       };
     });

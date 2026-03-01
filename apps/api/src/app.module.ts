@@ -10,4 +10,3 @@ import { FinanceModule } from './finance/finance.module';
   providers: [AppService],
 })
 export class AppModule {}
-

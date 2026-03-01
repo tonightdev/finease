@@ -3,7 +3,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
-import { MoreHorizontal } from "lucide-react";
 
 interface AssetAllocationData {
   name: string;
@@ -17,11 +16,6 @@ export function AssetAllocationDonut({ data }: { data: AssetAllocationData[] }) 
   return (
     <Card 
       title="Asset Allocation" 
-      headerAction={
-        <button className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800">
-          <MoreHorizontal className="w-5 h-5" />
-        </button>
-      }
       className="flex flex-col h-full"
     >
       <div className="flex flex-col items-center justify-center flex-1 gap-8 py-4">

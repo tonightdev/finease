@@ -6,12 +6,13 @@ import { RootState } from "@/store";
 import { addGoal, updateGoal } from "@/store/slices/goalsSlice";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
 import { FinancialGoal } from "@repo/types";
+import { formatDate } from "@/lib/utils";
 
 export default function GoalsPageClient() {
   const dispatch = useDispatch();
   const goals = useSelector((state: RootState) => state.goals.items);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<any>(null);
+  const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
   // Simple Savings Gap Calculator
   const calculateGap = (goal: FinancialGoal) => {
     const today = new Date();
@@ -58,7 +59,7 @@ export default function GoalsPageClient() {
                   </div>
                   <div className="flex flex-col">
                     <h3 className="text-slate-900 dark:text-white font-bold text-lg">{goal.name}</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">Target: {new Date(goal.targetDate).toLocaleDateString()}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Target: {formatDate(goal.targetDate)}</p>
                     <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs font-bold w-fit">
                       <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>warning</span>
                       <span>Requires: ₹{reqMonthly.toLocaleString(undefined, {maximumFractionDigits:0})}/mo</span>
@@ -80,7 +81,7 @@ export default function GoalsPageClient() {
                       <div className="absolute h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
                     </div>
                     <div className="flex justify-between text-xs mt-1">
-                      <span className="text-slate-400">Started: {new Date(goal.startDate).toLocaleDateString()}</span>
+                      <span className="text-slate-400">Started: {formatDate(goal.startDate)}</span>
                     </div>
                   </div>
                 </div>

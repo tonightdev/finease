@@ -4,7 +4,6 @@ import { GoalService } from './goal.service';
 import { ReconciliationService } from './reconciliation.service';
 import type { FinancialGoal, Transaction } from '@repo/types';
 
-
 @Controller('finance')
 @UseGuards(AuthGuard)
 export class FinanceController {
@@ -22,7 +21,10 @@ export class FinanceController {
   }
 
   @Post('reconcile/:id')
-  reconcileTransaction(@Param('id') id: string, @Body('transactions') transactions: Transaction[]) {
+  reconcileTransaction(
+    @Param('id') id: string,
+    @Body('transactions') transactions: Transaction[],
+  ) {
     return this.reconciliationService.reconcile(id, transactions);
   }
 

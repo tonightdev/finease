@@ -10,4 +10,3 @@ import { FirebaseAdminService } from '../common/services/firebase-admin.service'
   exports: [GoalService, ReconciliationService, FirebaseAdminService],
 })
 export class FinanceModule {}
-

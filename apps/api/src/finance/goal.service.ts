@@ -6,10 +6,12 @@ export class GoalService {
   calculateMonthlyRequirement(goal: FinancialGoal): number {
     const now = new Date();
     const targetDate = new Date(goal.targetDate);
-    
+
     // Calculate months remaining
-    const monthsDiff = (targetDate.getFullYear() - now.getFullYear()) * 12 + (targetDate.getMonth() - now.getMonth());
-    
+    const monthsDiff =
+      (targetDate.getFullYear() - now.getFullYear()) * 12 +
+      (targetDate.getMonth() - now.getMonth());
+
     if (monthsDiff <= 0) return 0;
 
     const remainingAmount = goal.targetAmount - goal.currentAmount;
@@ -25,7 +27,7 @@ export class GoalService {
 
     const totalDuration = targetDate.getTime() - startDate.getTime();
     const elapsed = now.getTime() - startDate.getTime();
-    
+
     const expectedPercentage = (elapsed / totalDuration) * 100;
     const actualPercentage = (goal.currentAmount / goal.targetAmount) * 100;
 

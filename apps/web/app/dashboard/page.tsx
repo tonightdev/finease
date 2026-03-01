@@ -10,9 +10,7 @@ import { RootState } from "@/store";
 import { addAccount } from "@/store/slices/accountsSlice";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { FinancialGoal } from "@repo/types";
-import { addCategory, updateCategory, removeCategory } from "@/store/slices/categoriesSlice";
-import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
-import toast from "react-hot-toast";
+import Link from "next/link";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -20,15 +18,30 @@ export default function Home() {
   const { user } = useAuth();
   const dispatch = useDispatch();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; color: string } | null>(null);
   const accounts = useSelector((state: RootState) => state.accounts.items);
-  const categories = useSelector((state: RootState) => state.categories.items);
   const goals = useSelector((state: RootState) => state.goals.items);
   const stats = useSelector((state: RootState) => state.stats.data);
 
-  const regularAccounts = accounts.filter(acc => acc.type !== 'investment');
+  const regularAccounts = accounts.filter(acc => acc.type !== 'investment' && acc.type !== 'loan');
   const investmentAccounts = accounts.filter(acc => acc.type === 'investment');
+  const loans = accounts.filter(acc => acc.type === 'loan');
+
+  const assets = accounts.filter(acc => acc.type !== 'loan').reduce((sum, item) => sum + item.balance, 0);
+  const liabilities = Math.abs(loans.reduce((sum, item) => sum + item.balance, 0));
+  const realTimeNetWorth = assets - liabilities;
+
+  // Real-time asset allocation from investments
+  const allocationMap: Record<string, number> = {};
+  investmentAccounts.forEach(inv => {
+    allocationMap[inv.assetType || 'Other'] = (allocationMap[inv.assetType || 'Other'] || 0) + inv.balance;
+  });
+  
+  const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+  const realTimeAssetAllocation = Object.entries(allocationMap).map(([name, value], idx) => ({
+    name,
+    value,
+    color: colors[idx % colors.length] || '#000000'
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 w-full">
@@ -38,28 +51,25 @@ export default function Home() {
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Financial Command Center</h1>
           <p className="text-slate-500 font-medium mt-1">Welcome back, {user?.displayName || "User"}. Here represents your unified wealth landscape.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95"
-          >
-            + Category
-          </button>
+        <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full md:w-auto mt-4 md:mt-0">
           <button 
             onClick={() => setIsAccountModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/25 active:scale-95"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/25 active:scale-95 w-full sm:w-auto"
           >
-            + Account
+            <span className="material-symbols-outlined text-lg">add</span>
+            Account
           </button>
         </div>
       </div>
 
 
 
+{regularAccounts.length > 0 && (
       <div className="space-y-6">
         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Your Accounts</h3>
         <AccountList accounts={regularAccounts} />
       </div>
+)}
 
       {investmentAccounts.length > 0 && (
         <div className="space-y-6">
@@ -68,47 +78,30 @@ export default function Home() {
         </div>
       )}
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Spending Categories</h3>
-          <button 
-             onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
-             className="text-sm font-bold text-primary hover:underline"
-          >
-             Add New
-          </button>
+      {loans.length > 0 && (
+        <div className="space-y-6">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Your Liabilities</h3>
+          <AccountList accounts={loans} />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map(c => (
-            <div 
-              key={c.id} 
-              onClick={() => { setEditingCategory(c); setIsCategoryModalOpen(true); }}
-              className="p-4 rounded-xl bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark flex items-center justify-between cursor-pointer hover:border-primary transition-colors group"
-            >
-               <span className="font-bold text-sm text-slate-700 dark:text-slate-300">{c.name}</span>
-               <div className={`w-3 h-3 rounded-full ${c.color}`} />
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <NetWorthChart 
-            data={stats.netWorthHistory} 
-            currentNetWorth={stats.netWorth} 
+            data={stats.netWorthHistory || []} 
+            currentNetWorth={realTimeNetWorth} 
             percentageChange={0} 
           />
         </div>
         <div className="lg:col-span-1">
-          <AssetAllocationDonut data={stats.assetAllocation} />
+          <AssetAllocationDonut data={realTimeAssetAllocation.length > 0 ? realTimeAssetAllocation : stats.assetAllocation} />
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white">Goal Navigator</h3>
-          <button className="text-sm font-bold text-primary hover:underline">View All</button>
+          <Link href="/goals" className="text-sm font-bold text-primary hover:underline">View All</Link>
         </div>
         
         {goals.length === 0 ? (
@@ -116,7 +109,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {goals.map((goal: FinancialGoal) => {
-              const pace = stats.goalPacing.find((p: any) => p.goalId === goal.id);
+              const pace = stats.goalPacing.find((p: { goalId: string; expectedPercentage: number; actualPercentage: number }) => p.goalId === goal.id);
               return (
                 <GoalProgressCard 
                   key={goal.id}
@@ -142,7 +135,7 @@ export default function Home() {
             id: `acc-${Date.now()}`,
             userId: "user-1",
             name: data.name,
-            type: data.type as any,
+            type: data.type as "bank" | "cash" | "loan" | "investment" | "card",
             assetType: "",
             balance: parseFloat(data.balance) || 0,
             currency: "INR",
@@ -150,32 +143,6 @@ export default function Home() {
           }));
           setIsAccountModalOpen(false);
         }} 
-      />
-      <AddCategoryModal 
-        isOpen={isCategoryModalOpen}
-        category={editingCategory}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onSave={(data) => {
-          if (data.id) {
-            dispatch(updateCategory({
-              id: data.id,
-              name: data.name,
-              color: data.color
-            }));
-          } else {
-            dispatch(addCategory({
-              id: `cat-${Date.now()}`,
-              name: data.name,
-              color: data.color
-            }));
-          }
-          setIsCategoryModalOpen(false);
-        }}
-        onDelete={(id) => {
-          dispatch(removeCategory(id));
-          setIsCategoryModalOpen(false);
-          toast.success("Category deleted");
-        }}
       />
     </div>
   );

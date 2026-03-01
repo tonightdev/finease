@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { FirebaseAdminService } from '../services/firebase-admin.service';
 import { Request } from 'express';
 
@@ -20,12 +25,14 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = await this.firebaseAdmin.getAuth().verifyIdToken(token);
-      (request as any).user = decodedToken;
+      const decodedToken = await this.firebaseAdmin
+        .getAuth()
+        .verifyIdToken(token);
+      const req = request as Request & { user: any };
+      req.user = decodedToken;
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }
-

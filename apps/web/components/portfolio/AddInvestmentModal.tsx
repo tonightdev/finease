@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 interface AddInvestmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { assetName: string; assetType: string; amount: string }) => void;
+  onSave: (data: { assetName: string; assetType: string; investedAmount: string; currentAmount: string }) => void;
   investment?: Account | null;
 }
 
@@ -20,7 +20,8 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
   const [formData, setFormData] = useState({
     assetName: "",
     assetType: assetTypes[0]?.name || "Equity",
-    amount: "",
+    investedAmount: "",
+    currentAmount: "",
   });
 
   useEffect(() => {
@@ -29,17 +30,19 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
         setFormData({
           assetName: investment.name,
           assetType: investment.assetType || assetTypes[0]?.name || "Equity",
-          amount: String(investment.balance),
+          investedAmount: String(investment.investedAmount || investment.balance),
+          currentAmount: String(investment.balance),
         });
       } else {
         setFormData({
           assetName: "",
           assetType: assetTypes[0]?.name || "Equity",
-          amount: "",
+          investedAmount: "",
+          currentAmount: "",
         });
       }
     } else {
-      setTimeout(() => setFormData({ assetName: "", assetType: assetTypes[0]?.name || "Equity", amount: "" }), 300);
+      setTimeout(() => setFormData({ assetName: "", assetType: assetTypes[0]?.name || "Equity", investedAmount: "", currentAmount: "" }), 300);
     }
   }, [investment, isOpen, assetTypes]);
 
@@ -48,8 +51,12 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
       toast.error("Please enter an asset name");
       return;
     }
-    if (!formData.amount) {
+    if (!formData.investedAmount) {
       toast.error("Please enter capital invested");
+      return;
+    }
+    if (!formData.currentAmount) {
+      toast.error("Please enter current value");
       return;
     }
     onSave(formData);
@@ -89,23 +96,26 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Asset Class</label>
-                <select 
-                  value={formData.assetType}
-                  onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
-                  className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
-                >
-                  {assetTypes.map((type) => (
-                    <option key={type.id} value={type.name}>{type.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select 
+                    value={formData.assetType}
+                    onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
+                    className="w-full p-3 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                  >
+                    {assetTypes.map((type) => (
+                      <option key={type.id} value={type.name}>{type.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Capital Invested (₹)</label>
                 <input 
                   type="number" 
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  value={formData.investedAmount}
+                  onChange={(e) => setFormData({ ...formData, investedAmount: e.target.value })}
                   placeholder="0.00"
                   disabled={!!investment}
                   className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${
@@ -119,6 +129,17 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
                      Capital Invested cannot be edited manually once created. Use transactions to adjust.
                    </p>
                 )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Current Value (₹)</label>
+                <input 
+                  type="number" 
+                  value={formData.currentAmount}
+                  onChange={(e) => setFormData({ ...formData, currentAmount: e.target.value })}
+                  placeholder="0.00"
+                  className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                />
               </div>
 
               <button 

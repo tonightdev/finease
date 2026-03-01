@@ -4,16 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { Transaction } from "@repo/types";
 import toast from "react-hot-toast";
+import { formatDate } from "@/lib/utils";
 
 export default function TransactionsImportClient() {
-  const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<"upload" | "review">("upload");
   // Review queue
   const [reviewQueue, setReviewQueue] = useState<Partial<Transaction>[]>([]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
       // Mock data parsing directly to Review Queue
       setReviewQueue([
         { id: "mock-new-1", date: new Date().toISOString(), description: "UPI/ZOMATO/FOOD", amount: 450, category: "Food & Dining", type: "expense" },
@@ -109,7 +108,7 @@ export default function TransactionsImportClient() {
               <tbody className="divide-y divide-slate-200 dark:divide-border-dark">
                 {reviewQueue.map(t => (
                   <tr key={t.id} className="bg-white dark:bg-background-dark hover:bg-slate-50 dark:hover:bg-surface-hover/50">
-                    <td className="px-4 py-3">{t.date ? new Date(t.date).toLocaleDateString() : ''}</td>
+                    <td className="px-4 py-3">{t.date ? formatDate(t.date) : ''}</td>
                     <td className="px-4 py-3"><input defaultValue={t.description} className="bg-transparent border-0 ring-1 ring-slate-300 dark:ring-border-dark rounded p-1 w-full text-sm"/></td>
                     <td className="px-4 py-3"><input defaultValue={t.category} className="bg-transparent border-0 ring-1 ring-slate-300 dark:ring-border-dark rounded p-1 text-sm"/></td>
                     <td className={`px-4 py-3 font-medium ${t.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>

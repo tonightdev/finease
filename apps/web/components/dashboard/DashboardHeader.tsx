@@ -1,6 +1,6 @@
 "use client";
 
-import { Wallet, CheckCircle2, AlertCircle, RefreshCcw } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface DashboardHeaderProps {

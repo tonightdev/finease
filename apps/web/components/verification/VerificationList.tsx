@@ -2,7 +2,7 @@
 
 import { Transaction } from "@repo/types";
 import { Card } from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Check, X, FileText, Landmark } from "lucide-react";
 
 interface VerificationListProps {
@@ -25,7 +25,7 @@ export function VerificationList({ transactions, onApprove, onReject }: Verifica
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{tx.description}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                    {new Date(tx.date).toLocaleDateString()}
+                    {formatDate(tx.date)}
                   </p>
                   <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
