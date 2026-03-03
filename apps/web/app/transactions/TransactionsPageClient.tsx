@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { TransactionModal } from "@/components/transactions/TransactionModal";
 import { TransactionDetailsModal } from "@/components/transactions/TransactionDetailsModal";
@@ -12,7 +12,7 @@ import { fetchAccounts, createAccount } from "@/store/slices/accountsSlice";
 import { addCategory, updateCategory, removeCategory } from "@/store/slices/categoriesSlice";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
 import { Transaction } from "@repo/types";
-import { Trash2, Edit2 } from "lucide-react";
+import { Trash2, Edit2, Filter, X, ChevronDown, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatDate } from "@/lib/utils";
 import { useEffect } from "react";
@@ -23,6 +23,8 @@ export default function TransactionsPageClient() {
   const dispatch = useDispatch<AppDispatch>();
   const transactions = useSelector((state: RootState) => state.transactions.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
+  const categories = useSelector((state: RootState) => state.categories.items);
+  const goals = useSelector((state: RootState) => state.goals.items);
   
   useEffect(() => {
     if (user) {
@@ -36,178 +38,442 @@ export default function TransactionsPageClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isCategoryEditMode, setIsCategoryEditMode] = useState(false);
   const [editingData, setEditingData] = useState<Transaction | null>(null);
   const [viewingData, setViewingData] = useState<Transaction | null>(null);
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; color: string } | null>(null);
 
+  // Filter States
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterAccount, setFilterAccount] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const categories = useSelector((state: RootState) => state.categories.items);
-  const goals = useSelector((state: RootState) => state.goals.items);
 
-  const filtered = transactions.filter((t: Transaction) => {
-    const isSearchMatch = t.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const isTabMatch = activeTab === "automated" ? !!t.isAutomated : !t.isAutomated;
-    return isSearchMatch && isTabMatch;
-  });
+  const filtered = useMemo(() => {
+    return transactions.filter((t: Transaction) => {
+      // Basic Tab & Search
+      const isSearchMatch = t.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const isTabMatch = activeTab === "automated" ? !!t.isAutomated : !t.isAutomated;
+      if (!isSearchMatch || !isTabMatch) return false;
+
+      // Category Filter
+      if (filterCategory !== "all" && t.category !== filterCategory) return false;
+
+      // Account Filter
+      if (filterAccount !== "all") {
+        const isSource = t.accountId === filterAccount;
+        const isDest = t.toAccountId === filterAccount;
+        if (!isSource && !isDest) return false;
+      }
+
+      // Type Filter
+      if (filterType !== "all" && t.type !== filterType) return false;
+
+      // Date Filters
+      if (filterDateFrom) {
+        if (new Date(t.date) < new Date(filterDateFrom)) return false;
+      }
+      if (filterDateTo) {
+        const toDate = new Date(filterDateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (new Date(t.date) > toDate) return false;
+      }
+
+      return true;
+    });
+  }, [transactions, searchTerm, activeTab, filterCategory, filterAccount, filterType, filterDateFrom, filterDateTo]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedTransactions = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const resetFilters = () => {
+    setFilterCategory("all");
+    setFilterAccount("all");
+    setFilterType("all");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+    setSearchTerm("");
+  };
+
+  const activeFilterCount = [
+    filterCategory !== "all",
+    filterAccount !== "all",
+    filterType !== "all",
+    !!filterDateFrom,
+    !!filterDateTo
+  ].filter(Boolean).length;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 w-full p-4 md:p-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transactions</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and track your financial activities</p>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 overflow-hidden">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Transactions</h1>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest leading-none">Unified financial ledger</p>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:flex-row items-stretch gap-3 w-full md:w-auto mt-4 md:mt-0">
-          <Link href="/transactions/import" className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none dark:border-border-dark dark:bg-surface-dark dark:text-slate-200 dark:hover:bg-border-dark col-span-1 w-full sm:w-auto">
-            <span className="material-symbols-outlined mr-2 text-lg">upload_file</span>
+        <div className="grid grid-cols-2 sm:flex sm:flex-row items-stretch gap-3 w-full sm:w-auto">
+          <Link href="/transactions/import" className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all dark:border-white/5 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 shadow-sm">
+            <span className="material-symbols-outlined mr-2 text-lg">download</span>
             Import
           </Link>
-          <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="inline-flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition col-span-1 w-full sm:w-auto">
-            <span className="material-symbols-outlined text-lg mr-2">add</span>
+          <button 
+            type="button"
+            onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} 
+            className="inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 px-5 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm"
+          >
+            <span className="material-symbols-outlined mr-2 text-lg">add</span>
             Category
           </button>
-          <button onClick={() => { setEditingData(null); setIsModalOpen(true); }} className="col-span-2 sm:col-span-1 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark w-full sm:w-auto mt-3 sm:mt-0">
+          <button 
+            type="button"
+            onClick={() => { setEditingData(null); setIsModalOpen(true); }} 
+            className="col-span-2 sm:col-span-1 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 active:scale-95"
+          >
             <span className="material-symbols-outlined mr-2 text-lg">add</span>
             Transaction
           </button>
         </div>
       </div>
 
-      <div className="mb-6 border-b border-slate-200 dark:border-border-dark overflow-x-auto">
-        <nav aria-label="Tabs" className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
+      {/* Tabs - No Scroll Mobile */}
+      <div className="border-b border-slate-200 dark:border-white/5">
+        <nav aria-label="Tabs" className="-mb-px flex w-full">
           <button 
+            type="button"
             onClick={() => { setActiveTab("actual"); setCurrentPage(1); }}
-            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold inline-flex items-center gap-2 transition-colors ${activeTab === 'actual' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            className={`flex-1 text-center border-b-2 py-4 px-1 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] inline-flex items-center justify-center gap-2 transition-colors ${activeTab === 'actual' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
-            <span className="material-symbols-outlined text-[20px]">receipt_long</span>
-            Actual Transactions
-            <span className={`hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block ${activeTab === 'actual' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+            Actual
+            <span className={`rounded-full py-0.5 px-2 text-[9px] font-bold ${activeTab === 'actual' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800'}`}>
               {transactions.filter((t: Transaction) => !t.isAutomated).length}
             </span>
           </button>
           <button 
+            type="button"
             onClick={() => { setActiveTab("automated"); setCurrentPage(1); }}
-            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-semibold inline-flex items-center gap-2 transition-colors ${activeTab === 'automated' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            className={`flex-1 text-center border-b-2 py-4 px-1 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] inline-flex items-center justify-center gap-2 transition-colors ${activeTab === 'automated' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
-            <span className="material-symbols-outlined text-[20px]">autorenew</span>
-            Automated Movements
-            <span className={`hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block ${activeTab === 'automated' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+            Automated
+            <span className={`rounded-full py-0.5 px-2 text-[9px] font-bold ${activeTab === 'automated' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800'}`}>
               {transactions.filter((t: Transaction) => !!t.isAutomated).length}
             </span>
           </button>
         </nav>
       </div>
 
-      <div className="space-y-6 mb-8">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Spending Categories</h3>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map(c => (
-            <div 
-              key={c.id} 
-              onClick={() => { setEditingCategory(c); setIsCategoryModalOpen(true); }}
-              className="p-4 rounded-xl bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark flex items-center justify-between cursor-pointer hover:border-primary transition-colors group"
+      {/* Categories Chips - Wrapping for No Scroll on Mobile */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Expense Categories</h3>
+          <div className="flex items-center gap-3">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest hidden xl:block">Double-click or icon to edit</p>
+            <button 
+              onClick={() => setIsCategoryEditMode(!isCategoryEditMode)}
+              className={`xl:hidden flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isCategoryEditMode ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}
             >
-               <span className="font-bold text-sm text-slate-700 dark:text-slate-300">{c.name}</span>
-               <div className={`w-3 h-3 rounded-full ${c.color}`} />
+              <Edit2 className="w-2.5 h-2.5" />
+              {isCategoryEditMode ? 'Done' : 'Edit'}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 py-2">
+          <button
+            onClick={() => { setFilterCategory("all"); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${filterCategory === 'all' ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+          >
+            All
+          </button>
+          {categories.map(c => (
+            <div key={c.id} className="relative group/chip">
+              <button 
+                onClick={() => { 
+                  if (isCategoryEditMode) {
+                    setEditingCategory(c);
+                    setIsCategoryModalOpen(true);
+                  } else {
+                    setFilterCategory(c.name); 
+                    setCurrentPage(1); 
+                  }
+                }}
+                onDoubleClick={() => { setEditingCategory(c); setIsCategoryModalOpen(true); }}
+                className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${isCategoryEditMode || filterCategory === c.name ? 'pr-7' : ''} ${filterCategory === c.name ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-950 border-transparent shadow-md' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:border-primary/30'} ${isCategoryEditMode ? 'border-primary/50 bg-primary/5' : ''}`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
+                {c.name}
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }}
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-primary transition-colors ${isCategoryEditMode ? 'flex text-primary' : 'hidden xl:flex'}`}
+                title="Edit category"
+              >
+                <Edit2 className="w-2.5 h-2.5" />
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-border-dark dark:bg-surface-dark mb-6">
-        <div className="relative w-full md:w-96">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <span className="material-symbols-outlined text-slate-400">search</span>
-          </div>
-          <input 
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="block w-full rounded-lg border-0 py-2.5 pl-10 pr-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-[#0b0d12] dark:text-white dark:ring-border-dark dark:focus:ring-primary" 
-            placeholder="Search transactions..." 
-            type="text"
-          />
+      {/* Search & Filters */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+            <div className="relative flex-1 group">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-primary transition-colors">
+                    <span className="material-symbols-outlined">search</span>
+                </div>
+                <input 
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="block w-full rounded-2xl border-none py-3.5 pl-12 pr-4 text-slate-900 ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-900 dark:text-white dark:ring-white/5 shadow-sm transition-all text-sm font-medium" 
+                    placeholder="Search ledger..." 
+                    type="text"
+                />
+            </div>
+            
+            <button 
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all relative ${showFilters || activeFilterCount > 0 ? 'bg-primary text-white shadow-xl shadow-primary/30' : 'bg-white dark:bg-slate-900 text-slate-600 border border-slate-100 dark:border-white/5'}`}
+            >
+                <Filter className="w-4 h-4" />
+                <span>Filters Center</span>
+                {activeFilterCount > 0 && (
+                    <span className="bg-white/20 px-2 py-0.5 rounded-full text-[9px] font-black">{activeFilterCount}</span>
+                )}
+            </button>
+
+            {activeFilterCount > 0 && (
+                <button 
+                    type="button"
+                    onClick={resetFilters}
+                    className="flex items-center justify-center gap-2 px-4 py-2 text-rose-500 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-all w-fit mx-auto md:mx-0"
+                >
+                    <X className="w-4 h-4" />
+                    Reset
+                </button>
+            )}
         </div>
+
+        {showFilters && (
+            <div className="p-6 md:p-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-2xl relative overflow-hidden transition-all">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                          <div className="w-1 h-1 bg-primary rounded-full" />
+                          Source
+                        </label>
+                        <div className="relative">
+                          <select 
+                              value={filterAccount}
+                              onChange={(e) => { setFilterAccount(e.target.value); setCurrentPage(1); }}
+                              className="w-full h-12 rounded-xl border-slate-100 dark:border-white/10 dark:bg-slate-950 text-sm font-bold focus:ring-2 focus:ring-primary appearance-none px-4 transition-all hover:border-primary/50"
+                          >
+                              <option value="all">Everything</option>
+                              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                          <div className="w-1 h-1 bg-primary rounded-full" />
+                          Type
+                        </label>
+                        <div className="relative">
+                          <select 
+                              value={filterType}
+                              onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
+                              className="w-full h-12 rounded-xl border-slate-100 dark:border-white/10 dark:bg-slate-950 text-sm font-bold focus:ring-2 focus:ring-primary appearance-none px-4 transition-all hover:border-primary/50"
+                          >
+                              <option value="all">Every type</option>
+                              <option value="expense">Outflow</option>
+                              <option value="income">Inflow</option>
+                              <option value="transfer">Transfer</option>
+                          </select>
+                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 lg:col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                          <CalendarIcon className="w-3 h-3 text-primary" />
+                          Period
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <input 
+                                type="date" 
+                                value={filterDateFrom}
+                                onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
+                                className="w-full h-12 rounded-xl border-slate-100 dark:border-white/10 dark:bg-slate-950 text-[10px] font-black focus:ring-2 focus:ring-primary px-3 transition-all uppercase tracking-widest bg-transparent" 
+                            />
+                            <input 
+                                type="date" 
+                                value={filterDateTo}
+                                onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
+                                className="w-full h-12 rounded-xl border-slate-100 dark:border-white/10 dark:bg-slate-950 text-[10px] font-black focus:ring-2 focus:ring-primary px-3 transition-all uppercase tracking-widest bg-transparent" 
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-border-dark dark:bg-surface-dark">
+      {/* Mobile & Tablet Card List (Visible up to lg/1024px) */}
+      <div className="block lg:hidden space-y-4">
+        {paginatedTransactions.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm">
+             <div className="flex flex-col items-center gap-4">
+                <span className="material-symbols-outlined text-4xl text-slate-200">history</span>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No activities found</p>
+             </div>
+          </div>
+        ) : (
+          paginatedTransactions.map((tx: Transaction) => (
+            <div 
+              key={tx.id} 
+              onClick={() => setViewingData(tx)}
+              className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm active:scale-95 transition-all"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${categories.find(c => c.name === tx.category)?.color || 'bg-slate-400'}`} />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tx.category}</span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">{tx.description}</h4>
+                </div>
+                <div className={`text-right font-black text-base tracking-tighter ${tx.type === 'expense' ? 'text-rose-500' : tx.type === 'income' ? 'text-emerald-500' : 'text-primary'}`}>
+                  {tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : ''} ₹{tx.amount.toLocaleString()}
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-end pt-4 border-t border-slate-50 dark:border-white/5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Account</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-900 dark:text-slate-200">{accounts.find(a => a.id === tx.accountId)?.name}</span>
+                    {tx.type === 'transfer' && tx.toAccountId && (
+                      <ArrowRight className="w-2.5 h-2.5 text-primary/50" />
+                    )}
+                    {tx.type === 'transfer' && tx.toAccountId && (
+                      <span className="text-[10px] font-bold text-primary">{accounts.find(a => a.id === tx.toAccountId)?.name || goals.find(g => g.id === tx.toAccountId)?.name}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{formatDate(tx.date)}</span>
+                  <div className="flex items-center gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); setEditingData(tx); setIsModalOpen(true); }} className="p-1.5 text-slate-400"><Edit2 className="w-3 h-3" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); /* delete logic ... */ }} className="p-1.5 text-rose-400"><Trash2 className="w-3 h-4" /></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table (Visible only on lg screens 1024px+) */}
+      <div className="hidden lg:block overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-            <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 dark:bg-[#0b0d12] dark:text-slate-300">
+            <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
               <tr>
-                <th className="px-6 py-4" scope="col">Date</th>
-                <th className="px-6 py-4" scope="col">Description</th>
-                <th className="px-6 py-4" scope="col">Account</th>
-                <th className="px-6 py-4" scope="col">Category</th>
-                <th className="px-6 py-4 text-right" scope="col">Amount</th>
-                <th className="px-6 py-4 text-right" scope="col">Actions</th>
+                <th className="px-8 py-6" scope="col">Execution Date</th>
+                <th className="px-8 py-6" scope="col">Description</th>
+                <th className="px-8 py-6" scope="col">Entity</th>
+                <th className="px-8 py-6" scope="col">Nexus Category</th>
+                <th className="px-8 py-6 text-right" scope="col">Quantum Amount</th>
+                <th className="px-8 py-6 text-right w-36" scope="col">Operations</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-border-dark">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-6 text-center text-slate-500">No transactions found.</td>
+                  <td colSpan={6} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center gap-5">
+                        <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-3xl text-slate-300">history</span>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">No matching activities</p>
+                          <p className="text-xs font-medium text-slate-400">Expand your filters to view more results</p>
+                        </div>
+                        {activeFilterCount > 0 && (
+                          <button onClick={resetFilters} className="text-primary text-[10px] font-black uppercase tracking-[0.2em] bg-primary/10 px-6 py-2 rounded-full hover:bg-primary/20 transition-all">Clear filters</button>
+                        )}
+                    </div>
+                  </td>
                 </tr>
               ) : (
                 paginatedTransactions.map((tx: Transaction) => (
-                <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-slate-900 dark:text-white">
+                <tr key={tx.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all">
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="font-bold text-slate-900 dark:text-white text-xs">
                       {formatDate(tx.date)}
                       {tx.isAutomated && (
-                         <div className="text-xs text-purple-500 mt-0.5">
-                           Every {tx.frequency} ({tx.recurringCount}x)
+                         <div className="text-[9px] text-primary/70 mt-1.5 flex items-center gap-1.5 font-black uppercase tracking-widest bg-primary/5 w-fit px-2 py-0.5 rounded-full">
+                           <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
+                           {tx.frequency}
                          </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <button onClick={() => setViewingData(tx)} className="font-medium text-slate-900 dark:text-white hover:text-primary transition-colors text-left underline decoration-primary/30 underline-offset-2">{tx.description}</button>
+                  <td className="px-8 py-5">
+                    <button onClick={() => setViewingData(tx)} className="font-bold text-slate-900 dark:text-white hover:text-primary transition-colors text-left truncate max-w-[220px] inline-block tracking-tight text-sm">{tx.description}</button>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-slate-900 dark:text-white flex items-center gap-1">
-                      {accounts.find(a => a.id === tx.accountId)?.name || 'Unknown'}
+                  <td className="px-8 py-5">
+                    <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 flex items-center gap-2 uppercase tracking-widest">
+                      <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-900 dark:text-white border border-slate-200 dark:border-white/5">{accounts.find(a => a.id === tx.accountId)?.name || 'N/A'}</span>
                       {tx.type === 'transfer' && tx.toAccountId && (
                         <>
-                          <span className="material-symbols-outlined text-[14px] text-slate-400">arrow_forward</span>
-                          {accounts.find(a => a.id === tx.toAccountId)?.name || goals.find(g => g.id === tx.toAccountId)?.name || 'Unknown'}
+                          <span className="material-symbols-outlined text-[16px] text-primary/40">trending_flat</span>
+                          <span className="bg-primary/5 text-primary px-2.5 py-1 rounded-lg border border-primary/10 tracking-widest">{accounts.find(a => a.id === tx.toAccountId)?.name || goals.find(g => g.id === tx.toAccountId)?.name || 'N/A'}</span>
                         </>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-300">
+                  <td className="px-8 py-5">
+                    <span className="inline-flex items-center rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 dark:bg-slate-800/50 dark:border-white/5 dark:text-slate-400">
+                      <div className={`w-1.5 h-1.5 rounded-full mr-2 ${categories.find(c => c.name === tx.category)?.color || 'bg-slate-400'}`} />
                       {tx.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={`font-bold ${tx.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>
-                      {tx.type === 'expense' ? '-' : '+'} ₹{tx.amount.toLocaleString()}
+                  <td className="px-8 py-5 text-right">
+                    <span className={`text-base font-black tracking-tighter ${tx.type === 'expense' ? 'text-rose-500' : tx.type === 'income' ? 'text-emerald-500' : 'text-primary'}`}>
+                      {tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : ''} ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                   </td>
-                  <td className="px-6 py-4 w-20 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end gap-2 transition-opacity">
                       <button 
+                        type="button"
                         onClick={() => { setEditingData(tx); setIsModalOpen(true); }}
-                        className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
+                        title="Edit entry"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button 
+                         type="button"
                         onClick={() => {
-                          dispatch(deleteTransaction(tx.id)).then(() => {
-                            dispatch(fetchAccounts()); // Refresh accounts to reflect balance change
-                            toast.success("Transaction deleted");
-                          });
+                          if (confirm("Delete this transaction? This action will reverse balance changes.")) {
+                            dispatch(deleteTransaction(tx.id)).then(() => {
+                              dispatch(fetchAccounts()); // Refresh accounts to reflect balance change
+                              toast.success("Transaction deleted");
+                            });
+                          }
                         }}
-                        className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
+                        title="Purge entry"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
@@ -216,65 +482,35 @@ export default function TransactionsPageClient() {
               )}
             </tbody>
           </table>
-          
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-[#0b0d12] px-4 py-3 sm:px-6">
-              <div className="flex flex-1 justify-between sm:hidden">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-border-dark dark:bg-surface-dark dark:text-slate-300"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-border-dark dark:bg-surface-dark dark:text-slate-300"
-                >
-                  Next
-                </button>
-              </div>
-              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
-                    Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, filtered.length)}</span> of <span className="font-medium">{filtered.length}</span> results
-                  </p>
-                </div>
-                <div>
-                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-border-dark dark:hover:bg-white/5"
-                    >
-                      <span className="sr-only">Previous</span>
-                      &larr;
-                    </button>
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === i + 1 ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary' : 'text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-border-dark hover:bg-slate-50 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0'}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-border-dark dark:hover:bg-white/5"
-                    >
-                      <span className="sr-only">Next</span>
-                      &rarr;
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+      
+      {/* Universal Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2 pt-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {currentPage} <span className="mx-1 text-slate-300">/</span> {totalPages}
+            </p>
+            <div className="flex gap-2">
+                <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 text-slate-600 disabled:opacity-30 shadow-sm"
+                >
+                    <span className="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 text-slate-600 disabled:opacity-30 shadow-sm"
+                >
+                    <span className="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </div>
+      )}
+      
+      {/* Modals */}
       <TransactionModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
@@ -336,6 +572,7 @@ export default function TransactionsPageClient() {
           setIsAccountModalOpen(false);
         }}
       />
+
       <AddCategoryModal 
         isOpen={isCategoryModalOpen}
         category={editingCategory}
