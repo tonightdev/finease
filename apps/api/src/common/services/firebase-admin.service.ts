@@ -1,25 +1,34 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class FirebaseAdminService implements OnModuleInit {
+  private readonly logger = new Logger(FirebaseAdminService.name);
+
   onModuleInit() {
     if (!admin.apps.length) {
-      const configPath = path.join(
-        process.cwd(),
-        'finease-d7e51-firebase-adminsdk-fbsvc-d6c9c4d591.json',
-      );
-      console.log('Firebase config path:', configPath);
-      const serviceAccount = JSON.parse(
-        fs.readFileSync(configPath, 'utf8'),
-      ) as admin.ServiceAccount;
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+      if (!projectId || !clientEmail || !privateKey) {
+        throw new Error(
+          'Missing Firebase configuration. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in .env',
+        );
+      }
+
+      this.logger.log(`Initializing Firebase Admin for project: ${projectId}`);
 
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: 'finease-d7e51',
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+        projectId,
       });
+
+      admin.firestore().settings({ ignoreUndefinedProperties: true });
     }
   }
 

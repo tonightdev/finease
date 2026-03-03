@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FirebaseAdminService } from '../common/services/firebase-admin.service';
+import { FirebaseAdminService } from '@common/services/firebase-admin.service';
 import { Account } from '@repo/types';
 
 @Injectable()

@@ -5,7 +5,7 @@ import goalsReducer from './slices/goalsSlice';
 import statsReducer from './slices/statsSlice';
 import userReducer from './slices/userSlice';
 import categoriesReducer from './slices/categoriesSlice';
-import assetTypesReducer from './slices/assetTypesSlice';
+import assetClassesReducer from './slices/assetClassesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -15,7 +15,7 @@ export const store = configureStore({
     stats: statsReducer,
     user: userReducer,
     categories: categoriesReducer,
-    assetTypes: assetTypesReducer,
+    assetClasses: assetClassesReducer,
   },
 });
 

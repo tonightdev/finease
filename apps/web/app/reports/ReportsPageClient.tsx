@@ -19,7 +19,7 @@ export default function ReportsPageClient() {
   const categories = useSelector((state: RootState) => state.categories.items);
   const stats = useSelector((state: RootState) => state.stats.data);
 
-  const netWorth = accounts.reduce((sum: number, acc: { type: string; balance: number }) => acc.type !== 'loan' ? sum + acc.balance : sum - acc.balance, 0);
+  const netWorth = accounts.reduce((sum: number, acc: { type: string; balance: number }) => acc.type !== 'debt' ? sum + acc.balance : sum - acc.balance, 0);
   
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -38,6 +38,7 @@ export default function ReportsPageClient() {
 
   // Filtering logic based on viewType
   const filteredTx = transactions.filter((tx: Transaction) => {
+    if (tx.status === 'pending_confirmation') return false;
     const d = new Date(tx.date);
     const txYear = d.getFullYear();
     const txMonth = d.getMonth();
@@ -63,6 +64,7 @@ export default function ReportsPageClient() {
   
   const trendData = months.map((month, idx) => {
     const monthTx = transactions.filter(tx => {
+      if (tx.status === 'pending_confirmation') return false;
       const d = new Date(tx.date);
       return d.getMonth() === idx && d.getFullYear() === currentYear;
     });

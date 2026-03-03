@@ -4,9 +4,20 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { SignupDto, LoginDto } from './dto/auth.dto';
+import * as bcrypt from 'bcryptjs';
+import { FirebaseAdminService } from '@common/services/firebase-admin.service';
+import { SignupDto, LoginDto, ResetPasswordDto } from '@auth/dto/auth.dto';
+
+interface StoredUser {
+  id: string;
+  email: string;
+  displayName: string;
+  password: string;
+  gender?: string;
+  dob?: string;
+  role: string;
+  createdAt: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -72,11 +83,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const userData = userDoc.data() as Record<string, any>;
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      userData.password as string,
-    );
+    const userData = userDoc.data() as StoredUser;
+    const isPasswordValid = await bcrypt.compare(password, userData.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -88,7 +96,31 @@ export class AuthService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userProfile } = userData;
+    const { password: _pw, id: _id, ...userProfile } = userData;
     return { user: { id: userDoc.id, ...userProfile }, token };
+  }
+
+  async resetPassword(data: ResetPasswordDto) {
+    const { email, newPassword } = data;
+
+    const snapshot = await this.collection.where('email', '==', email).get();
+
+    if (snapshot.empty) {
+      // Return success even if not found to prevent email enumeration
+      return { message: 'Password reset successfully' };
+    }
+
+    const userDoc = snapshot.docs[0];
+    if (!userDoc) {
+      return { message: 'Password reset successfully' };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await userDoc.ref.update({
+      password: hashedPassword,
+    });
+
+    return { message: 'Password reset successfully' };
   }
 }

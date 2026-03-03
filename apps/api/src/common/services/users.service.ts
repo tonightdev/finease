@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { User } from '@repo/types';
-import { FirebaseAdminService } from './firebase-admin.service';
+import { FirebaseAdminService } from '@common/services/firebase-admin.service';
 
 @Injectable()
 export class UsersService {

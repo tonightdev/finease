@@ -29,6 +29,16 @@ export const deleteTransaction = createAsyncThunk('transactions/delete', async (
   return id;
 });
 
+export const updateTransaction = createAsyncThunk('transactions/update', async ({ id, data }: { id: string, data: Partial<Transaction> }) => {
+  const response = await api.put<Transaction>(`/finance/transactions/${id}`, data);
+  return response.data;
+});
+
+export const confirmTransaction = createAsyncThunk('transactions/confirm', async (id: string) => {
+  const response = await api.post<Transaction>(`/finance/transactions/${id}/confirm`);
+  return response.data;
+});
+
 export const transactionsSlice = createSlice({
   name: 'transactions',
   initialState,
@@ -51,6 +61,18 @@ export const transactionsSlice = createSlice({
       })
       .addCase(deleteTransaction.fulfilled, (state, action) => {
         state.items = state.items.filter((t) => t.id !== action.payload);
+      })
+      .addCase(confirmTransaction.fulfilled, (state, action) => {
+        const index = state.items.findIndex(t => t.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(updateTransaction.fulfilled, (state, action) => {
+        const index = state.items.findIndex(t => t.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   },
 });

@@ -16,7 +16,7 @@ interface AddInvestmentModalProps {
 }
 
 export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddInvestmentModalProps) {
-  const assetTypes = useSelector((state: RootState) => state.assetTypes.items);
+  const assetTypes = useSelector((state: RootState) => state.assetClasses.items);
   const [formData, setFormData] = useState({
     assetName: "",
     assetType: assetTypes[0]?.name || "Equity",

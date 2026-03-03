@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { AnalyticsService } from './analytics.service';
+import { AnalyticsService } from '@analytics/analytics.service';
 import { DashboardStats } from '@repo/types';
 
 @Controller('analytics')

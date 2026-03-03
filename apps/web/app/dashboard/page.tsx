@@ -33,10 +33,10 @@ export default function Home() {
 
   const regularAccounts = accounts.filter(acc => acc.type === 'bank' || acc.type === 'cash' || acc.type === 'card');
   const investmentAccounts = accounts.filter(acc => acc.type === 'investment');
-  const loans = accounts.filter(acc => acc.type === 'loan');
+  const debts = accounts.filter(acc => acc.type === 'debt');
 
-  const assets = accounts.filter(acc => acc.type !== 'loan').reduce((sum, item) => sum + item.balance, 0);
-  const liabilities = Math.abs(loans.reduce((sum, item) => sum + item.balance, 0));
+  const assets = accounts.filter(acc => acc.type !== 'debt').reduce((sum, item) => sum + item.balance, 0);
+  const liabilities = Math.abs(debts.reduce((sum, item) => sum + item.balance, 0));
   const realTimeNetWorth = assets - liabilities;
 
   // Real-time asset allocation from investments
@@ -66,6 +66,7 @@ export default function Home() {
   const insights = useMemo(() => {
     const now = new Date();
     const last30Days = transactions.filter(tx => {
+      if (tx.status === 'pending_confirmation') return false;
       const d = new Date(tx.date);
       const diffTime = Math.abs(now.getTime() - d.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

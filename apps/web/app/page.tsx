@@ -1,188 +1,236 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Target, BrainCircuit, ShieldCheck } from "lucide-react";
+import { 
+  ArrowRight, 
+  CheckCircle2, 
+  Target, 
+  ShieldCheck, 
+  TrendingUp, 
+  Layers, 
+  Zap, 
+  Globe, 
+  Lock
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-32 lg:pb-40 flex-grow">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-background-dark dark:via-[#111827] dark:to-[#0f172a]"></div>
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[500px] w-[500px] rounded-full bg-primary/5 dark:bg-primary/10 blur-[100px]"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-[500px] w-[500px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px]"></div>
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#020408] selection:bg-primary/30">
+      {/* Premium Navigation (Minimal) */}
+
+      {/* Hero Section: The Architect's View */}
+      <section className="relative pt-16 pb-24 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-40 overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute inset-0 -z-10 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-primary/10 rounded-full blur-[120px] opacity-30 dark:opacity-20 translate-y-[-50%]" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[100px] opacity-20 translate-x-[20%]" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
-            <div className="lg:col-span-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-6">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                Now available in India
-              </div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl md:text-6xl lg:leading-tight">
-                Financial Command <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">Center</span>
-              </h1>
-              <p className="mt-6 text-lg leading-relaxed text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0">
-                Comprehensive wealth management and goal tracking tailored for the modern Indian investor. Track your INR assets, investments, and expenses in one secure place.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link 
-                  href="/signup" 
-                  className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark"
-                >
-                  Start Your Journey
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-                <Link 
-                  href="/login" 
-                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 dark:border-border-dark dark:bg-surface-dark dark:text-white dark:hover:bg-border-dark dark:focus:ring-offset-background-dark"
-                >
-                  Log in
-                </Link>
-              </div>
+          <div className="text-center space-y-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">The Ultimate Financial Command Center</span>
+            </motion.div>
 
-              <div className="mt-10 flex items-center justify-center lg:justify-start gap-6 text-slate-400 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <span>No credit card required</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <span>14-day free trial</span>
-                </div>
-              </div>
-            </div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tight leading-[0.95] max-w-5xl mx-auto"
+            >
+              Architect Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">Wealth</span>
+            </motion.h1>
 
-            <div className="relative mt-16 lg:col-span-6 lg:mt-0">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary to-emerald-500 rounded-2xl opacity-20 blur-lg"></div>
-              <div className="relative rounded-2xl border border-gray-200 dark:border-border-dark bg-white dark:bg-surface-dark shadow-2xl overflow-hidden aspect-[4/3] group flex flex-col items-center justify-center">
-                <div className="absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-[#1f232b] border-b border-gray-200 dark:border-border-dark flex items-center px-4 gap-2">
-                  <div className="size-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                  <div className="size-3 rounded-full bg-amber-500/20 border border-amber-500/50"></div>
-                  <div className="size-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
-                </div>
-                
-                {/* Mock dashboard visual */}
-                <div className="mt-8 p-6 flex-grow flex flex-col justify-center items-center h-full w-full opacity-60 dark:opacity-40">
-                  <div className="text-primary opacity-50 mb-4">
-                     <span className="material-symbols-outlined !text-[80px]">monitoring</span>
-                  </div>
-                  <div className="text-xl font-bold">Interactive Dashboard</div>
-                </div>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium"
+            >
+              Master every rupee with real-time analytics, automated confirmation ledgers, and goal-driven intelligence. No subscriptions. No ads. Just pure financial command.
+            </motion.p>
 
-                <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border border-gray-200 dark:border-border-dark rounded-xl shadow-xl transform transition-transform group-hover:-translate-y-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Balance</span>
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
-                      <ArrowRight className="w-3 h-3 mr-1 -rotate-45" /> +12.5%
-                    </span>
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white mb-3">₹ 24,50,000</div>
-                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-primary to-emerald-400 w-3/4"></div>
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] text-slate-500">
-                    <span>Monthly Goal</span>
-                    <span>75% Achieved</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            >
+              <Link 
+                href="/signup" 
+                className="w-full sm:w-auto px-8 py-5 bg-primary text-white text-xs font-black uppercase tracking-[0.2em] rounded-[1.5rem] shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                Start Constructing
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link 
+                href="/login" 
+                className="w-full sm:w-auto px-8 py-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-black uppercase tracking-[0.2em] rounded-[1.5rem] border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center"
+              >
+                Access Interface
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 bg-white dark:bg-[#0b0d11]">
+      {/* Feature Bento Grid */}
+      <section className="py-24 relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              Why Choose FinEase?
-            </h2>
-            <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-              Designed specifically for the nuances of the Indian financial ecosystem, giving you control over your future.
-            </p>
+          <div className="flex flex-col items-center text-center mb-16 space-y-4">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Core Modules</h2>
+            <p className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">The Architect&apos;s Toolkit</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            <div className="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
-              <div className="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* Wealth Command (Large Row) */}
+            <div className="md:col-span-8 group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-8 sm:p-12 overflow-hidden hover:border-primary/50 transition-all shadow-sm">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                <TrendingUp className="w-32 h-32 text-primary" />
+              </div>
+              <div className="relative z-10 max-w-md">
+                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">Wealth Nexus Command</h3>
+                <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                  A unified ledger for Bank Accounts, Investments, Liabilites, and Hidden Assets. Track your Net Worth across the total INR ecosystem with sub-second precision.
+                </p>
+                <div className="mt-8 flex gap-3">
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-500">Real-time valuation</div>
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-500">Asset classification</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Smart Automated Ledger */}
+            <div className="md:col-span-4 group relative bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2.5rem] p-8 sm:p-12 overflow-hidden hover:scale-[1.02] transition-all shadow-2xl">
+              <div className="relative z-10">
+                <div className="size-12 rounded-2xl bg-white/10 dark:bg-slate-900/10 flex items-center justify-center mb-6">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <h3 className="text-2xl font-black mb-4 uppercase tracking-tighter">Automated Ledger</h3>
+                <p className="opacity-70 font-medium leading-relaxed">
+                  Bill cycles and recurring payments detected automatically. Confirm with a single tap to update balances without the manual entry overhead.
+                </p>
+              </div>
+            </div>
+
+            {/* Goal Navigator */}
+            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-8 sm:p-12 overflow-hidden hover:border-emerald-500/50 transition-all shadow-sm">
+              <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                 <Target className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Goal Tracking</h3>
-              <p className="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                Set specific financial milestones like buying a home or retirement. We calculate the monthly SIP needed to get you there.
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">Goal Navigator</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                Set milestones for retirement or real estate. Our engine calculates exactly how much you need to save per month based on your current asset performance.
               </p>
             </div>
 
-            <div className="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
-              <div className="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                <BrainCircuit className="w-6 h-6" />
+            {/* Privacy Shield */}
+            <div className="md:col-span-8 group relative bg-gradient-to-br from-primary to-emerald-500 text-white rounded-[2.5rem] p-8 sm:p-12 overflow-hidden shadow-xl">
+              <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+              <div className="relative z-10 flex flex-col sm:flex-row items-center gap-8">
+                <div className="size-20 rounded-3xl bg-white/20 backdrop-blur-xl flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-10 h-10" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black mb-4 uppercase tracking-tighter">The Sovereignty Protocol</h3>
+                  <p className="opacity-90 font-medium leading-relaxed">
+                    Encryption is not a feature; it is our foundation. Your data is encrypted locally and replicated via zero-knowledge proofs. We don&apos;t just protect your data—we never see it.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Smart Insights</h3>
-              <p className="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                AI-driven analysis of your spending habits. Get personalized recommendations to save tax and optimize investments.
-              </p>
-            </div>
-
-            <div className="group relative rounded-2xl border border-slate-200 bg-slate-50 p-8 transition-all hover:shadow-lg dark:border-border-dark dark:bg-surface-dark dark:hover:border-primary/50">
-              <div className="mb-6 inline-flex size-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Secure & Private</h3>
-              <p className="mt-3 text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                Bank-grade 256-bit encryption. Your financial data is encrypted locally and never sold to third-party advertisers.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-primary/5 dark:bg-surface-dark"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-        <div className="mx-auto max-w-4xl relative text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl mb-6">
-            Ready to master your finances?
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of Indian investors who are taking control of their wealth with FinEase. Start your free trial today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      {/* Social Trust / No Subscription Section */}
+      <section className="py-24 bg-white dark:bg-slate-950/50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase">Built for the <br/><span className="text-primary italic">Absolute</span> Professional</h2>
+              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
+                FinEase is not a &quot;simple app&quot;. It is a high-performance instrument for those who take their capital seriously.
+              </p>
+              <ul className="space-y-4 pt-4">
+                {[
+                  "No generic 'Budgeting'—Advanced Ledger Architecting",
+                  "No recurring monthly subscription fees",
+                  "Direct Firestore access with local replication",
+                  "Comprehensive Multi-Asset Support (Fixed & Growth)"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="relative">
+               <div className="aspect-square rounded-[3rem] bg-gradient-to-tr from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-12 overflow-hidden shadow-inner">
+                  <div className="text-center space-y-4">
+                    <Globe className="w-24 h-24 text-primary/20 mx-auto" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Identity Nodes: Secured</p>
+                    <div className="flex gap-2 justify-center">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                    </div>
+                  </div>
+               </div>
+               <div className="absolute -bottom-8 -left-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-3xl shadow-2xl flex items-center gap-4">
+                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Layer</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">Active Encryption</p>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final Call to Action */}
+      <section className="py-24 pb-40 relative overflow-hidden">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h2 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mb-8">Ready to <span className="italic font-serif">Command?</span></h2>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link 
               href="/signup" 
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-base font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark"
+              className="px-10 py-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-[0.3em] rounded-3xl hover:scale-105 active:scale-95 transition-all shadow-2xl"
             >
-              Get Started Free
+              Request Access Node
             </Link>
           </div>
+          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Final Encryption Block Enabled</p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white dark:bg-background-dark dark:border-border-dark">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded bg-primary text-white text-xs">
-                <span className="material-symbols-outlined text-[16px]">account_balance_wallet</span>
-              </div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">FinEase</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-8">
-              <a className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Privacy Policy</a>
-              <a className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Terms of Service</a>
-              <a className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="#">Contact Us</a>
-            </div>
+      {/* Mini Footer */}
+      <footer className="mt-auto border-t border-slate-200 dark:border-white/5 py-12 bg-white dark:bg-slate-950">
+        <div className="mx-auto max-w-7xl px-4 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-2 grayscale group-hover:grayscale-0 transition-all">
+             <span className="text-lg font-black text-slate-900 dark:text-white tracking-tighter">Fin<span className="text-primary">Ease</span></span>
           </div>
-          <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-500">
-             © {new Date().getFullYear()} FinEase. All rights reserved.
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">© 2026 Sovereign Wealth Architect. India.</p>
+          <div className="flex gap-8">
+            <a href="#" className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">Infrastructure</a>
+            <a href="#" className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">Privacy</a>
+            <a href="#" className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">Terminal</a>
           </div>
         </div>
       </footer>

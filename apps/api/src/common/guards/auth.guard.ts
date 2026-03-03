@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import type { RequestWithUser } from '../interfaces/request.interface';
+import type {
+  JwtPayload,
+  RequestWithUser,
+} from '@common/interfaces/request.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -26,11 +29,10 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: 'finease-secret-123',
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
       });
-      // Attach payload to request
-      (request as RequestWithUser).user = payload as RequestWithUser['user'];
+      (request as RequestWithUser).user = payload;
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

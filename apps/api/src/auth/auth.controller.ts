@@ -1,7 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AuthService } from './auth.service';
-import { SignupDto, LoginDto } from './dto/auth.dto';
+import { AuthService } from '@auth/auth.service';
+import { SignupDto, LoginDto, ResetPasswordDto } from '@auth/dto/auth.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -18,5 +18,11 @@ export class AuthController {
   @Post('login')
   login(@Body() data: LoginDto) {
     return this.authService.login(data);
+  }
+
+  @ApiOperation({ summary: 'Reset user password' })
+  @Post('reset-password')
+  resetPassword(@Body() data: ResetPasswordDto) {
+    return this.authService.resetPassword(data);
   }
 }

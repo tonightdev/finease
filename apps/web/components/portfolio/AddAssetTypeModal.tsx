@@ -39,48 +39,48 @@ export function AddAssetTypeModal({ isOpen, onClose, onSave, onDelete, assetType
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-border-dark shadow-2xl overflow-hidden"
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden"
         >
-          <div className="p-6 border-b border-slate-100 dark:border-border-dark flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {assetType ? "Edit Asset Class" : "New Asset Class"}
+          <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              {assetType ? "Modify" : "New"} <span className="text-primary">Class</span>
             </h3>
-            <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-slate-500" />
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all active:scale-90">
+              <X className="w-5 h-5 text-slate-400" />
             </button>
           </div>
 
-          <div className="p-6 space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Asset Class Name</label>
+          <div className="p-8 pt-4 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Linguistic Label</label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Mutual Funds"
-                className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-white/5 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Color Theme</label>
-              <div className="flex flex-wrap gap-3 mt-2">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Visual Signature</label>
+              <div className="flex flex-wrap gap-4 mt-2">
                 {colors.map(c => (
                   <button 
                     key={c}
                     onClick={() => setColor(c)}
-                    className={`w-8 h-8 rounded-full ${c} ${color === c ? 'ring-2 ring-offset-2 ring-primary dark:ring-offset-surface-dark' : 'hover:scale-110 transition-transform'}`}
+                    className={`w-10 h-10 rounded-2xl ${c} ${color === c ? 'ring-4 ring-offset-4 ring-primary dark:ring-offset-slate-900 scale-110 shadow-lg shadow-primary/20' : 'hover:scale-105 transition-all opacity-80 hover:opacity-100'}`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="flex gap-3 mt-4">
+            <div className="flex flex-col gap-3 pt-4">
               <button 
                 onClick={() => {
                   if(name.trim()) {
@@ -89,17 +89,17 @@ export function AddAssetTypeModal({ isOpen, onClose, onSave, onDelete, assetType
                     setColor("bg-indigo-500");
                   }
                 }}
-                className="flex-1 py-4 bg-primary hover:bg-primary-dark text-white font-black rounded-xl shadow-lg shadow-primary/25 transition-all active:scale-[0.98]"
+                className="w-full py-5 bg-primary hover:bg-primary-dark text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
               >
-                {assetType ? "Update Asset Class" : "Create Asset Class"}
+                {assetType ? "Commit Changes" : "Create Entity"}
               </button>
               
               {assetType && onDelete && (
                 <button 
                   onClick={() => onDelete(assetType.id)}
-                  className="px-6 py-4 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-xl transition-all active:scale-[0.98]"
+                  className="w-full py-4 text-rose-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-all"
                 >
-                  Delete
+                  Purge Asset Class
                 </button>
               )}
             </div>

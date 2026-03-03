@@ -1,135 +1,165 @@
-# Turborepo starter
+# FinEase — Wealth Architect & Goal Navigator
 
-This Turborepo starter is maintained by the Turborepo core team.
+A monorepo personal finance application built with **Next.js**, **NestJS**, **Firebase**, and **Turborepo**.
 
-## Using this example
+---
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## 🗂️ Project Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+finease/
+├── apps/
+│   ├── api/          # NestJS backend REST API
+│   └── web/          # Next.js frontend application
+└── packages/
+    ├── types/        # Shared TypeScript interfaces & types
+    ├── ui/           # Shared UI components
+    ├── eslint-config/ # Shared ESLint config
+    └── typescript-config/ # Shared TS config
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+## ✅ Prerequisites
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- **Node.js**: v20+
+- **npm**: v10+
+- A [Firebase](https://firebase.google.com/) project with **Authentication** and **Firestore** enabled
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## 🔐 Environment Configuration
 
-```
-cd my-turborepo
+> ⚠️ **Never commit `.env` files or Firebase service account JSON files to Git.**
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+### API (`apps/api`)
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp apps/api/.env.example apps/api/.env
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+| Variable                | Description                                         |
+| ----------------------- | --------------------------------------------------- |
+| `PORT`                  | Port for the NestJS API (default: 3001)             |
+| `JWT_SECRET`            | Secret key used to sign JWT tokens                  |
+| `FIREBASE_PROJECT_ID`   | Your Firebase project ID                            |
+| `FIREBASE_CLIENT_EMAIL` | Service account client email                        |
+| `FIREBASE_PRIVATE_KEY`  | Service account private key (use `\n` for newlines) |
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+### Web (`apps/web`)
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Copy `.env.example` to `.env.local` and fill in your Firebase web config:
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+| Variable                                   | Description                                        |
+| ------------------------------------------ | -------------------------------------------------- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase web API key                               |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain                               |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase project ID                                |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket                            |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID                       |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase app ID                                    |
+| `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`      | Firebase measurement ID (Analytics)                |
+| `NEXT_PUBLIC_API_URL`                      | Backend API URL (default: `http://localhost:3001`) |
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+---
 
+## 🚀 Getting Started
+
+### 1. Install dependencies
+
+```bash
+npm install
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### 2. Configure environment variables
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+# Edit both files with your actual credentials
 ```
 
-## Useful Links
+### 3. Run in development mode
 
-Learn more about the power of Turborepo:
+```bash
+# Run both the API and Web simultaneously
+npm run dev
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+# Or run individually:
+npm run dev --filter=api     # API at http://localhost:3001
+npm run dev --filter=web     # Web at http://localhost:3000
+```
+
+---
+
+## 🛠️ Available Scripts
+
+| Command               | Description                   |
+| --------------------- | ----------------------------- |
+| `npm run dev`         | Start all apps in watch mode  |
+| `npm run build`       | Build all apps for production |
+| `npm run lint`        | Lint all packages             |
+| `npm run check-types` | Run TypeScript type checking  |
+
+---
+
+## 🏗️ Architecture
+
+### Backend (NestJS)
+
+- **Auth Module** — JWT-based authentication with Firebase user lookup. Tokens expire in 24h.
+- **Finance Module** — REST endpoints for Accounts, Transactions, Goals, Categories, and Asset Classes.
+- **Analytics Module** — Aggregated stats for dashboards.
+
+### Frontend (Next.js 16 App Router)
+
+- **Store** — Redux Toolkit slices for all domains (accounts, transactions, goals, categories, assetClasses, stats).
+- **Auth** — Firebase Auth with JWT exchange to the NestJS backend.
+- **Pages** — Dashboard, Transactions, Goals, Portfolio, Reports, Settings.
+
+### Key Features
+
+- 📊 **Dashboard** — Net worth, asset allocation, goal velocity, and financial freedom score.
+- 💳 **Transactions** — Manual and automated recurring transactions with pending confirmation flow.
+- 🎯 **Goals** — Financial goal tracking with progress and monthly requirement calculations.
+- 📈 **Reports** — Income/expense charts, savings velocity, and category breakdown.
+- 🏦 **Portfolio** — Investment account management with asset class breakdown.
+
+---
+
+## 🔥 Firebase Setup
+
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable **Authentication** (Email/Password provider)
+3. Enable **Firestore** in Native mode
+4. Generate a **Service Account Key** from Project Settings → Service Accounts → Generate new private key
+5. Extract values from the downloaded JSON and place them in `apps/api/.env`
+
+### Required Firestore Indexes
+
+For optimal transaction query performance, create this composite index in the Firebase Console:
+
+| Collection     | Fields                        | Order |
+| -------------- | ----------------------------- | ----- |
+| `transactions` | `userId` (ASC), `date` (DESC) | —     |
+
+---
+
+## 🔒 Security Notes
+
+- **`.env` files** are listed in `.gitignore` and should **never** be committed.
+- **Firebase service account JSON** should also never be committed — all credentials are now read from environment variables.
+- The JWT secret (`JWT_SECRET`) should be a strong, random string in production.
+- All API endpoints are protected by the `AuthGuard` which validates the JWT on every request.
+
+---
+
+## 📝 License
+
+UNLICENSED — Private project.

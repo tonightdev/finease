@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import type { AxiosError } from "axios";
 
 export default function SignupPage() {
   const { loginWithGoogle, user } = useAuth();
-  const [userName, setUserName] = useState("Dhaval Pithwa");
-  const [userEmail, setUserEmail] = useState("dhavalpithwa@gmail.com");
-  const [password, setPassword] = useState("password123");
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -26,8 +27,9 @@ export default function SignupPage() {
     try {
       await loginWithGoogle(userEmail, userName, password);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message: string }>;
+      setError(axiosErr.response?.data?.message ?? axiosErr.message);
     }
   };
 
@@ -52,6 +54,7 @@ export default function SignupPage() {
                type="text" 
                value={userName}
                onChange={(e) => setUserName(e.target.value)}
+               placeholder="John Doe"
                className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
@@ -62,6 +65,7 @@ export default function SignupPage() {
                type="email" 
                value={userEmail}
                onChange={(e) => setUserEmail(e.target.value)}
+               placeholder="you@example.com"
                className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
@@ -72,6 +76,7 @@ export default function SignupPage() {
                type="password" 
                value={password}
                onChange={(e) => setPassword(e.target.value)}
+               placeholder="Create a strong password"
                className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
