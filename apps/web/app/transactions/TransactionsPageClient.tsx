@@ -6,33 +6,45 @@ import { TransactionModal } from "@/components/transactions/TransactionModal";
 import { TransactionDetailsModal } from "@/components/transactions/TransactionDetailsModal";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store";
-import { addTransaction, updateTransaction, deleteTransaction } from "@/store/slices/transactionsSlice";
-import { addAccount, updateAccountBalance } from "@/store/slices/accountsSlice";
-import { addCategory, updateCategory, removeCategory } from "@/store/slices/categoriesSlice";
-import { updateGoal } from "@/store/slices/goalsSlice";
+import { RootState, AppDispatch } from "@/store";
+import { fetchTransactions, createTransaction, deleteTransaction, updateTransaction, confirmTransaction } from "@/store/slices/transactionsSlice";
+import { fetchAccounts, createAccount } from "@/store/slices/accountsSlice";
+import { addCategoryAction, updateCategoryAction, removeCategoryAction } from "@/store/slices/categoriesSlice";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
-import { Transaction } from "@repo/types";
-import { Trash2, Edit2, Filter, X, ChevronDown, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
+import { CategoryParentType, Transaction } from "@repo/types";
+import { Trash2, Edit2, Filter, X, ChevronDown, Calendar as CalendarIcon, ArrowRight, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { formatDate } from "@/lib/utils";
+import { useEffect } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+
+const liquidTypes = ["bank", "cash", "card"];
 
 export default function TransactionsPageClient() {
-  const dispatch = useDispatch();
+  const { user } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
   const transactions = useSelector((state: RootState) => state.transactions.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const categories = useSelector((state: RootState) => state.categories.items);
   const goals = useSelector((state: RootState) => state.goals.items);
   
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchTransactions());
+      dispatch(fetchAccounts());
+    }
+  }, [dispatch, user]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"actual" | "automated">("actual");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isCategoryEditMode, setIsCategoryEditMode] = useState(false);
   const [editingData, setEditingData] = useState<Transaction | null>(null);
   const [viewingData, setViewingData] = useState<Transaction | null>(null);
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; color: string } | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   // Filter States
   const [filterCategory, setFilterCategory] = useState("all");
@@ -45,22 +57,67 @@ export default function TransactionsPageClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const pendingAutomatedCount = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0] || "";
+    return (transactions || []).filter(t => 
+      t && t.isAutomated && 
+      t.status === 'pending_confirmation' && 
+      t.date && (t.date.split('T')[0] ?? "") <= todayStr
+    ).length;
+  }, [transactions]);
+
+  const explodedTransactions = useMemo(() => {
+    const result: Transaction[] = [];
+    (transactions || []).forEach(t => {
+      // Add the primary transaction
+      result.push(t);
+
+      // If it's a transfer between liquid accounts, add a virtual "credit" entry
+      if (t.type === 'transfer' && t.toAccountId) {
+        const toAcc = accounts.find(a => a.id === t.toAccountId);
+        if (toAcc && liquidTypes.includes(toAcc.type)) {
+          result.push({
+            ...t,
+            id: `${t.id}-credit`,
+            accountId: t.toAccountId,
+            toAccountId: t.accountId,
+            type: 'income',
+            balanceAfter: t.toBalanceAfter,
+            isVirtual: true,
+          } as Transaction & { isVirtual: boolean });
+        }
+      }
+    });
+    return result;
+  }, [transactions, accounts]);
+
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Transaction | 'date'; direction: 'asc' | 'desc' }>({
+    key: 'date',
+    direction: 'desc'
+  });
+
+  const handleSort = (key: keyof Transaction | 'date') => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
+
   const filtered = useMemo(() => {
-    return transactions.filter((t: Transaction) => {
+    const result = explodedTransactions.filter((t: Transaction) => {
       // Basic Tab & Search
       const isSearchMatch = t.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const isTabMatch = activeTab === "automated" ? !!t.isAutomated : !t.isAutomated;
+      const isTabMatch = activeTab === "automated" 
+        ? (!!t.isAutomated && t.status === 'pending_confirmation')
+        : (t.status === 'completed');
+      
       if (!isSearchMatch || !isTabMatch) return false;
 
       // Category Filter
       if (filterCategory !== "all" && t.category !== filterCategory) return false;
 
       // Account Filter
-      if (filterAccount !== "all") {
-        const isSource = t.accountId === filterAccount;
-        const isDest = t.toAccountId === filterAccount;
-        if (!isSource && !isDest) return false;
-      }
+      if (filterAccount !== "all" && t.accountId !== filterAccount) return false;
 
       // Type Filter
       if (filterType !== "all" && t.type !== filterType) return false;
@@ -77,7 +134,29 @@ export default function TransactionsPageClient() {
 
       return true;
     });
-  }, [transactions, searchTerm, activeTab, filterCategory, filterAccount, filterType, filterDateFrom, filterDateTo]);
+
+    // Apply Sorting
+    const sortedResult = [...result].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+      
+      if (sortConfig.key === 'date') {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      return sortConfig.direction === 'asc' 
+        ? String(aValue || "").localeCompare(String(bValue || ""))
+        : String(bValue || "").localeCompare(String(aValue || ""));
+    });
+
+    return sortedResult;
+  }, [explodedTransactions, searchTerm, activeTab, filterCategory, filterAccount, filterType, filterDateFrom, filterDateTo, sortConfig, categories, accounts]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedTransactions = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -140,9 +219,6 @@ export default function TransactionsPageClient() {
             className={`flex-1 text-center border-b-2 py-4 px-1 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] inline-flex items-center justify-center gap-2 transition-colors ${activeTab === 'actual' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
             Actual
-            <span className={`rounded-full py-0.5 px-2 text-[9px] font-bold ${activeTab === 'actual' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800'}`}>
-              {transactions.filter((t: Transaction) => !t.isAutomated).length}
-            </span>
           </button>
           <button 
             type="button"
@@ -150,59 +226,55 @@ export default function TransactionsPageClient() {
             className={`flex-1 text-center border-b-2 py-4 px-1 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] inline-flex items-center justify-center gap-2 transition-colors ${activeTab === 'automated' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
             Automated
-            <span className={`rounded-full py-0.5 px-2 text-[9px] font-bold ${activeTab === 'automated' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600 dark:bg-slate-800'}`}>
-              {transactions.filter((t: Transaction) => !!t.isAutomated).length}
-            </span>
+            {pendingAutomatedCount > 0 && (
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold animate-pulse">
+                {pendingAutomatedCount}
+              </span>
+            )}
           </button>
         </nav>
       </div>
 
-      {/* Categories Chips - Wrapping for No Scroll on Mobile */}
-      <div className="space-y-4">
+      {/* Categories Section - Redesigned for Premium Look */}
+      <div className="space-y-5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Expense Categories</h3>
           <div className="flex items-center gap-3">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest hidden xl:block">Double-click or icon to edit</p>
-            <button 
-              onClick={() => setIsCategoryEditMode(!isCategoryEditMode)}
-              className={`xl:hidden flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isCategoryEditMode ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}
-            >
-              <Edit2 className="w-2.5 h-2.5" />
-              {isCategoryEditMode ? 'Done' : 'Edit'}
-            </button>
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Expense Categories</h3>
+            <div className="h-px w-8 bg-slate-200 dark:bg-slate-800" />
           </div>
+          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block">Double-tap or click icon to manage</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 py-2">
+        <div className="flex flex-wrap items-center gap-3 py-2">
           <button
             onClick={() => { setFilterCategory("all"); setCurrentPage(1); }}
-            className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${filterCategory === 'all' ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+            className={`group relative px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${filterCategory === 'all' ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-xl shadow-slate-200 dark:shadow-none' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20'}`}
           >
-            All
+            All Ledger
           </button>
           {categories.map(c => (
             <div key={c.id} className="relative group/chip">
               <button 
                 onClick={() => { 
-                  if (isCategoryEditMode) {
-                    setEditingCategory(c);
-                    setIsCategoryModalOpen(true);
-                  } else {
-                    setFilterCategory(c.name); 
-                    setCurrentPage(1); 
-                  }
+                  setFilterCategory(c.id); 
+                  setCurrentPage(1); 
                 }}
                 onDoubleClick={() => { setEditingCategory(c); setIsCategoryModalOpen(true); }}
-                className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${isCategoryEditMode || filterCategory === c.name ? 'pr-7' : ''} ${filterCategory === c.name ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-950 border-transparent shadow-md' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:border-primary/30'} ${isCategoryEditMode ? 'border-primary/50 bg-primary/5' : ''}`}
+                className={`pl-4 pr-10 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border flex items-center gap-3 relative overflow-hidden backdrop-blur-sm ${filterCategory === c.id ? 'border-primary bg-primary/[0.03] text-primary dark:text-primary-light shadow-lg shadow-primary/5' : 'bg-white/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20'}`}
               >
-                <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
+                <div className={`w-2 h-2 rounded-full shadow-sm ${c.color} ${filterCategory === c.id ? 'ring-4 ring-primary/20 scale-110' : ''} transition-all`} />
                 {c.name}
               </button>
+              
               <button 
-                onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }}
-                className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-primary transition-colors ${isCategoryEditMode ? 'flex text-primary' : 'hidden xl:flex'}`}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setEditingCategory(c); 
+                  setIsCategoryModalOpen(true); 
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary dark:hover:text-primary-light transition-all rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 opacity-100 sm:opacity-0 group-hover/chip:opacity-100 focus:opacity-100 z-10"
                 title="Edit category"
               >
-                <Edit2 className="w-2.5 h-2.5" />
+                <Edit2 className="w-3 h-3" />
               </button>
             </div>
           ))}
@@ -334,14 +406,21 @@ export default function TransactionsPageClient() {
               <div className="flex justify-between items-start mb-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${categories.find(c => c.name === tx.category)?.color || 'bg-slate-400'}`} />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tx.category}</span>
+                    <div className={`w-2 h-2 rounded-full ${categories.find(c => c.id === tx.category)?.color || 'bg-slate-400'}`} />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {categories.find(c => c.id === tx.category)?.name || tx.category}
+                    </span>
                   </div>
                   <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">{tx.description}</h4>
                 </div>
-                <div className={`text-right font-black text-base tracking-tighter ${tx.type === 'expense' ? 'text-rose-500' : tx.type === 'income' ? 'text-emerald-500' : 'text-primary'}`}>
-                  {tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : ''} ₹{tx.amount.toLocaleString()}
+                <div className={`text-right font-black text-base tracking-tighter ${tx.type === 'expense' || tx.type === 'transfer' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  {tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+'} ₹{tx.amount.toLocaleString()}
                 </div>
+              </div>
+              
+              <div className="flex justify-between items-center mb-4 px-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Balance After</span>
+                <span className="text-xs font-black text-slate-600 dark:text-slate-300 tracking-tight">₹{(tx.balanceAfter ?? 0).toLocaleString()}</span>
               </div>
               
               <div className="flex justify-between items-end pt-4 border-t border-slate-50 dark:border-white/5">
@@ -359,9 +438,35 @@ export default function TransactionsPageClient() {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{formatDate(tx.date)}</span>
+                  {tx.status === 'pending_confirmation' && (
+                    <span className="text-[7px] font-black uppercase tracking-widest text-orange-500 bg-orange-500/5 px-1.5 py-0.5 rounded border border-orange-500/10">Pending Review</span>
+                  )}
                   <div className="flex items-center gap-2">
+                      {tx.isAutomated && tx.status === 'pending_confirmation' && (String(tx.date).split('T')[0] || "") <= (new Date().toISOString().split('T')[0] || "") && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(confirmTransaction(tx.id)).then(() => {
+                              dispatch(fetchAccounts());
+                              dispatch(fetchTransactions());
+                            });
+                            toast.success("Transaction Confirmed");
+                          }}
+                          className="px-4 py-1.5 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary/20 active:scale-95"
+                        >
+                          Confirm
+                        </button>
+                      )}
                       <button onClick={(e) => { e.stopPropagation(); setEditingData(tx); setIsModalOpen(true); }} className="p-1.5 text-slate-400"><Edit2 className="w-3 h-3" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); /* delete logic ... */ }} className="p-1.5 text-rose-400"><Trash2 className="w-3 h-4" /></button>
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setTransactionToDelete(tx);
+                        }} 
+                        className="p-1.5 text-rose-400"
+                      >
+                        <Trash2 className="w-3 h-4" />
+                      </button>
                   </div>
                 </div>
               </div>
@@ -376,11 +481,40 @@ export default function TransactionsPageClient() {
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
             <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
               <tr>
-                <th className="px-8 py-6" scope="col">Execution Date</th>
-                <th className="px-8 py-6" scope="col">Description</th>
+                <th className="px-8 py-6 cursor-pointer hover:text-primary transition-colors" scope="col" onClick={() => handleSort('date')}>
+                  <div className="flex items-center gap-2">
+                    Execution Date
+                    {sortConfig.key === 'date' && (
+                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="px-8 py-6 cursor-pointer hover:text-primary transition-colors" scope="col" onClick={() => handleSort('description')}>
+                  <div className="flex items-center gap-2">
+                    Description
+                    {sortConfig.key === 'description' && (
+                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                    )}
+                  </div>
+                </th>
                 <th className="px-8 py-6" scope="col">Entity</th>
-                <th className="px-8 py-6" scope="col">Nexus Category</th>
-                <th className="px-8 py-6 text-right" scope="col">Quantum Amount</th>
+                <th className="px-8 py-6 cursor-pointer hover:text-primary transition-colors" scope="col" onClick={() => handleSort('category')}>
+                  <div className="flex items-center gap-2">
+                    Nexus Category
+                    {sortConfig.key === 'category' && (
+                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="px-8 py-6 text-right cursor-pointer hover:text-primary transition-colors" scope="col" onClick={() => handleSort('amount')}>
+                  <div className="flex items-center justify-end gap-2">
+                    Quantum Amount
+                    {sortConfig.key === 'amount' && (
+                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="px-8 py-6 text-right" scope="col">Running Balance</th>
                 <th className="px-8 py-6 text-right w-36" scope="col">Operations</th>
               </tr>
             </thead>
@@ -432,52 +566,62 @@ export default function TransactionsPageClient() {
                   </td>
                   <td className="px-8 py-5">
                     <span className="inline-flex items-center rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 dark:bg-slate-800/50 dark:border-white/5 dark:text-slate-400">
-                      <div className={`w-1.5 h-1.5 rounded-full mr-2 ${categories.find(c => c.name === tx.category)?.color || 'bg-slate-400'}`} />
-                      {tx.category}
+                      <div className={`w-1.5 h-1.5 rounded-full mr-2 ${categories.find(c => c.id === tx.category)?.color || 'bg-slate-400'}`} />
+                      {categories.find(c => c.id === tx.category)?.name || tx.category}
                     </span>
                   </td>
-                  <td className="px-8 py-5 text-right">
-                    <span className={`text-base font-black tracking-tighter ${tx.type === 'expense' ? 'text-rose-500' : tx.type === 'income' ? 'text-emerald-500' : 'text-primary'}`}>
-                      {tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : ''} ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <td className="px-8 py-5 text-right flex flex-col items-end gap-1">
+                    <span className={`text-base font-black tracking-tighter ${tx.type === 'expense' || tx.type === 'transfer' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      {tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+'} ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
+                    {tx.status === 'pending_confirmation' && (
+                       <span className="text-[8px] font-black uppercase tracking-widest text-orange-500 bg-orange-500/5 px-2 py-0.5 rounded-md border border-orange-500/10">Pending Confirmation</span>
+                    )}
+                  </td>
+                  <td className="px-8 py-5 text-right font-bold text-slate-500 text-xs">
+                    {tx.balanceAfter !== undefined ? `₹${tx.balanceAfter.toLocaleString()}` : "—"}
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2 transition-opacity">
-                      <button 
-                        type="button"
-                        onClick={() => { setEditingData(tx); setIsModalOpen(true); }}
-                        className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                        title="Edit entry"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                         type="button"
-                        onClick={() => {
-                          if (confirm("Delete this transaction? This action will reverse balance changes.")) {
-                            if (!tx.isAutomated) {
-                              dispatch(updateAccountBalance({ id: tx.accountId, amountChange: tx.type === 'expense' ? tx.amount : -tx.amount }));
-                              if (tx.toAccountId) {
-                                const destAcc = accounts.find(a => a.id === tx.toAccountId);
-                                if (destAcc) {
-                                  dispatch(updateAccountBalance({ id: tx.toAccountId, amountChange: -tx.amount, interestAmount: tx.interestAmount }));
-                                } else {
-                                  const destGoal = goals.find(g => g.id === tx.toAccountId);
-                                  if (destGoal) {
-                                    dispatch(updateGoal({ ...destGoal, currentAmount: destGoal.currentAmount - tx.amount }));
-                                  }
-                                }
-                              }
-                            }
-                            dispatch(deleteTransaction(tx.id));
-                            toast.success("Entry removed from ledger");
-                          }
-                        }}
-                        className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
-                        title="Purge entry"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {tx.isAutomated && tx.status === 'pending_confirmation' && (String(tx.date).split('T')[0] || "") <= (new Date().toISOString().split('T')[0] || "") && (
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(confirmTransaction(tx.id)).then(() => {
+                              dispatch(fetchAccounts());
+                              dispatch(fetchTransactions());
+                            });
+                            toast.success("Transaction Confirmed");
+                          }}
+                          className="px-4 py-2 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          Confirm
+                        </button>
+                      )}
+                      {!(tx as Transaction & { isVirtual?: boolean }).isVirtual && (
+                        <>
+                          <button 
+                            type="button"
+                            onClick={() => { setEditingData(tx); setIsModalOpen(true); }}
+                            className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
+                            title="Edit entry"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setTransactionToDelete(tx);
+                            }}
+                            className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -519,43 +663,32 @@ export default function TransactionsPageClient() {
         onClose={() => setIsModalOpen(false)} 
         transaction={editingData || undefined}
         onSave={(data) => {
-          const amountVar = parseFloat(data.amount);
-          const interestVar = data.interestAmount ? parseFloat(data.interestAmount) : undefined;
+          const amountVar = data.amount || 0;
+          const interestVar = data.interestAmount;
           
           if (editingData) {
-            if (!editingData.isAutomated) {
-              dispatch(updateAccountBalance({ id: editingData.accountId, amountChange: editingData.type === 'expense' ? editingData.amount : -editingData.amount }));
-              if (editingData.toAccountId) {
-                const prevDestAcc = accounts.find(a => a.id === editingData.toAccountId);
-                if (prevDestAcc) {
-                  dispatch(updateAccountBalance({ id: editingData.toAccountId, amountChange: -editingData.amount, interestAmount: editingData.interestAmount }));
-                } else {
-                  const prevDestGoal = goals.find(g => g.id === editingData.toAccountId);
-                  if (prevDestGoal) {
-                    dispatch(updateGoal({ ...prevDestGoal, currentAmount: prevDestGoal.currentAmount - editingData.amount }));
-                  }
-                }
+            dispatch(updateTransaction({
+              id: editingData.id,
+              data: {
+                accountId: data.accountId,
+                toAccountId: data.toAccountId || undefined,
+                amount: amountVar,
+                interestAmount: interestVar,
+                date: data.date,
+                description: data.description,
+                category: data.category,
+                type: data.type,
+                isAutomated: data.isAutomated,
+                frequency: data.frequency,
+                recurringCount: data.recurringCount
               }
-            }
-            if (!data.isAutomated) {
-              dispatch(updateAccountBalance({ id: data.accountId, amountChange: data.type === 'expense' ? -amountVar : amountVar }));
-              if (data.toAccountId) {
-                const newDestAcc = accounts.find(a => a.id === data.toAccountId);
-                if (newDestAcc) {
-                  dispatch(updateAccountBalance({ id: data.toAccountId, amountChange: amountVar, interestAmount: interestVar }));
-                } else {
-                  const newDestGoal = goals.find(g => g.id === data.toAccountId);
-                  if (newDestGoal) {
-                    dispatch(updateGoal({ ...newDestGoal, currentAmount: newDestGoal.currentAmount + amountVar }));
-                  }
-                }
-              }
-            }
-            dispatch(updateTransaction({ ...editingData, ...data, amount: amountVar, interestAmount: interestVar }));
+            })).then(() => {
+              dispatch(fetchAccounts());
+              dispatch(fetchTransactions());
+              setIsModalOpen(false);
+            });
           } else {
-            const newTx: Transaction = {
-              id: `tx-${Date.now()}`,
-              userId: "user-1",
+            dispatch(createTransaction({
               accountId: data.accountId,
               toAccountId: data.toAccountId || undefined,
               amount: amountVar,
@@ -564,30 +697,15 @@ export default function TransactionsPageClient() {
               description: data.description,
               category: data.category,
               type: data.type,
-              status: "pending",
-              metadata: {},
               isAutomated: data.isAutomated,
               frequency: data.frequency,
               recurringCount: data.recurringCount
-            };
-            
-            if (!newTx.isAutomated) {
-              dispatch(updateAccountBalance({ id: newTx.accountId, amountChange: newTx.type === 'expense' ? -newTx.amount : newTx.amount }));
-              if (newTx.toAccountId) {
-                const newDestAcc = accounts.find(a => a.id === newTx.toAccountId);
-                if (newDestAcc) {
-                  dispatch(updateAccountBalance({ id: newTx.toAccountId, amountChange: newTx.amount, interestAmount: newTx.interestAmount }));
-                } else {
-                  const newDestGoal = goals.find(g => g.id === newTx.toAccountId);
-                  if (newDestGoal) {
-                    dispatch(updateGoal({ ...newDestGoal, currentAmount: newDestGoal.currentAmount + newTx.amount }));
-                  }
-                }
-              }
-            }
-            dispatch(addTransaction(newTx));
+            })).then(() => {
+              dispatch(fetchAccounts());
+              dispatch(fetchTransactions());
+              setIsModalOpen(false);
+            });
           }
-          setIsModalOpen(false);
         }} 
       />
       
@@ -597,21 +715,18 @@ export default function TransactionsPageClient() {
         transaction={viewingData}
         accounts={accounts}
         goals={goals}
+        categories={categories}
       />
 
       <AddAccountModal 
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}
         onSave={(data) => {
-          dispatch(addAccount({
-            id: `acc-${Date.now()}`,
-            userId: "user-1",
+          dispatch(createAccount({
             name: data.name,
-            type: data.type as "bank" | "cash" | "loan" | "investment" | "card",
-            assetType: "",
+            type: data.type as "bank" | "cash" | "debt" | "investment" | "card",
             balance: parseFloat(data.balance) || 0,
             currency: "INR",
-            lastSyncedAt: new Date().toISOString()
           }));
           setIsAccountModalOpen(false);
         }}
@@ -634,26 +749,44 @@ export default function TransactionsPageClient() {
             return;
           }
           if (data.id) {
-            dispatch(updateCategory({
+            dispatch(updateCategoryAction({
               id: data.id,
-              name: data.name,
-              color: data.color
+              data: {
+                name: data.name,
+                color: data.color,
+                parentType: data.parentType as CategoryParentType
+              }
             }));
           } else {
-            dispatch(addCategory({
-              id: `cat-${Date.now()}`,
+            dispatch(addCategoryAction({
               name: data.name,
-              color: data.color
+              color: data.color,
+              parentType: data.parentType as CategoryParentType
             }));
           }
           setIsCategoryModalOpen(false);
           toast.success(data.id ? "Category updated" : "Category added");
         }}
         onDelete={(id) => {
-          dispatch(removeCategory(id));
+          dispatch(removeCategoryAction(id));
           setIsCategoryModalOpen(false);
           toast.success("Category deleted");
         }}
+      />
+      
+      <ConfirmModal 
+        isOpen={!!transactionToDelete}
+        title="Delete Activity"
+        message={`Are you sure you want to permanently delete this ${transactionToDelete?.isAutomated ? "automated " : ""}activity? This action cannot be undone.`}
+        confirmText="Delete"
+        onConfirm={() => {
+          if (transactionToDelete) {
+            dispatch(deleteTransaction(transactionToDelete.id));
+            toast.success("Activity Deleted");
+          }
+          setTransactionToDelete(null);
+        }}
+        onCancel={() => setTransactionToDelete(null)}
       />
     </div>
   );

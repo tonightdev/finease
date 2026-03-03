@@ -1,22 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store";
-import { addAccount } from "@/store/slices/accountsSlice";
+import { RootState, AppDispatch } from "@/store";
+import { fetchAccounts, createAccount, updateAccount, deleteAccount } from "@/store/slices/accountsSlice";
 import { AddInvestmentModal } from "@/components/portfolio/AddInvestmentModal";
 import { AddLiabilityModal } from "@/components/portfolio/AddLiabilityModal";
 import { AddAssetTypeModal } from "@/components/portfolio/AddAssetTypeModal";
 import { AddAssetModal } from "@/components/portfolio/AddAssetModal";
 
-import { addAssetType, updateAssetType, removeAssetType } from "@/store/slices/assetTypesSlice";
-import { updateAccount, removeAccount } from "@/store/slices/accountsSlice";
+import { addAssetClassAction, updateAssetClassAction, removeAssetClassAction } from "@/store/slices/assetClassesSlice";
 import { Account } from "@repo/types";
 import { Edit2, Trash2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function PortfolioPageClient() {
-  const dispatch = useDispatch();
+  const { user } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchAccounts());
+    }
+  }, [dispatch, user]);
+
   const [isAddInvestmentOpen, setIsAddInvestmentOpen] = useState(false);
   const [isAssetTypeModalOpen, setIsAssetTypeModalOpen] = useState(false);
   const [editingAssetType, setEditingAssetType] = useState<{ id: string; name: string; color: string } | null>(null);
@@ -27,25 +35,25 @@ export default function PortfolioPageClient() {
   const [editingAsset, setEditingAsset] = useState<Account | null>(null);
   
   const accounts = useSelector((state: RootState) => state.accounts.items);
-  const assetTypes = useSelector((state: RootState) => state.assetTypes.items);
+  const assetTypes = useSelector((state: RootState) => state.assetClasses.items);
 
   const [investmentPage, setInvestmentPage] = useState(1);
   const [liabilityPage, setLiabilityPage] = useState(1);
   const itemsPerPage = 10;
 
   const investments = accounts.filter(a => a.type === 'investment');
-  const loans = accounts.filter(a => a.type === 'loan');
+  const debts = accounts.filter(a => a.type === 'debt');
   const otherAssets = accounts.filter(a => a.type === 'asset');
 
   const totalInvestmentPages = Math.ceil(investments.length / itemsPerPage);
   const paginatedInvestments = investments.slice((investmentPage - 1) * itemsPerPage, investmentPage * itemsPerPage);
 
-  const totalLiabilityPages = Math.ceil(loans.length / itemsPerPage);
-  const paginatedLoans = loans.slice((liabilityPage - 1) * itemsPerPage, liabilityPage * itemsPerPage);
+  const totalDebtPages = Math.ceil(debts.length / itemsPerPage);
+  const paginatedDebts = debts.slice((liabilityPage - 1) * itemsPerPage, liabilityPage * itemsPerPage);
   
-  const assets = accounts.filter(a => a.type !== 'loan').reduce((sum, item) => sum + item.balance, 0);
+  const assets = accounts.filter(a => a.type !== 'debt').reduce((sum, item) => sum + item.balance, 0);
   const totalCapitalInvested = investments.reduce((sum, item) => sum + (item.investedAmount || item.balance), 0);
-  const liabilities = Math.abs(loans.reduce((sum, item) => sum + item.balance, 0));
+  const liabilities = Math.abs(debts.reduce((sum, item) => sum + item.balance, 0));
   const netWorth = assets - liabilities;
 
   return (
@@ -112,28 +120,49 @@ export default function PortfolioPageClient() {
         </div>
       </div>
 
-      {/* Asset Classes Chips - Wrapped */}
-      <div className="space-y-4">
+      {/* Asset Classes Section - Synced Design */}
+      <div className="space-y-5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Asset Classes</h3>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest hidden xl:block">Click any class to adjust or rename</p>
+          <div className="flex items-center gap-3">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Asset Classes</h3>
+            <div className="h-px w-8 bg-slate-200 dark:bg-slate-800" />
+          </div>
+          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block">Double-tap or click icon to manage</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 py-2">
           {assetTypes.map(c => (
-            <button 
-              key={c.id} 
-              onClick={() => { setEditingAssetType(c); setIsAssetTypeModalOpen(true); }}
-              className="px-4 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center gap-2.5 group transition-all hover:border-primary/50"
-            >
-               <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
-               <span className="font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">{c.name}</span>
-            </button>
+            <div key={c.id} className="relative group/chip">
+              <button 
+                onClick={() => { 
+                  setEditingAssetType(c); 
+                  setIsAssetTypeModalOpen(true); 
+                }}
+                onDoubleClick={() => { setEditingAssetType(c); setIsAssetTypeModalOpen(true); }}
+                className="pl-4 pr-10 py-2.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex items-center gap-3 transition-all hover:border-slate-300 dark:hover:border-white/20 relative overflow-hidden backdrop-blur-sm group/btn"
+              >
+                <div className={`w-2 h-2 rounded-full shadow-sm ${c.color} group-hover/btn:scale-110 group-hover/btn:ring-4 group-hover/btn:ring-primary/20 transition-all`} />
+                <span className="font-bold text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400">{c.name}</span>
+              </button>
+              
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setEditingAssetType(c); 
+                  setIsAssetTypeModalOpen(true); 
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary dark:hover:text-primary-light transition-all rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 opacity-100 sm:opacity-0 group-hover/chip:opacity-100 focus:opacity-100 z-10"
+                title="Edit asset class"
+              >
+                <Edit2 className="w-3 h-3" />
+              </button>
+            </div>
           ))}
           <button 
              onClick={() => { setEditingAssetType(null); setIsAssetTypeModalOpen(true); }}
-             className="px-4 py-2.5 rounded-full border border-dashed border-slate-200 dark:border-white/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/5 transition-all"
+             className="px-5 py-2.5 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/5 transition-all flex items-center gap-2"
           >
-             + New Class
+             <Plus className="w-3 h-3" />
+             New Entity
           </button>
         </div>
       </div>
@@ -158,8 +187,8 @@ export default function PortfolioPageClient() {
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
                                 <span className={`text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${assetTypes.find(a => a.name === inv.assetType)?.color || 'bg-slate-400'}`} />
-                                    {inv.assetType || 'General'}
+                                    <div className={`w-1.5 h-1.5 rounded-full ${assetTypes.find(a => a.id === inv.assetType)?.color || 'bg-slate-400'}`} />
+                                    {assetTypes.find(a => a.id === inv.assetType)?.name || inv.assetType || 'General'}
                                 </span>
                                 <h4 className="text-base font-black text-slate-900 dark:text-white tracking-tight">{inv.name}</h4>
                             </div>
@@ -211,8 +240,8 @@ export default function PortfolioPageClient() {
                       </td>
                       <td className="px-8 py-5">
                         <span className="inline-flex items-center rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 dark:bg-slate-800/50 dark:border-white/5 dark:text-slate-400">
-                            <div className={`w-1.5 h-1.5 rounded-full mr-2 ${assetTypes.find(a => a.name === inv.assetType)?.color || 'bg-slate-400'}`} />
-                            {inv.assetType || inv.type}
+                            <div className={`w-1.5 h-1.5 rounded-full mr-2 ${assetTypes.find(a => a.id === inv.assetType)?.color || 'bg-slate-400'}`} />
+                            {assetTypes.find(a => a.id === inv.assetType)?.name || inv.assetType || inv.type}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right">
@@ -230,7 +259,7 @@ export default function PortfolioPageClient() {
                            <button onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }} className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20">
                              <Edit2 className="w-3.5 h-3.5" />
                            </button>
-                           <button onClick={() => dispatch(removeAccount(inv.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
+                           <button onClick={() => dispatch(deleteAccount(inv.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
                              <Trash2 className="w-3.5 h-3.5" />
                            </button>
                         </div>
@@ -260,39 +289,39 @@ export default function PortfolioPageClient() {
         
         {/* Mobile & Tablet: Card View */}
         <div className="grid grid-cols-1 gap-4 lg:hidden">
-            {paginatedLoans.length === 0 ? (
+            {paginatedDebts.length === 0 ? (
                 <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No active liabilities</p>
                 </div>
             ) : (
-                paginatedLoans.map(loan => (
+                paginatedDebts.map(debt => (
                     <div 
-                      key={loan.id} 
-                      onClick={() => { setEditingLiability(loan); setIsAddLiabilityOpen(true); }}
+                      key={debt.id} 
+                      onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}
                       className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm active:scale-95 transition-all flex flex-col gap-5"
                     >
                          <div className="flex justify-between items-start">
                              <div className="space-y-1">
-                                 <span className="text-[9px] font-black uppercase tracking-widest text-rose-400">{loan.type}</span>
-                                 <h4 className="text-base font-black text-slate-900 dark:text-white tracking-tight">{loan.name}</h4>
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-rose-400">{debt.type}</span>
+                                 <h4 className="text-base font-black text-slate-900 dark:text-white tracking-tight">{debt.name}</h4>
                              </div>
                              <div className="flex flex-col items-end">
                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Remaining</span>
-                                 <span className="text-lg font-black text-rose-500 tracking-tighter">₹{Math.abs(loan.balance).toLocaleString()}</span>
+                                 <span className="text-lg font-black text-rose-500 tracking-tighter">₹{Math.abs(debt.balance).toLocaleString()}</span>
                              </div>
                          </div>
                          <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-50 dark:border-white/5">
                              <div className="flex flex-col">
                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total</span>
-                                 <span className="text-[10px] font-bold text-slate-900 dark:text-slate-200 mt-1">₹{(loan.initialAmount || (Math.abs(loan.balance) + (loan.paidAmount || 0))).toLocaleString()}</span>
+                                 <span className="text-[10px] font-bold text-slate-900 dark:text-slate-200 mt-1">₹{(debt.initialAmount || (Math.abs(debt.balance) + (debt.paidAmount || 0))).toLocaleString()}</span>
                              </div>
                              <div className="flex flex-col items-center">
                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Paid</span>
-                                 <span className="text-[10px] font-bold text-emerald-500 mt-1">₹{(loan.paidAmount || 0).toLocaleString()}</span>
+                                 <span className="text-[10px] font-bold text-emerald-500 mt-1">₹{(debt.paidAmount || 0).toLocaleString()}</span>
                              </div>
                              <div className="flex flex-col items-end">
                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Interest</span>
-                                 <span className="text-[10px] font-bold text-orange-500 mt-1">₹{(loan.interestPaid || 0).toLocaleString()}</span>
+                                 <span className="text-[10px] font-bold text-orange-500 mt-1">₹{(debt.interestPaid || 0).toLocaleString()}</span>
                              </div>
                          </div>
                     </div>
@@ -316,45 +345,45 @@ export default function PortfolioPageClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {paginatedLoans.length === 0 ? (
+                {paginatedDebts.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest text-[10px]">No active debt cycles.</td>
                   </tr>
                 ) : (
-                  paginatedLoans.map(loan => (
-                    <tr key={loan.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all">
+                  paginatedDebts.map(debt => (
+                    <tr key={debt.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all">
                       <td className="px-8 py-5">
-                        <div className="font-black text-slate-900 dark:text-white tracking-tight">{loan.name}</div>
+                        <div className="font-black text-slate-900 dark:text-white tracking-tight">{debt.name}</div>
                       </td>
                       <td className="px-8 py-5">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/5 px-2.5 py-1 rounded-lg border border-rose-500/10">{loan.type}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/5 px-2.5 py-1 rounded-lg border border-rose-500/10">{debt.type}</span>
                       </td>
                       <td className="px-8 py-5 text-right">
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          ₹{(loan.initialAmount || (Math.abs(loan.balance) + (loan.paidAmount || 0))).toLocaleString()}
+                          ₹{(debt.initialAmount || (Math.abs(debt.balance) + (debt.paidAmount || 0))).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right text-emerald-500">
                         <span className="font-bold">
-                          ₹{(loan.paidAmount || 0).toLocaleString()}
+                          ₹{(debt.paidAmount || 0).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right text-orange-500">
                         <span className="font-bold">
-                          ₹{(loan.interestPaid || 0).toLocaleString()}
+                          ₹{(debt.interestPaid || 0).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right">
                         <span className="font-black text-rose-500 text-base tracking-tighter">
-                          ₹{Math.abs(loan.balance).toLocaleString()}
+                          ₹{Math.abs(debt.balance).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 transition-opacity">
-                           <button onClick={() => { setEditingLiability(loan); setIsAddLiabilityOpen(true); }} className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20">
+                           <button onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }} className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20">
                              <Edit2 className="w-3.5 h-3.5" />
                            </button>
-                           <button onClick={() => dispatch(removeAccount(loan.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
+                           <button onClick={() => dispatch(deleteAccount(debt.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
                              <Trash2 className="w-3.5 h-3.5" />
                            </button>
                         </div>
@@ -367,12 +396,12 @@ export default function PortfolioPageClient() {
           </div>
         </div>
 
-        {totalLiabilityPages > 1 && (
+        {totalDebtPages > 1 && (
             <div className="flex items-center justify-between px-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{liabilityPage} / {totalLiabilityPages}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{liabilityPage} / {totalDebtPages}</p>
                 <div className="flex gap-2">
                     <button onClick={() => setLiabilityPage(p => Math.max(p - 1, 1))} disabled={liabilityPage === 1} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
-                    <button onClick={() => setLiabilityPage(p => Math.min(p + 1, totalLiabilityPages))} disabled={liabilityPage === totalLiabilityPages} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+                    <button onClick={() => setLiabilityPage(p => Math.min(p + 1, totalDebtPages))} disabled={liabilityPage === totalDebtPages} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
                 </div>
             </div>
         )}
@@ -434,7 +463,7 @@ export default function PortfolioPageClient() {
                            <button onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }} className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20">
                              <Edit2 className="w-3.5 h-3.5" />
                            </button>
-                           <button onClick={() => dispatch(removeAccount(asset.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
+                           <button onClick={() => dispatch(deleteAccount(asset.id))} className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
                              <Trash2 className="w-3.5 h-3.5" />
                            </button>
                         </div>
@@ -458,23 +487,22 @@ export default function PortfolioPageClient() {
         onSave={(data) => {
           if (editingInvestment) {
              dispatch(updateAccount({
-                ...editingInvestment,
-                name: data.assetName,
-                assetType: data.assetType || "",
-                balance: parseFloat(data.currentAmount) || editingInvestment.balance,
-                investedAmount: parseFloat(data.investedAmount) || editingInvestment.investedAmount || editingInvestment.balance
+                id: editingInvestment.id,
+                data: {
+                  name: data.assetName,
+                  assetType: data.assetType || "",
+                  balance: parseFloat(data.currentAmount) || editingInvestment.balance,
+                  investedAmount: parseFloat(data.investedAmount) || editingInvestment.investedAmount || editingInvestment.balance
+                }
              }));
           } else {
-             dispatch(addAccount({
-              id: `inv-${Date.now()}`,
-              userId: "user-1",
+             dispatch(createAccount({
               name: data.assetName,
               type: "investment",
               assetType: data.assetType ??"",
               balance: parseFloat(data.currentAmount) || 0,
               investedAmount: parseFloat(data.investedAmount) || 0,
               currency: "INR",
-              lastSyncedAt: new Date().toISOString()
             }));
           }
           setIsAddInvestmentOpen(false);
@@ -484,7 +512,7 @@ export default function PortfolioPageClient() {
       
       <AddLiabilityModal
         isOpen={isAddLiabilityOpen}
-        liability={editingLiability}
+        liability={editingLiability || undefined}
         onClose={() => {
           setIsAddLiabilityOpen(false);
           setEditingLiability(null);
@@ -497,27 +525,26 @@ export default function PortfolioPageClient() {
           
           if (editingLiability) {
              dispatch(updateAccount({
-                ...editingLiability,
-                name: data.name,
-                type: data.type as "loan",
-                initialAmount: totalLoan,
-                paidAmount: paidAmt,
-                interestPaid: interestPaidVal,
-                balance: -remainingBalance
+                id: editingLiability.id,
+                data: {
+                  name: data.name,
+                  type: data.type as "debt",
+                  initialAmount: totalLoan,
+                  paidAmount: paidAmt,
+                  interestPaid: interestPaidVal,
+                  balance: -remainingBalance
+                }
              }));
           } else {
-             dispatch(addAccount({
-              id: `loan-${Date.now()}`,
-              userId: "user-1",
+             dispatch(createAccount({
               name: data.name,
-              type: "loan",
+              type: "debt",
               assetType: "",
               initialAmount: totalLoan,
               paidAmount: paidAmt,
               interestPaid: interestPaidVal,
               balance: -remainingBalance,
               currency: "INR",
-              lastSyncedAt: new Date().toISOString()
             }));
           }
           setIsAddLiabilityOpen(false);
@@ -527,7 +554,7 @@ export default function PortfolioPageClient() {
 
       <AddAssetModal
         isOpen={isAddAssetOpen}
-        asset={editingAsset}
+        asset={editingAsset || undefined}
         onClose={() => {
           setIsAddAssetOpen(false);
           setEditingAsset(null);
@@ -535,20 +562,19 @@ export default function PortfolioPageClient() {
         onSave={(data) => {
           if (editingAsset) {
              dispatch(updateAccount({
-                ...editingAsset,
-                name: data.name,
-                balance: parseFloat(data.balance) || editingAsset.balance
+                id: editingAsset.id,
+                data: {
+                  name: data.name,
+                  balance: parseFloat(data.balance) || editingAsset.balance
+                }
              }));
           } else {
-             dispatch(addAccount({
-              id: `asset-${Date.now()}`,
-              userId: "user-1",
+             dispatch(createAccount({
               name: data.name,
               type: "asset",
               assetType: "",
               balance: parseFloat(data.balance) || 0,
               currency: "INR",
-              lastSyncedAt: new Date().toISOString()
             }));
           }
           setIsAddAssetOpen(false);
@@ -573,14 +599,15 @@ export default function PortfolioPageClient() {
             return;
           }
           if (data.id) {
-            dispatch(updateAssetType({
+            dispatch(updateAssetClassAction({
               id: data.id,
-              name: data.name,
-              color: data.color
+              data: {
+                name: data.name,
+                color: data.color
+              }
             }));
           } else {
-            dispatch(addAssetType({
-              id: `ast-${Date.now()}`,
+            dispatch(addAssetClassAction({
               name: data.name,
               color: data.color
             }));
@@ -589,7 +616,7 @@ export default function PortfolioPageClient() {
           toast.success(data.id ? "Asset Class updated" : "Asset Class added");
         }}
         onDelete={(id) => {
-          dispatch(removeAssetType(id));
+          dispatch(removeAssetClassAction(id));
           setIsAssetTypeModalOpen(false);
           toast.success("Asset Class deleted");
         }}

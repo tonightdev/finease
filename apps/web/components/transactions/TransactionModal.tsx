@@ -7,13 +7,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import toast from "react-hot-toast";
 
-import { Transaction } from "@repo/types";
+import { Transaction, TransactionFrequency, FinancialGoal, Category } from "@repo/types";
 
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (data: any) => void;
+  onSave: (data: Partial<Transaction>) => void;
   transaction?: Transaction | null; // The initial transaction to edit
 }
 
@@ -21,15 +20,27 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const categories = useSelector((state: RootState) => state.categories.items);
   const goals = useSelector((state: RootState) => state.goals.items);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    description: string;
+    amount: string;
+    interestAmount: string;
+    category: string;
+    date: string;
+    accountId: string;
+    toAccountId: string;
+    type: "expense" | "income" | "transfer";
+    isAutomated: boolean;
+    frequency: TransactionFrequency;
+    recurringCount: string;
+  }>({
     description: "",
     amount: "",
     interestAmount: "",
-    category: "Uncategorized",
-    date: new Date().toISOString().split("T")[0],
+    category: "uncategorized",
+    date: new Date().toISOString().split("T")[0] ?? "",
     accountId: "acc-1",
     toAccountId: "",
-    type: "expense" as "expense" | "income",
+    type: "expense",
     isAutomated: false,
     frequency: "monthly",
     recurringCount: "12",
@@ -42,13 +53,13 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
           description: transaction.description,
           amount: String(transaction.amount),
           interestAmount: transaction.interestAmount ? String(transaction.interestAmount) : "",
-          category: transaction.category,
-          date: new Date(transaction.date).toISOString().split("T")[0],
+          category: transaction.category || "uncategorized",
+          date: new Date(transaction.date).toISOString().split("T")[0] ?? "",
           accountId: transaction.accountId || "acc-1",
           toAccountId: transaction.toAccountId || "",
-          type: (transaction.type as "expense" | "income") || "expense",
+          type: transaction.type || "expense",
           isAutomated: transaction.isAutomated || false,
-          frequency: transaction.frequency || "monthly",
+          frequency: (transaction.frequency ?? "monthly") as TransactionFrequency,
           recurringCount: String(transaction.recurringCount || "12"),
         });
       } else {
@@ -57,8 +68,8 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
           description: "",
           amount: "",
           interestAmount: "",
-          category: "Uncategorized",
-          date: new Date().toISOString().split("T")[0],
+          category: "uncategorized",
+          date: new Date().toISOString().split("T")[0] ?? "",
           accountId: defaultAcc ? defaultAcc.id : "",
           toAccountId: "",
           type: "expense",
@@ -74,8 +85,8 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
           description: "",
           amount: "",
           interestAmount: "",
-          category: "Uncategorized",
-          date: new Date().toISOString().split("T")[0],
+          category: "uncategorized",
+          date: new Date().toISOString().split("T")[0] ?? "",
           accountId: defaultAcc ? defaultAcc.id : "",
           toAccountId: "",
           type: "expense",
@@ -96,7 +107,13 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
       toast.error("Please select a primary account");
       return;
     }
-    onSave(formData);
+    const payload: Partial<Transaction> = {
+      ...formData,
+      amount: parseFloat(formData.amount),
+      interestAmount: formData.interestAmount ? parseFloat(formData.interestAmount) : undefined,
+      recurringCount: formData.recurringCount,
+    };
+    onSave(payload);
     toast.success(transaction ? "Transaction updated" : "Transaction added");
   };
 
@@ -126,6 +143,7 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
                   type="text" 
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="e.g. Grocery shopping, Netflix subscription..."
                   className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                 />
               </div>
@@ -190,7 +208,9 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
                         >
                           <option value="" disabled>Select an account</option>
                           {accounts.filter(a => ["bank", "cash", "card"].includes(a.type)).map(acc => (
-                            <option key={acc.id} value={acc.id}>{acc.name} ({acc.type.toUpperCase()})</option>
+                            <option key={acc.id} value={acc.id}>
+                              {acc.name} ({acc.type.toUpperCase()}) - ₹{acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </option>
                           ))}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -206,21 +226,23 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
                         >
                           <option value="">(None)</option>
                           <optgroup label="Accounts & Investments">
-                            {accounts.filter(acc => acc.id !== formData.accountId).map(acc => (
-                              <option key={acc.id} value={acc.id}>{acc.name} ({acc.type.toUpperCase()})</option>
+                            {accounts.filter(acc => acc.id !== formData.accountId && acc.type !== 'asset').map(acc => (
+                              <option key={acc.id} value={acc.id}>
+                                {acc.name} ({acc.type.toUpperCase()}) - ₹{acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </option>
                             ))}
                           </optgroup>
                           {goals && goals.length > 0 && (
                             <optgroup label="Goals (Direct Top-up)">
-                              {goals.map((g: { id: string; name: string }) => (
-                                <option key={g.id} value={g.id}>{g.name}</option>
+                              {goals.map((g: FinancialGoal) => (
+                                <option key={g.id} value={g.id}>{g.name} - ₹{g.currentAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</option>
                               ))}
                             </optgroup>
                           )}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                       </div>
-                      {accounts.find(a => a.id === formData.toAccountId)?.type === "loan" && (
+                      {accounts.find(a => a.id === formData.toAccountId)?.type === "debt" && (
                         <div className="pt-2">
                           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Interest Portion (₹)</label>
                           <input 
@@ -248,7 +270,9 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
                       >
                         <option value="" disabled>Select an account</option>
                         {accounts.filter(a => ["bank", "cash", "card"].includes(a.type)).map(acc => (
-                          <option key={acc.id} value={acc.id}>{acc.name} ({acc.type.toUpperCase()})</option>
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} ({acc.type.toUpperCase()}) - ₹{acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -266,10 +290,10 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full p-3 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                     >
-                      {categories.map((c: { id: string; name: string }) => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                      <option value="uncategorized">Uncategorized</option>
+                      {categories.map((c: Category) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
-                      <option value="Uncategorized">Uncategorized</option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                   </div>
@@ -289,10 +313,11 @@ export function TransactionModal({ isOpen, onClose, onSave, transaction }: Trans
               {formData.isAutomated && (
                 <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-purple-100 bg-purple-50/50 dark:bg-purple-500/5 dark:border-purple-500/10">
                   <div className="space-y-1 flex-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 text-purple-700 dark:text-purple-400">Frequency</label>
                     <div className="relative">
                       <select 
                         value={formData.frequency}
-                        onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, frequency: e.target.value as TransactionFrequency })}
                         className="w-full p-3 pr-10 appearance-none bg-white dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                       >
                         <option value="daily">Daily</option>

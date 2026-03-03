@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { type Account } from "@repo/types";
 
 interface AddAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  asset?: any;
+  asset?: Partial<Account>;
   onSave: (data: { name: string; balance: string }) => void;
 }
 
@@ -21,8 +21,8 @@ export function AddAssetModal({ isOpen, onClose, asset, onSave }: AddAssetModalP
   useEffect(() => {
     if (asset) {
       setFormData({
-        name: asset.name,
-        balance: asset.balance.toString(),
+        name: asset.name ?? "",
+        balance: (asset.balance ?? 0).toString(),
       });
     } else {
       setFormData({

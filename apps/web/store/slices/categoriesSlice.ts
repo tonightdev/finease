@@ -1,44 +1,69 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-export interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '@/lib/api';
+import { Category } from '@repo/types';
 
 export interface CategoriesState {
   items: Category[];
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: CategoriesState = {
-  items: [
-    { id: 'cat-1', name: 'Housing', color: 'bg-indigo-500' },
-    { id: 'cat-2', name: 'Food & Dining', color: 'bg-orange-500' },
-    { id: 'cat-3', name: 'Transport', color: 'bg-blue-500' },
-    { id: 'cat-4', name: 'Shopping', color: 'bg-pink-500' },
-    { id: 'cat-5', name: 'Salary', color: 'bg-emerald-500' },
-    { id: 'cat-6', name: 'Investment', color: 'bg-purple-500' },
-  ],
+  items: [],
+  loading: false,
+  error: null,
 };
+
+export const fetchCategories = createAsyncThunk('categories/fetchAll', async () => {
+  const response = await api.get<Category[]>('/finance/categories');
+  return response.data;
+});
+
+export const addCategoryAction = createAsyncThunk('categories/add', async (category: Partial<Category>) => {
+  const response = await api.post<Category>('/finance/categories', category);
+  return response.data;
+});
+
+export const updateCategoryAction = createAsyncThunk('categories/update', async ({ id, data }: { id: string; data: Partial<Category> }) => {
+  const response = await api.put<Category>(`/finance/categories/${id}`, data);
+  return response.data;
+});
+
+export const removeCategoryAction = createAsyncThunk('categories/remove', async (id: string) => {
+  await api.delete(`/finance/categories/${id}`);
+  return id;
+});
 
 export const categoriesSlice = createSlice({
   name: 'categories',
   initialState,
-  reducers: {
-    addCategory: (state, action: PayloadAction<Category>) => {
-      state.items.push(action.payload);
-    },
-    updateCategory: (state, action: PayloadAction<Category>) => {
-      const index = state.items.findIndex(c => c.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = action.payload;
-      }
-    },
-    removeCategory: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(c => c.id !== action.payload);
-    }
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? 'Failed to fetch categories';
+      })
+      .addCase(addCategoryAction.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(updateCategoryAction.fulfilled, (state, action) => {
+        const index = state.items.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(removeCategoryAction.fulfilled, (state, action) => {
+        state.items = state.items.filter(c => c.id !== action.payload);
+      });
   },
 });
 
-export const { addCategory, updateCategory, removeCategory } = categoriesSlice.actions;
 export default categoriesSlice.reducer;

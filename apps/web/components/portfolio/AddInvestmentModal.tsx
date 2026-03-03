@@ -16,10 +16,10 @@ interface AddInvestmentModalProps {
 }
 
 export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddInvestmentModalProps) {
-  const assetTypes = useSelector((state: RootState) => state.assetTypes.items);
+  const assetTypes = useSelector((state: RootState) => state.assetClasses.items);
   const [formData, setFormData] = useState({
     assetName: "",
-    assetType: assetTypes[0]?.name || "Equity",
+    assetType: assetTypes[0]?.id || "",
     investedAmount: "",
     currentAmount: "",
   });
@@ -29,26 +29,30 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
       if (investment) {
         setFormData({
           assetName: investment.name,
-          assetType: investment.assetType || assetTypes[0]?.name || "Equity",
+          assetType: investment.assetType || assetTypes[0]?.id || "",
           investedAmount: String(investment.investedAmount || investment.balance),
           currentAmount: String(investment.balance),
         });
       } else {
         setFormData({
           assetName: "",
-          assetType: assetTypes[0]?.name || "Equity",
+          assetType: assetTypes.length > 0 ? (assetTypes[0]?.id || "") : "",
           investedAmount: "",
           currentAmount: "",
         });
       }
     } else {
-      setTimeout(() => setFormData({ assetName: "", assetType: assetTypes[0]?.name || "Equity", investedAmount: "", currentAmount: "" }), 300);
+      setTimeout(() => setFormData({ assetName: "", assetType: assetTypes[0]?.id || "", investedAmount: "", currentAmount: "" }), 300);
     }
   }, [investment, isOpen, assetTypes]);
 
   const handleSave = () => {
     if (!formData.assetName) {
       toast.error("Please enter an asset name");
+      return;
+    }
+    if (!formData.assetType) {
+      toast.error("Please select an asset class");
       return;
     }
     if (!formData.investedAmount) {
@@ -102,8 +106,9 @@ export function AddInvestmentModal({ isOpen, onClose, onSave, investment }: AddI
                     onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
                     className="w-full p-3 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                   >
+                    <option value="" disabled>Select Asset Class</option>
                     {assetTypes.map((type) => (
-                      <option key={type.id} value={type.name}>{type.name}</option>
+                      <option key={type.id} value={type.id}>{type.name}</option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />

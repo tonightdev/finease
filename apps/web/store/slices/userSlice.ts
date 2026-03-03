@@ -8,6 +8,11 @@ export interface User {
   gender?: string;
   dob?: string;
   phone?: string;
+  budgetTargets?: {
+    needs: number;
+    wants: number;
+    savings: number;
+  };
 }
 
 export interface UserState {

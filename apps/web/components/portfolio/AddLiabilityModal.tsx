@@ -3,19 +3,19 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { type Account } from "@repo/types";
 
 interface AddLiabilityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  liability?: any;
+  liability?: Partial<Account>;
   onSave: (data: { name: string; type: string; initialAmount: string; paidAmount: string; interestPaid: string }) => void;
 }
 
 export function AddLiabilityModal({ isOpen, onClose, liability, onSave }: AddLiabilityModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    type: "loan",
+    type: "debt",
     initialAmount: "",
     paidAmount: "",
     interestPaid: "",
@@ -23,17 +23,18 @@ export function AddLiabilityModal({ isOpen, onClose, liability, onSave }: AddLia
 
   useEffect(() => {
     if (liability) {
+      const absBalance = Math.abs(liability.balance ?? 0);
       setFormData({
-        name: liability.name,
-        type: liability.type,
-        initialAmount: liability.initialAmount?.toString() || (Math.abs(liability.balance) + (liability.paidAmount || 0)).toString(),
-        paidAmount: liability.paidAmount?.toString() || "0",
-        interestPaid: liability.interestPaid?.toString() || "0",
+        name: liability.name ?? "",
+        type: liability.type ?? "debt",
+        initialAmount: liability.initialAmount?.toString() || (absBalance + (liability.paidAmount ?? 0)).toString(),
+        paidAmount: liability.paidAmount?.toString() ?? "0",
+        interestPaid: liability.interestPaid?.toString() ?? "0",
       });
     } else {
       setFormData({
         name: "",
-        type: "loan",
+        type: "debt",
         initialAmount: "",
         paidAmount: "0",
         interestPaid: "0",
@@ -76,13 +77,13 @@ export function AddLiabilityModal({ isOpen, onClose, liability, onSave }: AddLia
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
-                  placeholder="e.g. Home Loan, Car Loan"
+                  placeholder="e.g. Home Debt, Car Debt"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-                  Total Loan / Principal Amount (₹)
+                  Total Debt / Principal Amount (₹)
                 </label>
                 <input
                   type="number"

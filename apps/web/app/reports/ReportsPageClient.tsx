@@ -18,8 +18,11 @@ export default function ReportsPageClient() {
   const transactions = useSelector((state: RootState) => state.transactions.items);
   const categories = useSelector((state: RootState) => state.categories.items);
   const stats = useSelector((state: RootState) => state.stats.data);
+  const user = useSelector((state: RootState) => state.user.profile);
 
-  const netWorth = accounts.reduce((sum: number, acc: { type: string; balance: number }) => acc.type !== 'loan' ? sum + acc.balance : sum - acc.balance, 0);
+  const budgetTargets = user?.budgetTargets || { needs: 50, wants: 30, savings: 20 };
+
+  const netWorth = accounts.reduce((sum: number, acc: { type: string; balance: number }) => acc.type !== 'debt' ? sum + acc.balance : sum - acc.balance, 0);
   
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -38,6 +41,7 @@ export default function ReportsPageClient() {
 
   // Filtering logic based on viewType
   const filteredTx = transactions.filter((tx: Transaction) => {
+    if (tx.status === 'pending_confirmation') return false;
     const d = new Date(tx.date);
     const txYear = d.getFullYear();
     const txMonth = d.getMonth();
@@ -63,6 +67,7 @@ export default function ReportsPageClient() {
   
   const trendData = months.map((month, idx) => {
     const monthTx = transactions.filter(tx => {
+      if (tx.status === 'pending_confirmation') return false;
       const d = new Date(tx.date);
       return d.getMonth() === idx && d.getFullYear() === currentYear;
     });
@@ -98,6 +103,28 @@ export default function ReportsPageClient() {
     if (viewType === "Quarterly") return `Q${currentQuarter + 1} ${currentYear}`;
     return `${currentYear} Full Year`;
   };
+
+  const fiftyThirtyTwenty = useMemo(() => {
+    let needs = 0;
+    let wants = 0;
+    let savings = 0;
+
+    filteredTx.forEach((tx: Transaction) => {
+      if (tx.type === 'expense') {
+        const cat = categories.find(c => c.name === tx.category);
+        const pType = cat?.parentType || 'needs';
+        if (pType === 'needs') needs += tx.amount;
+        else if (pType === 'wants') wants += tx.amount;
+        else if (pType === 'savings') savings += tx.amount;
+      }
+    });
+
+    return {
+      needs: { amount: needs, percent: outflow > 0 ? (needs / outflow) * 100 : 0 },
+      wants: { amount: wants, percent: outflow > 0 ? (wants / outflow) * 100 : 0 },
+      savings: { amount: savings, percent: outflow > 0 ? (savings / outflow) * 100 : 0 }
+    };
+  }, [filteredTx, categories, outflow]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-6 sm:space-y-8">
@@ -177,6 +204,64 @@ export default function ReportsPageClient() {
              <SavingsVelocityChart data={trendData.map(d => ({ month: d.name, velocity: d.velocity }))} />
            </Card>
         </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Budget Target Benchmark</h3>
+          <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Total Outflow: {formatCurrency(outflow)}</span>
+        </div>
+        <Card className="p-6 sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">Needs</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{Math.round(fiftyThirtyTwenty.needs.percent)}% / Target {budgetTargets.needs}%</span>
+                </div>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(fiftyThirtyTwenty.needs.amount)}</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className={`bg-indigo-500 h-full rounded-full transition-all duration-1000 group-hover:opacity-80`} 
+                  style={{ width: `${Math.min(fiftyThirtyTwenty.needs.percent, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">Wants</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{Math.round(fiftyThirtyTwenty.wants.percent)}% / Target {budgetTargets.wants}%</span>
+                </div>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(fiftyThirtyTwenty.wants.amount)}</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className={`bg-pink-500 h-full rounded-full transition-all duration-1000 group-hover:opacity-80`} 
+                  style={{ width: `${Math.min(fiftyThirtyTwenty.wants.percent, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">Savings & Inv.</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{Math.round(fiftyThirtyTwenty.savings.percent)}% / Target {budgetTargets.savings}%</span>
+                </div>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(fiftyThirtyTwenty.savings.amount)}</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className={`bg-emerald-500 h-full rounded-full transition-all duration-1000 group-hover:opacity-80`} 
+                  style={{ width: `${Math.min(fiftyThirtyTwenty.savings.percent, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       <div className="space-y-4">

@@ -26,7 +26,7 @@ export const MOCK_ACCOUNTS: Account[] = [
     id: "acc-3",
     userId: "user-1",
     name: "Car Loan",
-    type: "loan",
+    type: "debt",
     assetType: "",
     balance: -800000,
     currency: "INR",

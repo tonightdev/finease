@@ -4,11 +4,18 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
+  gender?: "male" | "female" | "other";
+  dob?: string;
   role: UserRole;
   createdAt: string;
+  budgetTargets?: {
+    needs: number;
+    wants: number;
+    savings: number;
+  };
 }
 
-export type AccountType = "bank" | "cash" | "loan" | "investment" | "card" | "asset";
+export type AccountType = "bank" | "cash" | "debt" | "investment" | "card" | "asset";
 
 export interface Account {
   id: string;
@@ -40,8 +47,27 @@ export interface FinancialGoal {
   icon?: string;
 }
 
-export type TransactionStatus = "pending" | "approved" | "rejected";
+export type CategoryParentType = "needs" | "wants" | "savings" | "income";
+
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  color: string;
+  type?: "expense" | "income";
+  parentType?: CategoryParentType;
+}
+
+export interface AssetClass {
+  id: string;
+  userId: string;
+  name: string;
+  color: string;
+}
+
+export type TransactionStatus = "pending" | "approved" | "rejected" | "pending_confirmation" | "completed";
 export type TransactionType = "income" | "expense" | "transfer";
+export type TransactionFrequency = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface Transaction {
   id: string;
@@ -60,8 +86,10 @@ export interface Transaction {
     isCashWithdrawal?: boolean;
   };
   isAutomated?: boolean;
-  frequency?: string;
+  frequency?: TransactionFrequency;
   recurringCount?: string | number;
+  balanceAfter?: number;
+  toBalanceAfter?: number;
 }
 
 export interface DashboardStats {

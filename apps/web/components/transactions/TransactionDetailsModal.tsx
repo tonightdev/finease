@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Transaction, Account, FinancialGoal } from "@repo/types";
+import { Transaction, Account, FinancialGoal, Category } from "@repo/types";
 import { formatDate } from "@/lib/utils";
 
 interface TransactionDetailsModalProps {
@@ -11,9 +11,10 @@ interface TransactionDetailsModalProps {
   transaction: Transaction | null;
   accounts: Account[];
   goals: FinancialGoal[];
+  categories: Category[];
 }
 
-export function TransactionDetailsModal({ isOpen, onClose, transaction, accounts, goals }: TransactionDetailsModalProps) {
+export function TransactionDetailsModal({ isOpen, onClose, transaction, accounts, goals, categories }: TransactionDetailsModalProps) {
   if (!isOpen || !transaction) return null;
 
   const getAccountName = (id?: string) => {
@@ -24,6 +25,8 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction, accounts
     if (goal) return goal.name;
     return "Unknown";
   };
+
+  const categoryObj = categories.find(c => c.id === transaction.category);
 
   return (
     <AnimatePresence>
@@ -69,8 +72,8 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction, accounts
 
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category</span>
-                <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-300">
-                  {transaction.category}
+                <span className={`inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${categoryObj ? (categoryObj.color + ' bg-opacity-10 text-slate-800 dark:text-slate-300') : 'bg-slate-100 dark:bg-slate-800 dark:text-slate-300 text-slate-800'}`}>
+                  {categoryObj?.name || transaction.category}
                 </span>
               </div>
 

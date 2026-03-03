@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Upload, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { parseFinancialCSV, ParsedTransaction } from "@/lib/csv-parser";
+import toast from "react-hot-toast";
 
 interface FileUploadZoneProps {
   onTransactionsParsed: (transactions: ParsedTransaction[]) => void;
@@ -17,7 +18,7 @@ export function FileUploadZone({ onTransactionsParsed }: FileUploadZoneProps) {
 
   const handleFile = async (file: File) => {
     if (!file.name.endsWith(".csv")) {
-      alert("Please upload a CSV file.");
+      toast.error("Please upload a CSV file.");
       return;
     }
 

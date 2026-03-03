@@ -12,7 +12,7 @@ interface AssetAllocationData {
 
 interface TooltipProps {
   active?: boolean;
-  payload?: { name: string; value: number; payload: any }[];
+  payload?: { name: string; value: number; payload: AssetAllocationData }[];
 }
 
 const CustomTooltip = ({ active, payload }: TooltipProps) => {

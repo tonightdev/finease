@@ -1,0 +1,28 @@
+import { Controller, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { AuthService } from '@auth/auth.service';
+import { SignupDto, LoginDto, ResetPasswordDto } from '@auth/dto/auth.dto';
+
+@ApiTags('Auth')
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @ApiOperation({ summary: 'Register a new user' })
+  @Post('signup')
+  signup(@Body() data: SignupDto) {
+    return this.authService.signup(data);
+  }
+
+  @ApiOperation({ summary: 'Login and get a JWT token' })
+  @Post('login')
+  login(@Body() data: LoginDto) {
+    return this.authService.login(data);
+  }
+
+  @ApiOperation({ summary: 'Reset user password' })
+  @Post('reset-password')
+  resetPassword(@Body() data: ResetPasswordDto) {
+    return this.authService.resetPassword(data);
+  }
+}
