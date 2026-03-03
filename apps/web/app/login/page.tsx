@@ -8,7 +8,7 @@ import { Logo } from "@/components/ui/Logo";
 
 export default function LoginPage() {
   const { loginWithGoogle, user } = useAuth();
-  const [userEmail, setUserEmail] = useState("Rahul@example.com");
+  const [userEmail, setUserEmail] = useState("dhavalpithwa@gmail.com");
   const router = useRouter();
 
   useEffect(() => {

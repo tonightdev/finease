@@ -8,8 +8,8 @@ import { Logo } from "@/components/ui/Logo";
 
 export default function SignupPage() {
   const { loginWithGoogle, user } = useAuth();
-  const [userName, setUserName] = useState("Rahul Sharma");
-  const [userEmail, setUserEmail] = useState("Rahul@example.com");
+  const [userName, setUserName] = useState("Dhaval Pithwa");
+  const [userEmail, setUserEmail] = useState("dhavalpithwa@gmail.com");
   const router = useRouter();
 
   useEffect(() => {

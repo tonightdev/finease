@@ -12,7 +12,6 @@ interface GoalProgressProps {
   currentAmount: number;
   percentageSaved: number;
   expectedPercentage: number;
-  targetDate: string;
 }
 
 export function GoalProgressCard({ 
@@ -21,7 +20,6 @@ export function GoalProgressCard({
   currentAmount, 
   percentageSaved, 
   expectedPercentage,
-  targetDate 
 }: GoalProgressProps) {
   const diff = percentageSaved - expectedPercentage;
   const status = diff >= 0 ? (diff > 5 ? "ahead" : "ontrack") : "behind";
@@ -50,34 +48,32 @@ export function GoalProgressCard({
   const currentStatus = statusConfig[status as keyof typeof statusConfig];
 
   return (
-    <Card className="flex flex-col gap-4">
-      <div className="flex justify-between items-end">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">
-            <Target className="w-5 h-5" />
+    <Card className="flex flex-col p-4 gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">
+            <Target className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-slate-900 dark:text-white text-sm font-bold">{name}</p>
-            <p className="text-xs text-slate-500 font-medium">Target: {formatCurrency(targetAmount)} by {new Date(targetDate).getFullYear()}</p>
+            <p className="text-slate-900 dark:text-white text-sm font-bold truncate max-w-[120px] sm:max-w-[200px]">{name}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{Math.round(percentageSaved)}% SAVED</p>
           </div>
         </div>
-        <span className="text-slate-900 dark:text-white text-sm font-bold bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-700">
-          {Math.round(percentageSaved)}%
-        </span>
+        <Badge variant={currentStatus.badge as "ahead" | "behind" | "ontrack" | "default"} className="text-[10px] px-1.5 py-0">
+          {currentStatus.label}
+        </Badge>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         <ProgressBar 
           progress={percentageSaved} 
           expectedPace={expectedPercentage}
           barClassName={status === 'behind' ? 'bg-red-500' : 'bg-indigo-500'}
         />
         
-        <div className="flex justify-between text-xs font-medium">
-          <span className="text-slate-500">Saved: {formatCurrency(currentAmount)}</span>
-          <Badge variant={currentStatus.badge as "ahead" | "behind" | "ontrack" | "default"} icon={currentStatus.icon}>
-            {currentStatus.label}
-          </Badge>
+        <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <span>{formatCurrency(currentAmount)}</span>
+          <span>Target: {formatCurrency(targetAmount)}</span>
         </div>
       </div>
     </Card>

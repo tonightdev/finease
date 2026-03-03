@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (email?: string, name?: string) => {
     const cleanName = name || (email ? (email.split("@")[0] || "User") : "Dhaval Pithwa");
-    const cleanEmail = email || "dpithwa@example.com";
+    const cleanEmail = email || "dhavalpithwa@gmail.com";
     
     const mockUser: User = {
       uid: "local-mock-uid",

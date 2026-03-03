@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; type: string; balance: string }) => void;
+  onSave: (data: { name: string; type: string; balance: string; minimumBalance?: string; maxLimit?: string }) => void;
   account?: Account | null;
 }
 
@@ -18,6 +18,8 @@ export function AddAccountModal({ isOpen, onClose, onSave, account }: AddAccount
     name: "",
     type: "bank",
     balance: "",
+    minimumBalance: "",
+    maxLimit: "",
   });
 
   useEffect(() => {
@@ -27,16 +29,20 @@ export function AddAccountModal({ isOpen, onClose, onSave, account }: AddAccount
           name: account.name,
           type: account.type,
           balance: String(account.balance),
+          minimumBalance: account.minimumBalance?.toString() || "",
+          maxLimit: account.maxLimit?.toString() || "",
         });
       } else {
         setFormData({
           name: "",
           type: "bank",
           balance: "",
+          minimumBalance: "",
+          maxLimit: "",
         });
       }
     } else {
-      setTimeout(() => setFormData({ name: "", type: "bank", balance: "" }), 300);
+      setTimeout(() => setFormData({ name: "", type: "bank", balance: "", minimumBalance: "", maxLimit: "" }), 300);
     }
   }, [account, isOpen]);
 
@@ -49,11 +55,7 @@ export function AddAccountModal({ isOpen, onClose, onSave, account }: AddAccount
       toast.error("Please enter an initial balance");
       return;
     }
-    const safeData = {
-       ...formData,
-       balance: formData.balance,
-    };
-    onSave(safeData);
+    onSave(formData);
     toast.success(account ? "Account updated successfully" : "Account added successfully");
   };
 
@@ -138,6 +140,30 @@ export function AddAccountModal({ isOpen, onClose, onSave, account }: AddAccount
                   </p>
                 )}
               </div>
+
+              {formData.type === "card" ? (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 text-primary">Max Limit (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formData.maxLimit}
+                    onChange={(e) => setFormData({ ...formData, maxLimit: e.target.value })}
+                    placeholder="0.00"
+                    className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 text-orange-500">Minimum Balance (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formData.minimumBalance}
+                    onChange={(e) => setFormData({ ...formData, minimumBalance: e.target.value })}
+                    placeholder="0.00"
+                    className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                  />
+                </div>
+              )}
 
               <button 
                 onClick={handleSave}
