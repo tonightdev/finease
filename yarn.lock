@@ -4208,6 +4208,7 @@ __metadata:
     eslint: "npm:^9.18.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.2"
+    express: "npm:^5.2.1"
     firebase-admin: "npm:^13.7.0"
     globals: "npm:^16.0.0"
     jest: "npm:^30.0.0"
@@ -5991,7 +5992,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:5.2.1":
+"express@npm:5.2.1, express@npm:^5.2.1":
   version: 5.2.1
   resolution: "express@npm:5.2.1"
   dependencies:
