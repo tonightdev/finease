@@ -9,11 +9,25 @@ export class FirebaseAdminService implements OnModuleInit {
     if (!admin.apps.length) {
       const projectId = process.env.FIREBASE_PROJECT_ID;
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+      if (privateKey) {
+        // Remove surrounding quotes if they exist (common when copying from JSON/dashboard)
+        privateKey = privateKey.trim();
+        if (
+          (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+          (privateKey.startsWith("'") && privateKey.endsWith("'"))
+        ) {
+          privateKey = privateKey.slice(1, -1);
+        }
+
+        // Replace literal \n string with actual newlines
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
 
       if (!projectId || !clientEmail || !privateKey) {
         throw new Error(
-          'Missing Firebase configuration. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in .env',
+          'Missing Firebase configuration. Ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in Vercel/env.',
         );
       }
 
