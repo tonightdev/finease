@@ -7,8 +7,12 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 
+import { useSecurity } from "@/components/providers/SecurityProvider";
+import { Shield, Fingerprint } from "lucide-react";
+
 export default function SettingsPage() {
   const { user, updateProfile } = useAuth();
+  const { isLockEnabled, toggleLock } = useSecurity();
   const router = useRouter();
   
   const [formData, setFormData] = useState({
@@ -100,12 +104,12 @@ export default function SettingsPage() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Legal Identity</label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="text" 
                   value={formData.name}
                   disabled
-                  className="w-full h-10 pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5"
+                  className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
                 />
               </div>
             </div>
@@ -113,12 +117,12 @@ export default function SettingsPage() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Communication Node</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="email" 
                   value={formData.email}
                   disabled
-                  className="w-full h-10 pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5"
+                  className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
                 />
               </div>
             </div>
@@ -126,12 +130,12 @@ export default function SettingsPage() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Mobile Uplink</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="tel" 
                   value={formData.phone}
                   disabled
-                  className="w-full h-10 pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5"
+                  className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
                 />
               </div>
             </div>
@@ -142,28 +146,54 @@ export default function SettingsPage() {
                 <select 
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full h-10 px-3 pr-10 appearance-none bg-slate-50 dark:bg-slate-950 border-none rounded-xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5 transition-all"
+                  className="w-full h-12 px-4 pr-10 appearance-none bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
                 >
                   <option>Not Specified</option>
                   <option>Male</option>
                   <option>Female</option>
                   <option>Other</option>
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Biological Horizon</label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="date" 
                   value={formData.dob}
                   onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                  className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-950 border-none rounded-xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5 transition-all"
+                  className="w-full h-12 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-100 dark:border-white/5 mt-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Shield className="w-5 h-5 text-indigo-500" />
+              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Security & Privacy</h3>
+            </div>
+            
+            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl flex items-center justify-between group hover:ring-1 hover:ring-primary/20 transition-all">
+               <div className="flex items-center gap-4">
+                  <div className="size-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-primary shadow-sm">
+                     <Fingerprint className="w-5 h-5" />
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">App Lock</p>
+                     <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Biometrics or Face Unlock</p>
+                  </div>
+               </div>
+               
+               <button 
+                onClick={() => toggleLock(!isLockEnabled)}
+                className={`relative w-12 h-6 flex items-center rounded-full px-1 transition-colors duration-300 ${isLockEnabled ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-800'}`}
+               >
+                  <div className={`size-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${isLockEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+               </button>
             </div>
           </div>
 
@@ -181,9 +211,9 @@ export default function SettingsPage() {
                     type="number" 
                     value={formData.needsTarget}
                     onChange={(e) => setFormData({ ...formData, needsTarget: parseFloat(e.target.value) || 0 })}
-                    className="w-full h-10 px-3 pr-10 bg-indigo-50/30 dark:bg-indigo-500/5 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-indigo-500/20 transition-all"
+                    className="w-full h-12 px-4 pr-10 bg-indigo-50/30 dark:bg-indigo-500/5 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-indigo-500/20 transition-all font-mono"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-indigo-400/50 font-black text-xs">%</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-400/50 font-black text-xs">%</span>
                 </div>
               </div>
 
@@ -194,9 +224,9 @@ export default function SettingsPage() {
                     type="number" 
                     value={formData.wantsTarget}
                     onChange={(e) => setFormData({ ...formData, wantsTarget: parseFloat(e.target.value) || 0 })}
-                    className="w-full h-10 px-3 pr-10 bg-pink-50/30 dark: pink-500/5 border-none rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-pink-500/20 transition-all"
+                    className="w-full h-12 px-4 pr-10 bg-pink-50/30 dark:bg-pink-500/5 border-none rounded-2xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-pink-500/20 transition-all font-mono"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-pink-400/50 font-black text-xs">%</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400/50 font-black text-xs">%</span>
                 </div>
               </div>
 
@@ -207,21 +237,21 @@ export default function SettingsPage() {
                     type="number" 
                     value={formData.savingsTarget}
                     onChange={(e) => setFormData({ ...formData, savingsTarget: parseFloat(e.target.value) || 0 })}
-                    className="w-full h-10 px-3 pr-10 bg-emerald-50/30 dark:bg-emerald-500/5 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-emerald-500/20 transition-all"
+                    className="w-full h-12 px-4 pr-10 bg-emerald-50/30 dark:bg-emerald-500/5 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-white text-sm font-black ring-1 ring-emerald-500/20 transition-all font-mono"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400/50 font-black text-xs">%</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400/50 font-black text-xs">%</span>
                 </div>
               </div>
             </div>
 
-            <div className={`mt-4 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2 ${formData.needsTarget + formData.wantsTarget + formData.savingsTarget === 100 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+            <div className={`mt-4 px-4 py-2 rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest flex md:inline-flex items-center justify-center md:justify-start gap-2 ${formData.needsTarget + formData.wantsTarget + formData.savingsTarget === 100 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
               {formData.needsTarget + formData.wantsTarget + formData.savingsTarget === 100 ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               ) : (
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
               )}
-              Configuration Equilibrium: {formData.needsTarget + formData.wantsTarget + formData.savingsTarget}% 
-              {formData.needsTarget + formData.wantsTarget + formData.savingsTarget !== 100 && ' (Must equal 100%)'}
+              <span>Configuration Equilibrium: {formData.needsTarget + formData.wantsTarget + formData.savingsTarget}% </span>
+              {formData.needsTarget + formData.wantsTarget + formData.savingsTarget !== 100 && <span className="hidden sm:inline">(Must equal 100%)</span>}
             </div>
           </div>
 

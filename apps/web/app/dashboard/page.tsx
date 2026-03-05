@@ -207,7 +207,7 @@ export default function Home() {
       <div className="space-y-4">
             {regularAccounts.length > 0 && (
               <div className="space-y-2">
-                <div className="sticky top-[49px] z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Liquid Capital</h3>
                   <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">{regularAccounts.length} Units</span>
                 </div>
@@ -217,7 +217,7 @@ export default function Home() {
 
             {investmentAccounts.length > 0 && (
               <div className="space-y-2">
-                <div className="sticky top-[49px] z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Investment Portfolio</h3>
                   <span className="text-[8px] font-black text-indigo-500 uppercase bg-indigo-500/10 px-1.5 py-0.5 rounded tracking-[0.1em]">{investmentAccounts.length} Assets</span>
                 </div>

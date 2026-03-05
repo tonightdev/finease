@@ -3,31 +3,47 @@
 import { useAuth } from "./AuthProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
+import Loading from "@/app/loading";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const PUBLIC_ROUTES = ["/", "/login", "/signup"];
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Redux loading states
+  const accountsLoading = useSelector((state: RootState) => state.accounts.loading);
+  const accountsCount = useSelector((state: RootState) => state.accounts.items.length);
+  const transactionsLoading = useSelector((state: RootState) => state.transactions.loading);
+  const transactionsCount = useSelector((state: RootState) => state.transactions.items.length);
 
   useEffect(() => {
-    if (!loading && !user && pathname && !PUBLIC_ROUTES.includes(pathname)) {
+    if (!authLoading && !user && pathname && !PUBLIC_ROUTES.includes(pathname)) {
       router.push("/");
     }
     
     // Auto-redirect logged-in users from landing to dashboard
-    if (!loading && user && pathname === "/") {
+    if (!authLoading && user && pathname === "/") {
       router.push("/dashboard");
     }
-  }, [user, loading, pathname, router]);
+  }, [user, authLoading, pathname, router]);
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="size-10 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    );
+  // is we are on a protected route
+  const isProtectedRoute = pathname && !PUBLIC_ROUTES.includes(pathname);
+  
+  // High-level data loading check:
+  // Show loader if Auth is strictly loading
+  // OR if we are on a protected route and we have NO data yet AND an API call is in progress
+  const isDataFetching = isProtectedRoute && (
+    (accountsCount === 0 && accountsLoading) || 
+    (transactionsCount === 0 && transactionsLoading)
+  );
+
+  if (authLoading || isDataFetching) {
+    return <Loading />;
   }
 
   // If not loading, not user, and is not public route, it will redirect, but meanwhile return null to prevent flash

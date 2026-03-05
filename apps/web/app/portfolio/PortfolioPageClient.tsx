@@ -103,16 +103,16 @@ export default function PortfolioPageClient() {
             <div key={c.id} className="relative group/asset shrink-0">
               <button 
                 onClick={() => { setEditingAssetType(c); setIsAssetTypeModalOpen(true); }}
-                className="whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm transition-all"
+                className="whitespace-nowrap flex items-center gap-2 pl-3 pr-7 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm transition-all"
               >
                 <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
                 <span className="font-bold text-[9px] uppercase tracking-widest text-slate-600 dark:text-slate-400">{c.name}</span>
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); setEditingAssetType(c); setIsAssetTypeModalOpen(true); }}
-                className="absolute -top-1 -right-1 p-1 bg-white dark:bg-slate-800 rounded-full shadow-sm opacity-100 transition-opacity border border-slate-100 dark:border-white/5"
+                className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 lg:opacity-0 lg:group-hover/asset:opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
               >
-                <Edit2 className="w-1.5 h-1.5 text-slate-400" />
+                <Edit2 className="w-2.5 h-2.5 text-primary" />
               </button>
             </div>
           ))}

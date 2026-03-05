@@ -12,7 +12,7 @@ import { fetchAccounts, createAccount } from "@/store/slices/accountsSlice";
 import { addCategoryAction, updateCategoryAction, removeCategoryAction } from "@/store/slices/categoriesSlice";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
 import { CategoryParentType, Transaction } from "@repo/types";
-import { Trash2, Edit2, Filter, ArrowRight, CheckCircle2, Plus, Download } from "lucide-react";
+import { Trash2, Edit2, Filter, ArrowRight, CheckCircle2, Plus, Download, ChevronUp, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -212,20 +212,20 @@ export default function TransactionsPageClient() {
            >
              <Plus className="w-3.5 h-3.5" />
            </button>
-           {categories.map(c => (
+            {categories.map(c => (
               <div key={c.id} className="relative group/cat shrink-0">
                 <button 
                   onClick={() => { setFilterCategory(filterCategory === c.id ? 'all' : c.id); setCurrentPage(1); }}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${filterCategory === c.id ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5'}`}
+                  className={`flex items-center gap-2 pl-3 pr-7 py-1.5 rounded-xl border transition-all ${filterCategory === c.id ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5'}`}
                 >
                   <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
                   <span className={`font-bold text-[9px] uppercase tracking-widest ${filterCategory === c.id ? 'text-primary' : 'text-slate-500'}`}>{c.name}</span>
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }}
-                  className="absolute -top-1 -right-1 p-1 bg-white dark:bg-slate-800 rounded-full shadow-sm opacity-100 lg:opacity-0 lg:group-hover/cat:opacity-100 transition-opacity border border-slate-100 dark:border-white/5"
+                  className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 lg:opacity-0 lg:group-hover/cat:opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
                 >
-                  <Edit2 className="w-1.5 h-1.5 text-slate-400" />
+                  <Edit2 className="w-2.5 h-2.5 text-primary" />
                 </button>
               </div>
            ))}
@@ -270,25 +270,24 @@ export default function TransactionsPageClient() {
             </button>
           </div>
         </div>
-      </PageHeader>
 
-      {/* Expandable Filters */}
+        {/* Expandable Filters - Moved inside PageHeader for sticky behavior */}
         {showFilters && (
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/10 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Source Account</label>
+          <div className="mt-2 p-3 bg-white dark:bg-slate-950/80 backdrop-blur-sm rounded-2xl border border-slate-100 dark:border-white/10 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Source Account</label>
                 <select 
                   value={filterAccount}
                   onChange={(e) => { setFilterAccount(e.target.value); setCurrentPage(1); }}
-                  className="w-full h-9 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-2 text-xs font-bold"
+                  className="w-full h-8 bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
                 >
                   <option value="all">All Accounts</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Flow Type</label>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Flow Type</label>
                 <div className="flex gap-1">
                   {[
                     { id: 'all', label: 'All' },
@@ -298,8 +297,8 @@ export default function TransactionsPageClient() {
                   ].map((t) => (
                     <button
                       key={t.id}
-                      onClick={() => { setFilterType(t.id); setCurrentPage(1); }}
-                      className={`flex-1 h-8 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${filterType === t.id ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-500 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900'}`}
+                      onClick={() => { setFilterType(t.id as 'all' | 'expense' | 'income' | 'transfer'); setCurrentPage(1); }}
+                      className={`flex-1 h-8 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${filterType === t.id ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-slate-50 dark:bg-slate-900 text-slate-500 ring-1 ring-slate-100 dark:ring-white/5'}`}
                     >
                       {t.label}
                     </button>
@@ -307,36 +306,40 @@ export default function TransactionsPageClient() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">From Date</label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">From Date</label>
                 <input 
                   type="date" 
                   value={filterDateFrom}
                   onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
-                  className="w-full h-9 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-2 text-xs font-bold"
+                  className="w-full h-8 bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">To Date</label>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">To Date</label>
                 <input 
                   type="date" 
                   value={filterDateTo}
                   onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
-                  className="w-full h-9 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-2 text-xs font-bold"
+                  className="w-full h-8 bg-slate-50 dark:bg-slate-900 border-none rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
                 />
               </div>
             </div>
+
             {activeFilterCount > 0 && (
               <button 
                 onClick={resetFilters}
-                className="w-full py-2 text-[9px] font-black uppercase text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
+                className="w-full py-1.5 text-[8px] font-black uppercase text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20"
               >
-                Clear All Filters
+                Clear All {activeFilterCount} Filters
               </button>
             )}
           </div>
         )}
+      </PageHeader>
+
       
       {/* Mobile & Tablet Card List (Visible up to lg/1024px) */}
       <div className="block lg:hidden space-y-4">
@@ -417,7 +420,7 @@ export default function TransactionsPageClient() {
                   <div className="flex items-center gap-2">
                     Execution Date
                     {sortConfig.key === 'date' && (
-                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />
                     )}
                   </div>
                 </th>
@@ -425,7 +428,7 @@ export default function TransactionsPageClient() {
                   <div className="flex items-center gap-2">
                     Description
                     {sortConfig.key === 'description' && (
-                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />
                     )}
                   </div>
                 </th>
@@ -434,7 +437,7 @@ export default function TransactionsPageClient() {
                   <div className="flex items-center gap-2">
                     Nexus Category
                     {sortConfig.key === 'category' && (
-                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />
                     )}
                   </div>
                 </th>
@@ -442,7 +445,7 @@ export default function TransactionsPageClient() {
                   <div className="flex items-center justify-end gap-2">
                     Quantum Amount
                     {sortConfig.key === 'amount' && (
-                      <span className="material-symbols-outlined text-xs">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>
+                      sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />
                     )}
                   </div>
                 </th>
