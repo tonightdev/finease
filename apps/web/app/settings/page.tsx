@@ -104,7 +104,7 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 space-y-4 sm:space-y-6 pb-12 lg:pb-12 pt-0">
+    <div className="mx-auto max-w-3xl w-full px-4 sm:px-6 space-y-4 sm:space-y-6 pb-20 lg:pb-8 pt-0">
       {/* Sticky Header */}
       <PageHeader
         title="Architect Settings"
@@ -304,6 +304,17 @@ export default function SettingsPage() {
                  </div>
               </div>
             </div>
+            {isLockEnabled && (
+              <div className="mt-4">
+                 <button 
+                   onClick={() => toggleLock(false)}
+                   className="w-full p-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-900/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[10px]"
+                 >
+                   <Shield className="w-4 h-4" />
+                   Turn Off Security and Privacy
+                 </button>
+              </div>
+            )}
           </div>
 
           {/* PIN Modal */}

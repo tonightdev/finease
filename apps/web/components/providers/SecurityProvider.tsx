@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Fingerprint, MonitorSmartphone, Lock, Delete } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Loading from "@/app/loading";
+import { SplashScreen } from "@/components/ui/SplashScreen";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useSelector } from "react-redux";
@@ -234,7 +234,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
             transition={{ duration: 0.5 }}
             className="fixed inset-0 z-[9999]"
           >
-            <Loading />
+            <SplashScreen />
           </motion.div>
         ) : isLocked ? (
           <motion.div

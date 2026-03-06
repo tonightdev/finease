@@ -10,7 +10,7 @@ export function SplashScreen() {
         <div className="absolute -top-[25%] -left-[25%] w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.03)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.05)_0%,transparent_70%)] animate-pulse" />
       </div>
 
-      <div className="relative flex flex-col items-center -mt-12 sm:mt-0">
+      <div className="relative flex flex-col items-center -mt-12 lg:-mt-16">
         {/* Core Architectural Logo */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -19,7 +19,7 @@ export function SplashScreen() {
             duration: 1.5, 
             ease: [0.16, 1, 0.3, 1]
           }}
-          className="relative size-48 flex items-center justify-center"
+          className="relative w-48 h-30 flex items-center justify-center"
         >
           {/* Animated Rings */}
           {[0, 1, 2].map((i) => (

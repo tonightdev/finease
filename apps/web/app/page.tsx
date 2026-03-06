@@ -190,7 +190,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                </div>
-               <div className="absolute -bottom-8 -left-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-3xl shadow-2xl flex items-center gap-4">
+                <div className="absolute -bottom-6 -left-4 sm:-bottom-8 sm:-left-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 sm:p-6 rounded-3xl shadow-2xl flex items-center gap-4 z-20">
                   <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <Lock className="w-4 h-4" />
                   </div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final Call to Action */}
-      <section className="py-24 pb-40 relative overflow-hidden">
+      <section className="py-24 pb-8 relative overflow-hidden">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <h2 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mb-8">Ready to <span className="italic font-serif">Command?</span></h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -221,7 +221,7 @@ export default function LandingPage() {
       </section>
 
       {/* Mini Footer */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-white/5 py-12 bg-white dark:bg-slate-950">
+      <footer className="mt-8 border-t border-slate-200 dark:border-white/5 py-8 bg-white dark:bg-slate-950">
         <div className="mx-auto max-w-7xl px-4 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-2 grayscale group-hover:grayscale-0 transition-all">
              <span className="text-lg font-black text-slate-900 dark:text-white tracking-tighter">Fin<span className="text-primary">Ease</span></span>

@@ -94,7 +94,8 @@ export default function Home() {
         }, 0);
 
         runningNW = runningNW - netFlowNextMonth;
-        if (history[i]) history[i].value = runningNW;
+        const historyItem = history[i];
+        if (historyItem) historyItem.value = runningNW;
     }
 
     return history.map(h => ({ month: h.month, value: h.value > 0 ? h.value : 0 }));
@@ -152,7 +153,7 @@ export default function Home() {
 
   if (loading && accounts.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-8 animate-pulse">
+      <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-6 lg:space-y-8 animate-pulse">
         <div className="space-y-3">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-5 w-96" />
@@ -170,7 +171,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 w-full pb-8 pt-0">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 w-full pb-20 lg:pb-8 pt-0">
       <PageHeader
         title="Command Center"
         subtitle="Unified wealth landscape"

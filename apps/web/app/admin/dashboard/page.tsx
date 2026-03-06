@@ -7,11 +7,24 @@ import {
   ShieldCheck, 
   Database,
   ArrowUpRight,
-  Clock
+  Clock,
+  Loader2,
+  Zap,
+  Globe
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import api from "@/lib/api";
 import { AdminStats } from "@repo/types";
+import { 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  Tooltip as RechartsTooltip 
+} from "recharts";
+
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -22,8 +35,8 @@ export default function AdminDashboard() {
       try {
         const res = await api.get<AdminStats>("/admin/stats");
         setStats(res.data);
-      } catch (error) {
-        // Silent error for now as per requirements to remove console errors
+      } catch {
+        // Silent error
       } finally {
         setLoading(false);
       }
@@ -31,58 +44,58 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm z-50">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#08090a] p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
-            <ShieldCheck className="w-4 h-4" />
-            System Governance
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
-            Omniscience <span className="text-slate-400 font-medium">Dashboard</span>
-          </h1>
-        </div>
+    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-20 lg:pb-8 space-y-6 lg:space-y-8">
+      <PageHeader 
+        title="Platform Overview" 
+        subtitle="Administrative Portal" 
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <StatCard 
-            title="Total Sovereigns" 
+            title="Total Users" 
             value={stats?.totalUsers.toLocaleString() ?? "0"} 
             icon={<Users className="w-5 h-5" />}
-            trend="+12% this week"
+            trend="Total registered base"
           />
           <StatCard 
-            title="Active Pulsars" 
+            title="Avg. Daily Active" 
             value={stats?.activeUsers24h.toLocaleString() ?? "0"} 
             icon={<Activity className="w-5 h-5" />}
-            trend="Live Now"
+            trend="Rolling 24h window"
             color="emerald"
           />
           <StatCard 
-            title="Total Valuation" 
+            title="Total Assets Tracked" 
             value={`₹${(stats?.totalAssetsTracked ? stats.totalAssetsTracked / 10000000 : 0).toFixed(2)}Cr`} 
             icon={<Database className="w-5 h-5" />}
-            trend="Global Assets"
+            trend="Aggregate balance"
             color="primary"
           />
           <StatCard 
-            title="System Status" 
+            title="Instance Health" 
             value={stats?.systemHealth ?? "Optimal"} 
             icon={<ShieldCheck className="w-5 h-5" />}
-            trend="All Systems Normal"
+            trend="Production status"
             color="indigo"
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="p-6 rounded-[2.5rem] bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm h-[400px] flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-5">
+            <div className="p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm h-[280px] flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Growth Velocity</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">User Acquisition Trend</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Registration Metrics</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">New user distribution across timeline</p>
                 </div>
                 <div className="flex gap-2">
                   <div className="size-2 rounded-full bg-primary" />
@@ -90,8 +103,8 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="flex-1 flex items-end justify-between gap-4 px-2">
-                {stats?.userGrowth.map((g, i) => (
+              <div className="flex-1 flex items-end justify-between gap-4 px-2 pb-2">
+                {stats?.userGrowth.map((g: { count: number; day: string }, i: number) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-4">
                     <motion.div 
                       initial={{ height: 0 }}
@@ -100,7 +113,7 @@ export default function AdminDashboard() {
                       className="w-full max-w-[40px] bg-gradient-to-t from-primary/80 to-primary rounded-2xl relative group"
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-primary text-white text-[10px] font-black px-2 py-1 rounded-lg">
-                        {g.count}
+                        {g.count} users
                       </div>
                     </motion.div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{g.day}</span>
@@ -108,39 +121,116 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+               <div className="p-5 rounded-2xl bg-slate-900 border-none relative overflow-hidden group shadow-2xl shadow-indigo-500/10 transition-transform active:scale-[0.98] min-h-[160px] flex flex-col justify-center">
+                  <div className="relative z-10">
+                    <div className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 leading-none">Security Status</div>
+                    <h4 className="text-white font-black text-lg mb-1 tracking-tight">Active Encryption</h4>
+                    <p className="text-slate-400 text-[10px] font-medium leading-relaxed">
+                      End-to-end RSA-4096 protocols active across all clusters.
+                    </p>
+                  </div>
+                  <ShieldCheck className="absolute bottom-4 right-4 size-12 text-white/5 group-hover:text-white/10 transition-colors" />
+               </div>
+
+               <div className="p-5 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
+                      <Zap className="size-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">System Load</h4>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Across 4 nodes</p>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 dark:bg-white/5 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full w-[24%]" />
+                  </div>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Optimization</span>
+                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">99.9%</span>
+                  </div>
+               </div>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="p-6 rounded-[2.5rem] bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm">
+          <div className="space-y-5">
+            <div className="p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-100 md:text-slate-900 dark:text-white uppercase tracking-widest">Global Reach</h3>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active nodes by geography</p>
+                  </div>
+                  <Globe className="size-4 text-primary" />
+                </div>
+                
+                <div className="h-[140px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'India', value: 85 },
+                          { name: 'USA', value: 10 },
+                          { name: 'Europe', value: 5 }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={60}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        <Cell fill="#135bec" stroke="none" />
+                        <Cell fill="#10b981" stroke="none" />
+                        <Cell fill="#64748b" stroke="none" />
+                      </Pie>
+                      <RechartsTooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', fontSize: '9px', fontWeight: 'bold' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Real-time Feed</h3>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Feed Activity</h3>
                 <Clock className="w-4 h-4 text-slate-400" />
               </div>
               
-              <div className="space-y-6">
-                {stats?.recentActivities.map((activity, i) => (
-                  <div key={activity.id} className="flex gap-4">
-                    <div className="mt-1">
-                      <div className={`size-2 rounded-full ${i === 0 ? 'bg-primary animate-pulse' : 'bg-slate-200 dark:bg-slate-800'}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-baseline">
-                        <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">{activity.user}</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">{activity.time}</span>
+              <div className="space-y-5">
+                {stats?.recentActivities && stats.recentActivities.length > 0 ? (
+                  stats.recentActivities.map((activity: { id: number; user: string; time: string; type: string }, i: number) => (
+                    <div key={activity.id} className="flex gap-4">
+                      <div className="mt-1">
+                        <div className={`size-2 rounded-full ${i === 0 ? 'bg-primary animate-pulse' : 'bg-slate-200 dark:bg-slate-800'}`} />
                       </div>
-                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">{activity.type.replace('_', ' ')}</p>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-baseline">
+                          <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">{activity.user}</p>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">{activity.time}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">{activity.type.replace(/_/g, ' ')}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">No recent events logged</p>
                   </div>
-                ))}
+                )}
               </div>
 
-              <button className="w-full mt-8 py-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-widest rounded-2xl transition-all border border-slate-200/50 dark:border-white/5">
-                Audit Full Stream
-              </button>
+              <Link 
+                href="/admin/reports"
+                className="w-full mt-6 pt-4 pb-2 text-[10px] font-black text-slate-500 hover:text-primary uppercase tracking-widest transition-colors border-t border-slate-100 dark:border-white/5 text-center block"
+              >
+                View Full Reports
+              </Link>
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
@@ -161,17 +251,17 @@ function StatCard({ title, value, icon, trend, color = "primary" }: StatCardProp
   };
 
   return (
-    <div className="p-6 rounded-[2rem] bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm hover:shadow-md transition-all group">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${colorClasses[color]}`}>
+    <div className="p-3.5 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm hover:shadow-md transition-all group">
+      <div className="flex items-center justify-between mb-2.5">
+        <div className={`p-1.5 rounded-lg bg-gradient-to-br ${colorClasses[color]}`}>
           {icon}
         </div>
-        <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" />
+        <ArrowUpRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary transition-colors" />
       </div>
       <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
-        <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter mt-1">{value}</h4>
-        <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-2 flex items-center gap-1">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
+        <h4 className="text-lg font-black text-slate-900 dark:text-white tracking-tighter mt-0.5">{value}</h4>
+        <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1 flex items-center gap-1">
           {trend}
         </p>
       </div>

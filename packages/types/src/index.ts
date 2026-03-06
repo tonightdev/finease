@@ -13,6 +13,7 @@ export interface User {
     wants: number;
     savings: number;
   };
+  lastActiveAt?: string;
 }
 
 export type AccountType = "bank" | "cash" | "debt" | "investment" | "card" | "asset";

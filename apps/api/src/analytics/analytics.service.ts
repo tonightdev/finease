@@ -67,53 +67,80 @@ export class AnalyticsService {
   async getAdminStats(): Promise<AdminStats> {
     const db = this.firebaseAdmin.getFirestore();
 
-    // Fetch real counts
+    // Fetch real counts (only non-admin users)
     const usersSnapshot = await db.collection('users').get();
-    const totalUsers = usersSnapshot.size;
+    const userDocs = usersSnapshot.docs.filter((doc) => {
+      const data = doc.data() as Partial<User>;
+      return data.role !== 'admin';
+    });
+
+    const validUserIds = new Set(userDocs.map((doc) => doc.id));
+    const totalUsers = userDocs.length;
 
     const accountsSnapshot = await db.collection('accounts').get();
-    const totalAssetsTracked = accountsSnapshot.docs.reduce((sum: number, doc) => {
-      const data = doc.data();
-      return sum + (Number(data.balance) || 0);
-    }, 0);
+    const totalAssetsTracked = accountsSnapshot.docs.reduce(
+      (sum: number, doc) => {
+        const data = doc.data() as {
+          userId?: string;
+          balance?: number | string;
+        };
+        if (data.userId && !validUserIds.has(data.userId)) return sum;
+        return sum + (Number(data.balance) || 0);
+      },
+      0,
+    );
 
-    // Fetch real recent activities (last 5 signups)
+    // Fetch real recent activities
     const recentUsersSnapshot = await db
       .collection('users')
       .orderBy('createdAt', 'desc')
-      .limit(5)
       .get();
 
+    // Filter non-admins and take top 5
     const recentActivities: AdminStats['recentActivities'] =
-      recentUsersSnapshot.docs.map((doc, index) => {
-        const data = doc.data() as User;
-        return {
-          id: index + 1,
-          type: 'signup',
-          user: data.displayName || 'New Identity',
-          time: this.formatRelativeTime(data.createdAt),
-        };
-      });
+      recentUsersSnapshot.docs
+        .filter((doc) => (doc.data() as User).role !== 'admin')
+        .slice(0, 5)
+        .map((doc, index) => {
+          const data = doc.data() as User;
+          return {
+            id: index + 1,
+            type: 'signup',
+            user: data.displayName || 'New Identity',
+            time: this.formatRelativeTime(data.createdAt),
+          };
+        });
 
-    // Add system activities
-    if (recentActivities.length === 0) {
-      recentActivities.push({
-        id: 1,
-        type: 'audit_log',
-        user: 'System',
-        time: 'Just now',
-      });
-    } else {
-      recentActivities.unshift({
-        id: 0,
-        type: 'system_healthy',
-        user: 'System',
-        time: 'Just now',
-      });
+    // Calculate real user growth for last 7 days (non-admin)
+    const last7Days: { day: string; count: number }[] = [];
+    const now = new Date();
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayName = dayNames[d.getDay()];
+      const dayStart = new Date(d.setHours(0, 0, 0, 0));
+      const dayEnd = new Date(d.setHours(23, 59, 59, 999));
+
+      const count = userDocs.filter((doc) => {
+        const userData = doc.data() as Partial<User>;
+        const createdAt = userData.createdAt;
+        if (!createdAt) return false;
+        const createdDate = new Date(createdAt);
+        return createdDate >= dayStart && createdDate <= dayEnd;
+      }).length;
+
+      last7Days.push({ day: dayName ?? 'Unknown', count });
     }
 
-    // Mocking active ratio based on real user count
-    const activeUsers24h = Math.ceil(totalUsers * 0.4);
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const activeUsers24h = userDocs.filter((doc) => {
+      const userData = doc.data() as Partial<User>;
+      const activeAt = userData.lastActiveAt || userData.createdAt;
+      if (!activeAt) return false;
+      return new Date(activeAt) >= twentyFourHoursAgo;
+    }).length;
 
     return {
       totalUsers,
@@ -121,13 +148,7 @@ export class AnalyticsService {
       totalAssetsTracked,
       systemHealth: 'Optimal',
       recentActivities,
-      userGrowth: [
-        { day: 'Mon', count: Math.floor(totalUsers * 0.3) },
-        { day: 'Tue', count: Math.floor(totalUsers * 0.5) },
-        { day: 'Wed', count: Math.floor(totalUsers * 0.6) },
-        { day: 'Thu', count: Math.floor(totalUsers * 0.8) },
-        { day: 'Fri', count: totalUsers },
-      ],
+      userGrowth: last7Days,
     };
   }
 
@@ -139,7 +160,8 @@ export class AnalyticsService {
 
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   }
 }

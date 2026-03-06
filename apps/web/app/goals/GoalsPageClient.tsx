@@ -63,7 +63,7 @@ export default function GoalsPageClient() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-h-screen pb-12 lg:pb-8 pt-0">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pb-20 lg:pb-8 pt-0">
       <PageHeader
         title="Goals"
         subtitle={

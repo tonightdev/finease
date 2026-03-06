@@ -103,6 +103,9 @@ export class AuthService {
       role = 'admin';
     }
 
+    const lastActiveAt = new Date().toISOString();
+    await userDoc.ref.update({ lastActiveAt });
+
     const token = this.jwtService.sign({
       uid: userDoc.id,
       email: userData.email,

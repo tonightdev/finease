@@ -39,8 +39,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center min-h-screen bg-background-light dark:bg-background-dark p-4 sm:p-8">
-      <div className="w-full max-w-md bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark p-8 rounded-2xl shadow-xl flex flex-col gap-6">
+    <div className="flex-1 flex flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4 sm:p-8">
+      <div className="w-full max-w-md bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark p-8 rounded-2xl shadow-xl flex flex-col gap-6 -mt-8 sm:-mt-12">
         <div className="flex flex-col items-center mb-2 gap-3 text-center">
           <Logo className="w-12 h-12 mb-2" />
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">Join FinEase.</h1>

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/navigation/ThemeProvider";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { ClientHeader } from "@/components/navigation/ClientHeader";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { PWAInstallGuide } from "@/components/ui/PWAInstallGuide";
 import { ReduxProvider } from "@/components/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
 import { SecurityProvider } from "@/components/providers/SecurityProvider";
@@ -64,19 +65,20 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} font-body bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased`}>
+      <body className={`${inter.variable} min-h-[100dvh] flex flex-col font-body bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ReduxProvider>
             <AuthProvider>
               <SignalProvider>
                 <SecurityProvider>
                   <ClientHeader />
-                  <main className="flex-grow w-full pb-20 lg:pb-0 min-h-screen">
+                  <main className="flex flex-col flex-1 w-full">
                     <RequireAuth>
                       {children}
                     </RequireAuth>
                   </main>
                   <BottomNav />
+                  <PWAInstallGuide />
                   <Toaster position="bottom-right" toastOptions={{
                     style: {
                       background: '#333',

@@ -59,7 +59,7 @@ export default function PortfolioPageClient() {
   const netWorth = assets - liabilities;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-12 lg:pb-8 pt-0">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 sm:space-y-6 pb-20 lg:pb-8 pt-0">
       <PageHeader
         title="Portfolio"
         subtitle="Unified wealth command"
@@ -371,18 +371,26 @@ export default function PortfolioPageClient() {
         <h3 className="text-xs font-bold text-slate-400 px-1">Misc Asset Storage</h3>
         <div className="grid grid-cols-1 gap-4 lg:hidden">
             {otherAssets.length === 0 ? (
-                <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No misc assets</p>
+                <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters</p>
                 </div>
             ) : (
                 otherAssets.map(asset => (
                     <div 
                       key={asset.id} 
                       onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}
-                      className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm active:scale-95 transition-all flex items-center justify-between"
+                      className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
                     >
-                        <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">{asset.name}</h4>
-                        <span className="text-base font-black text-emerald-500 tracking-tighter">₹{asset.balance.toLocaleString()}</span>
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-0.5 min-w-0">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Fixed Asset</span>
+                                <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate">{asset.name}</h4>
+                            </div>
+                            <div className="flex flex-col items-end shrink-0">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Valuation</span>
+                                <span className="text-sm font-black text-emerald-500 tracking-tighter">₹{asset.balance.toLocaleString()}</span>
+                            </div>
+                        </div>
                     </div>
                 ))
             )}
