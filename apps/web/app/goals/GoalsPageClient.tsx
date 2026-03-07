@@ -136,12 +136,12 @@ export default function GoalsPageClient() {
 
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-6">
           {goals.length === 0 ? (
-            <div className="lg:col-span-2 text-center py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/5">
+            <div className="col-span-2 text-center py-12 px-6 sm:py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/5">
               <Target className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
                 No Goals Set
               </h3>
-              <p className="text-slate-500">
+              <p className="text-xs sm:text-sm text-slate-500">
                 Define your first milestone to start tracking progress.
               </p>
             </div>
