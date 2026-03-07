@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import type { AxiosError } from "axios";
 import { Button } from "@/components/ui/Button";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+
 
 export default function SignupPage() {
   const { loginWithGoogle, user } = useAuth();
@@ -77,14 +79,13 @@ export default function SignupPage() {
           
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-tight">Password</label>
-            <input 
-               type="password" 
+            <PasswordInput 
                value={password}
                onChange={(e) => setPassword(e.target.value)}
                placeholder="Create a strong password"
-               className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
+
 
           <Button type="submit" isLoading={isLoading} className="w-full mt-2 h-10">
             Create Account

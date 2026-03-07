@@ -8,6 +8,8 @@ import { Logo } from "@/components/ui/Logo";
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+
 
 export default function LoginPage() {
   const { loginWithGoogle, user, resetPassword } = useAuth();
@@ -105,13 +107,12 @@ export default function LoginPage() {
                 Forgot?
               </button>
             </label>
-            <input 
-             type="password" 
+            <PasswordInput 
                value={password}
                onChange={(e) => setPassword(e.target.value)}
                placeholder="Enter your password"
-               className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
+
           </div>
 
           <Button type="submit" isLoading={isLoading} className="w-full mt-2 h-10">
@@ -143,14 +144,13 @@ export default function LoginPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-500 tracking-tight ml-1">New Password</label>
-                <input 
-                  type="password" 
+                <PasswordInput 
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Create a strong password"
-                  className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                 />
               </div>
+
 
               <div className="flex gap-3 mt-4">
                 <button 

@@ -37,7 +37,7 @@ export default function SettingsPage() {
       setFormData({
         name: user.displayName || "",
         email: user.email || "",
-        phone: user.phone || "+91 9876543210",
+        phone: user.phone || "+91 ",
         gender: user.gender || "Not Specified",
         dob: user.dob || "1990-01-01",
         needsTarget: user.budgetTargets?.needs ?? 50,
@@ -47,7 +47,25 @@ export default function SettingsPage() {
     }
   }, [user]);
 
+  const isDirty = (
+    String(formData.name || "").trim() !== String(user?.displayName || "").trim() ||
+    String(formData.email || "").trim() !== String(user?.email || "").trim() ||
+    String(formData.phone || "+91 ").trim() !== String(user?.phone || "+91 ").trim() ||
+    String(formData.gender || "Not Specified") !== String(user?.gender || "Not Specified") ||
+    String(formData.dob || "1990-01-01") !== String(user?.dob || "1990-01-01") ||
+    Math.round(Number(formData.needsTarget ?? 50)) !== Math.round(Number(user?.budgetTargets?.needs ?? 50)) ||
+    Math.round(Number(formData.wantsTarget ?? 30)) !== Math.round(Number(user?.budgetTargets?.wants ?? 30)) ||
+    Math.round(Number(formData.savingsTarget ?? 20)) !== Math.round(Number(user?.budgetTargets?.savings ?? 20))
+  );
+
   const handleSave = () => {
+    // Phone validation (Optional but good: 10 digits prefixed with +91)
+    const phoneRegex = /^\+91\s\d{10}$/;
+    if (formData.phone && !phoneRegex.test(formData.phone)) {
+      toast.error("Mobile number must be in '+91 XXXXXXXXXX' format");
+      return;
+    }
+
     const total = formData.needsTarget + formData.wantsTarget + formData.savingsTarget;
     if (total !== 100) {
       toast.error(`Targets must sum to 100%. Currently: ${total}%`);
@@ -55,6 +73,7 @@ export default function SettingsPage() {
     }
 
     updateProfile({
+      phone: formData.phone,
       gender: formData.gender,
       dob: formData.dob,
       budgetTargets: {
@@ -171,11 +190,13 @@ export default function SettingsPage() {
                 <input 
                   type="tel" 
                   value={formData.phone}
-                  disabled
-                  className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 9876543210"
+                  className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
                 />
               </div>
             </div>
+
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Gender Identity</label>
@@ -449,12 +470,14 @@ export default function SettingsPage() {
           <div className="pt-6">
             <button 
               onClick={handleSave}
-              className="w-full md:w-auto h-11 px-8 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+              disabled={!isDirty}
+              className="w-full md:w-auto h-11 px-8 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed disabled:active:scale-100"
             >
               <Save className="w-4 h-4 group-hover:rotate-12 transition-transform" />
               Sync Architecture
             </button>
           </div>
+
         </div>
       </div>
     </div>

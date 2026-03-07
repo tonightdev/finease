@@ -4,8 +4,9 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
-  gender?: "male" | "female" | "other";
+  gender?: "male" | "female" | "other" | "Not Specified";
   dob?: string;
+  phone?: string;
   role: UserRole;
   createdAt: string;
   budgetTargets?: {

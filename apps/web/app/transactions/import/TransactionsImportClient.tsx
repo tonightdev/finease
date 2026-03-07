@@ -24,6 +24,9 @@ import {
   Plus,
   Trash2
 } from "lucide-react";
+
+import { PasswordInput } from "@/components/ui/PasswordInput";
+
 import Papa from "papaparse";
 import * as pdfjs from "pdfjs-dist";
 
@@ -599,13 +602,14 @@ export default function TransactionsImportClient() {
               <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2">Encrypted Pulse Detected</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Enter the master key for this statement</p>
               
-              <input 
-                type="password"
+              <PasswordInput 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full h-14 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-6 text-center text-lg font-bold focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white mb-6"
+                className="h-14 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-6 text-center text-lg font-bold focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white"
+                containerClassName="mb-6"
               />
+
               
               <div className="flex gap-3">
                 <button onClick={() => setStage("upload")} className="flex-1 h-12 rounded-2xl border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500">Cancel</button>
