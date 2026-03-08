@@ -32,6 +32,8 @@ export function AccountList({ accounts }: AccountListProps) {
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
   const [isLiabilityModalOpen, setIsLiabilityModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasMore = accounts.length > 4;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -68,8 +70,9 @@ export function AccountList({ accounts }: AccountListProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
-      {accounts.map((account) => {
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
+        {accounts.map((account, index) => {
         const isLowBalance =
           (account.type === "bank" || account.type === "cash") &&
           account.minimumBalance &&
@@ -84,11 +87,11 @@ export function AccountList({ accounts }: AccountListProps) {
           account.maxLimit > 0 &&
           usedAmount / account.maxLimit > 0.3;
 
-        return (
-          <Card
-            key={account.id}
-            className="p-2.5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2"
-          >
+          return (
+            <Card
+              key={account.id}
+              className={`p-2.5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2 ${index >= 4 && !isExpanded ? "hidden lg:flex" : "flex"}`}
+            >
             <div className="flex items-start justify-between">
               <div
                 className={`p-1.5 rounded-lg shrink-0 ${getTypeColor(account.type)}`}
@@ -123,44 +126,63 @@ export function AccountList({ accounts }: AccountListProps) {
             </div>
 
             <div className="min-w-0">
-              <h4 className="text-slate-400 dark:text-slate-500 font-bold text-[8px] uppercase tracking-widest truncate">
+              <h4 className="text-slate-400 dark:text-slate-500 font-bold text-[8px] uppercase tracking-widest truncate mb-0.5">
                 {account.name}
               </h4>
-              <p className="text-sm font-black text-slate-900 dark:text-white tracking-tighter truncate">
-                ₹
-                {(account.type === "card"
-                  ? usedAmount
-                  : account.balance
-                ).toLocaleString()}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between pt-1.5 border-t border-slate-50 dark:border-white/5">
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                  {account.type === "card"
-                    ? "Utilization"
-                    : account.type === "investment"
-                      ? "Capital"
-                      : "Balance"}
-                </span>
-                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 truncate">
-                  {account.type === "card"
-                    ? `₹${(account.maxLimit || 0).toLocaleString()}`
-                    : account.type === "investment"
-                      ? `₹${(account.investedAmount || account.balance).toLocaleString()}`
-                      : account.type}
-                </span>
+              <div className="flex items-baseline justify-between gap-2">
+                <p
+                  className={`text-sm font-black tracking-tighter truncate ${account.type === "card" && usedAmount > 0 ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
+                >
+                  {account.type === "card" && usedAmount > 0 ? "-" : ""}₹
+                  {(account.type === "card"
+                    ? usedAmount
+                    : account.balance
+                  ).toLocaleString()}
+                </p>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                    {account.type === "card"
+                      ? "Limit"
+                      : account.type === "investment"
+                        ? "Basis"
+                        : account.type === "bank"
+                          ? "Min Bal"
+                          : "Type"}
+                  </span>
+                  <span className="text-[9px] font-black text-slate-500 dark:text-slate-400">
+                    {account.type === "card"
+                      ? `₹${(account.maxLimit || 0).toLocaleString()}`
+                      : account.type === "investment"
+                        ? `₹${(account.investedAmount || account.balance).toLocaleString()}`
+                        : account.type === "bank"
+                          ? `₹${(account.minimumBalance || 0).toLocaleString()}`
+                          : account.type}
+                  </span>
+                  {(isLowBalance || isHighUsage) && (
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"} animate-pulse`}
+                    />
+                  )}
+                </div>
               </div>
-              {(isLowBalance || isHighUsage) && (
-                <div
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"} animate-pulse`}
-                />
-              )}
             </div>
           </Card>
         );
       })}
+      </div>
+
+      {hasMore && (
+        <div className="flex justify-center lg:hidden pb-1">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-all border border-slate-200/50 dark:border-white/5 active:scale-95 shadow-sm"
+          >
+            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.1em]">
+              {isExpanded ? "Show Less" : "Show More"}
+            </span>
+          </button>
+        </div>
+      )}
 
       <AddAccountModal
         isOpen={isAccountModalOpen}

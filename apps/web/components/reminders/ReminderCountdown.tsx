@@ -140,26 +140,26 @@ function CountdownCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       onClick={onClick}
-      className={`group relative p-4 rounded-3xl border transition-colors h-full flex flex-col justify-between cursor-pointer ${
+      className={`group relative p-3.5 rounded-2xl border transition-all h-full flex flex-col justify-between cursor-pointer hover:border-primary/50 ${
         isCritical
           ? "bg-rose-50/20 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/20 shadow-sm"
-          : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10"
+          : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 shadow-sm"
       }`}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex justify-between items-start">
           <div
-            className={`p-2 rounded-2xl ${isCritical ? "bg-rose-500/10 text-rose-500" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}
+            className={`p-1.5 rounded-lg border ${isCritical ? "bg-rose-50 dark:bg-rose-500/10 text-rose-500 border-rose-100 dark:border-rose-500/20" : "bg-indigo-50 dark:bg-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20"}`}
           >
             <Icon className="w-3.5 h-3.5" />
           </div>
           <span
-            className={`text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+            className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${
               isExpired
                 ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
                 : isCritical
                   ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
-                  : "text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-white/5"
+                  : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
             }`}
           >
             {isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
@@ -168,37 +168,23 @@ function CountdownCard({
 
         <div className="min-w-0">
           <h4
-            className={`text-xs font-black truncate tracking-tight uppercase ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
+            className={`text-sm font-black truncate tracking-tight ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
           >
             {reminder.name}
           </h4>
-          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-            ₹{reminder.renewalAmount.toLocaleString()}
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            {isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H REMAINING`}
           </p>
         </div>
 
-        <div className="flex items-end justify-between">
-          <div className="flex gap-4">
-            <div className="flex flex-col">
-              <span
-                className={`text-xl font-black tracking-tighter leading-none ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
-              >
-                {timeLeft.days}
-              </span>
-              <span className="text-[6px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                Days
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span
-                className={`text-xl font-black tracking-tighter leading-none ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
-              >
-                {timeLeft.hours}
-              </span>
-              <span className="text-[6px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                Hrs
-              </span>
-            </div>
+        <div className="flex items-end justify-between pt-1 border-t border-slate-50 dark:border-white/5">
+          <div className="flex flex-col">
+            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              Nexus Cost
+            </span>
+            <span className={`text-[10px] font-black ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}>
+              ₹{reminder.renewalAmount.toLocaleString()}
+            </span>
           </div>
 
           <button

@@ -48,18 +48,18 @@ export function GoalProgressCard({
   const currentStatus = statusConfig[status as keyof typeof statusConfig];
 
   return (
-    <Card className="flex flex-col p-4 gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all">
+    <Card className="flex flex-col p-3.5 gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">
             <Target className="w-4 h-4" />
           </div>
-          <div>
-            <p className="text-slate-900 dark:text-white text-sm font-bold truncate max-w-[120px] sm:max-w-[200px]">
+          <div className="min-w-0">
+            <p className="text-slate-900 dark:text-white text-sm font-black truncate max-w-[100px] sm:max-w-[150px] tracking-tight">
               {name}
             </p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              {Math.round(percentageSaved)}% SAVED
+            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+              {Math.round(percentageSaved)}% ARCHIEVED
             </p>
           </div>
         </div>
@@ -67,9 +67,9 @@ export function GoalProgressCard({
           variant={
             currentStatus.badge as "ahead" | "behind" | "ontrack" | "default"
           }
-          className="text-[10px] px-1.5 py-0"
+          className="text-[9px] px-1.5 py-0 border font-black uppercase tracking-widest"
         >
-          {currentStatus.label}
+          {currentStatus.badge}
         </Badge>
       </div>
 
@@ -80,9 +80,23 @@ export function GoalProgressCard({
           barClassName={status === "behind" ? "bg-red-500" : "bg-indigo-500"}
         />
 
-        <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          <span>{formatCurrency(currentAmount)}</span>
-          <span>Target: {formatCurrency(targetAmount)}</span>
+        <div className="flex justify-between items-center pt-1 border-t border-slate-50 dark:border-white/5">
+          <div className="flex flex-col">
+            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              Balance
+            </span>
+            <span className="text-[10px] font-black text-slate-900 dark:text-white">
+              {formatCurrency(currentAmount)}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              Objective
+            </span>
+            <span className="text-[10px] font-black text-slate-500">
+              {formatCurrency(targetAmount)}
+            </span>
+          </div>
         </div>
       </div>
     </Card>

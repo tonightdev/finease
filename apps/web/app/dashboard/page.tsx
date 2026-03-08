@@ -8,6 +8,9 @@ import { AccountList } from "@/components/accounts/AccountList";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { createAccount, fetchAccounts } from "@/store/slices/accountsSlice";
+import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
+import { fetchTransactions } from "@/store/slices/transactionsSlice";
+import { fetchGoals } from "@/store/slices/goalsSlice";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { FinancialGoal, AccountType } from "@repo/types";
 import Link from "next/link";
@@ -19,6 +22,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { useSignals } from "@/components/providers/SignalProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
+import { getHexFromTailwind } from "@/lib/utils";
 
 export default function Home() {
   const { user } = useAuth();
@@ -29,6 +33,7 @@ export default function Home() {
 
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const goals = useSelector((state: RootState) => state.goals.items);
+  const assetClasses = useSelector((state: RootState) => state.assetClasses.items);
   const stats = useSelector((state: RootState) => state.stats.data);
   const transactions = useSelector(
     (state: RootState) => state.transactions.items,
@@ -40,6 +45,9 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       dispatch(fetchAccounts());
+      dispatch(fetchAssetClasses());
+      dispatch(fetchTransactions());
+      dispatch(fetchGoals());
 
       if (permission === "default") {
         requestPermission();
@@ -47,36 +55,105 @@ export default function Home() {
     }
   }, [dispatch, user, permission, requestPermission]);
 
-  const regularAccounts = accounts.filter(
-    (acc) => acc.type === "bank" || acc.type === "cash" || acc.type === "card",
-  );
+  const regularAccounts = useMemo(() => {
+    const filtered = accounts.filter(
+      (acc) => acc.type === "bank" || acc.type === "cash" || acc.type === "card",
+    );
+    const order: Record<string, number> = { bank: 0, cash: 1, card: 2 };
+    return [...filtered].sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
+  }, [accounts]);
+
+  const cards = useMemo(() => accounts.filter(acc => acc.type === 'card'), [accounts]);
+  
   const investmentAccounts = accounts.filter(
     (acc) => acc.type === "investment",
   );
   const debts = accounts.filter((acc) => acc.type === "debt");
 
-  const assets = accounts
-    .filter((acc) => acc.type !== "debt")
-    .reduce((sum, item) => sum + item.balance, 0);
-  const liabilities = Math.abs(
-    debts.reduce((sum, item) => sum + item.balance, 0),
-  );
+  const assets = useMemo(() => {
+    const liquid = regularAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const invested = investmentAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const others = accounts.filter(a => a.type === 'asset').reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    return liquid + invested + others;
+  }, [regularAccounts, investmentAccounts, accounts]);
+
+  const liabilities = useMemo(() => {
+    const debtSum = debts.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
+    const cardSum = cards.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
+    return debtSum + cardSum;
+  }, [debts, cards]);
+
   const realTimeNetWorth = assets - liabilities;
 
-  const allocationMap: Record<string, number> = {};
-  investmentAccounts.forEach((inv) => {
-    allocationMap[inv.assetType || "Other"] =
-      (allocationMap[inv.assetType || "Other"] || 0) + inv.balance;
-  });
+  const allocationMap = useMemo(() => {
+    const assetsMap: Record<string, { value: number; type: "asset" }> = {};
+    const liabilitiesMap: Record<string, { value: number; type: "liability" }> = {};
 
-  const colors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
-  const realTimeAssetAllocation = Object.entries(allocationMap).map(
-    ([name, value], idx) => ({
-      name,
-      value,
-      color: colors[idx % colors.length] || "#000000",
-    }),
-  );
+    // Assets
+    investmentAccounts.forEach((inv) => {
+      assetsMap[inv.assetType || "Other"] = {
+        value: (assetsMap[inv.assetType || "Other"]?.value || 0) + inv.balance,
+        type: "asset",
+      };
+    });
+
+    regularAccounts
+      .filter((a) => a.type !== "card")
+      .forEach((acc) => {
+        const label = acc.type === "bank" ? "Bank" : "Cash";
+        assetsMap[label] = {
+          value: (assetsMap[label]?.value || 0) + acc.balance,
+          type: "asset",
+        };
+      });
+
+    // Liabilities
+    cards.forEach((card) => {
+      liabilitiesMap["Cards"] = {
+        value: (liabilitiesMap["Cards"]?.value || 0) + Math.abs(card.balance),
+        type: "liability",
+      };
+    });
+
+    return { assets: assetsMap, liabilities: liabilitiesMap };
+  }, [investmentAccounts, regularAccounts, cards]);
+
+  const realTimeAssetAllocation = useMemo(() => {
+    const defaultColors: Record<string, string> = {
+      Bank: "#3b82f6",
+      Cash: "#10b981",
+      Cards: "#f43f5e", // Liability color
+      Debts: "#fb7185", // Liability color
+      Other: "#94a3b8",
+    };
+
+    const fallbackPalette = [
+      "#6366f1", "#ec4899", "#8b5cf6", "#06b6d4",
+      "#f43f5e", "#10b981", "#f59e0b", "#3b82f6"
+    ];
+
+    const assets = Object.entries(allocationMap.assets).map(([id, data], index) => {
+      const assetClass = assetClasses.find((a) => a.id === id);
+      const rawColor = assetClass?.color || defaultColors[id] || fallbackPalette[index % fallbackPalette.length] || "#94a3b8";
+      return {
+        name: assetClass?.name || id,
+        value: data.value,
+        color: getHexFromTailwind(rawColor as string),
+        type: data.type,
+      };
+    });
+
+    const liabilities = Object.entries(allocationMap.liabilities).map(([id, data]) => {
+      return {
+        name: id,
+        value: data.value,
+        color: defaultColors[id] || "#f43f5e",
+        type: data.type,
+      };
+    });
+
+    return [...assets, ...liabilities].filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+  }, [allocationMap, assetClasses]);
 
   const computedNetWorthHistory = useMemo(() => {
     const history: { month: string; value: number; dateObj: Date }[] = [];
@@ -195,8 +272,11 @@ export default function Home() {
       status,
       suggestion,
       savingsRate: (savingsRate * 100).toFixed(0),
+      monthlyIncome,
+      monthlyExpense,
+      liquidCapital: regularAccounts.filter(a => a.type !== 'card').reduce((sum, a) => sum + a.balance, 0)
     };
-  }, [transactions, assets, goals]);
+  }, [transactions, assets, goals, regularAccounts]);
 
   if (loading && accounts.length === 0) {
     return (
@@ -239,7 +319,76 @@ export default function Home() {
         }
       />
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* ... big 4 cards ... */}
+        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all group">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+            Net Worth
+            <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Total assets minus debt</span>
+          </div>
+          <div className="text-lg font-black text-slate-900 dark:text-white tracking-tighter truncate">
+            ₹{realTimeNetWorth.toLocaleString()}
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
+              {netWorthChange >= 0 ? "+" : ""}
+              {netWorthChange}%
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all group">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+            Period Inflow
+            <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Total 30-day income</span>
+          </div>
+          <div className="text-lg font-black text-emerald-500 tracking-tighter truncate">
+            ₹{insights.monthlyIncome.toLocaleString()}{" "}
+            {insights.savingsRate}% Savings
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/10" />
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+              30 Day Window
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all group">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+            Period Outflow
+            <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Total 30-day spending</span>
+          </div>
+          <div className="text-lg font-black text-rose-500 tracking-tighter truncate">
+            ₹{insights.monthlyExpense.toLocaleString()}
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-rose-500/20" />
+            <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">
+              Efficiency 100%
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all group">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+            Liquid Capital
+            <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Bank & Cash reserves</span>
+          </div>
+          <div className="text-lg font-black text-primary tracking-tighter truncate">
+            ₹{insights.liquidCapital.toLocaleString()}
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+            <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+              Fluid Assets
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
         {accounts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
             <div className="flex flex-col items-center gap-4">
@@ -257,7 +406,7 @@ export default function Home() {
         ) : (
           <>
             {regularAccounts.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     Liquid Capital
@@ -266,103 +415,13 @@ export default function Home() {
                     {regularAccounts.length} Units
                   </span>
                 </div>
-                <AccountList accounts={regularAccounts} />
-              </div>
-            )}
-
-            {investmentAccounts.length > 0 && (
-              <div className="space-y-2">
-                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Investment Portfolio
-                  </h3>
-                  <span className="text-[8px] font-black text-indigo-500 uppercase bg-indigo-500/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-                    {investmentAccounts.length} Assets
-                  </span>
+                <div className="pt-1">
+                  <AccountList accounts={regularAccounts} />
                 </div>
-                <AccountList accounts={investmentAccounts} />
-              </div>
-            )}
-            
-            {debts.length > 0 && (
-              <div className="space-y-2">
-                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Liabilities
-                  </h3>
-                  <span className="text-[8px] font-black text-rose-500 uppercase bg-rose-500/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-                    {debts.length} Debts
-                  </span>
-                </div>
-                <AccountList accounts={debts} />
               </div>
             )}
           </>
         )}
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-            Net Worth
-          </div>
-          <div className="text-lg font-black text-slate-900 dark:text-white tracking-tighter truncate">
-            ₹{realTimeNetWorth.toLocaleString()}
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
-              {netWorthChange >= 0 ? "+" : ""}
-              {netWorthChange}%
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-            Period Inflow
-          </div>
-          <div className="text-lg font-black text-emerald-500 tracking-tighter truncate">
-            ₹{(parseFloat(insights.runwayMonths) * 0).toLocaleString()}{" "}
-            {insights.savingsRate}% Savings
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/10" />
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-              30 Day Window
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-            Period Outflow
-          </div>
-          <div className="text-lg font-black text-rose-500 tracking-tighter truncate">
-            ₹{liabilities.toLocaleString()}
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-rose-500/20" />
-            <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">
-              Efficiency 100%
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-            Freedom Score
-          </div>
-          <div className="text-lg font-black text-primary tracking-tighter truncate">
-            {insights.freedomScore}
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-            <span className="text-[8px] font-black text-primary uppercase tracking-widest">
-              {insights.status}
-            </span>
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:items-stretch">
@@ -375,9 +434,10 @@ export default function Home() {
         />
 
         <div className="space-y-4 flex flex-col">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+          <div className="flex items-center justify-between px-1 group">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               Goal Velocity
+              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards milestones</span>
             </h3>
             <Link
               href="/goals"

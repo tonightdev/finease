@@ -5,6 +5,7 @@ import { Rocket } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { FinancialGoal } from "@repo/types";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface TopUpModalProps {
   isOpen: boolean;
@@ -91,17 +92,16 @@ export function TopUpModal({ isOpen, onClose, goal, onSave }: TopUpModalProps) {
             Injection Magnitude
           </label>
           <div className="relative">
+            <AmountInput
+              value={amount}
+              onChange={(val) => setAmount(val)}
+              disabled={isSaving}
+              className="pl-8 text-lg"
+              placeholder="0.00"
+            />
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">
               ₹
             </span>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              disabled={isSaving}
-              className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-xl pl-8 pr-4 text-lg font-black text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
-              placeholder="0.00"
-            />
           </div>
         </div>
       </div>

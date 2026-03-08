@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { LayoutGrid } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import toast from "react-hot-toast";
 
 interface AddAssetTypeModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface AddAssetTypeModalProps {
   }) => Promise<void> | void;
   onDelete?: (id: string) => Promise<void> | void;
   assetType?: { id: string; name: string; color: string } | null;
+  existingClasses?: { name: string; color: string; id: string }[];
 }
 
 export function AddAssetTypeModal({
@@ -23,6 +25,7 @@ export function AddAssetTypeModal({
   onSave,
   onDelete,
   assetType,
+  existingClasses = [],
 }: AddAssetTypeModalProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("bg-indigo-500");
@@ -54,6 +57,19 @@ export function AddAssetTypeModal({
 
   const handleSave = async () => {
     if (!name.trim()) return;
+
+    const isDuplicate = existingClasses.some(
+      (c) =>
+        c.name.toLowerCase() === name.trim().toLowerCase() &&
+        c.color === color &&
+        c.id !== assetType?.id,
+    );
+
+    if (isDuplicate) {
+      toast.error("This class name and color combination already exists.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await onSave({ id: assetType?.id, name, color });

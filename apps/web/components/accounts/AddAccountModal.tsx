@@ -6,6 +6,7 @@ import { Account } from "@repo/types";
 import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -165,19 +166,12 @@ export function AddAccountModal({
               </span>
             )}
           </div>
-          <input
-            type="number"
+          <AmountInput
             value={formData.balance}
-            onChange={(e) =>
-              setFormData({ ...formData, balance: e.target.value })
-            }
+            onChange={(val) => setFormData({ ...formData, balance: val })}
             placeholder="0.00"
             disabled={!!account || isSaving}
-            className={`w-full h-10 border-none rounded-xl px-3 text-xs font-black ring-1 outline-none transition-all ${
-              account
-                ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed"
-                : "bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary"
-            }`}
+            className={account ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed" : ""}
           />
         </div>
 
@@ -186,14 +180,10 @@ export function AddAccountModal({
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Threshold (₹)
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.minimumBalance}
-              onChange={(e) =>
-                setFormData({ ...formData, minimumBalance: e.target.value })
-              }
+              onChange={(val) => setFormData({ ...formData, minimumBalance: val })}
               placeholder="Minimum..."
-              className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
           </div>
         )}
@@ -203,14 +193,11 @@ export function AddAccountModal({
             <label className="text-[10px] font-black text-primary uppercase tracking-widest pl-1">
               Node Limit (₹)
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.maxLimit}
-              onChange={(e) =>
-                setFormData({ ...formData, maxLimit: e.target.value })
-              }
+              onChange={(val) => setFormData({ ...formData, maxLimit: val })}
               placeholder="Total credit limit..."
-              className="w-full h-10 bg-primary/5 dark:bg-primary/10 border-none rounded-xl px-3 text-xs font-black text-primary ring-1 ring-primary/20 focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="bg-primary/5 dark:bg-primary/10 text-primary ring-primary/20 focus:ring-primary"
             />
           </div>
         )}

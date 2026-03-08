@@ -60,9 +60,7 @@ export default function TransactionsImportClient() {
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const categories = useSelector((state: RootState) => state.categories.items);
 
-  const [stage, setStage] = useState<TransactionImportStage | "paste">(
-    "upload",
-  );
+  const [stage, setStage] = useState<TransactionImportStage>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
@@ -73,7 +71,6 @@ export default function TransactionsImportClient() {
   const [reviewQueue, setReviewQueue] = useState<Partial<Transaction>[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pasteData, setPasteData] = useState<string>("");
 
   useEffect(() => {
     dispatch(fetchAccounts());
@@ -111,126 +108,7 @@ export default function TransactionsImportClient() {
       },
     });
   };
-  const handlePasteProcess = () => {
-    if (!pasteData.trim()) return;
 
-    const lines = pasteData.split("\n");
-    const blocks: string[] = [];
-    let currentBlock = "";
-
-    // Omni-Date Regex to find the start of a transaction
-    const dateRegex = /\b(\d{1,2}[-/.](\d{1,2}|[A-Za-z]{3})[-/.]\d{2,4})\b/;
-
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-
-      const hasDate = dateRegex.test(trimmed);
-
-      if (hasDate && currentBlock) {
-        blocks.push(currentBlock);
-        currentBlock = trimmed;
-      } else {
-        currentBlock = currentBlock ? currentBlock + " " + trimmed : trimmed;
-      }
-    });
-    if (currentBlock) blocks.push(currentBlock);
-
-    const parsed: Partial<Transaction>[] = blocks
-      .map((block, idx) => {
-        const dateMatch = block.match(dateRegex);
-        const date = dateMatch
-          ? parseImportDate(dateMatch[1]!).toISOString()
-          : new Date().toISOString();
-
-        // Clean block: remove the date from text to find money and narration
-        let remainingText = block;
-        if (dateMatch) remainingText = remainingText.replace(dateMatch[0], " ");
-
-        // Find all potential currency values (numbers with decimals or large groups)
-        // We look for parts that aren't the date
-        const parts = remainingText.split(/\s+/).filter(Boolean);
-        const moneyItems = parts.filter((p) => {
-          const cleaned = p.replace(/,/g, "");
-          return (
-            /^-?\d+\.\d{2}$/.test(cleaned) ||
-            (/^-?\d+$/.test(cleaned) && cleaned.length > 2)
-          );
-        });
-
-        let amt = 0;
-        let type: "income" | "expense" = "expense";
-
-        // In ICICI pastes, typically: [Cheque] [Withdrawal] [Deposit] [Balance] [Init]
-        if (moneyItems.length >= 2) {
-          // Validation of balance format from money items
-          parseFloat(moneyItems[moneyItems.length - 1]!.replace(/,/g, ""));
-          const possibleAmount = parseFloat(
-            moneyItems[moneyItems.length - 2]!.replace(/,/g, ""),
-          );
-
-          // If we have at least 3, look at the last 3 for DR/CR distinction
-          if (moneyItems.length >= 3) {
-            const val3 = parseFloat(
-              moneyItems[moneyItems.length - 2]!.replace(/,/g, ""),
-            );
-            const val4 = parseFloat(
-              moneyItems[moneyItems.length - 3]!.replace(/,/g, ""),
-            );
-
-            // Heuristic: If we can't tell, we'll let the user review
-            amt = Math.abs(val3 || val4);
-            // If the text contains "income" or "cr", assume income
-            type =
-              block.toLowerCase().includes("cr") ||
-              block.toLowerCase().includes("dep")
-                ? "income"
-                : "expense";
-          } else {
-            amt = Math.abs(possibleAmount);
-            type =
-              block.toLowerCase().includes("cr") ||
-              block.toLowerCase().includes("dep")
-                ? "income"
-                : "expense";
-          }
-        } else if (moneyItems.length === 1) {
-          amt = Math.abs(parseFloat(moneyItems[0]!.replace(/,/g, "")));
-          type =
-            block.toLowerCase().includes("cr") ||
-            block.toLowerCase().includes("dep")
-              ? "income"
-              : "expense";
-        }
-
-        // Narration is everything else
-        const narration = parts
-          .filter((p) => !moneyItems.includes(p))
-          .join(" ")
-          .trim();
-
-        return {
-          id: `paste-${idx}-${Date.now()}`,
-          date,
-          description: narration || "Pasted Record",
-          amount: amt || 0,
-          category: "General",
-          type,
-          accountId: selectedAccountId,
-          status: "completed",
-        } as Partial<Transaction>;
-      })
-      .filter(
-        (t) =>
-          t.description &&
-          t.description.length > 3 &&
-          !t.description.toLowerCase().includes("opening balance"),
-      );
-
-    setReviewQueue([...reviewQueue, ...parsed]);
-    setPasteData("");
-    setStage("review");
-  };
 
   const addManualRow = () => {
     const newRow: Partial<Transaction> = {
@@ -678,24 +556,7 @@ export default function TransactionsImportClient() {
               </p>
             </div>
 
-            <div
-              className="bg-emerald-500/[0.03] border border-emerald-500/10 rounded-3xl p-6 hover:bg-emerald-500/[0.05] transition-all cursor-pointer group"
-              onClick={() => setStage("paste")}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4 text-emerald-500" />
-                  <h3 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
-                    Alternative: Smart Paste
-                  </h3>
-                </div>
-                <ChevronRight className="w-3 h-3 text-emerald-500 group-hover:translate-x-1 transition-transform" />
-              </div>
-              <p className="text-[9px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
-                Copy direct from bank websites or Excel and paste here. No
-                mapping required.
-              </p>
-            </div>
+
 
             <button
               onClick={addManualRow}
@@ -708,67 +569,7 @@ export default function TransactionsImportClient() {
         </div>
       )}
 
-      {stage === "paste" && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-3xl p-8 shadow-xl">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500">
-                  <ClipboardCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    Smart Paste Ledger
-                  </h2>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
-                    Copy from Web/Excel and Paste Below
-                  </p>
-                </div>
-              </div>
-              <div className="w-48">
-                <select
-                  value={selectedAccountId}
-                  onChange={(e) => setSelectedAccountId(e.target.value)}
-                  className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-4 text-[9px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
-                >
-                  <option value="">Select Target Account</option>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            <textarea
-              value={pasteData}
-              onChange={(e) => setPasteData(e.target.value)}
-              placeholder={
-                "12/03/2024\tCoffee Shop\t-15.00\tF&B\n14/03/2024\tClient Payment\t5000.00\tIncome"
-              }
-              className="w-full h-64 bg-slate-50 dark:bg-slate-950/50 border-none rounded-2xl p-6 text-[11px] font-mono leading-relaxed focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
-            />
-
-            <div className="mt-8 flex gap-4">
-              <button
-                onClick={() => setStage("upload")}
-                className="px-8 h-12 rounded-2xl border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePasteProcess}
-                disabled={!pasteData.trim() || !selectedAccountId}
-                className="flex-1 h-12 bg-emerald-500 text-white rounded-2xl px-8 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 disabled:opacity-30 transition-all flex items-center justify-center gap-2"
-              >
-                Process Stream
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {stage === "password" && (
         <div className="max-w-md mx-auto py-12">
@@ -855,9 +656,9 @@ export default function TransactionsImportClient() {
                         className="w-full h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-4 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
                       >
                         <option value="">Select Stream Source</option>
-                        {rawHeaders.map((h) => (
-                          <option key={h} value={h}>
-                            {h}
+                        {rawHeaders.map((h, idx) => (
+                          <option key={`${h}-${idx}`} value={h}>
+                            Col {idx + 1}: {h}
                           </option>
                         ))}
                       </select>

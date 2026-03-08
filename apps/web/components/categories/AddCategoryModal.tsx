@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { LayoutGrid } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import toast from "react-hot-toast";
 
 interface AddCategoryModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface AddCategoryModalProps {
     color: string;
     parentType?: string;
   } | null;
+  existingCategories?: { name: string; color: string; id: string }[];
 }
 
 export function AddCategoryModal({
@@ -29,6 +31,7 @@ export function AddCategoryModal({
   onSave,
   onDelete,
   category,
+  existingCategories = [],
 }: AddCategoryModalProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("bg-indigo-500");
@@ -63,6 +66,20 @@ export function AddCategoryModal({
 
   const handleSave = async () => {
     if (!name.trim()) return;
+
+    // Validation: String and Color should not be the same as another item
+    const isDuplicate = existingCategories.some(
+      (c) =>
+        c.name.toLowerCase() === name.trim().toLowerCase() &&
+        c.color === color &&
+        c.id !== category?.id,
+    );
+
+    if (isDuplicate) {
+      toast.error("This exact label and color combination already exists.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await onSave({ id: category?.id, name, color, parentType });

@@ -39,7 +39,7 @@ export function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end items-center p-4 sm:p-6 bg-slate-900/80">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center items-center p-4 sm:p-6 bg-slate-900/80">
           {/* Backdrop Click-to-Close */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -50,11 +50,11 @@ export function Modal({
           />
 
           <motion.div
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "100%" }}
-            transition={{ duration: 0.2 }}
-            className={`relative w-full ${maxWidth} bg-white dark:bg-surface-dark rounded-[2.5rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-border-dark shadow-[0_20px_70px_rgba(0,0,0,0.4)] overflow-hidden ${maxHeight} flex flex-col ${className} mb-4 sm:mb-8`}
+            initial={{ opacity: 0, y: "100%", scale: 1 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: "100%", scale: 1 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className={`relative w-full ${maxWidth} bg-white dark:bg-surface-dark rounded-[2.5rem] border border-slate-200 dark:border-border-dark shadow-[0_20px_70px_rgba(0,0,0,0.4)] overflow-hidden ${maxHeight} flex flex-col ${className} mb-4 sm:mb-0`}
           >
             {/* Header */}
             {title && (

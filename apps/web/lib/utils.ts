@@ -89,8 +89,20 @@ export function parseImportDate(dateStr: string): Date {
   }
 
   // 3. Fallback to native constructor
-  const nativeDate = new Date(clean);
-  if (!isNaN(nativeDate.getTime())) return nativeDate;
-
   return new Date();
+}
+
+export function getHexFromTailwind(twClass: string): string {
+  const map: Record<string, string> = {
+    "bg-indigo-500": "#6366f1",
+    "bg-orange-500": "#f97316",
+    "bg-blue-500": "#3b82f6",
+    "bg-pink-500": "#ec4899",
+    "bg-emerald-500": "#10b981",
+    "bg-purple-500": "#a855f7",
+    "bg-rose-500": "#f43f5e",
+    "bg-amber-500": "#f59e0b",
+    "bg-slate-500": "#64748b",
+  };
+  return map[twClass] || twClass;
 }

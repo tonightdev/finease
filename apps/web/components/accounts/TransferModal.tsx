@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -105,13 +106,12 @@ export function TransferModal({
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
             Amount (₹)
           </label>
-          <input
-            type="number"
+          <AmountInput
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(val) => setAmount(val)}
             disabled={isSaving}
             placeholder="0.00"
-            className="w-full text-3xl font-black p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white disabled:opacity-50"
+            className="text-3xl h-auto py-4"
           />
         </div>
       </div>

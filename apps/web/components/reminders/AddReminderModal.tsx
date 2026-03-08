@@ -5,6 +5,7 @@ import { Bell, Calendar, IndianRupee } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Reminder } from "@/store/slices/remindersSlice";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface AddReminderModalProps {
   isOpen: boolean;
@@ -123,17 +124,17 @@ export function AddReminderModal({
               Renewal Magnitude
             </label>
             <div className="relative">
-              <input
-                type="number"
-                value={formData.renewalAmount || ""}
-                onChange={(e) =>
+              <AmountInput
+                value={String(formData.renewalAmount || "")}
+                onChange={(val) =>
                   setFormData({
                     ...formData,
-                    renewalAmount: Number(e.target.value),
+                    renewalAmount: Number(val),
                   })
                 }
+                disabled={isSaving}
+                className="pl-10"
                 placeholder="0.00"
-                className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl pl-10 pr-4 text-sm font-black text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
               />
               <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             </div>

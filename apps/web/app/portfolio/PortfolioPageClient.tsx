@@ -195,7 +195,7 @@ export default function PortfolioPageClient() {
                     setEditingAssetType(c);
                     setIsAssetTypeModalOpen(true);
                   }}
-                  className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 lg:opacity-0 lg:group-hover/cat:opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
+                  className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
                 >
                   <Edit2 className="w-2.5 h-2.5 text-primary" />
                 </button>
@@ -945,25 +945,9 @@ export default function PortfolioPageClient() {
       <AddAssetTypeModal
         isOpen={isAssetTypeModalOpen}
         assetType={editingAssetType}
+        existingClasses={assetTypes}
         onClose={() => setIsAssetTypeModalOpen(false)}
         onSave={async (data) => {
-          const isNameDuplicate = assetTypes.some(
-            (a) =>
-              a.name.toLowerCase() === data.name.trim().toLowerCase() &&
-              a.id !== data.id,
-          );
-          const isColorDuplicate = assetTypes.some(
-            (a) => a.color === data.color && a.id !== data.id,
-          );
-
-          if (isNameDuplicate) {
-            toast.error("Asset Class name already exists");
-            throw new Error("Duplicate");
-          }
-          if (isColorDuplicate) {
-            toast.error("Color theme is already used");
-            throw new Error("Duplicate");
-          }
           if (data.id) {
             await dispatch(
               updateAssetClassAction({

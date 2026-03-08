@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Flag } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface GoalFormData {
   name: string;
@@ -105,14 +106,13 @@ export function EditGoalModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Target Magnitude (₹)
           </label>
-          <input
-            type="number"
-            value={formData.targetAmount || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, targetAmount: Number(e.target.value) })
+          <AmountInput
+            value={String(formData.targetAmount || "")}
+            onChange={(val) =>
+              setFormData({ ...formData, targetAmount: Number(val) })
             }
             placeholder="0.00"
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-black text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
+            disabled={isSaving}
           />
         </div>
 

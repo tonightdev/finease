@@ -439,7 +439,7 @@ export default function TransactionsPageClient() {
                     setEditingCategory(c);
                     setIsCategoryModalOpen(true);
                   }}
-                  className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 lg:opacity-0 lg:group-hover/cat:opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
+                  className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 bg-white dark:bg-slate-800 rounded-full shadow-lg opacity-100 transition-opacity border border-slate-100 dark:border-white/5 z-10 hover:scale-110 active:scale-90"
                 >
                   <Edit2 className="w-2.5 h-2.5 text-primary" />
                 </button>
@@ -612,7 +612,7 @@ export default function TransactionsPageClient() {
 
       <div className="block lg:hidden space-y-4">
         {paginatedTransactions.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0 flex flex-col items-center justify-center text-center">
             <div className="flex flex-col items-center gap-4">
               <span className="material-symbols-outlined text-4xl text-slate-200">
                 history
@@ -798,19 +798,19 @@ export default function TransactionsPageClient() {
             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-5">
-                      <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-3xl text-slate-300">
+                  <td colSpan={7} className="px-8 py-24">
+                    <div className="flex flex-col items-center justify-center text-center gap-6">
+                      <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-white/5 shadow-inner">
+                        <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">
                           history
                         </span>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      <div className="space-y-1.5">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
                           No matching activities
                         </p>
-                        <p className="text-xs font-medium text-slate-400">
-                          Expand your filters to view more results
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-80">
+                          Expand your filtration nexus to view more results
                         </p>
                       </div>
                     </div>
@@ -1061,25 +1061,9 @@ export default function TransactionsPageClient() {
       <AddCategoryModal
         isOpen={isCategoryModalOpen}
         category={editingCategory}
+        existingCategories={categories}
         onClose={() => setIsCategoryModalOpen(false)}
         onSave={async (data) => {
-          const isNameDuplicate = categories.some(
-            (c) =>
-              c.name.toLowerCase() === data.name.trim().toLowerCase() &&
-              c.id !== data.id,
-          );
-          const isColorDuplicate = categories.some(
-            (c) => c.color === data.color && c.id !== data.id,
-          );
-
-          if (isNameDuplicate) {
-            toast.error("Category name already exists");
-            throw new Error("Duplicate");
-          }
-          if (isColorDuplicate) {
-            toast.error("Color theme is already used");
-            throw new Error("Duplicate");
-          }
           if (data.id) {
             await dispatch(
               updateCategoryAction({

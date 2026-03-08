@@ -57,16 +57,16 @@ export function NetWorthChart({
 
   return (
     <Card
-      className="h-[480px] overflow-hidden group shadow-none border-slate-100 dark:border-slate-800 relative"
+      className="h-[380px] sm:h-[420px] lg:h-[480px] overflow-hidden group shadow-none border-slate-100 dark:border-slate-800 relative"
       title="Wealth Pulse"
       subtitle="Comprehensive net worth trajectory"
       headerAction={
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 scale-90 sm:scale-100">
           {["1M", "6M", "1Y", "ALL"].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${period === p ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10" : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"}`}
+              className={`px-2.5 sm:px-3 py-1 text-[9px] sm:text-[10px] font-black rounded-lg transition-all ${period === p ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10" : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"}`}
             >
               {p}
             </button>
@@ -74,16 +74,16 @@ export function NetWorthChart({
         </div>
       }
     >
-      <div className="mb-10 flex items-end justify-between">
-        <div className="space-y-1">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+      <div className="mb-6 sm:mb-10 flex items-end justify-between">
+        <div className="space-y-0.5 sm:space-y-1">
+          <div className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
             Total Liquidity
           </div>
-          <div className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white flex items-baseline gap-3">
+          <div className="text-2xl sm:text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 dark:text-white flex items-baseline gap-2 sm:gap-3">
             {formatCurrency(currentNetWorth)}
             <div className="flex flex-col">
-              <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
+              <span className="text-[10px] sm:text-xs font-black text-emerald-500 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded flex items-center gap-1">
+                <TrendingUp className="w-2.5 h-2.5 sm:w-3 h-3" />
                 {percentageChange}%
               </span>
             </div>
@@ -91,7 +91,7 @@ export function NetWorthChart({
         </div>
       </div>
 
-      <div className="h-[300px] w-full -ml-4">
+      <div className="h-[200px] sm:h-[250px] lg:h-[300px] w-full -ml-4">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={data}
@@ -102,23 +102,20 @@ export function NetWorthChart({
                 <stop offset="5%" stopColor="#135bec" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#135bec" stopOpacity={0} />
               </linearGradient>
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
             </defs>
             <CartesianGrid
               strokeDasharray="4 4"
               stroke="#94a3b820"
               vertical={false}
+              className="hidden sm:block"
             />
             <XAxis
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 800 }}
+              tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: 800 }}
               interval="preserveStartEnd"
-              dy={15}
+              dy={10}
             />
             <YAxis hide domain={["dataMin * 0.98", "dataMax * 1.02"]} />
             <Tooltip
@@ -133,15 +130,15 @@ export function NetWorthChart({
               type="monotone"
               dataKey="value"
               stroke="#135bec"
-              strokeWidth={5}
+              strokeWidth={3}
               strokeLinecap="round"
               fillOpacity={1}
               fill="url(#wealthGradient)"
               activeDot={{
-                r: 8,
+                r: 6,
                 fill: "#135bec",
                 stroke: "#fff",
-                strokeWidth: 3,
+                strokeWidth: 2,
               }}
             />
           </AreaChart>

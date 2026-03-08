@@ -34,86 +34,95 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
 export function AssetAllocationDonut({
   data,
 }: {
-  data: AssetAllocationData[];
+  data: (AssetAllocationData & { type?: "asset" | "liability" })[];
 }) {
-  const total = data.reduce((acc, curr) => acc + curr.value, 0);
+  const assetsTotal = data.filter(d => d.type !== 'liability').reduce((acc, curr) => acc + curr.value, 0);
+  const liabilitiesTotal = data.filter(d => d.type === 'liability').reduce((acc, curr) => acc + curr.value, 0);
+  const netWorth = assetsTotal - liabilitiesTotal;
+  
   const ghostData = [{ value: 1 }];
 
   return (
     <Card
       title="Wealth Split"
-      subtitle="Asset distribution"
+      subtitle="Asset distribution - Your capital across classes"
       className="flex flex-col h-full shadow-none border-slate-100 dark:border-slate-800"
     >
       <div className="flex flex-col items-center justify-center flex-1 gap-6 py-4">
-        <div className="relative w-44 h-44 group">
+        <div className="relative w-48 h-48 group">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={ghostData}
                 cx="50%"
                 cy="50%"
-                innerRadius={65}
-                outerRadius={80}
+                innerRadius={72}
+                outerRadius={82}
                 dataKey="value"
                 stroke="none"
-                fill="#94a3b810"
+                fill="#94a3b808"
                 isAnimationActive={false}
               />
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={85}
-                paddingAngle={data.length > 1 ? 6 : 0}
+                innerRadius={68}
+                outerRadius={88}
+                paddingAngle={data.length > 1 ? 4 : 0}
                 dataKey="value"
                 stroke="none"
-                cornerRadius={data.length > 1 ? 10 : 0}
+                cornerRadius={data.length > 1 ? 8 : 0}
                 animationBegin={0}
                 animationDuration={1500}
+                animationEasing="ease-out"
               >
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color}
-                    className="hover:opacity-80 transition-opacity cursor-pointer outline-none shadow-xl"
+                    className="hover:opacity-80 transition-all cursor-pointer outline-none filter drop-shadow-sm"
                   />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center">
             <span className="text-slate-400 text-[8px] font-black uppercase tracking-[0.2em] mb-0.5">
-              Total
+              Net Worth
             </span>
-            <span className="text-slate-900 dark:text-white text-xl font-black">
-              {formatCurrency(total)}
+            <span className="text-slate-900 dark:text-white text-lg font-black tracking-tighter leading-none break-all">
+              {formatCurrency(netWorth)}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 w-full px-2">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 w-full px-4">
           {data.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2 group/item">
+            <div key={idx} className="flex items-start gap-2.5 group/item">
               <div
-                className="w-1 h-6 rounded-full transition-transform group-hover/item:scale-y-125"
+                className="w-1 h-7 rounded-sm transition-transform group-hover/item:scale-y-110"
                 style={{ backgroundColor: item.color }}
               />
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-0.5 flex items-center gap-1">
+              <div className="flex flex-col min-w-0">
+                <span className="text-[7px] text-slate-400 font-black uppercase tracking-[0.15em] mb-0.5 flex items-center gap-1.5 truncate">
                   {item.name}
-                  <span className="px-1 py-0.2 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 font-bold">
-                    {total > 0 ? Math.round((item.value / total) * 100) : 0}%
+                  <span className={`text-[8px] font-bold ${item.type === 'liability' ? 'text-rose-500' : 'text-primary'}`}>
+                    {assetsTotal > 0 ? `${item.type === 'liability' ? '-' : ''}${Math.round((item.value / assetsTotal) * 100)}%` : '0%'}
                   </span>
                 </span>
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  {formatCurrency(item.value)}
+                <span className={`text-[11px] font-black truncate ${item.type === 'liability' ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
+                  {item.type === 'liability' ? '-' : ''}{formatCurrency(item.value)}
                 </span>
               </div>
             </div>
           ))}
+          {data.length === 0 && (
+            <div className="col-span-2 text-center py-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              No Asset Data Available
+            </div>
+          )}
         </div>
       </div>
     </Card>

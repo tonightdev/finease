@@ -5,6 +5,7 @@ import { Home } from "lucide-react";
 import { type Account } from "@repo/types";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface AddLiabilityModalProps {
   isOpen: boolean;
@@ -116,14 +117,10 @@ export function AddLiabilityModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Total Obligation (₹)
           </label>
-          <input
-            type="number"
+          <AmountInput
             value={formData.initialAmount}
-            onChange={(e) =>
-              setFormData({ ...formData, initialAmount: e.target.value })
-            }
+            onChange={(val) => setFormData({ ...formData, initialAmount: val })}
             placeholder="0.00"
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-black text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
           />
         </div>
 
@@ -132,26 +129,20 @@ export function AddLiabilityModal({
             <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">
               Principal (₹)
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.paidAmount}
-              onChange={(e) =>
-                setFormData({ ...formData, paidAmount: e.target.value })
-              }
-              className="w-full h-10 bg-emerald-50 dark:bg-emerald-500/10 border-none rounded-xl px-3 text-xs font-black text-emerald-500 ring-1 ring-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              onChange={(val) => setFormData({ ...formData, paidAmount: val })}
+              className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 ring-emerald-500/20 focus:ring-emerald-500"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-orange-500 uppercase tracking-widest pl-1">
               Cost (₹)
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.interestPaid}
-              onChange={(e) =>
-                setFormData({ ...formData, interestPaid: e.target.value })
-              }
-              className="w-full h-10 bg-orange-50 dark:bg-orange-500/10 border-none rounded-xl px-3 text-xs font-black text-orange-500 ring-1 ring-orange-500/20 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+              onChange={(val) => setFormData({ ...formData, interestPaid: val })}
+              className="bg-orange-50 dark:bg-orange-500/10 text-orange-500 ring-orange-500/20 focus:ring-orange-500"
             />
           </div>
         </div>

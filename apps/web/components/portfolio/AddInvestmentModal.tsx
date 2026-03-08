@@ -8,6 +8,7 @@ import { Account } from "@repo/types";
 import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 interface AddInvestmentModalProps {
   isOpen: boolean;
@@ -167,33 +168,23 @@ export function AddInvestmentModal({
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Basis (Capital)
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.investedAmount}
-              onChange={(e) =>
-                setFormData({ ...formData, investedAmount: e.target.value })
-              }
+              onChange={(val) => setFormData({ ...formData, investedAmount: val })}
               placeholder="0.00"
               disabled={!!investment || isSaving}
-              className={`w-full h-10 border-none rounded-xl px-3 text-xs font-black ring-1 outline-none transition-all ${
-                investment
-                  ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed"
-                  : "bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary"
-              }`}
+              className={investment ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed" : ""}
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">
               Valuation
             </label>
-            <input
-              type="number"
+            <AmountInput
               value={formData.currentAmount}
-              onChange={(e) =>
-                setFormData({ ...formData, currentAmount: e.target.value })
-              }
+              onChange={(val) => setFormData({ ...formData, currentAmount: val })}
               placeholder="0.00"
-              className="w-full h-10 bg-emerald-50 dark:bg-emerald-500/10 border-none rounded-xl px-3 text-xs font-black text-emerald-500 ring-1 ring-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 ring-emerald-500/20 focus:ring-emerald-500"
             />
           </div>
         </div>

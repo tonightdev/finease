@@ -7,6 +7,7 @@ import { RootState } from "@/store";
 import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 import {
   Transaction,
@@ -172,6 +173,13 @@ export function TransactionModal({
               >
                 In
               </button>
+              <button
+                disabled={isSaving}
+                onClick={() => setFormData({ ...formData, type: "transfer" })}
+                className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${formData.type === "transfer" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"} disabled:opacity-50`}
+              >
+                Move
+              </button>
             </div>
           </div>
 
@@ -202,15 +210,11 @@ export function TransactionModal({
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
             Amount (₹)
           </label>
-          <input
-            type="number"
+          <AmountInput
             value={formData.amount}
-            onChange={(e) =>
-              setFormData({ ...formData, amount: e.target.value })
-            }
-            disabled={isSaving}
+            onChange={(val) => setFormData({ ...formData, amount: val })}
             placeholder="0.00"
-            className="w-full p-2.5 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs font-bold text-slate-900 dark:text-white disabled:opacity-50"
+            disabled={isSaving}
           />
         </div>
 
@@ -219,7 +223,7 @@ export function TransactionModal({
             <div className="flex flex-col gap-3.5">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                  Deduct From
+                  Pay From
                 </label>
                 <div className="relative">
                   <select
@@ -233,22 +237,28 @@ export function TransactionModal({
                     <option value="" disabled>
                       Select Source
                     </option>
-                    {accounts
-                      .filter((a) =>
-                        ["bank", "cash", "card", "investment"].includes(a.type),
-                      )
-                      .map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name} (₹{acc.balance.toLocaleString()})
-                        </option>
+                    <optgroup label="Bank Accounts">
+                      {accounts.filter(a => a.type === 'bank').map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
                       ))}
+                    </optgroup>
+                    <optgroup label="Cash & Others">
+                      {accounts.filter(a => ['cash', 'card'].includes(a.type)).map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Investments">
+                      {accounts.filter(a => a.type === 'investment').map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                  Credit / Invest To (Optional)
+                  Credit To (Optional)
                 </label>
                 <div className="relative">
                   <select
@@ -260,13 +270,36 @@ export function TransactionModal({
                     className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
                   >
                     <option value="">(None)</option>
-                    <optgroup label="Assets & Accounts">
+                    <optgroup label="Debts & Loans">
                       {accounts
-                        .filter(
-                          (acc) =>
-                            acc.id !== formData.accountId &&
-                            acc.type !== "asset",
-                        )
+                        .filter(acc => acc.type === 'debt' && acc.id !== formData.accountId)
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{Math.abs(acc.balance).toLocaleString()})
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Bank Accounts">
+                      {accounts
+                        .filter(acc => acc.type === 'bank' && acc.id !== formData.accountId)
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Cash & Others">
+                      {accounts
+                        .filter(acc => ['cash', 'card'].includes(acc.type) && acc.id !== formData.accountId)
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Investments">
+                      {accounts
+                        .filter(acc => acc.type === 'investment' && acc.id !== formData.accountId)
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
                             {acc.name} (₹{acc.balance.toLocaleString()})
@@ -274,7 +307,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     {goals && goals.length > 0 && (
-                      <optgroup label="Goals">
+                      <optgroup label="Financial Goals">
                         {goals.map((g: FinancialGoal) => (
                           <option key={g.id} value={g.id}>
                             {g.name} (₹{g.currentAmount.toLocaleString()})
@@ -291,21 +324,90 @@ export function TransactionModal({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                       Interest Portion (₹)
                     </label>
-                    <input
-                      type="number"
+                    <AmountInput
                       value={formData.interestAmount}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         setFormData({
                           ...formData,
-                          interestAmount: e.target.value,
+                          interestAmount: val,
                         })
                       }
                       disabled={isSaving}
                       placeholder="0.00"
-                      className="w-full p-2.5 mt-1 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs font-medium text-slate-900 dark:text-white disabled:opacity-50"
                     />
                   </div>
                 )}
+              </div>
+            </div>
+          ) : formData.type === "transfer" ? (
+            <div className="flex flex-col gap-3.5">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  From Account
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.accountId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, accountId: e.target.value })
+                    }
+                    disabled={isSaving}
+                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Select Source
+                    </option>
+                    <optgroup label="Bank Accounts">
+                      {accounts.filter(a => a.type === 'bank').map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Cash & Others">
+                      {accounts.filter(a => ['cash', 'card'].includes(a.type)).map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Investments">
+                      {accounts.filter(a => a.type === 'investment').map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  To Account
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.toAccountId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, toAccountId: e.target.value })
+                    }
+                    disabled={isSaving}
+                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
+                  >
+                    <option value="" disabled>Select Destination</option>
+                    <optgroup label="Bank Accounts">
+                      {accounts.filter(a => a.type === 'bank' && a.id !== formData.accountId).map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Cash & Others">
+                      {accounts.filter(a => ['cash', 'card'].includes(a.type) && a.id !== formData.accountId).map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Investments">
+                      {accounts.filter(a => a.type === 'investment' && a.id !== formData.accountId).map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
               </div>
             </div>
           ) : (
@@ -325,13 +427,16 @@ export function TransactionModal({
                   <option value="" disabled>
                     Select Destination
                   </option>
-                  {accounts
-                    .filter((a) => ["bank", "cash", "card"].includes(a.type))
-                    .map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} (₹{acc.balance.toLocaleString()})
-                      </option>
+                  <optgroup label="Bank Accounts">
+                    {accounts.filter(a => a.type === 'bank').map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
                     ))}
+                  </optgroup>
+                  <optgroup label="Cash & Others">
+                    {accounts.filter(a => ['cash', 'card'].includes(a.type)).map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
+                    ))}
+                  </optgroup>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
