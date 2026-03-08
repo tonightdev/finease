@@ -54,8 +54,8 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Auto-redirect logged-in users from landing to their respective dashboards
-    if (!authLoading && user && pathname === "/") {
+    // Auto-redirect logged-in users from public routes to their respective dashboards
+    if (!authLoading && user && pathname && PUBLIC_ROUTES.includes(pathname)) {
       if (user.role === "admin") {
         router.push("/admin/dashboard");
       } else {
@@ -70,6 +70,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   // If not loading, not user, and is not public route, it will redirect, but meanwhile return null to prevent flash
   if (!user && pathname && !PUBLIC_ROUTES.includes(pathname)) {
+    return null;
+  }
+
+  // If logged in and on a public route, prevent flashing public content while redirecting
+  if (user && pathname && PUBLIC_ROUTES.includes(pathname)) {
     return null;
   }
 
