@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           void dispatch(fetchGoals());
         } catch {
           localStorage.removeItem("finease_token");
+          dispatch({ type: "USER_LOGOUT" });
         }
       }
       setLoading(false);
@@ -131,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     localStorage.removeItem("finease_token");
+    dispatch({ type: "USER_LOGOUT" });
     dispatch(setUser(null));
   };
 

@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers, Action } from "@reduxjs/toolkit";
 import accountsReducer from "./slices/accountsSlice";
 import transactionsReducer from "./slices/transactionsSlice";
 import goalsReducer from "./slices/goalsSlice";
@@ -8,17 +8,30 @@ import categoriesReducer from "./slices/categoriesSlice";
 import assetClassesReducer from "./slices/assetClassesSlice";
 import remindersReducer from "./slices/remindersSlice";
 
+const appReducer = combineReducers({
+  accounts: accountsReducer,
+  transactions: transactionsReducer,
+  goals: goalsReducer,
+  stats: statsReducer,
+  user: userReducer,
+  categories: categoriesReducer,
+  assetClasses: assetClassesReducer,
+  reminders: remindersReducer,
+});
+
+const rootReducer = (
+  state: Parameters<typeof appReducer>[0] | undefined,
+  action: Action
+) => {
+  if (action.type === "USER_LOGOUT") {
+    // Reset state completely to prevent data leaking across users
+    return appReducer(undefined, action);
+  }
+  return appReducer(state, action);
+};
+
 export const store = configureStore({
-  reducer: {
-    accounts: accountsReducer,
-    transactions: transactionsReducer,
-    goals: goalsReducer,
-    stats: statsReducer,
-    user: userReducer,
-    categories: categoriesReducer,
-    assetClasses: assetClassesReducer,
-    reminders: remindersReducer,
-  },
+  reducer: rootReducer,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
