@@ -48,48 +48,75 @@ export class AccountsService {
     const newBalance =
       account.balance !== undefined ? Number(account.balance) : undefined;
 
-    // If balance is being manually updated, create an adjustment transaction
-    // to preserve this change in the historical record.
+    // If balance is being manually updated
     if (
       newBalance !== undefined &&
       Math.abs(newBalance - (currentAccount.balance || 0)) > 0.01
     ) {
-      const delta = newBalance - (currentAccount.balance || 0);
-      const isInvestment = currentAccount.type === 'investment';
+      const skipTraction = ['investment', 'debt', 'asset'].includes(
+        currentAccount.type,
+      );
 
-      // For investments, Valuation Adjustment is an ABSOLUTE set point.
-      // For others, it's a RELATIVE movement (delta).
-      const finalAmount = isInvestment ? newBalance : Math.abs(delta);
-      const finalType = isInvestment
-        ? 'income'
-        : delta > 0
-          ? 'income'
-          : 'expense';
+      if (skipTraction) {
+        // For Investment/Debt/Asset, we avoid creating a "traction" transaction.
+        // Instead, we adjust the valuationAdjustment (for investments) or initialAmount (for others)
+        // so that recalculateBalances results in the target balance.
 
-      await this.transactionsService.create({
-        userId: currentAccount.userId,
-        accountId: id,
-        amount: finalAmount,
-        type: finalType,
-        category: 'Valuation Adjustment',
-        description: `Manual adjustment to match ${newBalance.toLocaleString()} valuation`,
-        date: new Date().toISOString(),
-        status: 'completed',
-        metadata: {
-          isSystemAdjustment: true,
-          isBalanceSync: true, // Explicit flag for Absolute Sync point logic
-          previousBalance: currentAccount.balance,
-          newBalance: newBalance,
-        },
-      });
+        const updateData = { ...account };
+        delete updateData.balance;
 
-      // Remove balance from the direct update to avoid overwriting the recalculated value
-      const updateData = { ...account };
-      delete updateData.balance;
-      await this.collection.doc(id).update({
-        ...updateData,
-        lastSyncedAt: new Date().toISOString(),
-      });
+        if (currentAccount.type === 'investment') {
+          // Calculate existing tx-derived balance (without current adjustment)
+          // We'll just update the valuationAdjustment to be the delta from the current total balance
+          const existingAdj = Number(currentAccount.valuationAdjustment) || 0;
+          const delta = newBalance - (currentAccount.balance || 0);
+          const newAdj = existingAdj + delta;
+
+          await this.collection.doc(id).update({
+            ...updateData,
+            valuationAdjustment: newAdj,
+            lastSyncedAt: new Date().toISOString(),
+          });
+        } else {
+          // For Debt/Asset, we adjust initialAmount
+          const delta = newBalance - (currentAccount.balance || 0);
+          const newInitial = (currentAccount.initialAmount || 0) + delta;
+
+          await this.collection.doc(id).update({
+            ...updateData,
+            initialAmount: newInitial,
+            lastSyncedAt: new Date().toISOString(),
+          });
+        }
+
+        // Trigger recalculation to ensure everything is consistent
+        await this.transactionsService.recalculateBalances(id);
+      } else {
+        // For Bank/Cash/Card, we preserve the "traction" adjustment transaction logic
+        const delta = newBalance - (currentAccount.balance || 0);
+        await this.transactionsService.create({
+          userId: currentAccount.userId,
+          accountId: id,
+          amount: Math.abs(delta),
+          type: delta > 0 ? 'income' : 'expense',
+          category: 'Valuation Adjustment',
+          description: `Manual adjustment to match ${newBalance.toLocaleString()} valuation`,
+          date: new Date().toISOString(),
+          status: 'completed',
+          metadata: {
+            isSystemAdjustment: true,
+            previousBalance: currentAccount.balance,
+            newBalance: newBalance,
+          },
+        });
+
+        const updateData = { ...account };
+        delete updateData.balance;
+        await this.collection.doc(id).update({
+          ...updateData,
+          lastSyncedAt: new Date().toISOString(),
+        });
+      }
     } else {
       await this.collection.doc(id).update({
         ...account,

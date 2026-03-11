@@ -42,6 +42,7 @@ export interface Account {
   minimumBalance?: number;
   maxLimit?: number;
   currency: string;
+  valuationAdjustment?: number;
   institutionName?: string;
   lastSyncedAt: string;
   deletedAt?: string | null;
@@ -57,6 +58,7 @@ export interface FinancialGoal {
   startDate: string;
   category: string;
   icon?: string;
+  initialAmount?: number;
   deletedAt?: string | null;
 }
 

@@ -272,9 +272,17 @@ export function TransactionModal({
                 <div className="relative">
                   <select
                     value={formData.toAccountId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, toAccountId: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newToId = e.target.value;
+                      const targetAccount = accounts.find(a => a.id === newToId);
+                      const isInternal = targetAccount && ["bank", "cash", "card", "investment"].includes(targetAccount.type);
+                      
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        toAccountId: newToId,
+                        type: isInternal ? "transfer" : prev.type
+                      }));
+                    }}
                     disabled={isSaving}
                     className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
                   >

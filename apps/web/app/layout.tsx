@@ -97,12 +97,13 @@ export default function RootLayout({
                   <BottomNav />
                   <PWAInstallGuide />
                   <Toaster
-                    position="bottom-right"
+                    position="top-right"
                     toastOptions={{
                       style: {
                         background: "#333",
                         color: "#fff",
                       },
+                      className: "mobile-toast",
                     }}
                   />
                 </SecurityProvider>

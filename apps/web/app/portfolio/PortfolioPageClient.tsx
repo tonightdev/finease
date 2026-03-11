@@ -350,7 +350,7 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-hidden">
             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
               <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
                 <tr>
@@ -510,13 +510,7 @@ export default function PortfolioPageClient() {
                       Balance
                     </span>
                     <span className="text-sm font-black text-rose-500 tracking-tighter">
-                      ₹
-                      {(
-                        (debt.repaidCapital || 0) +
-                        (debt.burnedInterest || 0) -
-                        (debt.initialAmount ||
-                          Math.abs(debt.balance) + (debt.repaidCapital || 0))
-                      ).toLocaleString()}
+                      ₹{Math.abs(debt.balance).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -568,7 +562,7 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-hidden">
             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
               <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
                 <tr>
@@ -642,14 +636,7 @@ export default function PortfolioPageClient() {
                       </td>
                       <td className="px-8 py-5 text-right">
                         <span className="font-black text-rose-500 text-base tracking-tighter">
-                          ₹
-                          {(
-                            (debt.repaidCapital || 0) +
-                            (debt.burnedInterest || 0) -
-                            (debt.initialAmount ||
-                              Math.abs(debt.balance) +
-                                (debt.repaidCapital || 0))
-                          ).toLocaleString()}
+                          ₹{debt.balance}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right">
@@ -771,7 +758,7 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-hidden">
             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
               <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
                 <tr>
