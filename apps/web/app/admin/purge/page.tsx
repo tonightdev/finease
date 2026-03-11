@@ -21,6 +21,7 @@ import {
   Mail,
   Zap,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -140,8 +141,9 @@ export default function AdminPurgePage() {
   });
 
   const filteredUsers = users.filter((u) => {
+    const isCurrentUser = u.id === currentUser?.uid;
     const searchStr = (u.displayName || u.email || "").toLowerCase();
-    return searchStr.includes(searchTerm.toLowerCase());
+    return searchStr.includes(searchTerm.toLowerCase()) && !isCurrentUser;
   });
 
   if (loading) {
@@ -162,9 +164,26 @@ export default function AdminPurgePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:items-start">
         
-        {/* User Listing Sidebar */}
+        {/* User Dropdown / Listing Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col h-[700px]">
+          {/* Mobile Dropdown Selector */}
+          <div className="lg:hidden">
+            <div className="relative">
+                <select 
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="w-full h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-sm font-bold appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-xl"
+                >
+                    <option value="">Select Identity Cluster...</option>
+                    {filteredUsers.map(u => (
+                        <option key={u.id} value={u.id}>{u.displayName} ({u.email})</option>
+                    ))}
+                </select>
+                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col h-[700px] hidden lg:flex">
             <div className="p-6 border-b border-slate-100 dark:border-white/5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

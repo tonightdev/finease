@@ -781,7 +781,7 @@ export default function TransactionsImportClient() {
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-hidden">
               <table className="w-full text-left">
                 <thead className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-50 dark:bg-white/5 sticky top-0 z-10">
                   <tr>

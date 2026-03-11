@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { Transaction, Account } from '@repo/types';
+import { Transaction, Account, FinancialGoal } from '@repo/types';
 
 // =============================================================================
 // TransactionsService
@@ -362,6 +362,10 @@ export class TransactionsService {
       lastSyncedAt: new Date().toISOString(),
     };
     if (acc.type === 'investment') accUpdate.investedAmount = invested;
+    if (acc.valuationAdjustment) {
+      balance += Number(acc.valuationAdjustment);
+      accUpdate.balance = balance;
+    }
     if (acc.type === 'debt') {
       accUpdate.repaidCapital = repaidCapital;
       accUpdate.burnedInterest = burnedInterest;
@@ -380,6 +384,9 @@ export class TransactionsService {
     const goalRef = this.db.collection(this.goalsCollection).doc(goalId);
     if (!(await goalRef.get()).exists) return;
 
+    const goal = (await goalRef.get()).data() as FinancialGoal;
+    const initial = Number(goal.initialAmount) || 0;
+
     const snapshot = await this.collection
       .where('toAccountId', '==', goalId)
       .where('deletedAt', '==', null)
@@ -388,7 +395,7 @@ export class TransactionsService {
 
     const total = snapshot.docs.reduce(
       (sum, doc) => sum + Number((doc.data() as Transaction).amount),
-      0,
+      initial,
     );
 
     await goalRef.update({ currentAmount: total });

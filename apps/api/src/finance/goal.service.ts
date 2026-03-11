@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { FinancialGoal } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
+import { TransactionsService } from './transactions.service';
 
 @Injectable()
 export class GoalService {
   private readonly collectionName = 'goals';
 
-  constructor(private readonly firebase: FirebaseAdminService) {}
+  constructor(
+    private readonly firebase: FirebaseAdminService,
+    @Inject(forwardRef(() => TransactionsService))
+    private readonly transactionsService: TransactionsService,
+  ) {}
 
   private get db() {
     return this.firebase.getFirestore();
@@ -40,7 +45,26 @@ export class GoalService {
     id: string,
     goal: Partial<FinancialGoal>,
   ): Promise<FinancialGoal> {
-    await this.collection.doc(id).update(goal);
+    const currentGoal = (await this.collection.doc(id).get()).data() as FinancialGoal;
+    
+    if (goal.currentAmount !== undefined && Math.abs(goal.currentAmount - (currentGoal.currentAmount || 0)) > 0.01) {
+      const delta = goal.currentAmount - (currentGoal.currentAmount || 0);
+      const newInitial = (currentGoal.initialAmount || 0) + delta;
+      
+      const updateData = { ...goal };
+      delete updateData.currentAmount;
+      
+      await this.collection.doc(id).update({
+        ...updateData,
+        initialAmount: newInitial,
+      });
+      
+      // Trigger recalculation to ensure everything is consistent
+      await this.transactionsService.recalculateGoalProgress(id);
+    } else {
+      await this.collection.doc(id).update(goal);
+    }
+
     const doc = await this.collection.doc(id).get();
     return { id: doc.id, ...(doc.data() as Omit<FinancialGoal, 'id'>) };
   }

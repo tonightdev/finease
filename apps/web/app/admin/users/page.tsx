@@ -161,104 +161,106 @@ export default function AdminUsersPage() {
       />
 
       <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-surface-dark shadow-2xl shadow-slate-200/50 dark:shadow-none">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Identity
-              </th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Authorization
-              </th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Status
-              </th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-            {filteredUsers.map((u) => (
-              <tr
-                key={u.id}
-                className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group"
-              >
-                <td className="px-6 py-6" title={u.id}>
-                  <div className="flex items-center gap-4">
-                    <div className="size-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
-                      <UserIcon className="size-5 text-slate-500" />
+        <div className="overflow-x-auto overflow-y-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Identity
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Authorization
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+              {filteredUsers.map((u) => (
+                <tr
+                  key={u.id}
+                  className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group"
+                >
+                  <td className="px-6 py-6" title={u.id}>
+                    <div className="flex items-center gap-4">
+                      <div className="size-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
+                        <UserIcon className="size-5 text-slate-500" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                          {u.displayName}
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium">
+                          {u.email}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                        {u.displayName}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">
-                        {u.email}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-6">
-                  <button
-                    onClick={() => changeUserRole(u.id, u.role)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                      u.role === "admin"
-                        ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
-                        : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-                    }`}
-                  >
-                    {u.role === "admin" ? (
-                      <ShieldAlert className="size-3" />
-                    ) : (
-                      <Shield className="size-3" />
-                    )}
-                    {u.role}
-                  </button>
-                </td>
-                <td className="px-6 py-6">
-                  <div
-                    className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${
-                      u.status === "inactive"
-                        ? "text-rose-500"
-                        : "text-emerald-500"
-                    }`}
-                  >
-                    {u.status === "inactive" ? (
-                      <XCircle className="size-3" />
-                    ) : (
-                      <CheckCircle2 className="size-3" />
-                    )}
-                    {u.status || "active"}
-                  </div>
-                </td>
-                <td className="px-6 py-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  </td>
+                  <td className="px-6 py-6">
                     <button
-                      onClick={() => resetUserTour(u.id)}
-                      className="h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20"
-                      title="Reset Feature Tour"
-                    >
-                      Reset Tour
-                    </button>
-                    <button
-                      onClick={() =>
-                        toggleUserStatus(u.id, u.status || "active")
-                      }
-                      className={`h-8 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${
-                        u.status === "inactive"
-                          ? "bg-emerald-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/20"
-                          : "bg-white dark:bg-slate-900 text-rose-500 border-rose-100 dark:border-rose-500/20"
+                      onClick={() => changeUserRole(u.id, u.role)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                        u.role === "admin"
+                          ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                          : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
                       }`}
                     >
-                      {u.status === "inactive" ? "Activate" : "Deactivate"}
+                      {u.role === "admin" ? (
+                        <ShieldAlert className="size-3" />
+                      ) : (
+                        <Shield className="size-3" />
+                      )}
+                      {u.role}
                     </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-6 py-6">
+                    <div
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${
+                        u.status === "inactive"
+                          ? "text-rose-500"
+                          : "text-emerald-500"
+                      }`}
+                    >
+                      {u.status === "inactive" ? (
+                        <XCircle className="size-3" />
+                      ) : (
+                        <CheckCircle2 className="size-3" />
+                      )}
+                      {u.status || "active"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => resetUserTour(u.id)}
+                        className="h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20"
+                        title="Reset Feature Tour"
+                      >
+                        Reset Tour
+                      </button>
+                      <button
+                        onClick={() =>
+                          toggleUserStatus(u.id, u.status || "active")
+                        }
+                        className={`h-8 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${
+                          u.status === "inactive"
+                            ? "bg-emerald-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/20"
+                            : "bg-white dark:bg-slate-900 text-rose-500 border-rose-100 dark:border-rose-500/20"
+                        }`}
+                      >
+                        {u.status === "inactive" ? "Activate" : "Deactivate"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Mobile-friendly card list */}
