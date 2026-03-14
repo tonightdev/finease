@@ -32,10 +32,13 @@ export class AnalyticsService {
       .where('deletedAt', '==', null)
       .get();
 
-    const accounts = accountsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Record<string, any>),
-    })) as unknown as Account[];
+    // filter out accounts marked as excluded from analytics
+    const accounts = (
+      accountsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Record<string, any>),
+      })) as unknown as Account[]
+    ).filter((acc) => !acc.excludeFromAnalytics);
 
     // 2. Fetch Goals (for stats and pacing)
     const goalsSnapshot = await db
@@ -178,8 +181,26 @@ export class AnalyticsService {
       .where('date', '>=', sixMonthsAgo.toISOString())
       .get();
 
-    const transactions = txSnapshot.docs.map(
+    const allTransactions = txSnapshot.docs.map(
       (doc) => doc.data() as Transaction,
+    );
+
+    // Filter out transactions belonging to accounts excluded from analytics
+    const excludedAccountIds = new Set(
+      accountsSnapshot.docs
+        .map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...(doc.data() as Record<string, any>),
+            }) as unknown as Account,
+        )
+        .filter((acc) => acc.excludeFromAnalytics)
+        .map((acc) => acc.id),
+    );
+
+    const transactions = allTransactions.filter(
+      (tx) => !excludedAccountIds.has(tx.accountId),
     );
 
     let rollingNetWorth = netWorth;

@@ -82,8 +82,8 @@ export function UserMenu() {
                 <div className="mt-2 py-2 border-t border-slate-100 dark:border-border-dark">
                     <p className="px-4 text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Switch Identity</p>
                     <div className="space-y-0.5">
-                        {accounts.map(acc => (
-                            <div key={acc.uid} className="flex items-center group/item px-2">
+                        {accounts.map((acc, index) => (
+                            <div key={acc.uid || index} className="flex items-center group/item px-2">
                                 <button
                                     onClick={() => {
                                         if (acc.uid !== user.uid) {

@@ -28,11 +28,18 @@ export default function ReportsPageClient() {
   const [showAllExpenses, setShowAllExpenses] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const accounts =
+  const allAccounts =
     useSelector((state: RootState) => state.accounts?.items) ?? EMPTY_ACCOUNTS;
-  const transactions =
+  const accounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics), [allAccounts]);
+
+  const allTransactions =
     useSelector((state: RootState) => state.transactions?.items) ??
     EMPTY_TRANSACTIONS;
+  const transactions = useMemo(() => {
+    const includedIds = new Set(accounts.map(a => a.id));
+    return allTransactions.filter(tx => includedIds.has(tx.accountId));
+  }, [allTransactions, accounts]);
+
   const categories =
     useSelector((state: RootState) => state.categories?.items) ??
     EMPTY_CATEGORIES;
@@ -366,7 +373,7 @@ export default function ReportsPageClient() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Card
-              key={i}
+              key={`skeleton-${i}`}
               className="p-5 space-y-3 shadow-none border-slate-100 dark:border-slate-800"
             >
               <Skeleton className="h-3 w-20" />
@@ -614,8 +621,8 @@ export default function ReportsPageClient() {
             {(showAllExpenses
               ? expenseBreakdown
               : expenseBreakdown.slice(0, 6)
-            ).map((e) => (
-              <div key={e.category} className="group">
+            ).map((e, index) => (
+              <div key={e.category || index} className="group">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col">
                     <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">

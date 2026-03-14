@@ -44,6 +44,7 @@ export interface Account {
   currency: string;
   valuationAdjustment?: number;
   institutionName?: string;
+  excludeFromAnalytics?: boolean;
   lastSyncedAt: string;
   deletedAt?: string | null;
 }

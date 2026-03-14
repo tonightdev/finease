@@ -103,14 +103,18 @@ export default function PortfolioPageClient() {
   );
 
   const assets = accounts
-    .filter((a) => a.type !== "debt")
+    .filter((a) => a.type !== "debt" && !a.excludeFromAnalytics)
     .reduce((sum, item) => sum + item.balance, 0);
-  const totalCapitalInvested = investments.reduce(
-    (sum, item) => sum + (item.investedAmount || item.balance),
-    0,
-  );
+  const totalCapitalInvested = investments
+    .filter((a) => !a.excludeFromAnalytics)
+    .reduce(
+      (sum, item) => sum + (item.investedAmount || item.balance),
+      0,
+    );
   const liabilities = Math.abs(
-    debts.reduce((sum, item) => sum + item.balance, 0),
+    debts
+      .filter((a) => !a.excludeFromAnalytics)
+      .reduce((sum, item) => sum + item.balance, 0),
   );
   const netWorth = assets - liabilities;
 
@@ -121,7 +125,7 @@ export default function PortfolioPageClient() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
-              key={i}
+              key={`skeleton-${i}`}
               className="h-24 bg-slate-100 dark:bg-slate-800 rounded-2xl"
             />
           ))}
@@ -195,8 +199,8 @@ export default function PortfolioPageClient() {
             <Plus className="w-3.5 h-3.5" />
           </button>
           {(showAllAssetClasses ? assetTypes : assetTypes.slice(0, 5)).map(
-            (c) => (
-              <div key={c.id} className="relative group/cat shrink-0">
+            (c, index) => (
+              <div key={c.id || index} className="relative group/cat shrink-0">
                 <div className="flex items-center gap-2 pl-3 pr-7 py-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 transition-all">
                   <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
                   <span className="font-bold text-[9px] uppercase tracking-widest text-slate-500">
@@ -245,7 +249,9 @@ export default function PortfolioPageClient() {
           },
           {
             label: "Valuation",
-            value: investments.reduce((sum, item) => sum + item.balance, 0),
+            value: investments
+              .filter((a) => !a.excludeFromAnalytics)
+              .reduce((sum, item) => sum + item.balance, 0),
             color: "text-emerald-500",
           },
           { label: "Liabilities", value: liabilities, color: "text-rose-500" },
@@ -861,6 +867,7 @@ export default function PortfolioPageClient() {
                     parseFloat(data.investedAmount) ||
                     editingInvestment.investedAmount ||
                     editingInvestment.balance,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();
@@ -874,6 +881,7 @@ export default function PortfolioPageClient() {
                 initialAmount: parseFloat(data.currentAmount) || 0,
                 investedAmount: parseFloat(data.investedAmount) || 0,
                 currency: "INR",
+                excludeFromAnalytics: data.excludeFromAnalytics,
               }),
             ).unwrap();
           }
@@ -908,6 +916,7 @@ export default function PortfolioPageClient() {
                   repaidCapital: paidAmt,
                   burnedInterest: interestPaidVal,
                   balance: -remainingBalance,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();
@@ -922,6 +931,7 @@ export default function PortfolioPageClient() {
                 burnedInterest: interestPaidVal,
                 balance: -remainingBalance,
                 currency: "INR",
+                excludeFromAnalytics: data.excludeFromAnalytics,
               }),
             ).unwrap();
           }
@@ -947,6 +957,7 @@ export default function PortfolioPageClient() {
                 data: {
                   name: data.name,
                   balance: parseFloat(data.balance) || editingAsset.balance,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();
@@ -959,6 +970,7 @@ export default function PortfolioPageClient() {
                 balance: parseFloat(data.balance) || 0,
                 initialAmount: parseFloat(data.balance) || 0,
                 currency: "INR",
+                excludeFromAnalytics: data.excludeFromAnalytics,
               }),
             ).unwrap();
           }

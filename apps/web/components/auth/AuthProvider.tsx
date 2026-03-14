@@ -75,8 +75,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function buildUser(userData: ApiUserResponse): AuthUser {
+  const uid = userData.id ?? userData.uid;
+  if (!uid) {
+    console.warn("API returned user without ID/UID, generating fallback", userData.email);
+  }
   return {
-    uid: userData.id ?? userData.uid ?? "",
+    uid: uid || `tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     email: userData.email,
     displayName: userData.displayName,
     role: userData.role,
@@ -101,10 +105,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("finease_token");
+      
       const storedAccounts = localStorage.getItem("finease_multi_accounts");
       
       if (storedAccounts) {
-        setAccounts(JSON.parse(storedAccounts));
+        try {
+          const parsed = JSON.parse(storedAccounts);
+          if (Array.isArray(parsed)) {
+            // Sanitize: filter out entries with empty UIDs
+            const sanitized = parsed.filter(a => !!a.uid);
+            setAccounts(sanitized);
+          }
+        } catch (e) {
+          console.error("Failed to parse stored accounts", e);
+        }
       }
 
       if (token) {
@@ -123,12 +137,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return updated;
           });
 
-          const dataPromises = [
-            dispatch(fetchCategories()),
-            dispatch(fetchAssetClasses()),
-            dispatch(fetchGoals())
-          ];
-          await Promise.all(dataPromises);
+          // Fetch data in background without blocking initial render
+          void dispatch(fetchCategories());
+          void dispatch(fetchAssetClasses());
+          void dispatch(fetchGoals());
         } catch (err: unknown) {
           const axiosError = err as { response?: { status?: number } };
           // Only logout on 401 Unauthorized

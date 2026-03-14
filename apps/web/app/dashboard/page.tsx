@@ -32,13 +32,22 @@ export default function Home() {
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
-  const accounts = useSelector((state: RootState) => state.accounts.items);
+  const allAccounts = useSelector((state: RootState) => state.accounts.items);
+  // Accounts used for analytics/stats (excludes those marked as excluded)
+  const analyticsAccounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics), [allAccounts]);
+
   const goals = useSelector((state: RootState) => state.goals.items);
   const assetClasses = useSelector((state: RootState) => state.assetClasses.items);
   const stats = useSelector((state: RootState) => state.stats.data);
-  const transactions = useSelector(
+  const allTransactions = useSelector(
     (state: RootState) => state.transactions.items,
   );
+  
+  const transactions = useMemo(() => {
+    const includedAccountIds = new Set(analyticsAccounts.map(a => a.id));
+    return allTransactions.filter(tx => includedAccountIds.has(tx.accountId));
+  }, [allTransactions, analyticsAccounts]);
+
   const loading = useSelector(
     (state: RootState) => state.accounts.loading || state.transactions.loading,
   );
@@ -56,33 +65,40 @@ export default function Home() {
     }
   }, [dispatch, user, permission, requestPermission]);
 
-  const regularAccounts = useMemo(() => {
-    const filtered = accounts.filter(
+  // Regular accounts for display (includes excluded ones)
+  const displayRegularAccounts = useMemo(() => {
+    const filtered = allAccounts.filter(
       (acc) => acc.type === "bank" || acc.type === "cash" || acc.type === "card",
     );
     const order: Record<string, number> = { bank: 0, cash: 1, card: 2 };
     return [...filtered].sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
-  }, [accounts]);
+  }, [allAccounts]);
 
-  const cards = useMemo(() => accounts.filter(acc => acc.type === 'card'), [accounts]);
+  // Regular accounts for analytics (excludes excluded ones)
+  const analyticsRegularAccounts = useMemo(() => 
+    displayRegularAccounts.filter(a => !a.excludeFromAnalytics), 
+    [displayRegularAccounts]
+  );
 
-  const investmentAccounts = accounts.filter(
+  const analyticsCards = useMemo(() => analyticsAccounts.filter(acc => acc.type === 'card'), [analyticsAccounts]);
+
+  const analyticsInvestmentAccounts = analyticsAccounts.filter(
     (acc) => acc.type === "investment",
   );
-  const debts = accounts.filter((acc) => acc.type === "debt");
+  const analyticsDebts = analyticsAccounts.filter((acc) => acc.type === "debt");
 
   const assets = useMemo(() => {
-    const liquid = regularAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
-    const invested = investmentAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
-    const others = accounts.filter(a => a.type === 'asset').reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const liquid = analyticsRegularAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const invested = analyticsInvestmentAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const others = analyticsAccounts.filter(a => a.type === 'asset').reduce((sum, a) => sum + Math.max(0, a.balance), 0);
     return liquid + invested + others;
-  }, [regularAccounts, investmentAccounts, accounts]);
+  }, [analyticsRegularAccounts, analyticsInvestmentAccounts, analyticsAccounts]);
 
   const liabilities = useMemo(() => {
-    const debtSum = debts.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
-    const cardSum = cards.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
+    const debtSum = analyticsDebts.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
+    const cardSum = analyticsCards.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
     return debtSum + cardSum;
-  }, [debts, cards]);
+  }, [analyticsDebts, analyticsCards]);
 
   const realTimeNetWorth = assets - liabilities;
 
@@ -91,14 +107,14 @@ export default function Home() {
     const liabilitiesMap: Record<string, { value: number; type: "liability" }> = {};
 
     // Assets
-    investmentAccounts.forEach((inv) => {
+    analyticsInvestmentAccounts.forEach((inv) => {
       assetsMap[inv.assetType || "Other"] = {
         value: (assetsMap[inv.assetType || "Other"]?.value || 0) + inv.balance,
         type: "asset",
       };
     });
 
-    regularAccounts
+    analyticsRegularAccounts
       .filter((a) => a.type !== "card")
       .forEach((acc) => {
         const label = acc.type === "bank" ? "Bank" : "Cash";
@@ -109,7 +125,7 @@ export default function Home() {
       });
 
     // Liabilities
-    cards.forEach((card) => {
+    analyticsCards.forEach((card) => {
       liabilitiesMap["Cards"] = {
         value: (liabilitiesMap["Cards"]?.value || 0) + Math.abs(card.balance),
         type: "liability",
@@ -117,7 +133,7 @@ export default function Home() {
     });
 
     return { assets: assetsMap, liabilities: liabilitiesMap };
-  }, [investmentAccounts, regularAccounts, cards]);
+  }, [analyticsInvestmentAccounts, analyticsRegularAccounts, analyticsCards]);
 
   const realTimeAssetAllocation = useMemo(() => {
     const defaultColors: Record<string, string> = {
@@ -278,11 +294,11 @@ export default function Home() {
       savingsRate: (savingsRate * 100).toFixed(0),
       monthlyIncome,
       monthlyExpense,
-      liquidCapital: regularAccounts.filter(a => a.type !== 'card').reduce((sum, a) => sum + a.balance, 0)
+      liquidCapital: analyticsRegularAccounts.filter(a => a.type !== 'card').reduce((sum, a) => sum + a.balance, 0)
     };
-  }, [transactions, assets, goals, regularAccounts, user?.monthStartDate]);
+  }, [transactions, assets, goals, analyticsRegularAccounts, user?.monthStartDate]);
 
-  if (loading && accounts.length === 0) {
+  if (loading && allAccounts.length === 0) {
     return (
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-6 lg:space-y-8 animate-pulse">
         <div className="space-y-3">
@@ -373,7 +389,7 @@ export default function Home() {
       </div>
 
       <div className="space-y-2">
-        {accounts.length === 0 ? (
+        {allAccounts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
             <div className="flex flex-col items-center gap-4">
               <span className="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-700">
@@ -389,18 +405,18 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {regularAccounts.length > 0 && (
+            {displayRegularAccounts.length > 0 && (
               <div className="space-y-3">
                 <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     Liquid Capital
                   </h3>
                   <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-                    {regularAccounts.length} Units
+                    {displayRegularAccounts.length} Units
                   </span>
                 </div>
                 <div className="pt-1">
-                  <AccountList accounts={regularAccounts} />
+                  <AccountList accounts={displayRegularAccounts} />
                 </div>
               </div>
             )}
@@ -511,6 +527,7 @@ export default function Home() {
               minimumBalance: parseFloat(data.minimumBalance || "0") || 0,
               maxLimit: parseFloat(data.maxLimit || "0") || 0,
               currency: "INR",
+              excludeFromAnalytics: data.excludeFromAnalytics,
             }),
           ).unwrap();
         }}

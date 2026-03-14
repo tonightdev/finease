@@ -1063,6 +1063,7 @@ export default function TransactionsPageClient() {
                 | "card",
               balance: parseFloat(data.balance) || 0,
               currency: "INR",
+              excludeFromAnalytics: data.excludeFromAnalytics,
             }),
           ).unwrap();
         }}

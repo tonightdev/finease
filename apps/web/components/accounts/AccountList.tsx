@@ -89,7 +89,7 @@ export function AccountList({ accounts }: AccountListProps) {
 
           return (
             <Card
-              key={account.id}
+              key={account.id || index}
               className={`p-2.5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2 ${index >= 4 && !isExpanded ? "hidden lg:flex" : "flex"}`}
             >
             <div className="flex items-start justify-between">
@@ -200,6 +200,7 @@ export function AccountList({ accounts }: AccountListProps) {
                   balance: parseFloat(data.balance) || 0,
                   minimumBalance: parseFloat(data.minimumBalance || "0") || 0,
                   maxLimit: parseFloat(data.maxLimit || "0") || 0,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();
@@ -225,6 +226,7 @@ export function AccountList({ accounts }: AccountListProps) {
                     editingAccount.balance,
                   balance:
                     parseFloat(data.currentAmount) || editingAccount.balance,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();
@@ -253,6 +255,7 @@ export function AccountList({ accounts }: AccountListProps) {
                   repaidCapital: paidAmt,
                   burnedInterest: intPaid,
                   balance: -remainingBalance,
+                  excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
             ).unwrap();

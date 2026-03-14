@@ -11,7 +11,7 @@ import { FirebaseAdminService } from '../common/services/firebase-admin.service'
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
-        signOptions: { expiresIn: '1d' },
+        signOptions: { expiresIn: '365d' },
       }),
     }),
   ],
