@@ -650,19 +650,24 @@ export default function TransactionsPageClient() {
                   <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate pr-4">
                     {tx.description}
                   </h4>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1 block">
+                    {formatDate(tx.date)}
+                  </span>
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-right shrink-0 flex flex-col items-end gap-2">
                   <div
                     className={`text-sm font-black tracking-tighter ${tx.type === "expense" || tx.type === "transfer" ? "text-rose-500" : "text-emerald-500"}`}
                   >
                     {tx.type === "expense" || tx.type === "transfer"
                       ? "-"
                       : "+"}{" "}
-                    ₹{tx.amount.toLocaleString()}
+                    ₹{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </div>
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                    {formatDate(tx.date)}
-                  </span>
+                  <div className="text-[10px] font-bold text-slate-500">
+                    Bal: {tx.balanceAfter !== undefined
+                      ? `₹${tx.balanceAfter.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                      : "—"}
+                  </div>
                 </div>
               </div>
 

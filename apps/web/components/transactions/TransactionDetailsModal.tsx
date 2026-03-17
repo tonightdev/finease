@@ -70,13 +70,13 @@ export function TransactionDetailsModal({
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             Value Impact
           </span>
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
             <span
               className={`text-2xl font-black tracking-tighter ${transaction.type === "expense" ? "text-rose-500" : transaction.type === "transfer" ? "text-slate-500" : "text-emerald-500"}`}
             >
-              ₹{transaction.amount.toLocaleString()}
+              ₹{transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-[10px] font-black text-slate-400 uppercase">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
               {transaction.type}
             </span>
           </div>
@@ -84,6 +84,11 @@ export function TransactionDetailsModal({
             <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-2 py-0.5 rounded w-fit mt-1">
               Incl. ₹{Number(transaction.interestAmount).toLocaleString()} Cost
             </span>
+          )}
+          {transaction.balanceAfter !== undefined && (
+            <div className="mt-2 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-xl border border-slate-100 dark:border-white/10 w-fit">
+              Balance: ₹{transaction.balanceAfter.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
           )}
         </div>
 

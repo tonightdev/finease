@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { SavingsVelocityChart } from "@/components/dashboard/SavingsVelocityChart";
-import { TrendingDown, ArrowUpRight, Activity, Percent } from "lucide-react";
+import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
@@ -17,14 +17,15 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-type ViewType = "Monthly" | "Quarterly" | "Yearly";
+type ViewType = "Day" | "Week" | "Month" | "Year";
 
 const EMPTY_ACCOUNTS: Account[] = [];
 const EMPTY_TRANSACTIONS: Transaction[] = [];
 const EMPTY_CATEGORIES: Category[] = [];
 
 export default function ReportsPageClient() {
-  const [viewType, setViewType] = useState<ViewType>("Monthly");
+  const [viewType, setViewType] = useState<ViewType>("Month");
+  const [cursorDate, setCursorDate] = useState<Date>(new Date());
   const [showAllExpenses, setShowAllExpenses] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -59,23 +60,87 @@ export default function ReportsPageClient() {
 
   const now = useMemo(() => new Date(), []);
 
-  // Determine the most recent period with data
-  const latestData = useMemo(() => {
-    if (transactions.length === 0)
-      return { year: now.getFullYear(), month: now.getMonth() };
-    const validTx = transactions.filter(
-      (t) => t.status !== "pending_confirmation",
-    );
-    if (validTx.length === 0)
-      return { year: now.getFullYear(), month: now.getMonth() };
+  // Adjust cursor date when view type changes
+  useEffect(() => {
+    setCursorDate(new Date());
+  }, [viewType]);
 
-    // Sort to find the absolute latest transaction date
-    const sorted = [...validTx].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-    const d = new Date(sorted[0]!.date);
-    return { year: d.getFullYear(), month: d.getMonth() };
-  }, [transactions, now]);
+  const handlePrev = () => {
+    setCursorDate((prev) => {
+      const next = new Date(prev);
+      if (viewType === "Day") next.setDate(next.getDate() - 1);
+      if (viewType === "Week") next.setDate(next.getDate() - 7);
+      if (viewType === "Month") {
+        next.setMonth(next.getMonth() - 1);
+      }
+      if (viewType === "Year") next.setFullYear(next.getFullYear() - 1);
+      return next;
+    });
+  };
+
+  const handleNext = () => {
+    setCursorDate((prev) => {
+      const next = new Date(prev);
+      if (viewType === "Day") next.setDate(next.getDate() + 1);
+      if (viewType === "Week") next.setDate(next.getDate() + 7);
+      if (viewType === "Month") {
+        next.setMonth(next.getMonth() + 1);
+      }
+      if (viewType === "Year") next.setFullYear(next.getFullYear() + 1);
+      return next;
+    });
+  };
+
+  const formattedCursorDate = useMemo(() => {
+    if (viewType === "Day") {
+      return cursorDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    if (viewType === "Week") {
+      const start = new Date(cursorDate);
+      start.setDate(cursorDate.getDate() - cursorDate.getDay()); // Sunday
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6); // Saturday
+      return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
+    if (viewType === "Month") {
+      const fiscalStartDay = user?.monthStartDate || 1;
+      const start = getFiscalMonthStart(cursorDate, fiscalStartDay);
+
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setDate(end.getDate() - 1);
+
+      // Helper to get ordinal suffix (st, nd, rd, th)
+      const getOrdinal = (n: number) => {
+        const v = n % 100;
+        if (v >= 11 && v <= 13) return n + "th";
+        const tail = n % 10;
+        if (tail === 1) return n + "st";
+        if (tail === 2) return n + "nd";
+        if (tail === 3) return n + "rd";
+        return n + "th";
+      };
+
+      const startDay = getOrdinal(start.getDate());
+      const endDay = getOrdinal(end.getDate());
+
+      const startMonth = start.toLocaleDateString("en-US", { month: "short" });
+      const endMonth = end.toLocaleDateString("en-US", { month: "short" });
+
+      const startYear = start.getFullYear();
+      const endYear = end.getFullYear();
+
+      if (startYear !== endYear) {
+        return `${startDay} ${startMonth} ${startYear} to ${endDay} ${endMonth} ${endYear}`;
+      }
+      return `${startDay} ${startMonth} to ${endDay} ${endMonth} ${startYear}`;
+    }
+    return cursorDate.getFullYear().toString();
+  }, [cursorDate, viewType, user?.monthStartDate]);
 
   const budgetTargets = user?.budgetTargets || {
     needs: 50,
@@ -106,13 +171,13 @@ export default function ReportsPageClient() {
 
     const monthStartDate = user?.monthStartDate || 1;
     for (let i = 0; i < 6; i++) {
-        const d = getFiscalMonthStart(now, monthStartDate);
-        d.setMonth(d.getMonth() - i);
-        history.unshift({
-            month: `${monthNames[d.getMonth()]}`,
-            value: 0,
-            dateObj: d,
-        });
+      const d = getFiscalMonthStart(now, monthStartDate);
+      d.setMonth(d.getMonth() - i);
+      history.unshift({
+        month: `${monthNames[d.getMonth()]}`,
+        value: 0,
+        dateObj: d,
+      });
     }
 
     let runningNW = netWorth;
@@ -157,10 +222,8 @@ export default function ReportsPageClient() {
     return parseFloat((((last - prev) / prev) * 100).toFixed(1));
   }, [computedNetWorthHistory]);
 
-  const currentYear = latestData.year;
-  const currentMonth =
-    viewType === "Monthly" ? latestData.month : now.getMonth();
-  const currentQuarter = Math.floor(currentMonth / 3);
+  const currentYear = cursorDate.getFullYear();
+  const currentMonth = cursorDate.getMonth();
 
   // Trend data labels - Dynamic based on viewType
   const trendData = useMemo(() => {
@@ -169,11 +232,82 @@ export default function ReportsPageClient() {
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    if (viewType === "Monthly") {
+    if (viewType === "Day") {
+      const intervals = [
+        { name: "Night (12am-6am)", start: 0, end: 6 },
+        { name: "Morning (6am-12pm)", start: 6, end: 12 },
+        { name: "Afternoon (12pm-6pm)", start: 12, end: 18 },
+        { name: "Evening (6pm-12am)", start: 18, end: 24 },
+      ];
+      intervals.forEach((interval) => {
+        const intervalTx = transactions.filter((tx) => {
+          if (tx.status === "pending_confirmation") return false;
+          const d = new Date(tx.date);
+          return (
+            d.getDate() === cursorDate.getDate() &&
+            d.getMonth() === cursorDate.getMonth() &&
+            d.getFullYear() === cursorDate.getFullYear() &&
+            d.getHours() >= interval.start &&
+            d.getHours() < interval.end
+          );
+        });
+        const mInflow = intervalTx
+          .filter((tx: Transaction) => tx.type === "income")
+          .reduce((sum, tx) => sum + tx.amount, 0);
+        const mOutflow = intervalTx
+          .filter(
+            (tx: Transaction) =>
+              tx.type === "expense" || tx.type === "transfer",
+          )
+          .reduce((sum, tx) => sum + tx.amount, 0);
+        data.push({
+          name: interval.name,
+          income: mInflow,
+          expense: mOutflow,
+          velocity: mInflow - mOutflow,
+        });
+      });
+    } else if (viewType === "Week") {
+      const startOfWeek = new Date(cursorDate);
+      startOfWeek.setDate(cursorDate.getDate() - cursorDate.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      for (let i = 0; i < 7; i++) {
+        const targetDay = new Date(startOfWeek);
+        targetDay.setDate(startOfWeek.getDate() + i);
+
+        const dayTx = transactions.filter((tx) => {
+          if (tx.status === "pending_confirmation") return false;
+          const d = new Date(tx.date);
+          return (
+            d.getDate() === targetDay.getDate() &&
+            d.getMonth() === targetDay.getMonth() &&
+            d.getFullYear() === targetDay.getFullYear()
+          );
+        });
+
+        const mInflow = dayTx
+          .filter((tx: Transaction) => tx.type === "income")
+          .reduce((sum, tx) => sum + tx.amount, 0);
+        const mOutflow = dayTx
+          .filter(
+            (tx: Transaction) =>
+              tx.type === "expense" || tx.type === "transfer",
+          )
+          .reduce((sum, tx) => sum + tx.amount, 0);
+        data.push({
+          name: dayNames[i] || "???",
+          income: mInflow,
+          expense: mOutflow,
+          velocity: mInflow - mOutflow,
+        });
+      }
+    } else if (viewType === "Month") {
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       for (let i = 1; i <= daysInMonth; i++) {
-        // Find transactions for this specific day OR since fiscal start if it's the current period
+        // Find transactions for this specific day
         const dayTx = transactions.filter((tx) => {
           if (tx.status === "pending_confirmation") return false;
           const d = new Date(tx.date);
@@ -194,31 +328,6 @@ export default function ReportsPageClient() {
           .reduce((sum, tx) => sum + tx.amount, 0);
         data.push({
           name: `${i}`,
-          income: mInflow,
-          expense: mOutflow,
-          velocity: mInflow - mOutflow,
-        });
-      }
-    } else if (viewType === "Quarterly") {
-      const startMonth = currentQuarter * 3;
-      for (let i = 0; i < 3; i++) {
-        const m = startMonth + i;
-        const monthTx = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const d = new Date(tx.date);
-          return d.getMonth() === m && d.getFullYear() === currentYear;
-        });
-        const mInflow = monthTx
-          .filter((tx: Transaction) => tx.type === "income")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        const mOutflow = monthTx
-          .filter(
-            (tx: Transaction) =>
-              tx.type === "expense" || tx.type === "transfer",
-          )
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        data.push({
-          name: monthNames[m] || "???",
           income: mInflow,
           expense: mOutflow,
           velocity: mInflow - mOutflow,
@@ -249,29 +358,44 @@ export default function ReportsPageClient() {
       }
     }
     return data;
-  }, [transactions, viewType, currentYear, currentMonth, currentQuarter]);
+  }, [transactions, viewType, currentYear, currentMonth, cursorDate]);
 
   // Filtering logic based on viewType
   const filteredTx = useMemo(() => {
-      const monthStartDate = user?.monthStartDate || 1;
-      const currentFiscalStart = getFiscalMonthStart(now, monthStartDate);
+    const monthStartDate = user?.monthStartDate || 1;
+    const currentFiscalStart = getFiscalMonthStart(cursorDate, monthStartDate);
 
-      return transactions.filter((tx: Transaction) => {
-        if (tx.status === "pending_confirmation") return false;
-        const d = new Date(tx.date);
-        
-        if (viewType === "Monthly") {
-          return d.getTime() >= currentFiscalStart.getTime();
-        } else if (viewType === "Quarterly") {
-          const txYear = d.getFullYear();
-          const txMonth = d.getMonth();
-          const txQuarter = Math.floor(txMonth / 3);
-          return txYear === currentYear && txQuarter === currentQuarter;
-        } else {
-          return d.getFullYear() === currentYear;
-        }
-      });
-  }, [transactions, currentYear, currentQuarter, viewType, now, user?.monthStartDate]);
+    const dStartOfWeek = new Date(cursorDate);
+    dStartOfWeek.setDate(cursorDate.getDate() - cursorDate.getDay());
+    dStartOfWeek.setHours(0, 0, 0, 0);
+
+    const dEndOfWeek = new Date(dStartOfWeek);
+    dEndOfWeek.setDate(dStartOfWeek.getDate() + 6);
+    dEndOfWeek.setHours(23, 59, 59, 999);
+
+    return transactions.filter((tx: Transaction) => {
+      if (tx.status === "pending_confirmation") return false;
+      const d = new Date(tx.date);
+
+      if (viewType === "Day") {
+        return (
+          d.getDate() === cursorDate.getDate() &&
+          d.getMonth() === cursorDate.getMonth() &&
+          d.getFullYear() === cursorDate.getFullYear()
+        );
+      } else if (viewType === "Week") {
+        return d.getTime() >= dStartOfWeek.getTime() && d.getTime() <= dEndOfWeek.getTime();
+      } else if (viewType === "Month") {
+        // Find end of month based on start of month
+        const currentFiscalEnd = new Date(currentFiscalStart);
+        currentFiscalEnd.setMonth(currentFiscalEnd.getMonth() + 1);
+        currentFiscalEnd.setMilliseconds(currentFiscalEnd.getMilliseconds() - 1);
+        return d.getTime() >= currentFiscalStart.getTime() && d.getTime() <= currentFiscalEnd.getTime();
+      } else {
+        return d.getFullYear() === currentYear;
+      }
+    });
+  }, [transactions, currentYear, viewType, cursorDate, user?.monthStartDate]);
 
   const inflow = useMemo(
     () =>
@@ -405,16 +529,49 @@ export default function ReportsPageClient() {
         title="Intelligence"
         subtitle="Unified analytics & predictive insights"
         actions={
-          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 w-fit max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-hidden no-scrollbar">
-            {(["Monthly", "Quarterly", "Yearly"] as ViewType[]).map((type) => (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+            <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
+              {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setViewType(type)}
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 h-9 flex items-center justify-center text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${viewType === type
+                    ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-xl p-1 shadow-sm w-full sm:w-auto">
               <button
-                key={type}
-                onClick={() => setViewType(type)}
-                className={`px-4 h-9 flex items-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${viewType === type ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10" : "text-slate-500"}`}
+                onClick={handlePrev}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0"
+                aria-label="Previous Period"
               >
-                {type}
+                <ChevronLeft className="w-5 h-5" />
               </button>
-            ))}
+              <div className="flex items-center gap-2 px-2 min-w-[120px] sm:min-w-[140px] justify-center flex-1 sm:flex-auto">
+                <CalendarIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                <div className="flex flex-col items-center sm:flex-row sm:gap-2">
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate">
+                    {formattedCursorDate}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleNext}
+                disabled={cursorDate.getTime() > now.getTime()}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
+                  ? "opacity-50 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                  : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
+                  }`}
+                aria-label="Next Period"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         }
       />
