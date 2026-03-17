@@ -157,16 +157,34 @@ export interface AdminStats {
   activeUsers24h: number;
   totalAssetsTracked: number;
   systemHealth: string;
-  recentActivities: {
-    id: number;
-    type: string;
-    user: string;
-    time: string;
-  }[];
+  recentActivities: (ActivityLog & { id: string | number; time?: string })[];
   userGrowth: {
     day: string;
     count: number;
   }[];
+}
+
+export type ActivityType =
+  | "create"
+  | "update"
+  | "delete"
+  | "login"
+  | "signup"
+  | "import"
+  | "export";
+
+export interface ActivityLog {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  action: ActivityType;
+  entityType: string; // e.g., 'transaction', 'account', 'user'
+  entityId?: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  previousState?: unknown;
+  newState?: unknown;
+  timestamp: string;
 }
 export interface Reminder {
   id: string;
@@ -178,4 +196,13 @@ export interface Reminder {
   metadata?: Record<string, unknown>;
   createdAt: string;
   deletedAt?: string | null;
+}export interface UserSession {
+  id: string; // Document ID (usually same as token or random ID)
+  userId: string;
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+  lastActiveAt: string;
+  userAgent?: string;
+  ipAddress?: string;
 }

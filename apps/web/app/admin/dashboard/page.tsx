@@ -267,38 +267,29 @@ export default function AdminDashboard() {
 
             <div className="space-y-5">
               {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                stats.recentActivities.map(
-                  (
-                    activity: {
-                      id: number;
-                      user: string;
-                      time: string;
-                      type: string;
-                    },
-                    i: number,
-                  ) => (
-                    <div key={activity.id} className="flex gap-4">
-                      <div className="mt-1">
-                        <div
-                          className={`size-2 rounded-full ${i === 0 ? "bg-primary animate-pulse" : "bg-slate-200 dark:bg-slate-800"}`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-baseline">
-                          <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">
-                            {activity.user}
-                          </p>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">
-                            {activity.time}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">
-                          {activity.type.replace(/_/g, " ")}
-                        </p>
-                      </div>
+                stats.recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex gap-4">
+                    <div className="mt-1">
+                      <div className="size-2 rounded-full bg-primary" />
                     </div>
-                  ),
-                )
+                    <div className="flex-1">
+                      <div className="flex justify-between items-baseline">
+                        <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">
+                          {activity.userName}
+                        </p>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">
+                          {activity.time}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5 line-clamp-1">
+                        {activity.action} • {activity.entityType}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold mt-1 line-clamp-1 italic">
+                        &quot;{activity.description}&quot;
+                      </p>
+                    </div>
+                  </div>
+                ))
               ) : (
                 <div className="text-center py-6">
                   <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
@@ -309,10 +300,10 @@ export default function AdminDashboard() {
             </div>
 
             <Link
-              href="/admin/reports"
+              href="/admin/activities"
               className="w-full mt-6 pt-4 pb-2 text-[10px] font-black text-slate-500 hover:text-primary uppercase tracking-widest transition-colors border-t border-slate-100 dark:border-white/5 text-center block"
             >
-              View Full Reports
+              View Full Activity Log
             </Link>
           </div>
         </div>

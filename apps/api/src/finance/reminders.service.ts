@@ -1,13 +1,17 @@
 import * as admin from 'firebase-admin';
 import { Injectable } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { Reminder } from '@repo/types';
+import { Reminder, ActivityType } from '@repo/types';
+import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
 export class RemindersService {
   private readonly collectionName = 'reminders';
 
-  constructor(private readonly firebaseAdmin: FirebaseAdminService) {}
+  constructor(
+    private readonly firebaseAdmin: FirebaseAdminService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   private get collection(): admin.firestore.CollectionReference<Reminder> {
     return this.firebaseAdmin
@@ -71,23 +75,41 @@ export class RemindersService {
       throw new Error('Reminder not found or unauthorized');
     }
 
+    const prevReminder = this.mapDocToReminder(doc);
+
     await reminderRef.update(data);
     const updated = await reminderRef.get();
-    const updatedRaw = updated.data() as unknown as Record<string, unknown>;
+    const currentReminder = this.mapDocToReminder(updated);
 
-    const reminder: Reminder = {
-      id: updated.id,
-      userId: (updatedRaw?.userId as string) || '',
-      name: (updatedRaw?.name as string) || '',
-      type: (updatedRaw?.type as 'policy' | 'document' | 'other') || 'other',
-      expiryDate:
-        (updatedRaw?.expiryDate as string) || new Date().toISOString(),
-      renewalAmount: Number(updatedRaw?.renewalAmount || 0),
-      metadata: (updatedRaw?.metadata as Record<string, unknown>) || {},
-      createdAt: (updatedRaw?.createdAt as string) || new Date().toISOString(),
-      deletedAt: (updatedRaw?.deletedAt as string | null) || null,
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId,
+      action: 'update' as ActivityType,
+      entityType: 'reminder',
+      entityId: reminderId,
+      description: `Updated reminder: ${currentReminder.name}`,
+      previousState: prevReminder,
+      newState: currentReminder,
+    });
+
+    return currentReminder;
+  }
+
+  private mapDocToReminder(
+    doc: admin.firestore.DocumentSnapshot<Reminder>,
+  ): Reminder {
+    const raw = doc.data() as unknown as Record<string, unknown>;
+    return {
+      id: doc.id,
+      userId: (raw?.userId as string) || '',
+      name: (raw?.name as string) || '',
+      type: (raw?.type as 'policy' | 'document' | 'other') || 'other',
+      expiryDate: (raw?.expiryDate as string) || new Date().toISOString(),
+      renewalAmount: Number(raw?.renewalAmount || 0),
+      metadata: (raw?.metadata as Record<string, unknown>) || {},
+      createdAt: (raw?.createdAt as string) || new Date().toISOString(),
+      deletedAt: (raw?.deletedAt as string | null) || null,
     };
-    return reminder;
   }
 
   async deleteReminder(userId: string, reminderId: string): Promise<void> {

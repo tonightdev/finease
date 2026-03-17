@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { FirebaseAdminService } from '../services/firebase-admin.service';
 import { Request } from 'express';
 import type {
   JwtPayload,
@@ -13,7 +14,10 @@ import type {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly firebaseAdmin: FirebaseAdminService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -32,9 +36,33 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
       });
+
+      // Validate session in DB
+      const sessionDoc = await this.firebaseAdmin
+        .getFirestore()
+        .collection('sessions')
+        .doc(token)
+        .get();
+
+      if (!sessionDoc.exists) {
+        throw new UnauthorizedException('Session expired or revoked');
+      }
+
+      const sessionData = sessionDoc.data() as
+        | { expiresAt: string }
+        | undefined;
+      if (sessionData && new Date(sessionData.expiresAt) < new Date()) {
+        await sessionDoc.ref.delete();
+        throw new UnauthorizedException('Session expired');
+      }
+
+      // Update last active
+      await sessionDoc.ref.update({ lastActiveAt: new Date().toISOString() });
+
       (request as RequestWithUser).user = payload;
       return true;
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

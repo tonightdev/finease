@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { Account, TransactionType } from '@repo/types';
 import { TransactionsService } from './transactions.service';
+import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
 export class AccountsService {
@@ -10,6 +11,7 @@ export class AccountsService {
   constructor(
     private readonly firebaseAdmin: FirebaseAdminService,
     private readonly transactionsService: TransactionsService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   private get collection() {
@@ -40,7 +42,19 @@ export class AccountsService {
       lastSyncedAt: new Date().toISOString(),
     });
     const doc = await docRef.get();
-    return { id: doc.id, ...doc.data() } as Account;
+    const result = { id: doc.id, ...doc.data() } as Account;
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: result.userId,
+      action: 'create',
+      entityType: 'account',
+      entityId: doc.id,
+      description: `Created account: ${result.name} (${result.type})`,
+      metadata: { balance: result.balance, type: result.type },
+    });
+
+    return result;
   }
 
   async update(id: string, account: Partial<Account>): Promise<Account> {
@@ -128,15 +142,39 @@ export class AccountsService {
       });
     }
 
-    return this.findOne(id);
+    const updatedAccount = await this.findOne(id);
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: updatedAccount.userId,
+      action: 'update',
+      entityType: 'account',
+      entityId: id,
+      description: `Updated account: ${updatedAccount.name}`,
+      metadata: { updateData: account },
+      previousState: currentAccount,
+      newState: updatedAccount,
+    });
+
+    return updatedAccount;
   }
 
   async remove(id: string): Promise<void> {
+    const account = await this.findOne(id);
     // Cascade soft-delete transactions related to this account
     await this.transactionsService.removeByAccountId(id);
     // Soft-delete the account itself
     await this.collection.doc(id).update({
       deletedAt: new Date().toISOString(),
+    });
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: account.userId,
+      action: 'delete',
+      entityType: 'account',
+      entityId: id,
+      description: `Deleted account: ${account.name}`,
     });
   }
 }

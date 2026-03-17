@@ -6,8 +6,6 @@ import { TransactionsService } from './transactions.service';
 import { CategoriesService } from './categories.service';
 import { AssetClassesService } from './asset-classes.service';
 import { FinanceController } from './finance.controller';
-import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { UsersService } from '../common/services/users.service';
 import { RemindersService } from './reminders.service';
 import { AuthModule } from '../auth/auth.module';
 
@@ -17,23 +15,19 @@ import { AuthModule } from '../auth/auth.module';
   providers: [
     GoalService,
     ReconciliationService,
-    FirebaseAdminService,
     AccountsService,
     TransactionsService,
     CategoriesService,
     AssetClassesService,
-    UsersService,
     RemindersService,
   ],
   exports: [
     GoalService,
     ReconciliationService,
-    FirebaseAdminService,
     AccountsService,
     TransactionsService,
     CategoriesService,
     AssetClassesService,
-    UsersService,
     RemindersService,
   ],
 })

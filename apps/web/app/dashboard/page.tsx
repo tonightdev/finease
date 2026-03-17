@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
 
+
 export default function Home() {
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -42,7 +43,7 @@ export default function Home() {
   const allTransactions = useSelector(
     (state: RootState) => state.transactions.items,
   );
-  
+
   const transactions = useMemo(() => {
     const includedAccountIds = new Set(analyticsAccounts.map(a => a.id));
     return allTransactions.filter(tx => includedAccountIds.has(tx.accountId));
@@ -75,8 +76,8 @@ export default function Home() {
   }, [allAccounts]);
 
   // Regular accounts for analytics (excludes excluded ones)
-  const analyticsRegularAccounts = useMemo(() => 
-    displayRegularAccounts.filter(a => !a.excludeFromAnalytics), 
+  const analyticsRegularAccounts = useMemo(() =>
+    displayRegularAccounts.filter(a => !a.excludeFromAnalytics),
     [displayRegularAccounts]
   );
 
@@ -309,7 +310,7 @@ export default function Home() {
           {[1, 2, 3, 4].map((i) => (
             <Card
               key={i}
-              className="p-5 space-y-3 shadow-none border-slate-100 dark:border-slate-800"
+              className="space-y-3 shadow-none border-slate-100 dark:border-slate-800"
             >
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-8 w-32" />
@@ -475,7 +476,7 @@ export default function Home() {
           </div>
         </div>
 
-        <Card className="p-7 bg-slate-900 border-none relative overflow-hidden group shadow-2xl shadow-indigo-500/10 transition-transform active:scale-[0.98] min-h-[300px] flex flex-col justify-center">
+        <Card className="bg-slate-900 border-none relative overflow-hidden group shadow-2xl shadow-indigo-500/10 transition-transform active:scale-[0.98] min-h-[300px] flex flex-col justify-center">
           <div className="relative z-10">
             <div className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 leading-none">
               Portfolio Insights
@@ -513,6 +514,8 @@ export default function Home() {
           percentageChange={netWorthChange}
         />
       </div>
+
+
 
       <AddAccountModal
         isOpen={isAccountModalOpen}

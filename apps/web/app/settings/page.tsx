@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SessionList } from "@/components/dashboard/SessionList";
 import { useSecurity } from "@/components/providers/SecurityProvider";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -496,8 +497,10 @@ export default function SettingsPage() {
                     </button>
                 </div>
            </div>
-        </div>
       </div>
+    </div>
+
+    <SessionList />
 
       <AnimatePresence>
         {showPinModal && (

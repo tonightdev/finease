@@ -57,7 +57,7 @@ export function NetWorthChart({
 
   return (
     <Card
-      className="h-[380px] sm:h-[420px] lg:h-[480px] overflow-hidden group shadow-none border-slate-100 dark:border-slate-800 relative"
+      className="h-auto min-h-[380px] sm:min-h-[420px] lg:min-h-[480px] group shadow-none border-slate-100 dark:border-slate-800 relative"
       title="Wealth Pulse"
       subtitle="Comprehensive net worth trajectory"
       headerAction={
@@ -79,7 +79,7 @@ export function NetWorthChart({
           <div className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
             Total Liquidity
           </div>
-          <div className="text-2xl sm:text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 dark:text-white flex items-baseline gap-2 sm:gap-3">
+          <div className="text-xl xs:text-2xl sm:text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 dark:text-white flex items-baseline gap-2 sm:gap-3 flex-wrap">
             {formatCurrency(currentNetWorth)}
             <div className="flex flex-col">
               <span className="text-[10px] sm:text-xs font-black text-emerald-500 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded flex items-center gap-1">
@@ -91,11 +91,11 @@ export function NetWorthChart({
         </div>
       </div>
 
-      <div className="h-[200px] sm:h-[250px] lg:h-[300px] w-full -ml-4">
+      <div className="h-[220px] xs:h-[240px] sm:h-[280px] lg:h-[320px] w-full pb-6">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={data}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="wealthGradient" x1="0" y1="0" x2="0" y2="1">
@@ -115,6 +115,7 @@ export function NetWorthChart({
               tickLine={false}
               tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: 800 }}
               interval="preserveStartEnd"
+              minTickGap={20}
               dy={10}
             />
             <YAxis hide domain={["dataMin * 0.98", "dataMax * 1.02"]} />

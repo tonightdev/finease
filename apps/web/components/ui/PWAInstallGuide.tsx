@@ -82,7 +82,7 @@ export function PWAInstallGuide() {
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           className="fixed bottom-20 left-4 right-4 z-[100] lg:bottom-6 lg:left-auto lg:right-6 lg:w-80"
         >
-          <Card className="p-5 bg-slate-900 border-none shadow-2xl relative overflow-hidden group">
+          <Card className="bg-slate-900 border-none shadow-2xl relative overflow-hidden group">
             <button
               onClick={handleDismiss}
               className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-2 z-[110] active:scale-95"

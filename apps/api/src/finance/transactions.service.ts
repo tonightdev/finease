@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { Transaction, Account, FinancialGoal } from '@repo/types';
+import { ActivityLogService } from '../common/services/activity-log.service';
 
 // =============================================================================
 // TransactionsService
@@ -20,7 +21,10 @@ export class TransactionsService {
   private readonly accountsCollection = 'accounts';
   private readonly goalsCollection = 'goals';
 
-  constructor(private readonly firebaseAdmin: FirebaseAdminService) {}
+  constructor(
+    private readonly firebaseAdmin: FirebaseAdminService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   private get db() {
     return this.firebaseAdmin.getFirestore();
@@ -114,6 +118,16 @@ export class TransactionsService {
       }
     }
 
+    // Log the activity
+    await this.activityLogService.logActivity({
+      userId: transaction.userId!,
+      action: 'create',
+      entityType: 'transaction',
+      entityId: txRef.id,
+      description: `Created ${effectiveType} transaction: ${transaction.description}`,
+      metadata: { amount, type: effectiveType },
+    });
+
     return (await txRef.get()).data() as Transaction;
   }
 
@@ -162,7 +176,21 @@ export class TransactionsService {
       await this.recalculateGoalProgress(goalId);
     }
 
-    return this.findOne(id);
+    const updatedTx = await this.findOne(id);
+
+    // Log the activity
+    await this.activityLogService.logActivity({
+      userId: oldTx.userId,
+      action: 'update',
+      entityType: 'transaction',
+      entityId: id,
+      description: `Updated transaction: ${updateData.description || oldTx.description}`,
+      metadata: { updateData },
+      previousState: oldTx,
+      newState: updatedTx,
+    });
+
+    return updatedTx;
   }
 
   async remove(id: string): Promise<void> {
@@ -183,6 +211,16 @@ export class TransactionsService {
         await this.recalculateGoalProgress(txData.toAccountId);
       }
     }
+
+    // Log the activity
+    await this.activityLogService.logActivity({
+      userId: txData.userId,
+      action: 'delete',
+      entityType: 'transaction',
+      entityId: id,
+      description: `Deleted transaction: ${txData.description}`,
+      metadata: { amount: txData.amount },
+    });
   }
 
   async removeByAccountId(accountId: string): Promise<void> {
@@ -241,8 +279,21 @@ export class TransactionsService {
       await this.recalculateBalances(txData.toAccountId);
       await this.recalculateGoalProgress(txData.toAccountId);
     }
+    const updatedTx = { ...txData, status: 'completed' } as Transaction;
 
-    return { ...txData, status: 'completed' } as Transaction;
+    // Log the activity
+    await this.activityLogService.logActivity({
+      userId: txData.userId,
+      action: 'update',
+      entityType: 'transaction',
+      entityId: id,
+      description: `Confirmed automated transaction: ${txData.description}`,
+      metadata: { status: 'completed' },
+      previousState: txData,
+      newState: updatedTx,
+    });
+
+    return updatedTx;
   }
 
   /**

@@ -1,13 +1,17 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { AssetClass } from '@repo/types';
+import { AssetClass, ActivityType } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
+import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
 export class AssetClassesService {
   private readonly collectionName = 'asset_classes';
   private readonly accountsCollection = 'accounts';
 
-  constructor(private readonly firebase: FirebaseAdminService) {}
+  constructor(
+    private readonly firebase: FirebaseAdminService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   private get db() {
     return this.firebase.getFirestore();
@@ -40,9 +44,32 @@ export class AssetClassesService {
     id: string,
     assetClass: Partial<AssetClass>,
   ): Promise<AssetClass> {
-    await this.collection.doc(id).update(assetClass);
-    const doc = await this.collection.doc(id).get();
-    return { id: doc.id, ...(doc.data() as Omit<AssetClass, 'id'>) };
+    const docRef = this.collection.doc(id);
+    const prevDoc = await docRef.get();
+    const currentAssetClass = {
+      id: prevDoc.id,
+      ...prevDoc.data(),
+    } as AssetClass;
+
+    await docRef.update(assetClass);
+    const doc = await docRef.get();
+    const updatedAssetClass = {
+      id: doc.id,
+      ...(doc.data() as Omit<AssetClass, 'id'>),
+    };
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: updatedAssetClass.userId,
+      action: 'update' as ActivityType,
+      entityType: 'asset_class',
+      entityId: id,
+      description: `Updated asset class: ${updatedAssetClass.name}`,
+      previousState: currentAssetClass,
+      newState: updatedAssetClass,
+    });
+
+    return updatedAssetClass;
   }
 
   async remove(id: string): Promise<void> {

@@ -134,6 +134,20 @@ export default function AdminPurgePage() {
     }
   };
 
+  const handlePurgeAll = async () => {
+    if (!selectedUserId) return;
+    setItemsLoading(true);
+    try {
+      await api.delete(`/admin/purge/user/${selectedUserId}`);
+      setDeletedItems([]);
+      toast.success("Sector sanitized: All fragments destroyed");
+    } catch {
+      toast.error("Failed to purge all items");
+    } finally {
+      setItemsLoading(false);
+    }
+  };
+
   const filteredItems = deletedItems.filter((item) => {
     const searchStr = (item.description || item.name || item.id || "").toLowerCase();
     return searchStr.includes(searchTerm.toLowerCase());
@@ -158,6 +172,7 @@ export default function AdminPurgePage() {
       <PageHeader
         title="Protocol Purge"
         subtitle="Command terminal for permanent ledger sanitation"
+        backHref="/admin/dashboard"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-start relative z-10">
@@ -368,6 +383,14 @@ export default function AdminPurgePage() {
                       </h3>
                     </div>
                     <div className="flex gap-2">
+                      <button
+                        onClick={handlePurgeAll}
+                        disabled={itemsLoading || filteredItems.length === 0}
+                        className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 disabled:opacity-30 flex items-center gap-1"
+                      >
+                        <Zap className="size-3 fill-current" />
+                        Purge All Cluster Data
+                      </button>
                       <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary">
                         Latest First
                       </button>
@@ -404,7 +427,7 @@ export default function AdminPurgePage() {
                               exit={{ opacity: 0, scale: 0.9 }}
                               layout
                             >
-                              <Card className="p-5 border-slate-100 dark:border-white/5 hover:border-rose-500/20 transition-all group relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+                              <Card className="border-slate-100 dark:border-white/5 hover:border-rose-500/20 transition-all group relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
                                 <div className="flex items-center justify-between gap-6">
                                   <div className="flex items-center gap-5 min-w-0">
                                     <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center text-[8px] font-black uppercase text-slate-400 shrink-0 border border-slate-100 dark:border-white/5 group-hover:bg-rose-500/5 group-hover:border-rose-500/10 transition-colors">

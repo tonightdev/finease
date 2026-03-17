@@ -498,7 +498,7 @@ export default function ReportsPageClient() {
           {[1, 2, 3, 4].map((i) => (
             <Card
               key={`skeleton-${i}`}
-              className="p-5 space-y-3 shadow-none border-slate-100 dark:border-slate-800"
+              className="space-y-3 shadow-none border-slate-100 dark:border-slate-800"
             >
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-8 w-32" />
@@ -508,11 +508,11 @@ export default function ReportsPageClient() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="p-8 h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
+          <Card className="h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="flex-1 w-full" />
           </Card>
-          <Card className="p-8 h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
+          <Card className="h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="flex-1 w-full" />
           </Card>
@@ -577,7 +577,7 @@ export default function ReportsPageClient() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
+        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-primary transition-colors">
             Net Worth
           </div>
@@ -597,7 +597,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
+        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-emerald-500 transition-colors">
             Inflow
           </div>
@@ -610,7 +610,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
+        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-rose-500 transition-colors">
             Outflow
           </div>
@@ -623,7 +623,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6 shadow-none border-slate-100 dark:border-slate-800 bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.05] transition-all group">
+        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.05] transition-all group">
           <div className="text-xs font-bold text-primary/60 mb-2">Savings</div>
           <div className="text-lg sm:text-2xl font-black text-primary mb-2 truncate shrink-0">
             {formatCurrency(inflow - outflow)}
@@ -642,7 +642,7 @@ export default function ReportsPageClient() {
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
             Cash Flow Dynamics
           </h3>
-          <Card className="p-4 sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
+          <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
             {trendData.some((d) => d.income > 0 || d.expense > 0) ? (
               <IncomeExpenseChart data={trendData} />
             ) : (
@@ -660,7 +660,7 @@ export default function ReportsPageClient() {
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
             Savings Velocity
           </h3>
-          <Card className="p-4 sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
+          <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
             {trendData.some((d) => Math.abs(d.velocity) > 0) ? (
               <SavingsVelocityChart
                 data={trendData.map((d) => ({
@@ -689,7 +689,7 @@ export default function ReportsPageClient() {
             Total Outflow: {formatCurrency(outflow)}
           </span>
         </div>
-        <Card className="p-6 sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
+        <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="group">
               <div className="flex items-center justify-between mb-2">
@@ -773,7 +773,7 @@ export default function ReportsPageClient() {
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
           Expense Intensity Breakdown
         </h3>
-        <Card className="p-6 sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
+        <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-6 sm:gap-y-8">
             {(showAllExpenses
               ? expenseBreakdown

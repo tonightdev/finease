@@ -73,102 +73,102 @@ export function AccountList({ accounts }: AccountListProps) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
         {accounts.map((account, index) => {
-        const isLowBalance =
-          (account.type === "bank" || account.type === "cash") &&
-          account.minimumBalance &&
-          account.minimumBalance > 0 &&
-          account.balance < account.minimumBalance;
+          const isLowBalance =
+            (account.type === "bank" || account.type === "cash") &&
+            account.minimumBalance &&
+            account.minimumBalance > 0 &&
+            account.balance < account.minimumBalance;
 
-        const usedAmount =
-          account.type === "card" ? Math.abs(account.balance) : 0;
-        const isHighUsage =
-          account.type === "card" &&
-          account.maxLimit &&
-          account.maxLimit > 0 &&
-          usedAmount / account.maxLimit > 0.3;
+          const usedAmount =
+            account.type === "card" ? Math.abs(account.balance) : 0;
+          const isHighUsage =
+            account.type === "card" &&
+            account.maxLimit &&
+            account.maxLimit > 0 &&
+            usedAmount / account.maxLimit > 0.3;
 
           return (
             <Card
               key={account.id || index}
-              className={`p-2.5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2 ${index >= 4 && !isExpanded ? "hidden lg:flex" : "flex"}`}
+              className={`bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2 ${index >= 4 && !isExpanded ? "hidden lg:flex" : "flex"}`}
             >
-            <div className="flex items-start justify-between">
-              <div
-                className={`p-1.5 rounded-lg shrink-0 ${getTypeColor(account.type)}`}
-              >
-                {getIcon(account.type)}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingAccount(account);
-                    if (account.type === "investment")
-                      setIsInvestmentModalOpen(true);
-                    else if (account.type === "debt")
-                      setIsLiabilityModalOpen(true);
-                    else setIsAccountModalOpen(true);
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+              <div className="flex items-start justify-between">
+                <div
+                  className={`p-1.5 rounded-lg shrink-0 ${getTypeColor(account.type)}`}
                 >
-                  <Pencil className="w-2.5 h-2.5" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAccountToDelete(account);
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 dark:bg-slate-800/50 rounded-lg"
-                >
-                  <Trash2 className="w-2.5 h-2.5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="min-w-0">
-              <h4 className="text-slate-400 dark:text-slate-500 font-bold text-[8px] uppercase tracking-widest truncate mb-0.5">
-                {account.name}
-              </h4>
-              <div className="flex items-baseline justify-between gap-2">
-                <p
-                  className={`text-sm font-black tracking-tighter truncate flex-1 min-w-0 ${account.type === "card" && usedAmount > 0 ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
-                >
-                  {account.type === "card" && usedAmount > 0 ? "-" : ""}₹
-                  {(account.type === "card"
-                    ? usedAmount
-                    : account.balance
-                  ).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                    {account.type === "card"
-                      ? "Limit"
-                      : account.type === "investment"
-                        ? "Basis"
-                        : account.type === "bank"
-                          ? "Min Bal"
-                          : "Type"}
-                  </span>
-                  <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 truncate max-w-[50px]">
-                    {account.type === "card"
-                      ? `₹${(account.maxLimit || 0).toLocaleString()}`
-                      : account.type === "investment"
-                        ? `₹${(account.investedAmount || account.balance).toLocaleString()}`
-                        : account.type === "bank"
-                          ? `₹${(account.minimumBalance || 0).toLocaleString()}`
-                          : account.type}
-                  </span>
-                  {(isLowBalance || isHighUsage) && (
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"} animate-pulse`}
-                    />
-                  )}
+                  {getIcon(account.type)}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingAccount(account);
+                      if (account.type === "investment")
+                        setIsInvestmentModalOpen(true);
+                      else if (account.type === "debt")
+                        setIsLiabilityModalOpen(true);
+                      else setIsAccountModalOpen(true);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                  >
+                    <Pencil className="w-2.5 h-2.5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAccountToDelete(account);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                  >
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
                 </div>
               </div>
-            </div>
-          </Card>
-        );
-      })}
+
+              <div className="min-w-0">
+                <h4 className="text-slate-400 dark:text-slate-500 font-bold text-[8px] uppercase tracking-widest truncate mb-0.5">
+                  {account.name}
+                </h4>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p
+                    className={`text-sm font-black tracking-tighter truncate flex-1 min-w-0 ${account.type === "card" && usedAmount > 0 ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
+                  >
+                    {account.type === "card" && usedAmount > 0 ? "-" : ""}₹
+                    {(account.type === "card"
+                      ? usedAmount
+                      : account.balance
+                    ).toLocaleString()}
+                  </p>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                      {account.type === "card"
+                        ? "Limit"
+                        : account.type === "investment"
+                          ? "Basis"
+                          : account.type === "bank"
+                            ? "Min Bal"
+                            : "Type"}
+                    </span>
+                    <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 truncate max-w-[50px]">
+                      {account.type === "card"
+                        ? `₹${(account.maxLimit || 0).toLocaleString()}`
+                        : account.type === "investment"
+                          ? `₹${(account.investedAmount || account.balance).toLocaleString()}`
+                          : account.type === "bank"
+                            ? `₹${(account.minimumBalance || 0).toLocaleString()}`
+                            : account.type}
+                    </span>
+                    {(isLowBalance || isHighUsage) && (
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"} animate-pulse`}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {hasMore && (

@@ -48,7 +48,7 @@ export function GoalProgressCard({
   const currentStatus = statusConfig[status as keyof typeof statusConfig];
 
   return (
-    <Card className="flex flex-col p-3.5 gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
+    <Card className="flex flex-col gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">

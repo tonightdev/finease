@@ -5,8 +5,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { ActivityType } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
+import { ActivityLogService } from '../common/services/activity-log.service';
 
 interface StoredUser {
   id: string;
@@ -23,14 +25,22 @@ interface StoredUser {
 @Injectable()
 export class AuthService {
   private readonly collectionName = 'users';
+  private readonly sessionsCollection = 'sessions';
 
   constructor(
     private readonly firebaseAdmin: FirebaseAdminService,
     private readonly jwtService: JwtService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   private get collection() {
     return this.firebaseAdmin.getFirestore().collection(this.collectionName);
+  }
+
+  private get sessionCollection() {
+    return this.firebaseAdmin
+      .getFirestore()
+      .collection(this.sessionsCollection);
   }
 
   async signup(data: SignupDto) {
@@ -69,6 +79,18 @@ export class AuthService {
       uid: userRef.id,
       email,
       role: newUser.role,
+    });
+
+    // Store session in DB
+    await this.createSession(userRef.id, token);
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: userRef.id,
+      action: 'signup' as ActivityType,
+      entityType: 'user',
+      entityId: userRef.id,
+      description: `New user signed up: ${name}`,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -123,6 +145,18 @@ export class AuthService {
       role: role,
     });
 
+    // Store session in DB
+    await this.createSession(userDoc.id, token);
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: userDoc.id,
+      action: 'login' as ActivityType,
+      entityType: 'user',
+      entityId: userDoc.id,
+      description: `User logged in: ${userData.displayName}`,
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _pw, id: _id, ...userProfile } = userData;
     return { user: { id: userDoc.id, ...userProfile }, token };
@@ -149,6 +183,15 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: userDoc.id,
+      action: 'update' as ActivityType,
+      entityType: 'user',
+      entityId: userDoc.id,
+      description: `User reset their password`,
+    });
+
     return { message: 'Password reset successfully' };
   }
 
@@ -157,10 +200,62 @@ export class AuthService {
     if (!doc.exists) throw new ConflictException('User not found');
     const userData = doc.data() as StoredUser;
 
-    return this.jwtService.sign({
+    const token = this.jwtService.sign({
       uid: doc.id,
       email: userData.email,
       role: userData.role || 'user',
     });
+
+    // Store session in DB
+    await this.createSession(doc.id, token);
+
+    return token;
+  }
+
+  private async createSession(userId: string, token: string): Promise<void> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days session persistence
+
+    await this.sessionCollection.doc(token).set({
+      userId,
+      token,
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+    });
+  }
+
+  async logout(token: string): Promise<void> {
+    await this.sessionCollection.doc(token).delete();
+  }
+
+  async getSessionsForUser(userId: string) {
+    const snapshot = await this.sessionCollection
+      .where('userId', '==', userId)
+      .get();
+    return snapshot.docs.map((doc) => doc.data());
+  }
+
+  async revokeSession(userId: string, targetToken: string) {
+    const doc = await this.sessionCollection.doc(targetToken).get();
+    if (!doc.exists) {
+      throw new ConflictException('Session not found');
+    }
+    const sessionData = doc.data();
+    if (!sessionData || sessionData.userId !== userId) {
+      throw new UnauthorizedException('Access denied');
+    }
+    await doc.ref.delete();
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId,
+      action: 'delete' as ActivityType,
+      entityType: 'session',
+      entityId: userId,
+      description: `User revoked an active session`,
+    });
+
+    return { message: 'Session revoked successfully' };
   }
 }

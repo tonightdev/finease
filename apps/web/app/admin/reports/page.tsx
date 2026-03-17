@@ -67,7 +67,7 @@ export default function AdminReportsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* User Acquisition Velocity */}
-        <Card className="lg:col-span-2 p-4 space-y-4 rounded-2xl">
+        <Card className="lg:col-span-2 space-y-4 rounded-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -141,7 +141,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* System Health */}
-        <Card className="p-4 space-y-5 rounded-2xl">
+        <Card className="space-y-5 rounded-2xl">
           <div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest text-center">
               Service Health
@@ -195,7 +195,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* User Engagement */}
-        <Card className="p-4 space-y-4 rounded-2xl flex flex-col justify-center">
+        <Card className="space-y-4 rounded-2xl flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -267,7 +267,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* Activity Logs */}
-        <Card className="lg:col-span-2 p-4 space-y-5 rounded-2xl">
+        <Card className="lg:col-span-2 space-y-5 rounded-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -289,21 +289,25 @@ export default function AdminReportsPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-2 rounded-xl ${log.type === "signup" ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"}`}
+                      className={`p-2 rounded-xl ${log.action === "signup" ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"}`}
                     >
                       <ShieldCheck className="size-4" />
                     </div>
                     <div>
                       <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">
-                        {log.user}
+                        {log.userName}
                       </p>
                       <p className="text-[9px] font-bold text-slate-400 uppercase">
-                        {log.type.replace(/_/g, " ")}
+                        {log.action} • {log.entityType}
                       </p>
                     </div>
                   </div>
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">
                     {log.time}
+                    <br />
+                    <span className="text-[7px] font-bold italic lowercase opacity-70 block mt-0.5 max-w-[120px] truncate">
+                      {log.description}
+                    </span>
                   </span>
                 </div>
               ))

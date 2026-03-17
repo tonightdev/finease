@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { FirebaseAdminService } from '../common/services/firebase-admin.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, FirebaseAdminService],
+  providers: [AuthService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

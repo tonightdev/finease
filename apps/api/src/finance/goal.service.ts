@@ -1,6 +1,7 @@
 import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { FinancialGoal } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
+import { ActivityLogService } from '../common/services/activity-log.service';
 import { TransactionsService } from './transactions.service';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class GoalService {
 
   constructor(
     private readonly firebase: FirebaseAdminService,
+    private readonly activityLogService: ActivityLogService,
     @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
   ) {}
@@ -38,7 +40,19 @@ export class GoalService {
       startDate: goal.startDate || new Date().toISOString(),
     });
     const doc = await docRef.get();
-    return { id: doc.id, ...(doc.data() as Omit<FinancialGoal, 'id'>) };
+    const result = { id: doc.id, ...(doc.data() as Omit<FinancialGoal, 'id'>) };
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: result.userId,
+      action: 'create',
+      entityType: 'goal',
+      entityId: doc.id,
+      description: `Created goal: ${result.name}`,
+      metadata: { targetAmount: result.targetAmount },
+    });
+
+    return result;
   }
 
   async update(
@@ -66,17 +80,44 @@ export class GoalService {
 
       // Trigger recalculation to ensure everything is consistent
       await this.transactionsService.recalculateGoalProgress(id);
-    } else {
-      await this.collection.doc(id).update(goal);
     }
 
-    const doc = await this.collection.doc(id).get();
-    return { id: doc.id, ...(doc.data() as Omit<FinancialGoal, 'id'>) };
+    const updatedDoc = await this.collection.doc(id).get();
+    const result = {
+      id: updatedDoc.id,
+      ...(updatedDoc.data() as Omit<FinancialGoal, 'id'>),
+    };
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: result.userId,
+      action: 'update',
+      entityType: 'goal',
+      entityId: id,
+      description: `Updated goal: ${result.name}`,
+      previousState: currentGoal,
+      newState: result,
+    });
+
+    return result;
   }
 
   async remove(id: string): Promise<void> {
     await this.collection.doc(id).update({
       deletedAt: new Date().toISOString(),
+    });
+
+    // Fetch details for logging
+    const goalDoc = await this.collection.doc(id).get();
+    const goalData = goalDoc.data() as FinancialGoal;
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: goalData.userId,
+      action: 'delete',
+      entityType: 'goal',
+      entityId: id,
+      description: `Deleted goal: ${goalData.name}`,
     });
   }
 

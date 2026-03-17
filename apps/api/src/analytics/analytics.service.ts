@@ -7,6 +7,7 @@ import {
   FinancialGoal,
   AssetClass,
   Transaction,
+  ActivityLog,
 } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 
@@ -291,24 +292,21 @@ export class AnalyticsService {
       0,
     );
 
-    // Fetch real recent activities (only non-deleted users)
-    // We filter non-admins and sort in memory
-    const recentActivities: AdminStats['recentActivities'] = userDocs
-      .sort((a, b) => {
-        const catA = (a.data() as User).createdAt || '';
-        const catB = (b.data() as User).createdAt || '';
-        return catB.localeCompare(catA);
-      })
-      .slice(0, 5)
-      .map((doc, index) => {
-        const data = doc.data() as User;
-        return {
-          id: index + 1,
-          type: 'signup',
-          user: data.displayName || 'New Identity',
-          time: this.formatRelativeTime(data.createdAt),
-        };
-      });
+    // Fetch real recent activities from activity_logs collection
+    const activitiesSnapshot = await db
+      .collection('activity_logs')
+      .orderBy('timestamp', 'desc')
+      .limit(20)
+      .get();
+
+    const recentActivities = activitiesSnapshot.docs.map((doc) => {
+      const data = doc.data() as ActivityLog;
+      return {
+        id: doc.id,
+        ...data,
+        time: this.formatRelativeTime(data.timestamp),
+      };
+    });
 
     // Calculate real user growth for last 7 days (non-admin, non-deleted)
     const last7Days: { day: string; count: number }[] = [];
@@ -349,6 +347,20 @@ export class AnalyticsService {
       recentActivities,
       userGrowth: last7Days,
     };
+  }
+
+  async getActivityLogs(limit = 100): Promise<any[]> {
+    const db = this.firebaseAdmin.getFirestore();
+    const snapshot = await db
+      .collection('activity_logs')
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
   }
 
   private formatRelativeTime(dateString?: string): string {

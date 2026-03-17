@@ -17,7 +17,7 @@ export function Card({
   headerAction,
 }: CardProps) {
   return (
-    <div className={cn("finease-card p-6 overflow-hidden", className)}>
+    <div className={cn("finease-card p-4 sm:p-8", className)}>
       {(title || headerAction) && (
         <div className="flex items-center justify-between mb-6">
           <div>

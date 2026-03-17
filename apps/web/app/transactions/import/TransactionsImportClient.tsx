@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import {
   Transaction,
   TransactionImportMapping,
@@ -20,7 +19,6 @@ import {
   FileUp,
   CloudUpload,
   ClipboardCheck,
-  ArrowLeft,
   Settings2,
   ShieldAlert,
   AlertCircle,
@@ -32,6 +30,7 @@ import {
 
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import Papa from "papaparse";
 import * as pdfjs from "pdfjs-dist";
 
@@ -452,33 +451,13 @@ export default function TransactionsImportClient() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <div className="mb-8">
-        <nav aria-label="Breadcrumb" className="flex mb-4">
-          <ol className="inline-flex items-center space-x-1 md:space-x-2">
-            <li className="inline-flex items-center">
-              <Link
-                href="/transactions"
-                className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-colors"
-              >
-                <ArrowLeft className="w-3 h-3 mr-1.5" />
-                Transactions
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRight className="text-slate-400 w-3 h-3" />
-                <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-primary">
-                  Import Center
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
-            Vault Acquisition
-          </h1>
-          {stage !== "upload" && (
+      <PageHeader
+        title="Vault Acquisition"
+        subtitle="Ingest external data streams into your private instance"
+        backHref="/transactions"
+        backLabel="Back to Transactions"
+        actions={
+          stage !== "upload" && (
             <button
               onClick={() => {
                 setStage("upload");
@@ -486,17 +465,14 @@ export default function TransactionsImportClient() {
                 setRawData([]);
                 setMappings({});
               }}
-              className="flex items-center gap-2 px-4 h-9 rounded-xl border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+              className="flex items-center gap-2 px-4 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
             >
               <X className="w-3 h-3" />
               Replace File
             </button>
-          )}
-        </div>
-        <p className="mt-2 text-[10px] font-medium text-slate-500 uppercase tracking-widest">
-          Ingest external data streams into your private instance.
-        </p>
-      </div>
+          )
+        }
+      />
 
       {stage === "upload" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

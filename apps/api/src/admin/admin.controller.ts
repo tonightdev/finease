@@ -13,7 +13,10 @@ import { AdminGuard } from '../common/guards/admin.guard';
 import { UsersService } from '../common/services/users.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AuthService } from '../auth/auth.service';
-import { User, AdminStats } from '@repo/types';
+import { User, AdminStats, ActivityType } from '@repo/types';
+import type { RequestWithUser } from '../common/interfaces/request.interface';
+import { ActivityLogService } from '../common/services/activity-log.service';
+import { Req } from '@nestjs/common';
 
 @Controller('admin')
 @UseGuards(AuthGuard, AdminGuard)
@@ -22,6 +25,7 @@ export class AdminController {
     private readonly usersService: UsersService,
     private readonly analyticsService: AnalyticsService,
     private readonly authService: AuthService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   @Get('users')
@@ -92,14 +96,85 @@ export class AdminController {
   async purgeItem(
     @Param('collection') collection: string,
     @Param('id') id: string,
+    @Req() req: RequestWithUser,
   ) {
     const db = this.usersService.getFirestore();
+    const doc = await db.collection(collection).doc(id).get();
+    const itemData = doc.exists ? doc.data() : null;
+
     await db.collection(collection).doc(id).delete();
+
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'delete' as ActivityType,
+      entityType: collection,
+      entityId: id,
+      description: `Admin purged item ${id} from ${collection}`,
+      previousState: itemData,
+    });
+
     return { message: `Item ${id} purged from ${collection}` };
   }
 
+  @Delete('purge/user/:uid')
+  async purgeUserRecords(
+    @Param('uid') uid: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const db = this.usersService.getFirestore();
+    const collections = [
+      'accounts',
+      'transactions',
+      'goals',
+      'categories',
+      'asset_classes',
+      'reminders',
+    ];
+    let totalPurged = 0;
+
+    for (const collectionName of collections) {
+      const snapshot = await db
+        .collection(collectionName)
+        .where('userId', '==', uid)
+        .get();
+
+      const batch = db.batch();
+      let count = 0;
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.deletedAt) {
+          batch.delete(doc.ref);
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        await batch.commit();
+        totalPurged += count;
+      }
+    }
+
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'delete' as ActivityType,
+      entityType: 'user_data',
+      entityId: uid,
+      description: `Admin purged all soft-deleted records for user ${uid}. Total items: ${totalPurged}`,
+    });
+
+    return {
+      message: `Successfully purged ${totalPurged} soft-deleted records for user ${uid}`,
+      totalPurged,
+    };
+  }
+
+  @Post('users/enable-tour')
+  async enableTourForAll(@Req() req: RequestWithUser) {
+    return this.usersService.enableTourForAll(req.user.uid);
+  }
+
   @Put('bulk-soft-delete-migration')
-  async migrateToSoftDelete() {
+  async migrateToSoftDelete(@Req() req: RequestWithUser) {
     const db = this.usersService.getFirestore();
     const collections = [
       'users',
@@ -131,6 +206,13 @@ export class AdminController {
       }
     }
 
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'update' as ActivityType,
+      entityType: 'system',
+      description: `Admin initiated bulk soft-delete migration. Total records updated: ${totalUpdated}`,
+    });
+
     return {
       message: `Soft delete field initialized for ${totalUpdated} records across ${collections.length} collections.`,
       totalUpdated,
@@ -138,8 +220,22 @@ export class AdminController {
   }
 
   @Post('impersonate/:uid')
-  async impersonate(@Param('uid') uid: string) {
+  async impersonate(@Param('uid') uid: string, @Req() req: RequestWithUser) {
     const token = await this.authService.generateTokenForUser(uid);
+
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'login' as ActivityType,
+      entityType: 'user',
+      entityId: uid,
+      description: `Admin impersonated user ${uid}`,
+    });
+
     return { token };
+  }
+
+  @Get('activities')
+  async getActivityLogs() {
+    return this.analyticsService.getActivityLogs(100);
   }
 }

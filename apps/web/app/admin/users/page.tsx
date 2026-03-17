@@ -12,6 +12,7 @@ import {
   XCircle,
   Loader2,
   Search,
+  Zap,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -107,7 +108,6 @@ export default function AdminUsersPage() {
       },
     });
   };
-
   const resetUserTour = (uid: string) => {
     setConfirmModal({
       isOpen: true,
@@ -120,6 +120,24 @@ export default function AdminUsersPage() {
           toast.success("Feature tour reset for identity");
         } catch {
           toast.error("Failed to reset feature tour");
+        }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
+  const enableGlobalTour = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Global Protocol Reset",
+      message:
+        "This will force the 'Feature Tour' for every registered identity in the system. Are you absolutely certain? This impact is platform-wide.",
+      onConfirm: async () => {
+        try {
+          await api.post("/admin/users/enable-tour");
+          toast.success("Feature tour enabled for all users");
+        } catch {
+          toast.error("Failed to enable global feature tour");
         }
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
@@ -147,15 +165,25 @@ export default function AdminUsersPage() {
       <PageHeader
         title="User Governance"
         subtitle={`Commanding ${users.length} registered identities`}
+        backHref="/admin/dashboard"
         actions={
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 bg-white dark:bg-slate-900 border-none rounded-xl pl-9 text-[10px] font-bold ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
-              placeholder="Search identities..."
-            />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <button
+              onClick={enableGlobalTour}
+              className="w-full sm:w-auto h-9 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center justify-center gap-2"
+            >
+              <Zap className="size-3.5 fill-current" />
+              Global Tour Reset
+            </button>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-9 bg-white dark:bg-slate-900 border-none rounded-xl pl-9 text-[10px] font-bold ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                placeholder="Search identities..."
+              />
+            </div>
           </div>
         }
       />
@@ -265,7 +293,7 @@ export default function AdminUsersPage() {
         {filteredUsers.map((u) => (
           <Card
             key={u.id}
-            className="p-4 space-y-4 border-slate-100 dark:border-white/5 rounded-2xl"
+            className="space-y-4 border-slate-100 dark:border-white/5 rounded-2xl"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
