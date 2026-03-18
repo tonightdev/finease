@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
@@ -12,14 +13,18 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Register a new user' })
   @Post('signup')
-  signup(@Body() data: SignupDto) {
-    return this.authService.signup(data);
+  signup(@Body() data: SignupDto, @Req() req: Request) {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
+    return this.authService.signup(data, { userAgent, ipAddress });
   }
 
   @ApiOperation({ summary: 'Login and get a JWT token' })
   @Post('login')
-  login(@Body() data: LoginDto) {
-    return this.authService.login(data);
+  login(@Body() data: LoginDto, @Req() req: Request) {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
+    return this.authService.login(data, { userAgent, ipAddress });
   }
 
   @ApiOperation({ summary: 'Reset user password' })
@@ -55,5 +60,12 @@ export class AuthController {
     @Body('token') targetToken: string,
   ) {
     return this.authService.revokeSession(req.user.uid, targetToken);
+  }
+
+  @ApiOperation({ summary: 'Get recent activities for current user' })
+  @UseGuards(AuthGuard)
+  @Get('activity')
+  async getActivity(@Req() req: RequestWithUser) {
+    return this.authService.getRecentActivitiesForUser(req.user.uid, 10);
   }
 }

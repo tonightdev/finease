@@ -282,7 +282,7 @@ export default function AdminReportsPage() {
 
           <div className="space-y-4">
             {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-              stats.recentActivities.map((log) => (
+              stats.recentActivities.slice(0, 3).map((log) => (
                 <div
                   key={log.id}
                   className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-white/[0.02] rounded-2xl border border-slate-100 dark:border-white/5"

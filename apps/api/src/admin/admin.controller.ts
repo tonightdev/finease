@@ -221,7 +221,12 @@ export class AdminController {
 
   @Post('impersonate/:uid')
   async impersonate(@Param('uid') uid: string, @Req() req: RequestWithUser) {
-    const token = await this.authService.generateTokenForUser(uid);
+    const userAgent = req.headers['user-agent'] as string;
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
+    const token = await this.authService.generateTokenForUser(uid, {
+      userAgent,
+      ipAddress,
+    });
 
     await this.activityLogService.logActivity({
       userId: req.user.uid,

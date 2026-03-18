@@ -15,6 +15,9 @@ export class SignupDto {
 
   @ApiProperty({ example: '1990-01-01', required: false })
   dob?: string;
+
+  @ApiProperty({ example: true, required: false })
+  isPWA?: boolean;
 }
 
 export class LoginDto {
@@ -23,6 +26,9 @@ export class LoginDto {
 
   @ApiProperty({ example: 'password123' })
   password!: string;
+
+  @ApiProperty({ example: true, required: false })
+  isPWA?: boolean;
 }
 
 export class ResetPasswordDto {

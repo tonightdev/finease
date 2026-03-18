@@ -176,10 +176,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name?: string,
     password?: string,
   ) => {
+    const isPWA = typeof window !== 'undefined' && 
+                 (window.matchMedia('(display-mode: standalone)').matches || 
+                  (window.navigator as Navigator & { standalone?: boolean }).standalone || 
+                  document.referrer.includes('android-app://'));
+
     const endpoint = name ? "/auth/signup" : "/auth/login";
     const payload = name
-      ? { email, name, password: password ?? "password123" }
-      : { email, password: password ?? "password123" };
+      ? { email, name, password: password ?? "password123", isPWA }
+      : { email, password: password ?? "password123", isPWA };
 
     const res = await api.post<ApiAuthResponse>(endpoint, payload);
     const { user: userData, token } = res.data;

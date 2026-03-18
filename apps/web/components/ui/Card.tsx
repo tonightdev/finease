@@ -17,9 +17,9 @@ export function Card({
   headerAction,
 }: CardProps) {
   return (
-    <div className={cn("finease-card p-4 sm:p-8", className)}>
+    <div className={cn("finease-card p-4 sm:p-5", className)}>
       {(title || headerAction) && (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             {title && (
               <h3 className="text-slate-900 dark:text-white font-bold text-lg tracking-tight">

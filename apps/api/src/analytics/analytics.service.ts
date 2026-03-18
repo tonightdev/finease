@@ -296,7 +296,7 @@ export class AnalyticsService {
     const activitiesSnapshot = await db
       .collection('activity_logs')
       .orderBy('timestamp', 'desc')
-      .limit(20)
+      .limit(5)
       .get();
 
     const recentActivities = activitiesSnapshot.docs.map((doc) => {

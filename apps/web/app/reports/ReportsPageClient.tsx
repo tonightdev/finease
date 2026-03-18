@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { Transaction, Account, Category } from "@repo/types";
@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/Card";
 import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { SavingsVelocityChart } from "@/components/dashboard/SavingsVelocityChart";
-import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X, ChevronDown, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
@@ -16,6 +17,7 @@ import { fetchGoals } from "@/store/slices/goalsSlice";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
 
@@ -23,10 +25,117 @@ const EMPTY_ACCOUNTS: Account[] = [];
 const EMPTY_TRANSACTIONS: Transaction[] = [];
 const EMPTY_CATEGORIES: Category[] = [];
 
+// Custom Dropdown Component
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onSelect,
+  onClear,
+  multi = false,
+  icon: Icon
+}: {
+  label: string;
+  value: string | string[];
+  options: { id: string; name: string }[];
+  onSelect: (id: string) => void;
+  onClear?: () => void;
+  multi?: boolean;
+  icon?: React.ElementType;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedCount = multi ? (value as string[]).length : (value === "all" ? 0 : 1);
+  const isSelected = (id: string) => multi ? (value as string[]).includes(id) : value === id;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border transition-all duration-300 text-xs font-black uppercase tracking-widest ${isOpen || selectedCount > 0
+          ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-lg shadow-primary/5"
+          : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-white/5 text-slate-500 hover:border-primary/40"
+          }`}
+      >
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="size-3.5" />}
+          <span>{label}</span>
+          {selectedCount > 0 && (
+            <span className="bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-lg ml-1">
+              {selectedCount}
+            </span>
+          )}
+        </div>
+        <ChevronDown className={`size-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 min-w-[220px]"
+          >
+            <div className="p-2 max-h-[280px] overflow-y-auto no-scrollbar">
+              {options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    onSelect(option.id);
+                    if (!multi) setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-bold ${isSelected(option.id)
+                    ? "bg-primary/10 text-primary"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                >
+                  <span className="truncate">{option.name}</span>
+                  {isSelected(option.id) && <Check className="size-3.5" />}
+                </button>
+              ))}
+            </div>
+            {onClear && selectedCount > 0 && (
+              <div className="p-2 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
+                <button
+                  onClick={() => {
+                    onClear();
+                    setIsOpen(false);
+                  }}
+                  className="w-full py-2 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function ReportsPageClient() {
   const [viewType, setViewType] = useState<ViewType>("Month");
   const [cursorDate, setCursorDate] = useState<Date>(new Date());
   const [showAllExpenses, setShowAllExpenses] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<string>("all");
+
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const allAccounts =
@@ -38,8 +147,24 @@ export default function ReportsPageClient() {
     EMPTY_TRANSACTIONS;
   const transactions = useMemo(() => {
     const includedIds = new Set(accounts.map(a => a.id));
-    return allTransactions.filter(tx => includedIds.has(tx.accountId));
-  }, [allTransactions, accounts]);
+    let filtered = allTransactions.filter(tx => includedIds.has(tx.accountId));
+
+    if (selectedAccountIds.length > 0) {
+      const selectedSet = new Set(selectedAccountIds);
+      filtered = filtered.filter(tx => selectedSet.has(tx.accountId));
+    }
+
+    if (selectedCategoryIds.length > 0) {
+      const selectedSet = new Set(selectedCategoryIds);
+      filtered = filtered.filter(tx => selectedSet.has(tx.category));
+    }
+
+    if (selectedType !== "all") {
+      filtered = filtered.filter(tx => tx.type === selectedType);
+    }
+
+    return filtered;
+  }, [allTransactions, accounts, selectedAccountIds, selectedCategoryIds, selectedType]);
 
   const categories =
     useSelector((state: RootState) => state.categories?.items) ??
@@ -524,17 +649,35 @@ export default function ReportsPageClient() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 sm:space-y-6 pb-20 lg:pb-8 pt-0">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-3 sm:space-y-4 pb-20 lg:pb-8 pt-0">
       <PageHeader
         title="Intelligence"
         subtitle="Unified analytics & predictive insights"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`h-9 px-4 flex items-center justify-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm ${showFilters
+                ? "bg-primary text-white border-primary"
+                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
+                }`}
+            >
+              {showFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+              <span>Filters</span>
+              {(selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all") && (
+                <span className="size-4 rounded-full bg-rose-500 text-white text-[8px] flex items-center justify-center animate-pulse">
+                  {selectedAccountIds.length + selectedCategoryIds.length + (selectedType !== "all" ? 1 : 0)}
+                </span>
+              )}
+            </button>
+
             <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
               {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
                 <button
                   key={type}
-                  onClick={() => setViewType(type)}
+                  onClick={() => {
+                    setViewType(type);
+                  }}
                   className={`flex-1 sm:flex-none px-3 sm:px-4 h-9 flex items-center justify-center text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${viewType === type
                     ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -547,7 +690,7 @@ export default function ReportsPageClient() {
             <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-xl p-1 shadow-sm w-full sm:w-auto">
               <button
                 onClick={handlePrev}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
                 aria-label="Previous Period"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -564,7 +707,7 @@ export default function ReportsPageClient() {
                 onClick={handleNext}
                 disabled={cursorDate.getTime() > now.getTime()}
                 className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
-                  ? "opacity-50 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                  ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
                   : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
                   }`}
                 aria-label="Next Period"
@@ -576,8 +719,68 @@ export default function ReportsPageClient() {
         }
       />
 
+      {showFilters && (
+        <Card className="bg-white dark:bg-slate-900 border-dashed border-slate-200 dark:border-white/10 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl shadow-primary/5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <FilterDropdown
+              label="Account"
+              multi
+              value={selectedAccountIds}
+              options={accounts.map(a => ({ id: a.id, name: a.name }))}
+              onSelect={(id) => {
+                setSelectedAccountIds(prev =>
+                  prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                );
+              }}
+              onClear={() => setSelectedAccountIds([])}
+            />
+
+            <FilterDropdown
+              label="Category"
+              multi
+              value={selectedCategoryIds}
+              options={categories.map(c => ({ id: c.id, name: c.name }))}
+              onSelect={(id) => {
+                setSelectedCategoryIds(prev =>
+                  prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                );
+              }}
+              onClear={() => setSelectedCategoryIds([])}
+            />
+
+            <FilterDropdown
+              label="Type"
+              value={selectedType}
+              options={[
+                { id: "all", name: "All Types" },
+                { id: "income", name: "Income" },
+                { id: "expense", name: "Expense" },
+                { id: "transfer", name: "Transfers" },
+              ]}
+              onSelect={setSelectedType}
+            />
+
+            <button
+              onClick={() => {
+                setSelectedAccountIds([]);
+                setSelectedCategoryIds([]);
+                setSelectedType("all");
+              }}
+              disabled={selectedAccountIds.length === 0 && selectedCategoryIds.length === 0 && selectedType === "all"}
+              className={`h-11 flex items-center justify-center gap-2 rounded-2xl transition-all font-black text-[10px] uppercase tracking-[0.2em] border ${selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all"
+                ? "bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20 hover:scale-[1.02]"
+                : "bg-slate-50 dark:bg-slate-800/50 text-slate-300 border-slate-100 dark:border-white/5 cursor-not-allowed opacity-50"
+                }`}
+            >
+              <X className="size-3.5" />
+              <span>Clear Filters</span>
+            </button>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-primary transition-colors">
             Net Worth
           </div>
@@ -597,7 +800,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-emerald-500 transition-colors">
             Inflow
           </div>
@@ -610,7 +813,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-rose-500 transition-colors">
             Outflow
           </div>
@@ -623,7 +826,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="sm:p-6 shadow-none border-slate-100 dark:border-slate-800 bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.05] transition-all group">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.05] transition-all group">
           <div className="text-xs font-bold text-primary/60 mb-2">Savings</div>
           <div className="text-lg sm:text-2xl font-black text-primary mb-2 truncate shrink-0">
             {formatCurrency(inflow - outflow)}
@@ -642,7 +845,7 @@ export default function ReportsPageClient() {
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
             Cash Flow Dynamics
           </h3>
-          <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
+          <Card className="shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
             {trendData.some((d) => d.income > 0 || d.expense > 0) ? (
               <IncomeExpenseChart data={trendData} />
             ) : (
@@ -660,7 +863,7 @@ export default function ReportsPageClient() {
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
             Savings Velocity
           </h3>
-          <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
+          <Card className="shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
             {trendData.some((d) => Math.abs(d.velocity) > 0) ? (
               <SavingsVelocityChart
                 data={trendData.map((d) => ({
@@ -689,7 +892,7 @@ export default function ReportsPageClient() {
             Total Outflow: {formatCurrency(outflow)}
           </span>
         </div>
-        <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="group">
               <div className="flex items-center justify-between mb-2">
@@ -773,7 +976,7 @@ export default function ReportsPageClient() {
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
           Expense Intensity Breakdown
         </h3>
-        <Card className="sm:p-8 shadow-none border-slate-100 dark:border-slate-800">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-6 sm:gap-y-8">
             {(showAllExpenses
               ? expenseBreakdown
@@ -823,6 +1026,10 @@ export default function ReportsPageClient() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="pt-4">
+        <ActivityFeeds />
       </div>
     </div>
   );

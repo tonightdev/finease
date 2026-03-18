@@ -32,6 +32,7 @@ import { Edit2, Trash2, Plus, Wallet, Pencil, Target } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
 
 export default function GoalsPageClient() {
   const dispatch = useDispatch<AppDispatch>();
@@ -359,6 +360,10 @@ export default function GoalsPageClient() {
         message="This operation will permanently remove this financial goal from your roadmap. All historical tracking for this target will be lost."
         confirmText="Confirm Purge"
       />
+
+      <div className="pt-8">
+        <ActivityFeeds />
+      </div>
     </div>
   );
 }

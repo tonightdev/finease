@@ -122,3 +122,27 @@ export function getFiscalMonthStart(date: Date, startDay: number): Date {
   d.setDate(Math.min(startDay, lastDay));
   return d;
 }
+
+export function parseUserAgent(ua: string) {
+  if (!ua) return { isMobile: false, isPWA: false, browser: "Unknown", os: "Unknown" };
+
+  const isMobile = /mobile|android|iphone|ipad|phone/i.test(ua);
+  const isPWA = /standalone|pwa|finEase-app/i.test(ua);
+
+  let browser = "Unknown Browser";
+  if (/edg/i.test(ua)) browser = "Edge";
+  else if (/chrome|crios/i.test(ua)) browser = "Chrome";
+  else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+  else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
+  else if (/opera|opr/i.test(ua)) browser = "Opera";
+  else if (/trident/i.test(ua)) browser = "Internet Explorer";
+
+  let os = "Unknown OS";
+  if (/windows/i.test(ua)) os = "Windows";
+  else if (/macintosh|mac os/i.test(ua)) os = "macOS";
+  else if (/android/i.test(ua)) os = "Android";
+  else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
+  else if (/linux/i.test(ua)) os = "Linux";
+
+  return { isMobile, isPWA, browser, os };
+}

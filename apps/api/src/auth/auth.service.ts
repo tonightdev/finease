@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { ActivityType } from '@repo/types';
+import { ActivityType, ActivityLog } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -43,8 +43,11 @@ export class AuthService {
       .collection(this.sessionsCollection);
   }
 
-  async signup(data: SignupDto) {
-    const { email, password, name, gender, dob } = data;
+  async signup(
+    data: SignupDto,
+    metadata?: { userAgent?: string; ipAddress?: string },
+  ) {
+    const { email, password, name, gender, dob, isPWA } = data;
 
     // Check if user exists
     const existingUser = await this.collection
@@ -82,7 +85,11 @@ export class AuthService {
     });
 
     // Store session in DB
-    await this.createSession(userRef.id, token);
+    await this.createSession(userRef.id, token, {
+      ...metadata,
+      isPWA,
+      userName: name,
+    });
 
     // Log activity
     await this.activityLogService.logActivity({
@@ -98,8 +105,11 @@ export class AuthService {
     return { user: userProfile, token };
   }
 
-  async login(data: LoginDto) {
-    const { email, password } = data;
+  async login(
+    data: LoginDto,
+    metadata?: { userAgent?: string; ipAddress?: string },
+  ) {
+    const { email, password, isPWA } = data;
 
     if (!email) {
       throw new UnauthorizedException('Email is required');
@@ -146,7 +156,11 @@ export class AuthService {
     });
 
     // Store session in DB
-    await this.createSession(userDoc.id, token);
+    await this.createSession(userDoc.id, token, {
+      ...metadata,
+      isPWA,
+      userName: userData.displayName,
+    });
 
     // Log activity
     await this.activityLogService.logActivity({
@@ -195,7 +209,15 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
-  async generateTokenForUser(uid: string) {
+  async generateTokenForUser(
+    uid: string,
+    metadata?: {
+      userAgent?: string;
+      ipAddress?: string;
+      isPWA?: boolean;
+      userName?: string;
+    },
+  ) {
     const doc = await this.collection.doc(uid).get();
     if (!doc.exists) throw new ConflictException('User not found');
     const userData = doc.data() as StoredUser;
@@ -207,12 +229,24 @@ export class AuthService {
     });
 
     // Store session in DB
-    await this.createSession(doc.id, token);
+    await this.createSession(doc.id, token, {
+      ...metadata,
+      userName: userData.displayName,
+    });
 
     return token;
   }
 
-  private async createSession(userId: string, token: string): Promise<void> {
+  private async createSession(
+    userId: string,
+    token: string,
+    metadata?: {
+      userAgent?: string;
+      ipAddress?: string;
+      isPWA?: boolean;
+      userName?: string;
+    },
+  ): Promise<void> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days session persistence
 
@@ -222,6 +256,10 @@ export class AuthService {
       expiresAt: expiresAt.toISOString(),
       createdAt: new Date().toISOString(),
       lastActiveAt: new Date().toISOString(),
+      userAgent: metadata?.userAgent || null,
+      ipAddress: metadata?.ipAddress || null,
+      isPWA: metadata?.isPWA || false,
+      userName: metadata?.userName || null,
     });
   }
 
@@ -257,5 +295,23 @@ export class AuthService {
     });
 
     return { message: 'Session revoked successfully' };
+  }
+
+  async getRecentActivitiesForUser(
+    userId: string,
+    limit = 10,
+  ): Promise<ActivityLog[]> {
+    const db = this.firebaseAdmin.getFirestore();
+    const snapshot = await db
+      .collection('activity_logs')
+      .where('userId', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ActivityLog),
+    }));
   }
 }

@@ -43,6 +43,7 @@ import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { Button } from "@/components/ui/Button";
 import { AccountType } from "@repo/types";
+import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
 
 const liquidTypes: AccountType[] = ["bank", "cash", "card"];
 
@@ -1133,6 +1134,10 @@ export default function TransactionsPageClient() {
         }}
         onCancel={() => setTransactionToDelete(null)}
       />
+
+      <div className="pt-8">
+        <ActivityFeeds />
+      </div>
     </div>
   );
 }

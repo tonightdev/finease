@@ -205,4 +205,6 @@ export interface Reminder {
   lastActiveAt: string;
   userAgent?: string;
   ipAddress?: string;
+  isPWA?: boolean;
+  userName?: string;
 }
