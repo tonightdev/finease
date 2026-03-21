@@ -297,21 +297,4 @@ export class AuthService {
     return { message: 'Session revoked successfully' };
   }
 
-  async getRecentActivitiesForUser(
-    userId: string,
-    limit = 10,
-  ): Promise<ActivityLog[]> {
-    const db = this.firebaseAdmin.getFirestore();
-    const snapshot = await db
-      .collection('activity_logs')
-      .where('userId', '==', userId)
-      .orderBy('timestamp', 'desc')
-      .limit(limit)
-      .get();
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as ActivityLog),
-    }));
-  }
 }

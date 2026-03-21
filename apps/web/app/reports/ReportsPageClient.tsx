@@ -17,7 +17,7 @@ import { fetchGoals } from "@/store/slices/goalsSlice";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
+
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
 
@@ -1026,10 +1026,6 @@ export default function ReportsPageClient() {
             </div>
           )}
         </Card>
-      </div>
-
-      <div className="pt-4">
-        <ActivityFeeds />
       </div>
     </div>
   );

@@ -32,7 +32,6 @@ import { Edit2, Trash2, Plus, Wallet, Pencil, Target } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
 
 export default function GoalsPageClient() {
   const dispatch = useDispatch<AppDispatch>();
@@ -144,7 +143,7 @@ export default function GoalsPageClient() {
               {goals.length} Targets
             </span>
           </div>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {goals.length === 0 ? (
               <div className="col-span-2 text-center py-12 px-6 sm:py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/5">
@@ -326,7 +325,7 @@ export default function GoalsPageClient() {
           }
         }}
       />
-      
+
       <AddReminderModal
         isOpen={isReminderModalOpen}
         onClose={() => {
@@ -360,10 +359,6 @@ export default function GoalsPageClient() {
         message="This operation will permanently remove this financial goal from your roadmap. All historical tracking for this target will be lost."
         confirmText="Confirm Purge"
       />
-
-      <div className="pt-8">
-        <ActivityFeeds />
-      </div>
     </div>
   );
 }

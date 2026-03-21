@@ -62,10 +62,4 @@ export class AuthController {
     return this.authService.revokeSession(req.user.uid, targetToken);
   }
 
-  @ApiOperation({ summary: 'Get recent activities for current user' })
-  @UseGuards(AuthGuard)
-  @Get('activity')
-  async getActivity(@Req() req: RequestWithUser) {
-    return this.authService.getRecentActivitiesForUser(req.user.uid, 10);
-  }
 }

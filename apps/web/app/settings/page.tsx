@@ -79,7 +79,6 @@ export default function SettingsPage() {
   }, [user]);
 
   const saveIdentity = async () => {
-    // Phone validation (Optional but good: 10 digits)
     if (formData.phone && !/^\+?\d{10,15}$/.test(formData.phone.replace(/\s/g, ""))) {
       toast.error("Invalid phone number format");
       return;
@@ -95,8 +94,7 @@ export default function SettingsPage() {
   };
 
   const saveBudgets = async () => {
-    const total =
-      formData.needsTarget + formData.wantsTarget + formData.savingsTarget;
+    const total = formData.needsTarget + formData.wantsTarget + formData.savingsTarget;
     if (total !== 100) {
       toast.error(`Targets must sum to 100%. Currently: ${total}%`);
       return;
@@ -153,127 +151,128 @@ export default function SettingsPage() {
         subtitle="Manage your financial operating system"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8">
-
-        {/* Profile Card */}
-        <div className="md:col-span-8 space-y-6">
-          <SectionCard
-            title="Identity Profile"
-            subtitle="Core personal metadata"
-            icon={<UserCog className="w-4 h-4" />}
-            onSave={saveIdentity}
-            isDirty={
-              formData.phone !== (user.phone || "") ||
-              formData.gender !== (user.gender || "Not Specified") ||
-              formData.dob !== (user.dob || "1990-01-01") ||
-              formData.monthStartDate !== (user.monthStartDate || 1)
-            }
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Identity
-                </label>
-                <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    disabled
-                    className="w-full h-11 pl-11 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-slate-400 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Communication
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    disabled
-                    className="w-full h-11 pl-11 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-slate-400 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Mobile Uplink
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 9876543210"
-                    className="w-full h-11 pl-11 bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Gender Identity
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full h-11 px-4 pr-10 appearance-none bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
-                  >
-                    <option>Not Specified</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Fiscal Start Date
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <select
-                    value={formData.monthStartDate}
-                    onChange={(e) => setFormData({ ...formData, monthStartDate: parseInt(e.target.value) })}
-                    className="w-full h-11 pl-11 appearance-none bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
-                  >
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                      <option key={d} value={d}>Day {d}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-1 pl-1">
-                  Sets the first day of your financial month
-                </p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                  Biological Origin
-                </label>
-                <div className="relative group">
-                  <input
-                    type="date"
-                    value={formData.dob}
-                    onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                    className="w-full h-11 pl-11 pr-4 bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all appearance-none"
-                  />
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
-                </div>
+      <div className="space-y-6 sm:gap-8">
+        {/* Profile Card (Full Width) */}
+        <SectionCard
+          title="Identity Profile"
+          subtitle="Core personal metadata"
+          icon={<UserCog className="w-4 h-4" />}
+          onSave={saveIdentity}
+          isDirty={
+            formData.phone !== (user.phone || "") ||
+            formData.gender !== (user.gender || "Not Specified") ||
+            formData.dob !== (user.dob || "1990-01-01") ||
+            formData.monthStartDate !== (user.monthStartDate || 1)
+          }
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Identity
+              </label>
+              <div className="relative">
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={formData.name}
+                  disabled
+                  className="w-full h-11 pl-11 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-slate-400 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
+                />
               </div>
             </div>
-          </SectionCard>
 
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Communication
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  className="w-full h-11 pl-11 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-slate-400 opacity-60 cursor-not-allowed text-xs font-black ring-1 ring-slate-100 dark:ring-white/5"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Mobile Uplink
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 9876543210"
+                  className="w-full h-11 pl-11 bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Gender Identity
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full h-11 px-4 pr-10 appearance-none bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
+                >
+                  <option>Not Specified</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Fiscal Start Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <select
+                  value={formData.monthStartDate}
+                  onChange={(e) => setFormData({ ...formData, monthStartDate: parseInt(e.target.value) })}
+                  className="w-full h-11 pl-11 appearance-none bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all"
+                >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                    <option key={d} value={d}>Day {d}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-1 pl-1">
+                Sets the first day of your financial month
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                Biological Origin
+              </label>
+              <div className="relative group">
+                <input
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  className="w-full h-11 pl-11 pr-4 bg-white dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 transition-all appearance-none"
+                />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* Side-by-Side Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          {/* Budget Protocol */}
           {user.role !== "admin" && (
             <SectionCard
               title="Budget Protocol"
@@ -286,7 +285,7 @@ export default function SettingsPage() {
                 formData.savingsTarget !== (user.budgetTargets?.savings ?? 20)
               }
             >
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest pl-1">
                     Essentials
@@ -375,62 +374,13 @@ export default function SettingsPage() {
               </div>
             </SectionCard>
           )}
-        </div>
 
-        {/* Sidebar Sections */}
-        <div className="md:col-span-4 space-y-6">
-          {isPWA && (
-            <div className="p-6 rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 space-y-6">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Security Lattice
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={() => toggleLock(!isLockEnabled || lockType !== "biometric", "biometric")}
-                  className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${isLockEnabled && lockType === "biometric" ? "border-primary bg-primary/5" : "border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Fingerprint className={`w-5 h-5 ${isLockEnabled && lockType === "biometric" ? "text-primary" : "text-slate-400"}`} />
-                    <div className={`size-4 rounded-full border-2 flex items-center justify-center ${isLockEnabled && lockType === "biometric" ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
-                      {isLockEnabled && lockType === "biometric" && <div className="size-1 bg-white rounded-full" />}
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Biometric Access</p>
-                  <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">FaceID / TouchID</p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (isLockEnabled && lockType === "pin") toggleLock(false);
-                    else setShowPinModal(true);
-                  }}
-                  className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${isLockEnabled && lockType === "pin" ? "border-indigo-500 bg-indigo-500/5" : "border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Key className={`w-5 h-5 ${isLockEnabled && lockType === "pin" ? "text-indigo-500" : "text-slate-400"}`} />
-                    <div className={`size-4 rounded-full border-2 flex items-center justify-center ${isLockEnabled && lockType === "pin" ? "border-indigo-500 bg-indigo-500" : "border-slate-300 dark:border-slate-600"}`}>
-                      {isLockEnabled && lockType === "pin" && <div className="size-1 bg-white rounded-full" />}
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Secure PIN</p>
-                  <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">4-Digit Verification</p>
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="p-6 rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 space-y-4">
-            <div className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                Identity Switcher
-              </h3>
-            </div>
-
+          {/* Identity Switcher */}
+          <SectionCard
+            title="Identity Switcher"
+            subtitle="Switch between authorized account nodes"
+            icon={<UserIcon className="w-4 h-4" />}
+          >
             <div className="space-y-4">
               <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
                 Authorized Nodes active on this bridge
@@ -495,12 +445,56 @@ export default function SettingsPage() {
                 Authorize Sub-Node
               </button>
             </div>
-          </div>
+          </SectionCard>
         </div>
+
+        {/* Security Lattice (Full Width) */}
+        {isPWA && (
+          <SectionCard
+            title="Security Lattice"
+            subtitle="Biometric and cryptographic access controls"
+            icon={<Shield className="w-4 h-4" />}
+          >
+            <div className="space-y-3">
+              <button
+                onClick={() => toggleLock(!isLockEnabled || lockType !== "biometric", "biometric")}
+                className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${isLockEnabled && lockType === "biometric" ? "border-primary bg-primary/5" : "border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Fingerprint className={`w-5 h-5 ${isLockEnabled && lockType === "biometric" ? "text-primary" : "text-slate-400"}`} />
+                  <div className={`size-4 rounded-full border-2 flex items-center justify-center ${isLockEnabled && lockType === "biometric" ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                    {isLockEnabled && lockType === "biometric" && <div className="size-1 bg-white rounded-full" />}
+                  </div>
+                </div>
+                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Biometric Access</p>
+                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">FaceID / TouchID</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (isLockEnabled && lockType === "pin") toggleLock(false);
+                  else setShowPinModal(true);
+                }}
+                className={`w-full p-4 rounded-2xl border-2 transition-all text-left ${isLockEnabled && lockType === "pin" ? "border-indigo-500 bg-indigo-500/5" : "border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Key className={`w-5 h-5 ${isLockEnabled && lockType === "pin" ? "text-indigo-500" : "text-slate-400"}`} />
+                  <div className={`size-4 rounded-full border-2 flex items-center justify-center ${isLockEnabled && lockType === "pin" ? "border-indigo-500 bg-indigo-500" : "border-slate-300 dark:border-slate-600"}`}>
+                    {isLockEnabled && lockType === "pin" && <div className="size-1 bg-white rounded-full" />}
+                  </div>
+                </div>
+                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Secure PIN</p>
+                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">4-Digit Verification</p>
+              </button>
+            </div>
+          </SectionCard>
+        )}
       </div>
 
+      {/* Session List (Full Width) */}
       <SessionList />
 
+      {/* Security Pin Modal */}
       <AnimatePresence>
         {showPinModal && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 backdrop-blur-md bg-black/40">
@@ -536,8 +530,8 @@ export default function SettingsPage() {
                     <div
                       key={idx}
                       className={`size-3 rounded-full border-2 transition-all ${(pinStep === 1 ? tempPin : confirmPin).length > idx
-                          ? "bg-indigo-500 border-indigo-500 scale-125"
-                          : "border-slate-200 dark:border-white/10"
+                        ? "bg-indigo-500 border-indigo-500 scale-125"
+                        : "border-slate-200 dark:border-white/10"
                         }`}
                     />
                   ))}
@@ -591,33 +585,37 @@ function SectionCard({
   subtitle: string;
   icon: React.ReactNode;
   children: React.ReactNode;
-  onSave: () => void;
+  onSave?: () => void;
   isDirty?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 p-6 sm:p-8 space-y-6 shadow-2xl shadow-slate-200/50 dark:shadow-none transition-all">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-6">
-        <div className="flex items-center gap-4">
-          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            {icon}
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{title}</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{subtitle}</p>
-          </div>
+    <div className="rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 p-6 sm:p-8 space-y-6 shadow-2xl shadow-slate-200/50 dark:shadow-none transition-all overflow-hidden lg:overflow-visible flex flex-col">
+      <div className="flex items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-6">
+        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+          {icon}
         </div>
-        <button
-          onClick={onSave}
-          disabled={!isDirty}
-          className="h-10 px-6 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:scale-100 flex items-center justify-center gap-2 group"
-        >
-          <Save className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-          Commit Changes
-        </button>
+        <div className="min-w-0">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest truncate">{title}</h3>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{subtitle}</p>
+        </div>
       </div>
-      <div className="pt-2">
+      
+      <div className="pt-2 flex-grow">
         {children}
       </div>
+
+      {onSave && (
+        <div className="pt-6 border-t border-slate-100 dark:border-white/5 flex justify-end">
+          <button
+            onClick={onSave}
+            disabled={!isDirty}
+            className="h-11 px-8 w-full sm:w-auto bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:scale-100 flex items-center justify-center gap-2 group whitespace-nowrap"
+          >
+            <Save className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+            Commit Changes
+          </button>
+        </div>
+      )}
     </div>
   );
 }

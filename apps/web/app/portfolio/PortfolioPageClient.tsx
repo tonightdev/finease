@@ -37,7 +37,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
+
 
 export default function PortfolioPageClient() {
   const { user, loading: authLoading } = useAuth();
@@ -1045,9 +1045,7 @@ export default function PortfolioPageClient() {
         confirmText="Execute Purge"
       />
 
-      <div className="pt-8">
-        <ActivityFeeds />
-      </div>
+
     </div>
   );
 }

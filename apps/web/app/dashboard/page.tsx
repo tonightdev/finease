@@ -24,7 +24,6 @@ import { useSignals } from "@/components/providers/SignalProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
-import { ActivityFeeds } from "@/components/dashboard/ActivityFeeds";
 
 
 export default function Home() {
@@ -516,11 +515,6 @@ export default function Home() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-4">
-          <ActivityFeeds />
-        </div>
-      </div>
 
 
 
