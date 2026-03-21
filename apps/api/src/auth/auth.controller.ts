@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Body, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -73,5 +81,4 @@ export class AuthController {
     }
     return this.authService.revokeOtherSessions(req.user.uid, currentToken);
   }
-
 }

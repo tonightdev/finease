@@ -37,6 +37,15 @@ import { SessionList } from "@/components/dashboard/SessionList";
 import { useTheme } from "next-themes";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import {
+  User as UserType,
+  Account,
+  Transaction,
+  FinancialGoal,
+  Reminder,
+  Category,
+  AssetClass
+} from "@repo/types";
 
 type TabType = "profile" | "preferences" | "security" | "identities" | "data";
 
@@ -64,7 +73,7 @@ export default function SettingsPage() {
     if (user?.preferences?.theme && user.preferences.theme !== theme) {
       setTheme(user.preferences.theme);
     }
-  }, [user?.preferences?.theme]);
+  }, [user?.preferences?.theme, theme, setTheme]);
 
   useEffect(() => {
     if (user) {
@@ -134,13 +143,13 @@ export default function SettingsPage() {
         categoriesRes,
         assetClassesRes
       ] = await Promise.all([
-        api.get("/finance/profile").then(res => res.data as any),
-        api.get("/finance/accounts").then(res => res.data as any),
-        api.get("/finance/transactions").then(res => res.data as any),
-        api.get("/finance/goals").then(res => res.data as any),
-        api.get("/finance/reminders").then(res => res.data as any),
-        api.get("/finance/categories").then(res => res.data as any),
-        api.get("/finance/asset-classes").then(res => res.data as any)
+        api.get("/finance/profile").then(res => res.data as UserType),
+        api.get("/finance/accounts").then(res => res.data as Account[]),
+        api.get("/finance/transactions").then(res => res.data as Transaction[]),
+        api.get("/finance/goals").then(res => res.data as FinancialGoal[]),
+        api.get("/finance/reminders").then(res => res.data as Reminder[]),
+        api.get("/finance/categories").then(res => res.data as Category[]),
+        api.get("/finance/asset-classes").then(res => res.data as AssetClass[])
       ]);
 
       const data = {
@@ -476,7 +485,7 @@ export default function SettingsPage() {
                               key={mode.id}
                               onClick={() => {
                                 setTheme(mode.id);
-                                updateProfile({ preferences: { ...user?.preferences, theme: mode.id as any } });
+                                 updateProfile({ preferences: { ...user?.preferences, theme: mode.id as "light" | "dark" | "system" } });
                               }}
                               className={`flex flex-col items-start gap-4 p-5 rounded-3xl border-2 transition-all group relative overflow-hidden ${isSelected
                                 ? "bg-primary/5 border-primary shadow-2xl shadow-primary/5 scale-[1.02]"

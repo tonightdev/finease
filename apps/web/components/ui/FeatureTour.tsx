@@ -13,6 +13,7 @@ import {
   Compass,
   Zap,
   UserCircle2,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -53,6 +54,12 @@ export function FeatureTour() {
       description:
         "Track your investments across stocks, mutual funds, and assets. Watch your net worth evolve through our automated tracking.",
       icon: <TrendingUp className="w-10 h-10 text-indigo-500" />,
+    },
+    {
+      title: "Strategic Simulation",
+      description:
+        "Experiment with your capital without risk. Our hybrid engine lets you project future net worth based on custom adherence rules.",
+      icon: <Activity className="w-10 h-10 text-amber-500" />,
     },
     {
       title: "Wealth Mapping",
@@ -109,12 +116,12 @@ export function FeatureTour() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
+      <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white dark:bg-[#0f1115] w-full max-w-lg rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-slate-200 dark:border-white/5 relative overflow-hidden"
+          exit={{ opacity: 0, scale: 0.9, y: 30 }}
+          className="bg-white/80 dark:bg-[#0f1115]/80 w-full max-w-lg rounded-[2.5rem] md:rounded-[3rem] p-6 sm:p-8 md:p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white/20 dark:border-white/5 relative overflow-hidden backdrop-blur-2xl"
         >
           {/* Progress Bar */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-white/5">
@@ -135,64 +142,69 @@ export function FeatureTour() {
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex flex-col items-center text-center">
+          <div className="flex flex-col items-center text-center relative z-10">
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+              initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              className="size-20 rounded-3xl bg-slate-50 dark:bg-white/5 flex items-center justify-center mb-8 shadow-inner"
+              className="size-20 sm:size-24 rounded-[1.5rem] sm:rounded-[2rem] bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center mb-6 sm:mb-8 shadow-2xl border border-slate-200 dark:border-white/10 relative group"
             >
-              {steps[currentStep]?.icon}
+              <div className="absolute inset-0 bg-primary/5 rounded-[1.5rem] sm:rounded-[2rem] blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100" />
+              <div className="scale-90 sm:scale-100">
+                {steps[currentStep]?.icon}
+              </div>
             </motion.div>
 
             <motion.div
               key={`text-${currentStep}`}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
+              className="space-y-3 sm:space-y-4"
             >
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">
                 {steps[currentStep]?.title}
               </h2>
-              <p className="text-sm md:text-base font-medium text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mb-12">
+              <p className="text-xs sm:text-base font-bold text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs sm:max-w-sm mx-auto mb-8 sm:mb-10">
                 {steps[currentStep]?.description}
               </p>
             </motion.div>
 
-            <div className="flex items-center justify-between w-full pt-4">
-              <button
-                onClick={handlePrev}
-                disabled={currentStep === 0}
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-0 transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
-              </button>
+            <div className="flex items-center justify-between w-full pt-6 sm:pt-8 gap-4">
+              <div className="flex-1 flex justify-start">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentStep === 0}
+                  className="flex items-center justify-center size-10 sm:size-12 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white disabled:opacity-0 transition-all shadow-sm hover:bg-slate-100 dark:hover:bg-white/10"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
 
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 sm:gap-2 bg-slate-100 dark:bg-white/10 p-2.5 rounded-full shadow-inner">
                 {steps.map((_, i) => (
                   <div
                     key={i}
-                    className={`size-1.5 rounded-full transition-all duration-300 ${i === currentStep ? "bg-primary w-4" : "bg-slate-200 dark:bg-white/10"}`}
+                    className={`size-1.5 sm:size-2 rounded-full transition-all duration-500 ${i === currentStep ? "bg-primary w-5 sm:w-8 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)]" : "bg-slate-300 dark:bg-white/20"}`}
                   />
                 ))}
               </div>
 
-              <button
-                onClick={handleNext}
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:scale-105 transition-all"
-              >
-                {currentStep === steps.length - 1
-                  ? "Begin Mission"
-                  : "Secure Next"}
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={handleNext}
+                  className="flex items-center justify-center size-10 sm:size-12 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Decorative background elements */}
-          <div className="absolute -bottom-12 -right-12 size-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -top-12 -left-12 size-48 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+          {/* Advanced Decorative background elements */}
+          <div className="absolute -bottom-24 -right-24 size-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+          <div className="absolute -top-24 -left-24 size-72 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-primary/5 via-transparent to-emerald-500/5 pointer-events-none" />
         </motion.div>
       </div>
     </AnimatePresence>

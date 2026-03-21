@@ -1,0 +1,29 @@
+
+> web@0.1.0 lint
+> eslint --max-warnings 0
+
+
+/Users/dhavalpithwa/Documents/Developing/finease/apps/web/app/settings/page.tsx
+   67:6    warning  React Hook useEffect has missing dependencies: 'setTheme' and 'theme'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  137:61   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  138:62   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  139:66   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  140:59   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  141:63   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  142:64   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  143:67   warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  479:104  warning  Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+
+/Users/dhavalpithwa/Documents/Developing/finease/apps/web/app/simulation/page.tsx
+  125:14  warning  '_err' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 10 problems (0 errors, 10 warnings)
+
+ESLint found too many warnings (maximum: 0).
+npm error Lifecycle script `lint` failed with error:
+npm error code 1
+npm error path /Users/dhavalpithwa/Documents/Developing/finease/apps/web
+npm error workspace web@0.1.0
+npm error location /Users/dhavalpithwa/Documents/Developing/finease/apps/web
+npm error command failed
+npm error command sh -c eslint --max-warnings 0

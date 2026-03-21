@@ -11,6 +11,7 @@ import {
   Zap,
   Globe,
   Lock,
+  Activity,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -104,7 +105,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             {/* Wealth Command (Large Row) */}
-            <div className="md:col-span-8 group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-8 sm:p-12 overflow-hidden hover:border-primary/50 transition-all shadow-sm">
+            <div className="md:col-span-8 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-primary/50 transition-all shadow-sm">
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingUp className="w-32 h-32 text-primary" />
               </div>
@@ -132,7 +133,7 @@ export default function LandingPage() {
             </div>
 
             {/* Smart Automated Ledger */}
-            <div className="md:col-span-4 group relative bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2.5rem] p-8 sm:p-12 overflow-hidden hover:scale-[1.02] transition-all shadow-2xl">
+            <div className="md:col-span-4 group relative bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden hover:scale-[1.02] transition-all shadow-2xl">
               <div className="relative z-10">
                 <div className="size-12 rounded-2xl bg-white/10 dark:bg-slate-900/10 flex items-center justify-center mb-6">
                   <Zap className="w-6 h-6" />
@@ -149,7 +150,7 @@ export default function LandingPage() {
             </div>
 
             {/* Goal Navigator */}
-            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-8 sm:p-12 overflow-hidden hover:border-emerald-500/50 transition-all shadow-sm">
+            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-emerald-500/50 transition-all shadow-sm">
               <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                 <Target className="w-6 h-6" />
               </div>
@@ -163,14 +164,31 @@ export default function LandingPage() {
               </p>
             </div>
 
+            {/* Strategic Simulation (NEW) */}
+            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-amber-500/50 transition-all shadow-sm">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Activity className="w-24 h-24 text-amber-500" />
+              </div>
+              <div className="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-6">
+                <Activity className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">
+                Strategic Simulation
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                Experiment with your capital without real-world risk. Our hybrid
+                simulation engine lets you project future wealth based on custom adherence rules.
+              </p>
+            </div>
+
             {/* Privacy Shield */}
-            <div className="md:col-span-8 group relative bg-gradient-to-br from-primary to-emerald-500 text-white rounded-[2.5rem] p-8 sm:p-12 overflow-hidden shadow-xl">
+            <div className="md:col-span-8 group relative bg-gradient-to-br from-primary to-emerald-500 text-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden shadow-xl">
               <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
               <div className="relative z-10 flex flex-col sm:flex-row items-center gap-8">
                 <div className="size-20 rounded-3xl bg-white/20 backdrop-blur-xl flex items-center justify-center flex-shrink-0">
                   <ShieldCheck className="w-10 h-10" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="text-2xl font-black mb-4 uppercase tracking-tighter">
                     The Sovereignty Protocol
                   </h3>

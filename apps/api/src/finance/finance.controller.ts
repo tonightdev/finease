@@ -18,6 +18,7 @@ import { TransactionsService } from './transactions.service';
 import { CategoriesService } from './categories.service';
 import { AssetClassesService } from './asset-classes.service';
 import { RemindersService } from './reminders.service';
+import { SimulationService } from './simulation.service';
 import type {
   FinancialGoal,
   Transaction,
@@ -26,6 +27,7 @@ import type {
   Category,
   AssetClass,
   Reminder,
+  BudgetSimulation,
 } from '@repo/types';
 import { UsersService } from '../common/services/users.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
@@ -44,6 +46,7 @@ export class FinanceController {
     private readonly assetClassesService: AssetClassesService,
     private readonly usersService: UsersService,
     private readonly remindersService: RemindersService,
+    private readonly simulationService: SimulationService,
   ) {}
 
   // --- Profile ---
@@ -285,5 +288,22 @@ export class FinanceController {
   @Delete('reminders/:id')
   removeReminder(@Req() req: RequestWithUser, @Param('id') id: string) {
     return this.remindersService.deleteReminder(req.user.uid, id);
+  }
+
+  // --- Simulation ---
+
+  @ApiOperation({ summary: 'Get persistent budget simulation for user' })
+  @Get('simulation')
+  getSimulation(@Req() req: RequestWithUser) {
+    return this.simulationService.getSimulation(req.user.uid);
+  }
+
+  @ApiOperation({ summary: 'Save budget simulation state' })
+  @Post('simulation')
+  saveSimulation(
+    @Req() req: RequestWithUser,
+    @Body() data: Partial<BudgetSimulation>,
+  ) {
+    return this.simulationService.saveSimulation(req.user.uid, data);
   }
 }

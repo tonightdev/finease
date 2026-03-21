@@ -504,6 +504,14 @@ export default function TransactionsPageClient() {
                 placeholder="Search ledger..."
               />
             </div>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={resetFilters}
+                className="h-8 px-3 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20"
+              >
+                Clear
+              </button>
+            )}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`h-8 px-3 rounded-xl flex items-center gap-2 transition-all ${showFilters || activeFilterCount > 0 ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-white/5"}`}
@@ -606,14 +614,6 @@ export default function TransactionsPageClient() {
               </div>
             </div>
 
-            {activeFilterCount > 0 && (
-              <button
-                onClick={resetFilters}
-                className="w-full py-1.5 text-[8px] font-black uppercase text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20"
-              >
-                Clear All {activeFilterCount} Filters
-              </button>
-            )}
           </div>
         )}
       </PageHeader>

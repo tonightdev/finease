@@ -7,6 +7,7 @@ import { CategoriesService } from './categories.service';
 import { AssetClassesService } from './asset-classes.service';
 import { FinanceController } from './finance.controller';
 import { RemindersService } from './reminders.service';
+import { SimulationService } from './simulation.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { AuthModule } from '../auth/auth.module';
     CategoriesService,
     AssetClassesService,
     RemindersService,
+    SimulationService,
   ],
   exports: [
     GoalService,
@@ -29,6 +31,7 @@ import { AuthModule } from '../auth/auth.module';
     CategoriesService,
     AssetClassesService,
     RemindersService,
+    SimulationService,
   ],
 })
 export class FinanceModule {}

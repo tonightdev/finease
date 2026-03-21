@@ -214,13 +214,23 @@ export interface Reminder {
   userName?: string;
 }
 
+export interface SimEntry {
+  id: string;
+  amount: string;
+  description: string;
+  categoryId: string;
+  categoryName: string;
+  parentType: CategoryParentType;
+  type: "income" | "outflow";
+  accountId: string;
+  accountName: string;
+}
+
 export interface BudgetSimulation {
-  entries: {
-    amount: number;
-    description: string;
-    category: string;
-    type: "income" | "outflow";
-  }[];
+  userId: string;
+  protocol: { needs: number; wants: number; savings: number };
+  entries: SimEntry[];
+  updatedAt?: string;
 }
 
 export interface SimulationResult {

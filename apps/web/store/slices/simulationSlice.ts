@@ -1,47 +1,49 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { BudgetSimulation, SimulationResult } from "@repo/types";
+import { BudgetSimulation, SimEntry } from "@repo/types";
+import api from "@/lib/api";
 
 export interface SimulationState {
   current: BudgetSimulation | null;
-  results: SimulationResult | null;
   loading: boolean;
+  saveLoading: boolean;
   error: string | null;
+  lastFetched: number | null;
 }
 
 const initialState: SimulationState = {
   current: {
-    entries: []
+    userId: "",
+    entries: [],
+    protocol: { needs: 50, wants: 30, savings: 20 },
   },
-  results: null,
   loading: false,
+  saveLoading: false,
   error: null,
+  lastFetched: null,
 };
 
-export const fetchSimulation = createAsyncThunk(
-  "simulation/fetch",
-  async () => {
-    // Simulated fetch
-    return { entries: [] };
+export const fetchSimulation = createAsyncThunk<
+  BudgetSimulation | null,
+  { force?: boolean } | void
+>("simulation/fetch", async () => {
+  const response = await api.get<BudgetSimulation | null>("/finance/simulation");
+  return response.data;
+}, {
+  condition: (arg, { getState }) => {
+    if (arg?.force) return true;
+    const state = getState() as { simulation: SimulationState };
+    if (state.simulation.lastFetched !== null || state.simulation.loading) {
+      return false;
+    }
+    return true;
   }
-);
+});
 
-export const startSimulation = createAsyncThunk(
-  "simulation/start",
-  async () => {
-    // Artificial delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Simple logic for the demo
-    return {
-      surplus: 1250,
-      adherence: 85,
-      efficiency: 92,
-      suggestions: [
-        "Reduce subscription overhead by 15%",
-        "Allocate $200 more to high-yield savings",
-        "Target dining out for optimization"
-      ]
-    };
+export const saveSimulation = createAsyncThunk(
+  "simulation/save",
+  async (data: Partial<BudgetSimulation>) => {
+    const response = await api.post<BudgetSimulation>("/finance/simulation", data);
+    return response.data;
   }
 );
 
@@ -50,12 +52,16 @@ export const simulationSlice = createSlice({
   initialState,
   reducers: {
     resetSimulation: (state) => {
-      state.current = { entries: [] };
-      state.results = null;
+      state.current = { userId: "", entries: [], protocol: { needs: 50, wants: 30, savings: 20 } };
     },
-    addEntry: (state, action: PayloadAction<BudgetSimulation["entries"][0]>) => {
+    setSimulationProtocol: (state, action: PayloadAction<{ needs: number, wants: number, savings: number }>) => {
       if (state.current) {
-        state.current.entries.push(action.payload);
+         state.current.protocol = action.payload;
+      }
+    },
+    setSimulationEntries: (state, action: PayloadAction<SimEntry[]>) => {
+      if (state.current) {
+        state.current.entries = action.payload;
       }
     }
   },
@@ -66,17 +72,24 @@ export const simulationSlice = createSlice({
       })
       .addCase(fetchSimulation.fulfilled, (state, action) => {
         state.loading = false;
-        state.current = action.payload;
+        if (action.payload) {
+          state.current = action.payload;
+        }
+        state.lastFetched = Date.now();
       })
-      .addCase(startSimulation.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(startSimulation.fulfilled, (state, action) => {
+      .addCase(fetchSimulation.rejected, (state, action) => {
         state.loading = false;
-        state.results = action.payload;
+        state.error = action.error.message || "Failed to fetch simulation";
+      })
+      .addCase(saveSimulation.pending, (state) => {
+        state.saveLoading = true;
+      })
+      .addCase(saveSimulation.fulfilled, (state, action) => {
+        state.saveLoading = false;
+        state.current = action.payload;
       });
   },
 });
 
-export const { resetSimulation, addEntry } = simulationSlice.actions;
+export const { resetSimulation, setSimulationProtocol, setSimulationEntries } = simulationSlice.actions;
 export default simulationSlice.reducer;

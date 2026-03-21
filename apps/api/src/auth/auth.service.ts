@@ -301,7 +301,7 @@ export class AuthService {
     const snapshot = await this.sessionCollection
       .where('userId', '==', userId)
       .get();
-    
+
     const batch = this.firebaseAdmin.getFirestore().batch();
     let count = 0;
 
@@ -314,7 +314,7 @@ export class AuthService {
 
     if (count > 0) {
       await batch.commit();
-      
+
       // Log activity
       await this.activityLogService.logActivity({
         userId,
@@ -327,5 +327,4 @@ export class AuthService {
 
     return { message: `Revoked ${count} other sessions successfully`, count };
   }
-
 }

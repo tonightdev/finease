@@ -14,6 +14,7 @@ interface AddCategoryModalProps {
     name: string;
     color: string;
     parentType?: string;
+    type?: "expense" | "income";
   }) => Promise<void> | void;
   onDelete?: (id: string) => Promise<void> | void;
   category?: {
@@ -82,7 +83,13 @@ export function AddCategoryModal({
 
     setIsSaving(true);
     try {
-      await onSave({ id: category?.id, name, color, parentType });
+      await onSave({ 
+        id: category?.id, 
+        name, 
+        color, 
+        parentType,
+        type: parentType === "income" ? "income" : "expense"
+      });
       onClose();
     } catch {
       // Error handled by parent
@@ -152,10 +159,10 @@ export function AddCategoryModal({
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Spending Bucket
+            Category Type
           </label>
-          <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl ring-1 ring-slate-100 dark:ring-white/5">
-            {["needs", "wants", "savings"].map((type) => (
+          <div className="grid grid-cols-4 gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl ring-1 ring-slate-100 dark:ring-white/5">
+            {["needs", "wants", "savings", "income"].map((type) => (
               <button
                 key={type}
                 disabled={isSaving || isDeleting}
