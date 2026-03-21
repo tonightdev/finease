@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
   Trash2,
+  Zap,
 } from "lucide-react";
 
 export function BottomNav() {
@@ -25,6 +26,7 @@ export function BottomNav() {
 
   const userLinks = [
     { href: "/dashboard", label: "Dashboard", Icon: Home },
+    { href: "/simulation", label: "Strategy", Icon: Zap },
     { href: "/goals", label: "Goals", Icon: Target },
     { href: "/transactions", label: "Transact", Icon: IndianRupee },
     { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },

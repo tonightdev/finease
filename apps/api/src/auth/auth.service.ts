@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { ActivityType, ActivityLog } from '@repo/types';
+import { ActivityType } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -295,6 +295,37 @@ export class AuthService {
     });
 
     return { message: 'Session revoked successfully' };
+  }
+
+  async revokeOtherSessions(userId: string, currentToken: string) {
+    const snapshot = await this.sessionCollection
+      .where('userId', '==', userId)
+      .get();
+    
+    const batch = this.firebaseAdmin.getFirestore().batch();
+    let count = 0;
+
+    snapshot.docs.forEach((doc) => {
+      if (doc.id !== currentToken) {
+        batch.delete(doc.ref);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      await batch.commit();
+      
+      // Log activity
+      await this.activityLogService.logActivity({
+        userId,
+        action: 'delete' as ActivityType,
+        entityType: 'session',
+        entityId: userId,
+        description: `User revoked all other active sessions (${count} sessions)`,
+      });
+    }
+
+    return { message: `Revoked ${count} other sessions successfully`, count };
   }
 
 }

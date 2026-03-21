@@ -34,6 +34,7 @@ import {
   FileUp,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { formatDate, calculateRunningBalances } from "@/lib/utils";
@@ -342,7 +343,7 @@ export default function TransactionsPageClient() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Transactions"
         subtitle="Unified financial ledger"
@@ -1133,6 +1134,6 @@ export default function TransactionsPageClient() {
         }}
         onCancel={() => setTransactionToDelete(null)}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -60,6 +60,18 @@ export class AuthController {
     @Body('token') targetToken: string,
   ) {
     return this.authService.revokeSession(req.user.uid, targetToken);
+  }
+
+  @ApiOperation({ summary: 'Revoke all other sessions except current' })
+  @UseGuards(AuthGuard)
+  @Post('sessions/revoke-others')
+  async revokeOtherSessions(@Req() req: RequestWithUser) {
+    const authHeader = req.headers.authorization;
+    const currentToken = authHeader?.split(' ')[1];
+    if (!currentToken) {
+      throw new UnauthorizedException('No active token found');
+    }
+    return this.authService.revokeOtherSessions(req.user.uid, currentToken);
   }
 
 }

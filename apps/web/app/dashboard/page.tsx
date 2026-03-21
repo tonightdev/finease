@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Plus, Target as TargetIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { useSignals } from "@/components/providers/SignalProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
@@ -322,7 +323,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <FeatureTour />
       <PageHeader
         title="Command Center"
@@ -536,6 +537,6 @@ export default function Home() {
           ).unwrap();
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -4,7 +4,7 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
-  gender?: "male" | "female" | "other" | "Not Specified";
+  gender?: "male" | "female" | "other" | "not_specified";
   dob?: string;
   phone?: string;
   monthStartDate?: number;
@@ -18,6 +18,11 @@ export interface User {
   hasOnboarded?: boolean;
   lastActiveAt?: string;
   deletedAt?: string | null;
+  preferences?: {
+    theme?: "light" | "dark" | "system";
+    language?: string;
+    currency?: string;
+  };
 }
 
 export type AccountType =
@@ -207,4 +212,20 @@ export interface Reminder {
   ipAddress?: string;
   isPWA?: boolean;
   userName?: string;
+}
+
+export interface BudgetSimulation {
+  entries: {
+    amount: number;
+    description: string;
+    category: string;
+    type: "income" | "outflow";
+  }[];
+}
+
+export interface SimulationResult {
+  surplus: number;
+  adherence: number;
+  efficiency: number;
+  suggestions: string[];
 }

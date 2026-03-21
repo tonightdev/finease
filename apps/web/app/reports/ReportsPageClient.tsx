@@ -6,8 +6,6 @@ import { RootState, AppDispatch } from "@/store";
 import { Transaction, Account, Category } from "@repo/types";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
-import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
-import { SavingsVelocityChart } from "@/components/dashboard/SavingsVelocityChart";
 import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X, ChevronDown, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
@@ -16,6 +14,7 @@ import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 
@@ -348,142 +347,8 @@ export default function ReportsPageClient() {
   }, [computedNetWorthHistory]);
 
   const currentYear = cursorDate.getFullYear();
-  const currentMonth = cursorDate.getMonth();
 
-  // Trend data labels - Dynamic based on viewType
-  const trendData = useMemo(() => {
-    const data = [];
-    const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    if (viewType === "Day") {
-      const intervals = [
-        { name: "Night (12am-6am)", start: 0, end: 6 },
-        { name: "Morning (6am-12pm)", start: 6, end: 12 },
-        { name: "Afternoon (12pm-6pm)", start: 12, end: 18 },
-        { name: "Evening (6pm-12am)", start: 18, end: 24 },
-      ];
-      intervals.forEach((interval) => {
-        const intervalTx = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const d = new Date(tx.date);
-          return (
-            d.getDate() === cursorDate.getDate() &&
-            d.getMonth() === cursorDate.getMonth() &&
-            d.getFullYear() === cursorDate.getFullYear() &&
-            d.getHours() >= interval.start &&
-            d.getHours() < interval.end
-          );
-        });
-        const mInflow = intervalTx
-          .filter((tx: Transaction) => tx.type === "income")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        const mOutflow = intervalTx
-          .filter(
-            (tx: Transaction) =>
-              tx.type === "expense" || tx.type === "transfer",
-          )
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        data.push({
-          name: interval.name,
-          income: mInflow,
-          expense: mOutflow,
-          velocity: mInflow - mOutflow,
-        });
-      });
-    } else if (viewType === "Week") {
-      const startOfWeek = new Date(cursorDate);
-      startOfWeek.setDate(cursorDate.getDate() - cursorDate.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      for (let i = 0; i < 7; i++) {
-        const targetDay = new Date(startOfWeek);
-        targetDay.setDate(startOfWeek.getDate() + i);
-
-        const dayTx = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const d = new Date(tx.date);
-          return (
-            d.getDate() === targetDay.getDate() &&
-            d.getMonth() === targetDay.getMonth() &&
-            d.getFullYear() === targetDay.getFullYear()
-          );
-        });
-
-        const mInflow = dayTx
-          .filter((tx: Transaction) => tx.type === "income")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        const mOutflow = dayTx
-          .filter(
-            (tx: Transaction) =>
-              tx.type === "expense" || tx.type === "transfer",
-          )
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        data.push({
-          name: dayNames[i] || "???",
-          income: mInflow,
-          expense: mOutflow,
-          velocity: mInflow - mOutflow,
-        });
-      }
-    } else if (viewType === "Month") {
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      for (let i = 1; i <= daysInMonth; i++) {
-        // Find transactions for this specific day
-        const dayTx = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const d = new Date(tx.date);
-          return (
-            d.getDate() === i &&
-            d.getMonth() === currentMonth &&
-            d.getFullYear() === currentYear
-          );
-        });
-        const mInflow = dayTx
-          .filter((tx: Transaction) => tx.type === "income")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        const mOutflow = dayTx
-          .filter(
-            (tx: Transaction) =>
-              tx.type === "expense" || tx.type === "transfer",
-          )
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        data.push({
-          name: `${i}`,
-          income: mInflow,
-          expense: mOutflow,
-          velocity: mInflow - mOutflow,
-        });
-      }
-    } else {
-      for (let i = 0; i < 12; i++) {
-        const monthTx = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const d = new Date(tx.date);
-          return d.getMonth() === i && d.getFullYear() === currentYear;
-        });
-        const mInflow = monthTx
-          .filter((tx: Transaction) => tx.type === "income")
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        const mOutflow = monthTx
-          .filter(
-            (tx: Transaction) =>
-              tx.type === "expense" || tx.type === "transfer",
-          )
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        data.push({
-          name: monthNames[i] || "???",
-          income: mInflow,
-          expense: mOutflow,
-          velocity: mInflow - mOutflow,
-        });
-      }
-    }
-    return data;
-  }, [transactions, viewType, currentYear, currentMonth, cursorDate]);
 
   // Filtering logic based on viewType
   const filteredTx = useMemo(() => {
@@ -649,7 +514,7 @@ export default function ReportsPageClient() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-3 sm:space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Intelligence"
         subtitle="Unified analytics & predictive insights"
@@ -802,199 +667,139 @@ export default function ReportsPageClient() {
 
         <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-emerald-500 transition-colors">
-            Inflow
+            Total Inflow
           </div>
-          <div className="text-lg sm:text-2xl font-black text-emerald-500 mb-2 truncate shrink-0">
+          <div className="text-lg sm:text-2xl font-black text-emerald-600 mb-2 truncate shrink-0">
             {formatCurrency(inflow)}
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400">
-            <Activity className="w-3 h-3" />
-            <span className="truncate leading-none">STREAMS</span>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+            {filteredTx.filter((t) => t.type === "income").length} Confirmations
           </div>
         </Card>
 
         <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-rose-500 transition-colors">
-            Outflow
+            Total Outflow
           </div>
           <div className="text-lg sm:text-2xl font-black text-rose-500 mb-2 truncate shrink-0">
             {formatCurrency(outflow)}
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-black text-rose-500/80">
-            <TrendingDown className="w-3 h-3" />
-            <span className="truncate leading-none">TRACKED</span>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+            {filteredTx.filter((t) => t.type !== "income").length} Authorizations
           </div>
         </Card>
 
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.05] transition-all group">
-          <div className="text-xs font-bold text-primary/60 mb-2">Savings</div>
-          <div className="text-lg sm:text-2xl font-black text-primary mb-2 truncate shrink-0">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group">
+          <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-amber-500 transition-colors">
+            Net Results
+          </div>
+          <div
+            className={`text-lg sm:text-2xl font-black mb-2 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
+          >
             {formatCurrency(inflow - outflow)}
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-black text-primary/80">
-            <Percent className="w-3 h-3" />
-            <span className="truncate leading-none">
-              {inflow > 0 ? Math.round(((inflow - outflow) / inflow) * 100) : 0}% RATE
-            </span>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+            Final Balance
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
-            Cash Flow Dynamics
-          </h3>
-          <Card className="shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
-            {trendData.some((d) => d.income > 0 || d.expense > 0) ? (
-              <IncomeExpenseChart data={trendData} />
-            ) : (
-              <div className="text-center py-12">
-                <Activity className="w-8 h-8 text-slate-200 mx-auto mb-4" />
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  No historical flux detected
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <Percent className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  Equilibrium Scan
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Target Protocol Analysis
                 </p>
               </div>
-            )}
-          </Card>
-        </div>
+            </div>
+            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">
+              {viewType} Status
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
-            Savings Velocity
-          </h3>
-          <Card className="shadow-none border-slate-100 dark:border-slate-800 overflow-hidden min-h-[400px] flex items-center justify-center">
-            {trendData.some((d) => Math.abs(d.velocity) > 0) ? (
-              <SavingsVelocityChart
-                data={trendData.map((d) => ({
-                  month: d.name,
-                  velocity: d.velocity,
-                }))}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <TrendingDown className="w-8 h-8 text-slate-200 mx-auto mb-4" />
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Velocity engine idle
+          <div className="space-y-8 pt-4">
+            {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
+              const target = budgetTargets[key as keyof typeof budgetTargets];
+              const isOver =
+                key !== "savings" ? data.percent > target : data.percent < target;
+              const diff = Math.abs(data.percent - target);
+
+              return (
+                <div key={key} className="space-y-3">
+                  <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.2em]">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-slate-400">{key}</span>
+                      <span className="text-slate-900 dark:text-white text-xs">
+                        {formatCurrency(data.amount)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={
+                          isOver && diff > 5 ? "text-rose-500" : "text-emerald-500"
+                        }
+                      >
+                        {data.percent.toFixed(1)}% / {target}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                    <div
+                      className="absolute top-0 bottom-0 left-0 bg-primary/20 p-px z-10 border-r-2 border-primary/40"
+                      style={{ width: `${target}%` }}
+                    />
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${isOver && diff > 5 ? "bg-rose-500" : "bg-emerald-500"}`}
+                      style={{ width: `${Math.min(data.percent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <TrendingDown className="w-4 h-4 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  Absorption Grid
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Top Outflow Categories
                 </p>
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-            Budget Target Benchmark
-          </h3>
-          <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">
-            Total Outflow: {formatCurrency(outflow)}
-          </span>
-        </div>
-        <Card className="shadow-none border-slate-100 dark:border-slate-800">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="group">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Needs
-                  </span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {Math.round(fiftyThirtyTwenty.needs.percent)}% / Target{" "}
-                    {budgetTargets.needs}%
-                  </span>
-                </div>
-                <span className="text-sm font-black text-slate-900 dark:text-white">
-                  {formatCurrency(fiftyThirtyTwenty.needs.amount)}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`bg-indigo-500 h-full rounded-full`}
-                  style={{
-                    width: `${Math.min(fiftyThirtyTwenty.needs.percent, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="group">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Wants
-                  </span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {Math.round(fiftyThirtyTwenty.wants.percent)}% / Target{" "}
-                    {budgetTargets.wants}%
-                  </span>
-                </div>
-                <span className="text-sm font-black text-slate-900 dark:text-white">
-                  {formatCurrency(fiftyThirtyTwenty.wants.amount)}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`bg-pink-500 h-full rounded-full`}
-                  style={{
-                    width: `${Math.min(fiftyThirtyTwenty.wants.percent, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="group">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Savings & Inv.
-                  </span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {Math.round(fiftyThirtyTwenty.savings.percent)}% / Target{" "}
-                    {budgetTargets.savings}%
-                  </span>
-                </div>
-                <span className="text-sm font-black text-slate-900 dark:text-white">
-                  {formatCurrency(fiftyThirtyTwenty.savings.amount)}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`bg-emerald-500 h-full rounded-full`}
-                  style={{
-                    width: `${Math.min(fiftyThirtyTwenty.savings.percent, 100)}%`,
-                  }}
-                />
               </div>
             </div>
           </div>
-        </Card>
-      </div>
 
-      <div className="space-y-4">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
-          Expense Intensity Breakdown
-        </h3>
-        <Card className="shadow-none border-slate-100 dark:border-slate-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-6 sm:gap-y-8">
+          <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
             {(showAllExpenses
               ? expenseBreakdown
               : expenseBreakdown.slice(0, 6)
-            ).map((e, index) => (
-              <div key={e.category || index} className="group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      {e.category}
-                    </span>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      {Math.round(e.percent)}% CONTRIBUTION
+            ).map((e) => (
+              <div key={e.category} className="space-y-2 group">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-slate-400 group-hover:text-primary transition-colors">
+                    {e.category}
+                  </span>
+                  <div className="flex gap-3">
+                    <span className="text-slate-400">{e.percent.toFixed(1)}%</span>
+                    <span className="text-slate-900 dark:text-white">
+                      {formatCurrency(e.amount)}
                     </span>
                   </div>
-                  <span className="text-sm font-black text-slate-900 dark:text-white">
-                    {formatCurrency(e.amount)}
-                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
                   <div
@@ -1027,6 +832,6 @@ export default function ReportsPageClient() {
           )}
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

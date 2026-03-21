@@ -23,6 +23,8 @@ import {
   removeAssetClassAction,
 } from "@/store/slices/assetClassesSlice";
 import { Account } from "@repo/types";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import {
   Trash2,
   Edit2,
@@ -34,7 +36,6 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -139,7 +140,7 @@ export default function PortfolioPageClient() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Portfolio"
         subtitle="Unified wealth command"
@@ -1046,6 +1047,6 @@ export default function PortfolioPageClient() {
       />
 
 
-    </div>
+    </PageContainer>
   );
 }

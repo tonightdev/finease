@@ -29,6 +29,11 @@ interface AuthUser {
     savings: number;
   };
   hasOnboarded?: boolean;
+  preferences?: {
+    theme?: "light" | "dark" | "system";
+    language?: string;
+    currency?: string;
+  };
 }
 
 interface ApiUserResponse {
@@ -48,6 +53,11 @@ interface ApiUserResponse {
     savings: number;
   };
   hasOnboarded?: boolean;
+  preferences?: {
+    theme?: "light" | "dark" | "system";
+    language?: string;
+    currency?: string;
+  };
 }
 
 interface ApiAuthResponse {
@@ -93,6 +103,7 @@ function buildUser(userData: ApiUserResponse): AuthUser {
     monthStartDate: userData.monthStartDate,
     budgetTargets: userData.budgetTargets,
     hasOnboarded: userData.hasOnboarded,
+    preferences: userData.preferences,
   };
 }
 
@@ -253,7 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = tokenMap[uid];
     if (token) {
       localStorage.setItem("finease_token", token);
-      window.location.reload(); // Simplest way to re-init everything with new token
+      window.location.href = "/dashboard";
     }
   };
 

@@ -50,6 +50,18 @@ export function SessionList() {
     }
   };
 
+  const handleRevokeOthers = async () => {
+    try {
+      await api.post("/auth/sessions/revoke-others");
+      toast.success("Other identity nodes revoked");
+      const currentToken = localStorage.getItem('finease_token');
+      setSessions(sessions.filter((s) => s.token === currentToken));
+    } catch (error) {
+      console.error("Failed to revoke other sessions", error);
+      toast.error("Mass revocation failure");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -58,16 +70,37 @@ export function SessionList() {
     );
   }
 
+  const otherSessionsCount = sessions.filter(s => {
+      const isCurrent = typeof window !== 'undefined' && localStorage.getItem('finease_token') === s.token;
+      return !isCurrent;
+  }).length;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-          Identity Nodes
-          <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Active authorization sessions for {user?.displayName}</span>
-        </h3>
-        <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-          {sessions.length} Active
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 pb-1">
+        <div className="space-y-0.5">
+          <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            Identity Nodes
+            <span className="text-[7px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
+            {sessions.length} Active
+            </span>
+          </h3>
+          <p className="text-[7px] font-medium normal-case tracking-normal text-slate-400 opacity-80">
+            Active authorization sessions for {user?.displayName}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+            {otherSessionsCount > 0 && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRevokeOthers}
+                    className="h-8 px-4 flex-1 sm:flex-none rounded-xl border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white font-black text-[9px] uppercase tracking-widest gap-2 transition-all shadow-none"
+                >
+                    <Shield className="size-3.5" /> Revoke All Others
+                </Button>
+            )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -79,24 +112,24 @@ export function SessionList() {
             return (
               <Card
                 key={session.token}
-                className={`flex items-center justify-between border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900/50 hover:border-primary/30 transition-all ${isCurrent ? 'ring-1 ring-primary/20 shadow-lg shadow-primary/5' : ''}`}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900/50 hover:border-primary/30 transition-all p-3 ${isCurrent ? 'ring-1 ring-primary/20 shadow-lg shadow-primary/5' : ''}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`size-10 rounded-2xl flex items-center justify-center ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                    {isMobile ? <Smartphone size={20} /> : <Monitor size={20} />}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                    {isMobile ? <Smartphone size={16} /> : <Monitor size={16} />}
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-primary uppercase tracking-tight">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-tight truncate">
                         {session.userName || user?.displayName}
                       </span>
                       {isCurrent && (
-                        <span className="text-[7px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-1 py-0.5 rounded tracking-widest">
+                        <span className="text-[7px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-1 py-0.5 rounded tracking-widest shrink-0">
                           Current
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center flex-wrap gap-2 mt-0.5">
                       <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
                         {os} • {browser}
                       </span>
@@ -107,13 +140,13 @@ export function SessionList() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1">
                       <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                        <Globe className="w-3 h-3" />
+                        <Globe className="size-3" />
                         {session.ipAddress || "Unknown IP"}
                       </div>
                       <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="size-3" />
                         {formatDate(session.lastActiveAt)}
                       </div>
                     </div>
@@ -125,7 +158,7 @@ export function SessionList() {
                   size="sm"
                   onClick={() => setSessionToRevoke(session)}
                   disabled={revokingToken === session.token || isCurrent}
-                  className={`h-10 px-4 rounded-xl transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${isCurrent
+                  className={`h-8 sm:h-9 px-3 rounded-xl transition-all flex items-center justify-center gap-2 font-black text-[9px] uppercase tracking-widest w-full sm:w-auto ${isCurrent
                     ? 'opacity-40 cursor-not-allowed border-slate-100 dark:border-white/5'
                     : 'hover:bg-rose-500 hover:text-white border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50 text-rose-500'
                     }`}
@@ -136,7 +169,7 @@ export function SessionList() {
                   ) : (
                     <>
                       <LogOut className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{isCurrent ? "Active" : "Revoke"}</span>
+                      <span>{isCurrent ? "Active" : "Revoke"}</span>
                     </>
                   )}
                 </Button>

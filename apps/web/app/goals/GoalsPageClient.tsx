@@ -27,9 +27,10 @@ import { FinancialGoal } from "@repo/types";
 import { formatDate } from "@/lib/utils";
 import { TopUpModal } from "@/components/goals/TopUpModal";
 import toast from "react-hot-toast";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Edit2, Trash2, Plus, Wallet, Pencil, Target } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -90,7 +91,7 @@ export default function GoalsPageClient() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-4 sm:space-y-6 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Goals"
         subtitle={
@@ -359,6 +360,6 @@ export default function GoalsPageClient() {
         message="This operation will permanently remove this financial goal from your roadmap. All historical tracking for this target will be lost."
         confirmText="Confirm Purge"
       />
-    </div>
+    </PageContainer>
   );
 }
