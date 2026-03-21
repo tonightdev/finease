@@ -13,6 +13,7 @@ export interface SimulationState {
 const initialState: SimulationState = {
   current: {
     userId: "",
+    basis: "monthly",
     entries: [],
     protocol: { needs: 50, wants: 30, savings: 20 },
   },
@@ -87,6 +88,11 @@ export const simulationSlice = createSlice({
       if (state.current) {
         state.current.entries = action.payload;
       }
+    },
+    setSimulationBasis: (state, action: PayloadAction<"monthly" | "yearly">) => {
+      if (state.current) {
+        state.current.basis = action.payload;
+      }
     }
   },
   extraReducers: (builder) => {
@@ -124,5 +130,5 @@ export const simulationSlice = createSlice({
   },
 });
 
-export const { resetSimulation, setSimulationProtocol, setSimulationEntries } = simulationSlice.actions;
+export const { resetSimulation, setSimulationProtocol, setSimulationEntries, setSimulationBasis } = simulationSlice.actions;
 export default simulationSlice.reducer;

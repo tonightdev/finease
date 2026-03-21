@@ -217,6 +217,7 @@ export interface Reminder {
 export interface SimEntry {
   id: string;
   amount: string;
+  isMonthly?: boolean;
   description: string;
   categoryId: string;
   categoryName: string;
@@ -228,6 +229,7 @@ export interface SimEntry {
 
 export interface BudgetSimulation {
   userId: string;
+  basis?: "monthly" | "yearly";
   protocol: { needs: number; wants: number; savings: number };
   entries: SimEntry[];
   updatedAt?: string;

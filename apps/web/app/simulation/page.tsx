@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
-import { fetchSimulation, saveSimulation, addSimEntry, updateSimEntry, removeSimEntry } from "@/store/slices/simulationSlice";
+import { fetchSimulation, saveSimulation, addSimEntry, updateSimEntry, removeSimEntry, setSimulationBasis } from "@/store/slices/simulationSlice";
 import { Card } from "@/components/ui/Card";
 import {
   Plus,
@@ -18,7 +18,9 @@ import {
   PieChart,
   Activity,
   AlertCircle,
-  Save
+  Save,
+  Calendar,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -43,7 +45,7 @@ export default function SimulationPage() {
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector((state: RootState) => state.categories.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
-  const { current, loading: simLoading } = useSelector((state: RootState) => state.simulation);
+  const { current, loading: simLoading, lastFetched } = useSelector((state: RootState) => state.simulation);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -59,26 +61,43 @@ export default function SimulationPage() {
   const [mobileTab, setMobileTab] = useState<"matrix" | "controls">("matrix");
 
   // New entry form state
-  const [newEntry, setNewEntry] = useState<{ amount: string; description: string; categoryId: string; type: "income" | "outflow", accountId: string }>({
+  const [newEntry, setNewEntry] = useState<{
+    amount: string;
+    description: string;
+    categoryId: string;
+    type: "income" | "outflow";
+    accountId: string;
+    isMonthly: boolean;
+  }>({
     amount: "",
     description: "",
     categoryId: "",
     type: "outflow",
-    accountId: ""
+    accountId: "",
+    isMonthly: true
   });
 
   // Load persistence state locally
   useEffect(() => {
-    if (!simLoading && !isInitialized) {
-      if (current && (current.entries?.length > 0 || current.protocol)) {
-        setEntries(current.entries || []);
-        setProtocol(current.protocol || { needs: 50, wants: 30, savings: 20 });
-      } else if (user?.budgetTargets) {
+    // Wait for the simulation to finish loading from the backend
+    if (simLoading || lastFetched === null) return;
+
+    // Only auto-initialize if we haven't already or if we are stuck in an empty state while data is available
+    const hasCloudData = current && (current.entries?.length > 0 || (current.userId && current.userId !== ""));
+    const isSandboxEmpty = entries.length === 0;
+
+    if (hasCloudData && (isSandboxEmpty || !isInitialized)) {
+      setEntries(current.entries || []);
+      setProtocol(current.protocol || { needs: 50, wants: 30, savings: 20 });
+      setIsInitialized(true);
+    } else if (current?.userId === "" && !isInitialized) {
+      // Handle case where simulation is truly empty/new (after first fetch)
+      if (user?.budgetTargets) {
         setProtocol(user.budgetTargets);
       }
       setIsInitialized(true);
     }
-  }, [current, isInitialized, simLoading, user]);
+  }, [current, isInitialized, simLoading, user, lastFetched, entries.length]);
 
   const isProtocolValid = useMemo(() => {
     const { needs, wants, savings } = protocol;
@@ -96,6 +115,14 @@ export default function SimulationPage() {
 
   // Auto-save logic removed in favor of granular entry persistence
 
+
+  const handleBasisToggle = (newBasis: "monthly" | "yearly") => {
+    if (newBasis === current?.basis) return;
+    dispatch(setSimulationBasis(newBasis));
+    // Persistence for the basis choice is handled during the next entry/protocol save
+    // as per user request to keep filtering lightning-fast and local-only for now.
+    toast.success(`Switched to ${newBasis} view`);
+  };
 
   const handleSaveProtocol = async () => {
     if (!isProtocolValid) {
@@ -138,7 +165,14 @@ export default function SimulationPage() {
     const accountFlows: Record<string, { name: string, netFlow: number }> = {};
 
     entries.forEach(entry => {
-      const amt = parseFloat(entry.amount) || 0;
+      let amt = parseFloat(entry.amount) || 0;
+
+      // Dynamic Scaling: Normalize to the current global basis
+      if (current?.basis === "yearly" && (entry.isMonthly ?? true)) {
+        amt *= 12;
+      } else if (current?.basis === "monthly" && !(entry.isMonthly ?? true)) {
+        amt /= 12;
+      }
 
       if (!accountFlows[entry.accountId]) {
         accountFlows[entry.accountId] = { name: entry.accountName, netFlow: 0 };
@@ -212,7 +246,7 @@ export default function SimulationPage() {
       efficiency: Math.max(0, Math.min(100, Math.round(efficiency))),
       activeAccounts
     };
-  }, [entries, protocol]);
+  }, [entries, protocol, current?.basis]);
 
   const handleAddEntry = () => {
     if (!newEntry.amount || parseFloat(newEntry.amount) <= 0) {
@@ -237,6 +271,7 @@ export default function SimulationPage() {
     if (editingId) {
       const entryData = {
         amount: newEntry.amount,
+        isMonthly: newEntry.isMonthly,
         description: newEntry.description.trim(),
         categoryId: selectedCat.id,
         categoryName: selectedCat.name,
@@ -253,6 +288,7 @@ export default function SimulationPage() {
       const newSimEntry: SimEntry = {
         id: Math.random().toString(36).substring(7),
         amount: newEntry.amount,
+        isMonthly: newEntry.isMonthly,
         description: newEntry.description.trim(),
         categoryId: selectedCat.id,
         categoryName: selectedCat.name,
@@ -265,7 +301,7 @@ export default function SimulationPage() {
       dispatch(addSimEntry(newSimEntry));
       toast.success("Vector recorded.");
     }
-    setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow" });
+    setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow", isMonthly: true });
   };
 
   const handleEditEntry = (entry: SimEntry) => {
@@ -275,8 +311,10 @@ export default function SimulationPage() {
       description: entry.description,
       categoryId: entry.categoryId,
       accountId: entry.accountId || "",
-      type: entry.type
+      type: entry.type,
+      isMonthly: entry.isMonthly ?? true
     });
+    setMobileTab('controls');
   };
 
   const handleRemoveEntry = (id: string) => {
@@ -308,30 +346,66 @@ export default function SimulationPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Budget Strategy Engine"
+        title="Strategy Hub"
         subtitle="Standalone sandbox for real-time predictive financial modeling."
-        actions={null}
+        actions={
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            {/* Desktop Basis Toggle */}
+            <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+              <button
+                onClick={() => handleBasisToggle("monthly")}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${current?.basis === "monthly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <Clock className="size-3" /> Monthly
+              </button>
+              <button
+                onClick={() => handleBasisToggle("yearly")}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${current?.basis === "yearly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <Calendar className="size-3" /> Yearly
+              </button>
+            </div>
+
+            {/* Mobile Basis Toggle */}
+            <div className="sm:hidden flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+              <button
+                onClick={() => handleBasisToggle("monthly")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${current?.basis === "monthly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
+              >
+                <Clock className="size-3" /> Monthly
+              </button>
+              <button
+                onClick={() => handleBasisToggle("yearly")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${current?.basis === "yearly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
+              >
+                <Calendar className="size-3" /> Yearly
+              </button>
+            </div>
+
+            {/* Mobile Tab Switcher */}
+            <div className="xl:hidden flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm sm:w-[240px]">
+              <button
+                onClick={() => setMobileTab('matrix')}
+                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${mobileTab === 'matrix' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Matrix
+              </button>
+              <button
+                onClick={() => setMobileTab('controls')}
+                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${mobileTab === 'controls' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Editor
+              </button>
+            </div>
+          </div>
+        }
       />
 
-      {/* Mobile Tab Switcher (Sticky Overlap Fix) */}
-      <div className="xl:hidden sticky top-[72px] z-30 flex bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-2xl mb-6 border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none mx-[-4px]">
-        <button
-          onClick={() => setMobileTab('matrix')}
-          className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${mobileTab === 'matrix' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-        >
-          Live Matrix
-        </button>
-        <button
-          onClick={() => setMobileTab('controls')}
-          className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${mobileTab === 'controls' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-        >
-          Editor & Controls
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 xl:gap-8 items-start">
         <div className={`xl:col-span-4 space-y-6 w-full min-w-0 ${mobileTab === 'controls' ? 'block' : 'hidden xl:block'}`}>
-          <Card className="p-5 space-y-5 border-slate-100 dark:border-white/5 shadow-none w-full">
+          <Card className="p-4 sm:p-5 space-y-5 border-slate-100 dark:border-white/5 shadow-none w-full">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Plus className="size-5 text-primary" />
@@ -364,22 +438,45 @@ export default function SimulationPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Amount</label>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Amount</label>
+                <div className="relative group">
                   <Input
                     type="number"
-                    placeholder="0.00"
+                    placeholder={`Enter amount...`}
                     value={newEntry.amount}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, amount: e.target.value })}
-                    className={`font-mono h-10 text-xs font-bold ${newEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}
+                    className={`font-mono h-10 text-xs font-bold pr-16 ${newEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}
                   />
+                  <div className="absolute right-1 top-1 bottom-1 flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-white/5">
+                    <button
+                      onClick={() => setNewEntry({ ...newEntry, isMonthly: true })}
+                      className={`px-2 py-1 text-[8px] font-black uppercase rounded-md transition-all ${newEntry.isMonthly ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500"}`}
+                    >MO</button>
+                    <button
+                      onClick={() => setNewEntry({ ...newEntry, isMonthly: false })}
+                      className={`px-2 py-1 text-[8px] font-black uppercase rounded-md transition-all ${!newEntry.isMonthly ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500"}`}
+                    >YR</button>
+                  </div>
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
+                <Input
+                  placeholder="E.g., Salary, Rent..."
+                  value={newEntry.description}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, description: e.target.value })}
+                  className="h-10 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Target Account</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Routing</label>
                   <Select value={newEntry.accountId} onValueChange={(val: string) => setNewEntry({ ...newEntry, accountId: val })}>
                     <SelectTrigger className="h-10 text-xs font-bold truncate">
-                      <SelectValue placeholder="Select..." />
+                      <SelectValue placeholder="Account..." />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
                       {filteredAccounts.map((acc: Account) => (
@@ -388,23 +485,11 @@ export default function SimulationPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
-                  <Input
-                    placeholder="E.g., Salary, Rent..."
-                    value={newEntry.description}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, description: e.target.value })}
-                    className="h-10 text-xs truncate"
-                  />
-                </div>
                 <div className="space-y-1.5 min-w-0">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Classification</label>
                   <Select value={newEntry.categoryId} onValueChange={(val: string) => setNewEntry({ ...newEntry, categoryId: val })}>
                     <SelectTrigger className="h-10 text-xs font-bold truncate">
-                      <SelectValue placeholder="Select..." />
+                      <SelectValue placeholder="Category..." />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
                       {filteredCategories.map(cat => (
@@ -425,7 +510,7 @@ export default function SimulationPage() {
                   variant="ghost"
                   onClick={() => {
                     setEditingId(null);
-                    setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow" });
+                    setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow", isMonthly: true });
                   }}
                   className="w-full h-8 text-[10px] font-bold text-slate-400 mt-1 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
@@ -436,7 +521,7 @@ export default function SimulationPage() {
 
             {entries.length > 0 && (
               <div className="pt-4 border-t border-slate-100 dark:border-white/5 relative">
-                <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pb-6 pr-1">
+                <div className="space-y-2 pb-6">
                   <AnimatePresence>
                     {entries.map(entry => (
                       <motion.div
@@ -453,9 +538,14 @@ export default function SimulationPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          <span className={`text-xs font-mono font-bold mr-2 ${entry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(parseFloat(entry.amount) || 0)}
-                          </span>
+                          <div className="text-right mr-2">
+                            <div className={`text-xs font-mono font-bold ${entry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                              {entry.type === 'income' ? '+' : '-'}{formatCurrency(parseFloat(entry.amount) || 0)}
+                            </div>
+                            <div className="text-[8px] font-black uppercase tracking-tighter text-slate-400 opacity-70">
+                              {entry.isMonthly ?? true ? "Monthly Vector" : "Yearly Vector"}
+                            </div>
+                          </div>
                           <button onClick={() => handleEditEntry(entry)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <Edit2 className="size-3.5" />
                           </button>
@@ -540,7 +630,7 @@ export default function SimulationPage() {
         </div>
 
         <div className={`xl:col-span-8 w-full min-w-0 ${mobileTab === 'matrix' ? 'block' : 'hidden xl:block'}`}>
-          <Card className="h-full min-h-[600px] flex flex-col p-5 border-slate-100 dark:border-white/5 w-full">
+          <Card className="h-full min-h-[400px] sm:min-h-[600px] flex flex-col p-4 sm:p-6 border-slate-100 dark:border-white/5 w-full">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className="size-10 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
@@ -581,7 +671,7 @@ export default function SimulationPage() {
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   <div className={`p-4 rounded-[1.25rem] border transition-all ${simulationMetrics.surplus < 0 ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20' : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20'}`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Projected Surprise / Deficit</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Projected {current?.basis === "yearly" ? "Annual" : "Monthly"} Surplus</span>
                     <div className={`text-xl font-black mt-1 truncate ${simulationMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(simulationMetrics.surplus)}</div>
                   </div>
                   <div className="p-4 rounded-[1.25rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 group hover:border-primary/30 transition-all">
