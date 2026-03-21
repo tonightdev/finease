@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { BudgetSimulation } from '@repo/types';
+import { BudgetSimulation, SimEntry } from '@repo/types';
 import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
@@ -49,10 +49,49 @@ export class SimulationService {
       action: doc.exists ? 'update' : 'create',
       entityType: 'simulation',
       entityId: userId,
-      description: `Saved Budget Simulation snapshot`,
+      description: `Saved Budget Simulation state`,
     });
 
     const updatedDoc = await docRef.get();
     return updatedDoc.data() as BudgetSimulation;
+  }
+
+  async addEntry(userId: string, entry: SimEntry): Promise<BudgetSimulation> {
+    const docRef = this.collection.doc(userId);
+    const doc = await docRef.get();
+    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
+    const entries = currentData?.entries || [];
+
+    const newEntries = [...entries, entry];
+    return this.saveSimulation(userId, { entries: newEntries });
+  }
+
+  async updateEntry(
+    userId: string,
+    entryId: string,
+    entryData: Partial<SimEntry>,
+  ): Promise<BudgetSimulation> {
+    const docRef = this.collection.doc(userId);
+    const doc = await docRef.get();
+    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
+    if (!currentData) throw new Error('Simulation not found');
+
+    const newEntries = currentData.entries.map((e) =>
+      e.id === entryId ? { ...e, ...entryData } : e,
+    );
+    return this.saveSimulation(userId, { entries: newEntries });
+  }
+
+  async removeEntry(
+    userId: string,
+    entryId: string,
+  ): Promise<BudgetSimulation> {
+    const docRef = this.collection.doc(userId);
+    const doc = await docRef.get();
+    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
+    if (!currentData) throw new Error('Simulation not found');
+
+    const newEntries = currentData.entries.filter((e) => e.id !== entryId);
+    return this.saveSimulation(userId, { entries: newEntries });
   }
 }

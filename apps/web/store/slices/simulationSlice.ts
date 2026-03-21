@@ -47,6 +47,30 @@ export const saveSimulation = createAsyncThunk(
   }
 );
 
+export const addSimEntry = createAsyncThunk(
+  "simulation/addEntry",
+  async (entry: SimEntry) => {
+    const response = await api.post<BudgetSimulation>("/finance/simulation/entries", entry);
+    return response.data;
+  }
+);
+
+export const updateSimEntry = createAsyncThunk(
+  "simulation/updateEntry",
+  async ({ id, data }: { id: string; data: Partial<SimEntry> }) => {
+    const response = await api.put<BudgetSimulation>(`/finance/simulation/entries/${id}`, data);
+    return response.data;
+  }
+);
+
+export const removeSimEntry = createAsyncThunk(
+  "simulation/removeEntry",
+  async (id: string) => {
+    const response = await api.delete<BudgetSimulation>(`/finance/simulation/entries/${id}`);
+    return response.data;
+  }
+);
+
 export const simulationSlice = createSlice({
   name: "simulation",
   initialState,
@@ -86,6 +110,15 @@ export const simulationSlice = createSlice({
       })
       .addCase(saveSimulation.fulfilled, (state, action) => {
         state.saveLoading = false;
+        state.current = action.payload;
+      })
+      .addCase(addSimEntry.fulfilled, (state, action) => {
+        state.current = action.payload;
+      })
+      .addCase(updateSimEntry.fulfilled, (state, action) => {
+        state.current = action.payload;
+      })
+      .addCase(removeSimEntry.fulfilled, (state, action) => {
         state.current = action.payload;
       });
   },

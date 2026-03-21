@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
-import { fetchSimulation, saveSimulation } from "@/store/slices/simulationSlice";
+import { fetchSimulation, saveSimulation, addSimEntry, updateSimEntry, removeSimEntry } from "@/store/slices/simulationSlice";
 import { Card } from "@/components/ui/Card";
 import {
   Plus,
@@ -94,22 +94,8 @@ export default function SimulationPage() {
     );
   }, [protocol, current?.protocol]);
 
-  // Hybrid Auto-save logic (Entries only)
-  useEffect(() => {
-    if (!isInitialized) return;
-    
-    const timer = setTimeout(() => {
-       // When entries change, we sync them but keep the *server-side* protocol
-       // to avoid overwriting the valid DB strategy with a "dirty" local slider state
-       dispatch(saveSimulation({
-         protocol: current?.protocol || protocol,
-         entries
-       }));
-    }, 1200);
+  // Auto-save logic removed in favor of granular entry persistence
 
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, isInitialized, dispatch, current?.protocol]);
 
   const handleSaveProtocol = async () => {
     if (!isProtocolValid) {
@@ -249,8 +235,7 @@ export default function SimulationPage() {
     }
 
     if (editingId) {
-      setEntries(prev => prev.map(e => e.id === editingId ? {
-        ...e,
+      const entryData = {
         amount: newEntry.amount,
         description: newEntry.description.trim(),
         categoryId: selectedCat.id,
@@ -259,24 +244,25 @@ export default function SimulationPage() {
         accountName: selectedAcc.name,
         parentType: selectedCat.parentType || (newEntry.type === "income" ? "income" : "needs"),
         type: newEntry.type
-      } : e));
+      };
+      setEntries(prev => prev.map(e => e.id === editingId ? { ...e, ...entryData } : e));
+      dispatch(updateSimEntry({ id: editingId, data: entryData }));
       setEditingId(null);
       toast.success("Vector updated.");
     } else {
-      setEntries(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substring(7),
-          amount: newEntry.amount,
-          description: newEntry.description.trim(),
-          categoryId: selectedCat.id,
-          categoryName: selectedCat.name,
-          accountId: selectedAcc.id,
-          accountName: selectedAcc.name,
-          parentType: selectedCat.parentType || (newEntry.type === "income" ? "income" : "needs"),
-          type: newEntry.type
-        }
-      ]);
+      const newSimEntry: SimEntry = {
+        id: Math.random().toString(36).substring(7),
+        amount: newEntry.amount,
+        description: newEntry.description.trim(),
+        categoryId: selectedCat.id,
+        categoryName: selectedCat.name,
+        accountId: selectedAcc.id,
+        accountName: selectedAcc.name,
+        parentType: selectedCat.parentType || (newEntry.type === "income" ? "income" : "needs"),
+        type: newEntry.type
+      };
+      setEntries(prev => [...prev, newSimEntry]);
+      dispatch(addSimEntry(newSimEntry));
       toast.success("Vector recorded.");
     }
     setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow" });
@@ -295,6 +281,7 @@ export default function SimulationPage() {
 
   const handleRemoveEntry = (id: string) => {
     setEntries(prev => prev.filter(o => o.id !== id));
+    dispatch(removeSimEntry(id));
   };
 
 
@@ -326,7 +313,8 @@ export default function SimulationPage() {
         actions={null}
       />
 
-      <div className="xl:hidden sticky top-[72px] z-60 flex bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-2xl mb-6 border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none mx-[-4px]">
+      {/* Mobile Tab Switcher (Sticky Overlap Fix) */}
+      <div className="xl:hidden sticky top-[72px] z-30 flex bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-2xl mb-6 border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none mx-[-4px]">
         <button
           onClick={() => setMobileTab('matrix')}
           className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${mobileTab === 'matrix' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}

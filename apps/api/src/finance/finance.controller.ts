@@ -28,6 +28,7 @@ import type {
   AssetClass,
   Reminder,
   BudgetSimulation,
+  SimEntry,
 } from '@repo/types';
 import { UsersService } from '../common/services/users.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
@@ -305,5 +306,27 @@ export class FinanceController {
     @Body() data: Partial<BudgetSimulation>,
   ) {
     return this.simulationService.saveSimulation(req.user.uid, data);
+  }
+
+  @ApiOperation({ summary: 'Add a simulation entry' })
+  @Post('simulation/entries')
+  addSimEntry(@Req() req: RequestWithUser, @Body() entry: SimEntry) {
+    return this.simulationService.addEntry(req.user.uid, entry);
+  }
+
+  @ApiOperation({ summary: 'Update a simulation entry' })
+  @Put('simulation/entries/:id')
+  updateSimEntry(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() data: Partial<SimEntry>,
+  ) {
+    return this.simulationService.updateEntry(req.user.uid, id, data);
+  }
+
+  @ApiOperation({ summary: 'Remove a simulation entry' })
+  @Delete('simulation/entries/:id')
+  removeSimEntry(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.simulationService.removeEntry(req.user.uid, id);
   }
 }
