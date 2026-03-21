@@ -3973,15 +3973,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jspdf@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@types/jspdf@npm:2.0.0"
-  dependencies:
-    jspdf: "npm:*"
-  checksum: 10c0/69bed9c099c9a0d369c2734fa97862cb67c4d1151ce45b7f9f3c6dfedf7b1bb612cf0561aa5768b7adf5cec207adf2fa82ffbcb7907c716b33b1f5a8f75fe5fc
-  languageName: node
-  linkType: hard
-
 "@types/long@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/long@npm:4.0.2"
@@ -9118,7 +9109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jspdf@npm:*, jspdf@npm:^4.2.0":
+"jspdf@npm:^4.2.0":
   version: 4.2.1
   resolution: "jspdf@npm:4.2.1"
   dependencies:
@@ -12830,7 +12821,6 @@ __metadata:
     "@repo/typescript-config": "npm:*"
     "@repo/ui": "npm:*"
     "@tailwindcss/postcss": "npm:4.1.3"
-    "@types/jspdf": "npm:^2.0.0"
     "@types/node": "npm:^22.15.3"
     "@types/papaparse": "npm:^5.5.2"
     "@types/react": "npm:19.2.2"

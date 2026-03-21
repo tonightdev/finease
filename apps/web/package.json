@@ -15,7 +15,6 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@repo/types": "*",
     "@repo/ui": "*",
-    "@types/jspdf": "^2.0.0",
     "@types/papaparse": "^5.5.2",
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
