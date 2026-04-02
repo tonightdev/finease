@@ -6,7 +6,8 @@ import { TransactionDetailsModal } from "@/components/transactions/TransactionDe
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { ArrowRight, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ArrowRight, Calendar as CalendarIcon, Download } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 import {
   fetchTransactions,
   createTransaction,
@@ -618,7 +619,16 @@ export default function TransactionsPageClient() {
         )}
       </PageHeader>
 
-      <div className="block lg:hidden space-y-4">
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filtered.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        className="mb-1 sm:mb-2"
+      />
+
+      <div className="block lg:hidden space-y-3 mb-3">
         {paginatedTransactions.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0 flex flex-col items-center justify-center text-center">
             <div className="flex flex-col items-center gap-4">
@@ -968,32 +978,14 @@ export default function TransactionsPageClient() {
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 pt-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            {currentPage} <span className="mx-1 text-slate-300">/</span>{" "}
-            {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 text-slate-600 disabled:opacity-30 shadow-sm"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 text-slate-600 disabled:opacity-30 shadow-sm"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalEntries={filtered.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        className="mt-1 border-t border-slate-100 dark:border-white/5"
+      />
 
       <TransactionModal
         isOpen={isModalOpen}

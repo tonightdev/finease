@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ShieldAlert, FileText, Activity, Trash2, CheckCircle2, Calendar } from "lucide-react";
+import { ShieldAlert, FileText, Activity, Trash2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Reminder, deleteReminder, createReminder, fetchArchivedReminders } from "@/store/slices/remindersSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import toast from "react-hot-toast";
-import { Input } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface ReminderCountdownProps {
   reminders: Reminder[];
@@ -195,17 +195,11 @@ export function ReminderCountdown({
                 </div>
 
                 <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2">
-                      <Calendar size={10} className="text-primary" /> Next Expiry Node
-                    </label>
-                    <Input
-                      type="date"
-                      value={renewalDate}
-                      onChange={(e) => setRenewalDate(e.target.value)}
-                      className="h-10 text-[11px] font-black uppercase border-slate-200"
-                    />
-                  </div>
+                  <DateInput
+                    label="Next Expiry Node"
+                    value={renewalDate}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewalDate(e.target.value)}
+                  />
                   
                   <div className="flex flex-col gap-2">
                     <button

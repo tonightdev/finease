@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { DateInput } from "@/components/ui/DateInput";
 import { Card } from "@/components/ui/Card";
 import {
   Shield,
@@ -360,20 +361,11 @@ export default function SettingsPage() {
                             className="h-10"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                            Date of Birth
-                          </label>
-                          <div className="relative group">
-                            <Input
-                              type="date"
-                              value={dob}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
-                              className="pr-10 h-10 w-full"
-                            />
-                            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                          </div>
-                        </div>
+                        <DateInput
+                          label="Date of Birth"
+                          value={dob}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
+                        />
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Gender Identity
@@ -390,12 +382,12 @@ export default function SettingsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                             Fiscal Cycle Reset Day
                           </label>
                           <div className="relative group">
-                            <Input
+                            <input
                               type="number"
                               min="1"
                               max="28"
@@ -405,9 +397,9 @@ export default function SettingsPage() {
                                 if (isNaN(val)) setMonthStartDate(1);
                                 else setMonthStartDate(Math.max(1, Math.min(28, val)));
                               }}
-                              className="pr-10 h-10 w-full"
+                              className="w-full h-12 p-3 pl-10 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm font-medium text-slate-900 dark:text-white disabled:opacity-50"
                             />
-                            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
                           </div>
                         </div>
                       </div>
