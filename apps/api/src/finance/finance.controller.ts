@@ -269,6 +269,12 @@ export class FinanceController {
     return this.remindersService.getReminders(req.user.uid);
   }
 
+  @ApiOperation({ summary: 'List all archived reminders for user' })
+  @Get('reminders/archived')
+  findAllArchivedReminders(@Req() req: RequestWithUser) {
+    return this.remindersService.getArchivedReminders(req.user.uid);
+  }
+
   @ApiOperation({ summary: 'Create a new reminder' })
   @Post('reminders')
   createReminder(@Req() req: RequestWithUser, @Body() data: Partial<Reminder>) {

@@ -12,18 +12,20 @@ import { createAccount, fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
+import { fetchReminders } from "@/store/slices/remindersSlice";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { FinancialGoal, AccountType } from "@repo/types";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Plus, Target as TargetIcon } from "lucide-react";
+import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useSignals } from "@/components/providers/SignalProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
+import { motion } from "framer-motion";
 import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
 
 
@@ -51,8 +53,19 @@ export default function Home() {
   }, [allTransactions, analyticsAccounts]);
 
   const loading = useSelector(
-    (state: RootState) => state.accounts.loading || state.transactions.loading,
+    (state: RootState) => state.accounts.loading || state.transactions.loading || state.reminders.loading,
   );
+
+  const reminders = useSelector((state: RootState) => state.reminders.items);
+
+  const expiringSoon = useMemo(() => {
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return reminders.filter(r => {
+      const expiry = new Date(r.expiryDate);
+      return expiry > now && expiry <= thirtyDaysFromNow;
+    });
+  }, [reminders]);
 
   useEffect(() => {
     if (user) {
@@ -60,6 +73,7 @@ export default function Home() {
       dispatch(fetchAssetClasses({ force: true }));
       dispatch(fetchTransactions({ force: true }));
       dispatch(fetchGoals({ force: true }));
+      dispatch(fetchReminders());
 
       if (permission === "default") {
         requestPermission();
@@ -341,6 +355,33 @@ export default function Home() {
           </div>
         }
       />
+      
+      {expiringSoon.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto w-full"
+        >
+          <Link href="/goals" className="block">
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-tight">
+                    {expiringSoon.length} Signal Horizon{expiringSoon.length > 1 ? 's' : ''} require{expiringSoon.length === 1 ? 's' : ''} immediate attention
+                  </h4>
+                  <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
+                    Impending expiry detected within 30-day window
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="size-5 text-rose-500 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <DashboardStatCard

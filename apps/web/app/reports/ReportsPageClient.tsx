@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from "@/store";
 import { Transaction, Account, Category } from "@repo/types";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
-import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X, ChevronDown, Check } from "lucide-react";
+import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X, ChevronDown, Check, Wallet, PiggyBank, Briefcase } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
@@ -830,6 +830,102 @@ export default function ReportsPageClient() {
               </button>
             </div>
           )}
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-6 sm:mt-8">
+        {/* Account Liquidity Widget */}
+        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Wallet className="size-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  Liquidity Grid
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Active Asset Distribution
+                </p>
+              </div>
+            </div>
+            <div className="text-[10px] font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
+              {accounts.length} Nodes
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
+            {accounts.map((acc) => (
+              <div key={acc.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
+                    <Briefcase className="size-3.5 text-slate-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">{acc.name}</div>
+                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{acc.type}</div>
+                  </div>
+                </div>
+                <div className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
+                  {formatCurrency(acc.balance)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Savings Performance Widget */}
+        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-6 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+            <PiggyBank size={140} />
+          </div>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <PiggyBank className="size-4 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  Savings Vector
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Accumulation Performance
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 space-y-8 py-4">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="text-4xl font-black text-emerald-500 tracking-tighter">
+                {fiftyThirtyTwenty.savings.percent.toFixed(1)}%
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                Current Savings Rate
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
+                <span className="text-slate-400">Target Efficiency</span>
+                <span className="text-primary">{budgetTargets.savings}%</span>
+              </div>
+              <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%` }}
+                  className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-primary'}`}
+                />
+              </div>
+              <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">
+                {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings 
+                  ? "EXCELLENT: Your accumulation vector is outperforming the target protocol. Surplus capital identified."
+                  : `ATTENTION: You are currently operating at ${(budgetTargets.savings - fiftyThirtyTwenty.savings.percent).toFixed(1)}% below your defined savings architecture.`}
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
     </PageContainer>

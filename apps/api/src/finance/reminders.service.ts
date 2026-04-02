@@ -122,4 +122,19 @@ export class RemindersService {
       });
     }
   }
+
+  async getArchivedReminders(userId: string): Promise<Reminder[]> {
+    const snapshot = await this.collection.where('userId', '==', userId).get();
+
+    return snapshot.docs
+      .map((doc: admin.firestore.QueryDocumentSnapshot<Reminder>) => {
+        return this.mapDocToReminder(doc);
+      })
+      .filter((reminder) => !!reminder.deletedAt)
+      .sort((a, b) => {
+        const dateA = a.deletedAt ? new Date(a.deletedAt).getTime() : 0;
+        const dateB = b.deletedAt ? new Date(b.deletedAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
 }

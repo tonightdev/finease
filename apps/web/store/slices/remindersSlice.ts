@@ -7,16 +7,19 @@ export interface Reminder {
   type: "policy" | "document" | "other";
   expiryDate: string;
   renewalAmount: number;
+  deletedAt?: string | null;
 }
 
 export interface RemindersState {
   items: Reminder[];
+  archivedItems: Reminder[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: RemindersState = {
   items: [],
+  archivedItems: [],
   loading: false,
   error: null,
 };
@@ -25,6 +28,14 @@ export const fetchReminders = createAsyncThunk(
   "reminders/fetchReminders",
   async () => {
     const response = await api.get<Reminder[]>("/finance/reminders");
+    return response.data;
+  },
+);
+
+export const fetchArchivedReminders = createAsyncThunk(
+  "reminders/fetchArchivedReminders",
+  async () => {
+    const response = await api.get<Reminder[]>("/finance/reminders/archived");
     return response.data;
   },
 );
@@ -69,6 +80,9 @@ const remindersSlice = createSlice({
       .addCase(fetchReminders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch reminders";
+      })
+      .addCase(fetchArchivedReminders.fulfilled, (state, action) => {
+        state.archivedItems = action.payload;
       })
       .addCase(createReminder.fulfilled, (state, action) => {
         state.items.push(action.payload);

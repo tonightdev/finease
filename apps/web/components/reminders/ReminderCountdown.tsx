@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ShieldAlert, FileText, Activity, Trash2 } from "lucide-react";
+import { ShieldAlert, FileText, Activity, Trash2, CheckCircle2, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Reminder, deleteReminder } from "@/store/slices/remindersSlice";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
+import { Reminder, deleteReminder, createReminder, fetchArchivedReminders } from "@/store/slices/remindersSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store";
 import toast from "react-hot-toast";
+import { Input } from "@/components/ui/Input";
 
 interface ReminderCountdownProps {
   reminders: Reminder[];
@@ -23,16 +24,68 @@ export function ReminderCountdown({
     null,
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
+  const [completedReminder, setCompletedReminder] = useState<Reminder | null>(null);
+  const [renewalDate, setRenewalDate] = useState("");
+  const [viewArchive, setViewArchive] = useState(false);
+  
   const dispatch = useDispatch<AppDispatch>();
+  const archivedReminders = useSelector((state: RootState) => state.reminders.archivedItems);
+
+  useEffect(() => {
+    if (viewArchive) {
+      dispatch(fetchArchivedReminders());
+    }
+  }, [viewArchive, dispatch]);
+
+  const handleComplete = (reminder: Reminder) => {
+    setCompletedReminder(reminder);
+    const nextYear = new Date(reminder.expiryDate);
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    setRenewalDate(nextYear.toISOString().split('T')[0] || "");
+    setIsRenewModalOpen(true);
+  };
+
+  const confirmCompletion = async () => {
+    if (!completedReminder) return;
+    
+    // First delete the current one as it's completed
+    await dispatch(deleteReminder(completedReminder.id)).unwrap();
+    toast.success("Signal successfully completed.");
+    setIsRenewModalOpen(false);
+    setCompletedReminder(null);
+  };
+
+  const confirmRenewal = async () => {
+    if (!completedReminder || !renewalDate) return;
+
+    try {
+      // Create new reminder for next year
+      await dispatch(createReminder({
+        name: completedReminder.name,
+        type: completedReminder.type,
+        expiryDate: new Date(renewalDate).toISOString(),
+        renewalAmount: completedReminder.renewalAmount
+      })).unwrap();
+      
+      // Delete old one
+      await dispatch(deleteReminder(completedReminder.id)).unwrap();
+      
+      toast.success("Signal successfully renewed for next year.");
+      setIsRenewModalOpen(false);
+      setCompletedReminder(null);
+    } catch {
+      toast.error("Failed to sync renewal signal.");
+    }
+  };
 
   const sortedReminders = useMemo(() => {
-    return [...reminders].sort(
+    const list = viewArchive ? archivedReminders : reminders;
+    return [...list].sort(
       (a, b) =>
         new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime(),
     );
-  }, [reminders]);
-
-  if (reminders.length === 0) return null;
+  }, [reminders, archivedReminders, viewArchive]);
 
   return (
     <div className="space-y-4">
@@ -42,29 +95,53 @@ export function ReminderCountdown({
             Signal Horizon
           </h3>
           <p className="text-[8px] font-bold text-slate-500 mt-0.5 uppercase tracking-widest leading-none">
-            Omni-Channel Expiry Nodes
+            {viewArchive ? "Historical Expiry Logs" : "Omni-Channel Expiry Nodes"}
           </p>
         </div>
-        <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded-full border border-primary/20 tracking-[0.1em]">
-          Active Monitoring
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewArchive(!viewArchive)}
+            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full border transition-all tracking-[0.1em] ${
+              viewArchive 
+                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                : "bg-slate-100 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10 hover:border-primary/50"
+            }`}
+          >
+            {viewArchive ? "Viewing Archive" : "View Archive"}
+          </button>
+          {!viewArchive && reminders.length > 0 && (
+            <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded-full border border-primary/20 tracking-[0.1em]">
+              Active Monitoring
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-        <AnimatePresence mode="popLayout">
-          {sortedReminders.map((reminder) => (
-            <CountdownCard
-              key={reminder.id}
-              reminder={reminder}
-              onClick={() => onEdit?.(reminder)}
-              onDelete={() => {
-                setReminderToDelete(reminder);
-                setIsDeleteModalOpen(true);
-              }}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
+      {sortedReminders.length === 0 ? (
+        <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-2xl bg-white/50 dark:bg-slate-900/50">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {viewArchive ? "No archived signals found" : "No active signals configured"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+          <AnimatePresence mode="popLayout">
+            {sortedReminders.map((reminder) => (
+              <CountdownCard
+                key={reminder.id}
+                reminder={reminder}
+                isArchived={viewArchive}
+                onClick={() => !viewArchive && onEdit?.(reminder)}
+                onComplete={() => handleComplete(reminder)}
+                onDelete={() => {
+                  setReminderToDelete(reminder);
+                  setIsDeleteModalOpen(true);
+                }}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={isDeleteModalOpen}
@@ -84,17 +161,97 @@ export function ReminderCountdown({
         message="Decommissioning this signal node will stop active monitoring of this expiry. This operation is recorded."
         confirmText="Confirm Termination"
       />
+
+      {/* Renewal / Completion Modal */}
+      <AnimatePresence>
+        {isRenewModalOpen && completedReminder && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+              onClick={() => {
+                setIsRenewModalOpen(false);
+                setCompletedReminder(null);
+              }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/10 p-8 overflow-hidden"
+            >
+              <div className="relative space-y-6 text-center">
+                <div className="size-16 rounded-[2rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                  <CheckCircle2 size={32} />
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Signal Completed</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                    Would you like to authorize a renewal signal for the next operational cycle?
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2">
+                      <Calendar size={10} className="text-primary" /> Next Expiry Node
+                    </label>
+                    <Input
+                      type="date"
+                      value={renewalDate}
+                      onChange={(e) => setRenewalDate(e.target.value)}
+                      className="h-10 text-[11px] font-black uppercase border-slate-200"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={confirmRenewal}
+                      className="w-full h-11 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      Authorize Renewal
+                    </button>
+                    <button
+                      onClick={confirmCompletion}
+                      className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                    >
+                      Archive Only
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setIsRenewModalOpen(false);
+                    setCompletedReminder(null);
+                  }}
+                  className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                >
+                  Cancel Operation
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function CountdownCard({
   reminder,
+  isArchived = false,
   onClick,
+  onComplete,
   onDelete,
 }: {
   reminder: Reminder;
+  isArchived?: boolean;
   onClick?: () => void;
+  onComplete: () => void;
   onDelete: () => void;
 }) {
   const [timeLeft, setTimeLeft] = useState<{
@@ -104,6 +261,8 @@ function CountdownCard({
   }>({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
+    if (isArchived) return;
+
     const calculate = () => {
       const diff =
         new Date(reminder.expiryDate).getTime() - new Date().getTime();
@@ -121,11 +280,11 @@ function CountdownCard({
     calculate();
     const timer = setInterval(calculate, 60000);
     return () => clearInterval(timer);
-  }, [reminder.expiryDate]);
+  }, [reminder.expiryDate, isArchived]);
 
-  const isCritical = timeLeft.days < 7;
+  const isCritical = !isArchived && timeLeft.days < 7;
   const isExpired =
-    timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0;
+    !isArchived && timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0;
 
   const Icon =
     reminder.type === "policy"
@@ -140,7 +299,9 @@ function CountdownCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       onClick={onClick}
-      className={`group relative p-3.5 rounded-2xl border transition-all h-full flex flex-col justify-between cursor-pointer hover:border-primary/50 ${
+      className={`group relative p-3.5 rounded-2xl border transition-all h-full flex flex-col justify-between ${
+        !isArchived ? "cursor-pointer hover:border-primary/50" : "opacity-75 grayscale-[0.5]"
+      } ${
         isCritical
           ? "bg-rose-50/20 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/20 shadow-sm"
           : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 shadow-sm"
@@ -155,14 +316,16 @@ function CountdownCard({
           </div>
           <span
             className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${
-              isExpired
-                ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
-                : isCritical
-                  ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
-                  : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
+              isArchived
+                ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
+                : isExpired
+                  ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
+                  : isCritical
+                    ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
+                    : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
             }`}
           >
-            {isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
+            {isArchived ? "Completed" : isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
           </span>
         </div>
 
@@ -172,8 +335,10 @@ function CountdownCard({
           >
             {reminder.name}
           </h4>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            {isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H REMAINING`}
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+            {isArchived 
+              ? `Completed on ${reminder.deletedAt ? new Date(reminder.deletedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}` 
+              : isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H REMAINING`}
           </p>
         </div>
 
@@ -187,15 +352,30 @@ function CountdownCard({
             </span>
           </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {!isArchived && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onComplete();
+                }}
+                className="p-1 px-2 text-slate-300 hover:text-emerald-500 transition-colors"
+                title="Complete Signal"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors"
+                title="Archive Signal"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

@@ -328,7 +328,7 @@ export default function SimulationPage() {
     setProtocol(prev => ({ ...prev, [key]: value }));
   };
 
-  if (authLoading) {
+  if (authLoading || (simLoading && !isInitialized)) {
     return (
       <PageContainer>
         <div className="space-y-4">

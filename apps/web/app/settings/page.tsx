@@ -268,7 +268,7 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-1 sm:mt-2">
         {/* Sidebar Tabs - Desktop Only */}
         <div className="hidden lg:block lg:col-span-1">
-          <Card className="p-2 space-y-1 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-100 dark:border-white/5 shadow-none">
+          <Card className="space-y-1 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-100 dark:border-white/5 shadow-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -308,7 +308,7 @@ export default function SettingsPage() {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              <Card className="p-4 space-y-4 flex flex-col shadow-none border-slate-100 dark:border-white/5">
+              <Card className="space-y-4 flex flex-col shadow-none border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4 -mx-1">
                   <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20">
                     <activeTabData.icon size={20} />
@@ -364,12 +364,15 @@ export default function SettingsPage() {
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Date of Birth
                           </label>
-                          <Input
-                            type="date"
-                            value={dob}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
-                            className="h-10"
-                          />
+                          <div className="relative group">
+                            <Input
+                              type="date"
+                              value={dob}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
+                              className="pr-10 h-10 w-full"
+                            />
+                            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
@@ -540,71 +543,70 @@ export default function SettingsPage() {
                   {activeTab === "security" && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
                       {/* App Lock Configuration */}
-                      <Card className="p-1 border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none">
-                        <div className="p-3 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <div className={`size-2 rounded-full ${isLockEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Security Protocol</span>
-                              </div>
-                              <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Application Vault Lock</h4>
-                              <p className="text-[10px] font-medium text-slate-400 max-w-[240px]">Architectural device-level authentication for your identity node.</p>
+                      <Card className="border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none">
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className={`size-2 rounded-full ${isLockEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Security Protocol</span>
                             </div>
-                            {isLockEnabled && (
-                              <Button
-                                onClick={() => toggleLock(false)}
-                                variant="outline"
-                                className="h-8 px-4 rounded-xl font-black text-[8px] uppercase tracking-widest border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-                              >
-                                Deactivate
-                              </Button>
+                            <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Application Vault Lock</h4>
+                            <p className="text-[10px] font-medium text-slate-400 max-w-[240px]">Architectural device-level authentication for your identity node.</p>
+                          </div>
+                          {isLockEnabled && (
+                            <Button
+                              onClick={() => toggleLock(false)}
+                              variant="outline"
+                              className="h-8 px-4 rounded-xl font-black text-[8px] uppercase tracking-widest border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                            >
+                              Deactivate
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Biometric Option */}
+                          <button
+                            onClick={() => toggleLock(true, "biometric")}
+                            className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "biometric" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+                          >
+                            <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "biometric" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
+                              <Fingerprint size={20} />
+                            </div>
+                            <div className="text-left">
+                              <div className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Biometric</div>
+                              <div className="text-[8px] font-bold text-slate-400 uppercase">FaceID / TouchID</div>
+                            </div>
+                            {isLockEnabled && lockType === "biometric" && (
+                              <div className="absolute top-4 right-4">
+                                <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center">
+                                  <Check size={12} />
+                                </div>
+                              </div>
                             )}
-                          </div>
+                          </button>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {/* Biometric Option */}
-                            <button
-                              onClick={() => toggleLock(true, "biometric")}
-                              className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "biometric" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
-                            >
-                              <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "biometric" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
-                                <Fingerprint size={20} />
-                              </div>
-                              <div className="text-left">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Biometric</div>
-                                <div className="text-[8px] font-bold text-slate-400 uppercase">FaceID / TouchID</div>
-                              </div>
-                              {isLockEnabled && lockType === "biometric" && (
-                                <div className="absolute top-4 right-4">
-                                  <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center">
-                                    <Check size={12} />
-                                  </div>
+                          {/* PIN Option */}
+                          <button
+                            onClick={() => setShowPinSetup(true)}
+                            className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "pin" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+                          >
+                            <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "pin" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
+                              <Shield size={20} />
+                            </div>
+                            <div className="text-left">
+                              <div className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Security PIN</div>
+                              <div className="text-[8px] font-bold text-slate-400 uppercase">4-Digit Access Code</div>
+                            </div>
+                            {isLockEnabled && lockType === "pin" && (
+                              <div className="absolute top-4 right-4">
+                                <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center">
+                                  <Check size={12} />
                                 </div>
-                              )}
-                            </button>
-
-                            {/* PIN Option */}
-                            <button
-                              onClick={() => setShowPinSetup(true)}
-                              className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "pin" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
-                            >
-                              <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "pin" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
-                                <Shield size={20} />
                               </div>
-                              <div className="text-left">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Security PIN</div>
-                                <div className="text-[8px] font-bold text-slate-400 uppercase">4-Digit Access Code</div>
-                              </div>
-                              {isLockEnabled && lockType === "pin" && (
-                                <div className="absolute top-4 right-4">
-                                  <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center">
-                                    <Check size={12} />
-                                  </div>
-                                </div>
-                              )}
-                            </button>
-                          </div>
+                            )}
+                          </button>
                         </div>
 
                         {/* PIN Setup Modal Overlay */}
@@ -696,7 +698,7 @@ export default function SettingsPage() {
                       </Card>
 
                       {/* Signal Protocol Configuration */}
-                      <Card className="p-3 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden relative group">
+                      <Card className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden relative group">
                         <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
                           <Bell size={120} />
                         </div>
@@ -754,7 +756,7 @@ export default function SettingsPage() {
                         {accounts.map((acc) => (
                           <Card
                             key={acc.uid}
-                            className={`p-3 flex items-center justify-between group transition-all duration-300 relative overflow-hidden shadow-none ${acc.uid === user?.uid
+                            className={`flex items-center justify-between group transition-all duration-300 relative overflow-hidden shadow-none ${acc.uid === user?.uid
                               ? "border-primary ring-1 ring-primary/20 bg-primary/5"
                               : "hover:border-primary/50 border-slate-100 dark:border-white/5"
                               }`}
