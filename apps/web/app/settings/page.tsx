@@ -557,7 +557,7 @@ export default function SettingsPage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                           {/* Biometric Option */}
                           <button
                             onClick={() => toggleLock(true, "biometric")}
