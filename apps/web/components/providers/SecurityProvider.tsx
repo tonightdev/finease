@@ -146,8 +146,21 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
     if (isLocked && lockType === "biometric") {
       timer = setTimeout(() => {
         void authenticate();
-      }, 50);
+      }, 500); // Give some time for the screen to mount
     } else {
+      // Re-check lock status on visibility change (for PWA resume)
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          const enabled = localStorage.getItem("finease_app_lock") === "true";
+          const sessionAuthenticated = sessionStorage.getItem("finease_session_authenticated") === "true";
+          if (enabled && !sessionAuthenticated) {
+             setIsLocked(true);
+             if (lockType === "biometric") void authenticate();
+          }
+        }
+      };
+      window.addEventListener("visibilitychange", handleVisibilityChange);
+      
       // Wait for Auth AND Data (if logged in) to prevent "blink"
       const isAuthReady = !authLoading;
       const isDataReady = user ? accountsCount > 0 || !accountsLoading : true;
@@ -157,6 +170,10 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
           setIsChecking(false);
         }, 600); // Buffer for animations
       }
+      return () => {
+        window.removeEventListener("visibilitychange", handleVisibilityChange);
+        if (timer) clearTimeout(timer);
+      };
     }
 
     return () => {
@@ -363,17 +380,23 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               ) : (
-                <button
-                  disabled={authenticating}
-                  onClick={async () => {
-                    const success = await authenticate();
-                    if (!success) toast.error("Authentication Failed");
-                  }}
-                  className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
-                >
-                  <Fingerprint className="w-5 h-5" />
-                  {authenticating ? "Verifying..." : "Authenticate"}
-                </button>
+                <div className="w-full flex flex-col items-center gap-4">
+                  <div className="animate-pulse flex flex-col items-center gap-2">
+                    <Fingerprint className="w-12 h-12 text-primary opacity-50" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Waiting for biometrics...</span>
+                  </div>
+                  
+                  <button
+                    disabled={authenticating}
+                    onClick={async () => {
+                      const success = await authenticate();
+                      if (!success) toast.error("Authentication Failed");
+                    }}
+                    className="mt-4 text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                  >
+                    {authenticating ? "Verifying..." : "Retry Biometrics"}
+                  </button>
+                </div>
               )}
 
               <div className="mt-12 flex flex-col items-center gap-6">
