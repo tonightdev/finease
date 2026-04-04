@@ -211,9 +211,9 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-4 w-64" />
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-            <Skeleton className="h-64 lg:col-span-1" />
-            <Skeleton className="h-[600px] lg:col-span-3" />
+          <div className="flex flex-wrap gap-5">
+            <Skeleton className="h-64 flex-1 min-w-[240px]" />
+            <Skeleton className="h-[600px] flex-[3] min-w-0 w-full" />
           </div>
         </div>
       </PageContainer>
@@ -266,9 +266,9 @@ export default function SettingsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-1 sm:mt-2">
+      <div className="flex flex-wrap gap-6 mt-1 sm:mt-2">
         {/* Sidebar Tabs - Desktop Only */}
-        <div className="hidden lg:block lg:col-span-1">
+        <div className="hidden lg:block w-[280px] shrink-0">
           <Card className="space-y-1 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-100 dark:border-white/5 shadow-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -299,7 +299,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="lg:col-span-3">
+        <div className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -307,9 +307,9 @@ export default function SettingsPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <Card className="space-y-4 flex flex-col shadow-none border-slate-100 dark:border-white/5">
+              <Card className="space-y-3.5 flex flex-col shadow-none border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4 -mx-1">
                   <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20">
                     <activeTabData.icon size={20} />
@@ -326,9 +326,9 @@ export default function SettingsPage() {
 
                 <div className="flex-1">
                   {activeTab === "profile" && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                        <div className="space-y-2">
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                      <div className="flex flex-wrap gap-4">
+                        <div className="w-full lg:flex-1 lg:min-w-[280px] space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Full Name
                           </label>
@@ -339,7 +339,7 @@ export default function SettingsPage() {
                             className="h-10"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="w-full lg:flex-1 lg:min-w-[240px] space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Email Address
                           </label>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                             className="h-10"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="w-full lg:flex-1 lg:min-w-[240px] space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Mobile Number
                           </label>
@@ -361,12 +361,14 @@ export default function SettingsPage() {
                             className="h-10"
                           />
                         </div>
-                        <DateInput
-                          label="Date of Birth"
-                          value={dob}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
-                        />
-                        <div className="space-y-2">
+                        <div className="w-full lg:flex-1 lg:min-w-[240px]">
+                          <DateInput
+                            label="Date of Birth"
+                            value={dob}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDob(e.target.value)}
+                          />
+                        </div>
+                        <div className="w-full lg:flex-1 lg:min-w-[240px] space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
                             Gender Identity
                           </label>
@@ -382,7 +384,7 @@ export default function SettingsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-1">
+                        <div className="w-full lg:flex-1 lg:min-w-[200px] space-y-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                             Fiscal Cycle Reset Day
                           </label>
@@ -404,7 +406,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-6 border border-slate-200 dark:border-white/10 relative overflow-hidden group">
+                      <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 sm:-mx-6 sm:px-6 py-4 border-y border-slate-200 dark:border-white/10 relative overflow-hidden group">
                         <div className="relative z-10 space-y-4">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex-1">
@@ -441,13 +443,13 @@ export default function SettingsPage() {
                             <motion.div animate={{ width: `${savingsTarget}%` }} className="h-full bg-indigo-500" />
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                          <div className="flex flex-wrap gap-2 pt-2">
                             {[
                               { label: "Needs", val: needsTarget, set: setNeedsTarget, color: "text-emerald-500", bg: "bg-emerald-500/5", border: "border-emerald-500/10" },
                               { label: "Wants", val: wantsTarget, set: setWantsTarget, color: "text-amber-500", bg: "bg-amber-500/5", border: "border-amber-500/10" },
                               { label: "Savings", val: savingsTarget, set: setSavingsTarget, color: "text-indigo-500", bg: "bg-indigo-500/5", border: "border-indigo-500/10" },
                             ].map((field) => (
-                              <div key={field.label} className={`px-4 py-3 rounded-xl ${field.bg} border ${field.border}`}>
+                              <div key={field.label} className={`px-3 py-2.5 rounded-xl ${field.bg} border ${field.border} w-full sm:flex-1`}>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{field.label}</label>
                                 <div className="flex items-center gap-2">
                                   <Input
@@ -464,7 +466,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                      <div className="pt-2 border-t border-slate-100 dark:border-white/5">
                         <Button
                           onClick={handleUpdateProfile}
                           disabled={isUpdating || !hasChanges}
@@ -478,7 +480,7 @@ export default function SettingsPage() {
 
                   {activeTab === "preferences" && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-wrap gap-6">
                         {[
                           { id: "light", label: "Brilliant", icon: Sun, desc: "High-contrast daylight optimization" },
                           { id: "dark", label: "Abyssal", icon: Moon, desc: "Low-light OLED-ready obsidian interface" },
@@ -493,7 +495,7 @@ export default function SettingsPage() {
                                 setTheme(mode.id);
                                 updateProfile({ preferences: { ...user?.preferences, theme: mode.id as "light" | "dark" | "system" } });
                               }}
-                              className={`flex flex-col items-start gap-4 p-5 rounded-3xl border-2 transition-all group relative overflow-hidden ${isSelected
+                              className={`w-full lg:flex-1 lg:min-w-[240px] flex flex-col items-start gap-4 p-5 rounded-3xl border-2 transition-all group relative overflow-hidden ${isSelected
                                 ? "bg-primary/5 border-primary shadow-2xl shadow-primary/5 scale-[1.02]"
                                 : "bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-slate-200 dark:hover:border-white/10"
                                 }`}
@@ -533,14 +535,14 @@ export default function SettingsPage() {
                   )}
 
                   {activeTab === "security" && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
                       {/* App Lock Configuration */}
                       <Card className="border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none">
 
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <div className={`size-2 rounded-full ${isLockEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                              <div className={`size-2 rounded-full ${isLockEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                               <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Security Protocol</span>
                             </div>
                             <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Application Vault Lock</h4>
@@ -557,11 +559,11 @@ export default function SettingsPage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <div className="flex flex-wrap gap-3 mt-3">
                           {/* Biometric Option */}
                           <button
                             onClick={() => toggleLock(true, "biometric")}
-                            className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "biometric" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+                            className={`w-full sm:w-auto relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "biometric" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
                           >
                             <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "biometric" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
                               <Fingerprint size={20} />
@@ -582,7 +584,7 @@ export default function SettingsPage() {
                           {/* PIN Option */}
                           <button
                             onClick={() => setShowPinSetup(true)}
-                            className={`relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "pin" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
+                            className={`w-full sm:w-auto relative overflow-hidden group p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-4 ${isLockEnabled && lockType === "pin" ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 hover:border-primary/30'}`}
                           >
                             <div className={`size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${isLockEnabled && lockType === "pin" ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
                               <Shield size={20} />
@@ -627,8 +629,8 @@ export default function SettingsPage() {
                                   <Shield size={160} />
                                 </div>
 
-                                <div className="relative space-y-8 text-center">
-                                  <div className="space-y-2">
+                                <div className="relative space-y-4 text-center">
+                                  <div className="flex-1 min-w-[240px] space-y-2">
                                     <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
                                       <Shield size={24} />
                                     </div>
@@ -645,7 +647,7 @@ export default function SettingsPage() {
                                     ))}
                                   </div>
 
-                                  <div className="grid grid-cols-3 gap-3">
+                                  <div className="flex flex-wrap gap-3">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"].map((btn) => (
                                       <button
                                         key={btn}
@@ -699,7 +701,7 @@ export default function SettingsPage() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <div className={`size-2 rounded-full ${permission === 'granted' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                                <div className={`size-2 rounded-full ${permission === 'granted' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-primary">Signal Protocol</span>
                               </div>
                               <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Intelligent Signals</h4>
@@ -731,7 +733,7 @@ export default function SettingsPage() {
                   )}
 
                   {activeTab === "identities" && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Active Identity Nodes</h4>
                         <Button
@@ -744,11 +746,11 @@ export default function SettingsPage() {
                         </Button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-wrap gap-6">
                         {accounts.map((acc) => (
                           <Card
                             key={acc.uid}
-                            className={`flex items-center justify-between group transition-all duration-300 relative overflow-hidden shadow-none ${acc.uid === user?.uid
+                            className={`flex-1 min-w-[240px] flex items-center justify-between group transition-all duration-300 relative overflow-hidden shadow-none ${acc.uid === user?.uid
                               ? "border-primary ring-1 ring-primary/20 bg-primary/5"
                               : "hover:border-primary/50 border-slate-100 dark:border-white/5"
                               }`}
@@ -801,9 +803,9 @@ export default function SettingsPage() {
                   )}
 
                   {activeTab === "data" && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
                       <button
-                        className="w-full text-left max-w-sm"
+                        className="w-full text-left"
                         onClick={handleExportData}
                       >
                         <Card className="p-3.5 space-y-2.5 group hover:border-primary/50 transition-all cursor-pointer shadow-none border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
@@ -820,13 +822,13 @@ export default function SettingsPage() {
                         </Card>
                       </button>
 
-                      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden group">
+                      <div className="bg-slate-900 rounded-[2.5rem] p-2 sm:p-8 text-white relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-10 opacity-10 transition-transform group-hover:rotate-12 duration-1000">
                           <Shield size={160} />
                         </div>
                         <div className="relative z-10 max-w-lg space-y-4">
                           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-                            <span className="size-2 rounded-full bg-primary animate-pulse" /> Security Protocol
+                            <span className="size-2 rounded-full bg-primary" /> Security Protocol
                           </div>
                           <h4 className="text-2xl font-black tracking-tight">Identity Persistence</h4>
                           <p className="text-slate-400 text-sm font-medium leading-relaxed">

@@ -354,7 +354,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="flex flex-wrap gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
@@ -381,7 +381,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                 </div>
               ) : (
                 <div className="w-full flex flex-col items-center gap-4">
-                  <div className="animate-pulse flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2">
                     <Fingerprint className="w-12 h-12 text-primary opacity-50" />
                     <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Waiting for biometrics...</span>
                   </div>

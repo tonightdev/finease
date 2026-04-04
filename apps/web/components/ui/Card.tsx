@@ -7,6 +7,7 @@ interface CardProps {
   title?: string;
   subtitle?: ReactNode;
   headerAction?: ReactNode;
+  onClick?: () => void;
 }
 
 export function Card({
@@ -15,9 +16,13 @@ export function Card({
   title,
   subtitle,
   headerAction,
+  onClick,
 }: CardProps) {
   return (
-    <div className={cn("finease-card p-4", className)}>
+    <div 
+      className={cn("finease-card p-3.5", className)}
+      onClick={onClick}
+    >
       {(title || headerAction) && (
         <div className="flex items-center justify-between mb-4">
           <div>

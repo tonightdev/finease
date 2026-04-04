@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
@@ -62,21 +63,21 @@ function FilterDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border transition-all duration-300 text-xs font-black uppercase tracking-widest ${isOpen || selectedCount > 0
-          ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-lg shadow-primary/5"
-          : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-white/5 text-slate-500 hover:border-primary/40"
+        className={`w-full flex items-center justify-between px-3 h-9 rounded-xl border transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${isOpen || selectedCount > 0
+          ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-sm"
+          : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-white/5 text-slate-500 hover:border-primary/40"
           }`}
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="size-3.5" />}
-          <span>{label}</span>
+          <span className="truncate">{label}</span>
           {selectedCount > 0 && (
-            <span className="bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-lg ml-1">
+            <span className="bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-lg ml-1 shrink-0">
               {selectedCount}
             </span>
           )}
         </div>
-        <ChevronDown className={`size-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`size-3.5 transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       <AnimatePresence>
@@ -134,6 +135,7 @@ export default function ReportsPageClient() {
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [showAllLiquidity, setShowAllLiquidity] = useState(false);
 
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -438,6 +440,45 @@ export default function ReportsPageClient() {
     };
   }, [filteredTx, categories, outflow]);
 
+  const insights = useMemo(() => {
+    const monthStartDate = user?.monthStartDate || 1;
+    const currentFiscalStart = getFiscalMonthStart(new Date(), monthStartDate);
+
+    const periodTx = transactions.filter((tx) => {
+      if (tx.status === "pending_confirmation") return false;
+      const d = new Date(tx.date);
+      return d >= currentFiscalStart;
+    });
+
+    const monthlyIncome = periodTx
+      .filter((tx) => tx.type === "income")
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const monthlyExpense = periodTx
+      .filter((tx) => tx.type === "expense")
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const savingsRate = monthlyIncome > 0
+      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
+      : 0;
+
+    const liquidCapital = accounts
+      .filter(a => !a.excludeFromAnalytics && a.type !== 'card')
+      .reduce((sum, a) => sum + a.balance, 0);
+
+    const score = monthlyExpense > 0
+      ? (liquidCapital / monthlyExpense).toFixed(1)
+      : (liquidCapital > 0 ? "100+" : "0");
+
+    return {
+      monthlyIncome,
+      monthlyExpense,
+      savingsRate: savingsRate.toFixed(1),
+      liquidCapital,
+      score: parseFloat(score)
+    };
+  }, [transactions, accounts, user?.monthStartDate]);
+
   const expenseBreakdown = useMemo(() => {
     const totals = filteredTx
       .filter(
@@ -478,13 +519,13 @@ export default function ReportsPageClient() {
 
   if (authLoading || (loading && transactions.length === 0)) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-8 animate-pulse text-center">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-8 text-center">
         <div className="space-y-3 flex flex-col items-center">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-5 w-96" />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Card
               key={`skeleton-${i}`}
@@ -497,7 +538,7 @@ export default function ReportsPageClient() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="flex flex-wrap gap-8">
           <Card className="h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="flex-1 w-full" />
@@ -520,21 +561,37 @@ export default function ReportsPageClient() {
         subtitle="Unified analytics & predictive insights"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`h-9 px-4 flex items-center justify-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm ${showFilters
-                ? "bg-primary text-white border-primary"
-                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
-                }`}
-            >
-              {showFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
-              <span>Filters</span>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`h-9 px-4 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm ${showFilters
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
+                  }`}
+              >
+                {showFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+                <span>Filters</span>
+                {(selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all") && (
+                  <span className="size-4 rounded-full bg-rose-500 text-white text-[8px] flex items-center justify-center">
+                    {selectedAccountIds.length + selectedCategoryIds.length + (selectedType !== "all" ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+
               {(selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all") && (
-                <span className="size-4 rounded-full bg-rose-500 text-white text-[8px] flex items-center justify-center animate-pulse">
-                  {selectedAccountIds.length + selectedCategoryIds.length + (selectedType !== "all" ? 1 : 0)}
-                </span>
+                <button
+                  onClick={() => {
+                    setSelectedAccountIds([]);
+                    setSelectedCategoryIds([]);
+                    setSelectedType("all");
+                  }}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:scale-[1.03] active:scale-95 transition-all shrink-0"
+                  title="Clear Filters"
+                >
+                  <X className="size-4" />
+                </button>
               )}
-            </button>
+            </div>
 
             <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
               {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
@@ -544,7 +601,7 @@ export default function ReportsPageClient() {
                     setViewType(type);
                   }}
                   className={`flex-1 sm:flex-none px-3 sm:px-4 h-9 flex items-center justify-center text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${viewType === type
-                    ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                    ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     }`}
                 >
@@ -582,69 +639,57 @@ export default function ReportsPageClient() {
             </div>
           </div>
         }
-      />
+      >
+        {showFilters && (
+          <div className="bg-slate-50/50 dark:bg-slate-900/40 p-2.5 rounded-2xl border border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm flex flex-wrap gap-2.5 mt-2">
+            <div className="flex-1 min-w-[130px]">
+              <FilterDropdown
+                label="Account"
+                multi
+                value={selectedAccountIds}
+                options={accounts.map(a => ({ id: a.id, name: a.name }))}
+                onSelect={(id) => {
+                  setSelectedAccountIds(prev =>
+                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  );
+                }}
+                onClear={() => setSelectedAccountIds([])}
+              />
+            </div>
 
-      {showFilters && (
-        <Card className="bg-white dark:bg-slate-900 border-dashed border-slate-200 dark:border-white/10 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl shadow-primary/5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <FilterDropdown
-              label="Account"
-              multi
-              value={selectedAccountIds}
-              options={accounts.map(a => ({ id: a.id, name: a.name }))}
-              onSelect={(id) => {
-                setSelectedAccountIds(prev =>
-                  prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-                );
-              }}
-              onClear={() => setSelectedAccountIds([])}
-            />
+            <div className="flex-1 min-w-[130px]">
+              <FilterDropdown
+                label="Category"
+                multi
+                value={selectedCategoryIds}
+                options={categories.map(c => ({ id: c.id, name: c.name }))}
+                onSelect={(id) => {
+                  setSelectedCategoryIds(prev =>
+                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  );
+                }}
+                onClear={() => setSelectedCategoryIds([])}
+              />
+            </div>
 
-            <FilterDropdown
-              label="Category"
-              multi
-              value={selectedCategoryIds}
-              options={categories.map(c => ({ id: c.id, name: c.name }))}
-              onSelect={(id) => {
-                setSelectedCategoryIds(prev =>
-                  prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-                );
-              }}
-              onClear={() => setSelectedCategoryIds([])}
-            />
-
-            <FilterDropdown
-              label="Type"
-              value={selectedType}
-              options={[
-                { id: "all", name: "All Types" },
-                { id: "income", name: "Income" },
-                { id: "expense", name: "Expense" },
-                { id: "transfer", name: "Transfers" },
-              ]}
-              onSelect={setSelectedType}
-            />
-
-            <button
-              onClick={() => {
-                setSelectedAccountIds([]);
-                setSelectedCategoryIds([]);
-                setSelectedType("all");
-              }}
-              disabled={selectedAccountIds.length === 0 && selectedCategoryIds.length === 0 && selectedType === "all"}
-              className={`h-11 flex items-center justify-center gap-2 rounded-2xl transition-all font-black text-[10px] uppercase tracking-[0.2em] border ${selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all"
-                ? "bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20 hover:scale-[1.02]"
-                : "bg-slate-50 dark:bg-slate-800/50 text-slate-300 border-slate-100 dark:border-white/5 cursor-not-allowed opacity-50"
-                }`}
-            >
-              <X className="size-3.5" />
-              <span>Clear Filters</span>
-            </button>
+            <div className="flex-1 min-w-[130px]">
+              <FilterDropdown
+                label="Type"
+                value={selectedType}
+                options={[
+                  { id: "all", name: "All Types" },
+                  { id: "income", name: "Income" },
+                  { id: "expense", name: "Expense" },
+                  { id: "transfer", name: "Transfers" },
+                ]}
+                onSelect={setSelectedType}
+              />
+            </div>
           </div>
-        </Card>
-      )}
+        )}
+      </PageHeader>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-primary transition-colors">
             Net Worth
@@ -704,7 +749,7 @@ export default function ReportsPageClient() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -722,6 +767,33 @@ export default function ReportsPageClient() {
             </div>
             <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">
               {viewType} Status
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 space-y-4 border border-slate-100 dark:border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <Activity className="size-3 text-primary" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Financial Freedom Score</span>
+                </div>
+                <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg tracking-widest">
+                  SCORE: {insights.score}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-end">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capital Endurance</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">{insights.score} Months</span>
+                </div>
+                <ProgressBar progress={Math.min((insights.score / 6) * 100, 100)} className="h-1.5" />
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                  Your liquid capital covers <span className="text-primary">{insights.score} months</span> of current expansion. Target is 6.0 units.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -833,7 +905,7 @@ export default function ReportsPageClient() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-6 sm:mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 sm:mt-8">
         {/* Account Liquidity Widget */}
         <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-6">
           <div className="flex items-center justify-between">
@@ -855,8 +927,8 @@ export default function ReportsPageClient() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
-            {accounts.map((acc) => (
+          <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
+            {(showAllLiquidity ? accounts : accounts.slice(0, 4)).map((acc) => (
               <div key={acc.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
@@ -873,6 +945,16 @@ export default function ReportsPageClient() {
               </div>
             ))}
           </div>
+          {accounts.length > 4 && (
+            <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
+              <button
+                onClick={() => setShowAllLiquidity(!showAllLiquidity)}
+                className="flex items-center gap-2 px-6 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all"
+              >
+                {showAllLiquidity ? "Minimize View" : `Audit ${accounts.length - 4} More Nodes`}
+              </button>
+            </div>
+          )}
         </Card>
 
         {/* Savings Performance Widget */}
@@ -880,7 +962,7 @@ export default function ReportsPageClient() {
           <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
             <PiggyBank size={140} />
           </div>
-          
+
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
@@ -913,14 +995,14 @@ export default function ReportsPageClient() {
                 <span className="text-primary">{budgetTargets.savings}%</span>
               </div>
               <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%` }}
                   className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-primary'}`}
                 />
               </div>
               <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">
-                {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings 
+                {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings
                   ? "EXCELLENT: Your accumulation vector is outperforming the target protocol. Surplus capital identified."
                   : `ATTENTION: You are currently operating at ${(budgetTargets.savings - fiftyThirtyTwenty.savings.percent).toFixed(1)}% below your defined savings architecture.`}
               </p>

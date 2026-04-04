@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { Card } from "@/components/ui/Card";
 import {
   Database,
@@ -168,17 +169,17 @@ export default function AdminPurgePage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Protocol Purge"
         subtitle="Command terminal for permanent ledger sanitation"
         backHref="/admin/dashboard"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-start relative z-10">
+      <div className="flex flex-wrap gap-6 lg:items-start relative z-10">
 
         {/* User Dropdown / Listing Sidebar */}
-        <div className="lg:col-span-4">
+        <div className="flex-1 lg:flex-[4] min-w-[300px]">
           {/* Mobile Dropdown Selector */}
           <div className="lg:hidden">
             <div className="relative">
@@ -251,7 +252,7 @@ export default function AdminPurgePage() {
                           <ShieldCheck className={`size-3 shrink-0 ${isActive ? "text-white/70" : "text-primary/50"}`} />
                         )}
                         {isLocal && (
-                          <div className={`size-1.5 rounded-full shrink-0 animate-pulse ${isActive ? "bg-white" : "bg-primary"}`} title="Authorized locally" />
+                          <div className={`size-1.5 rounded-full shrink-0 ${isActive ? "bg-white" : "bg-primary"}`} title="Authorized locally" />
                         )}
                       </div>
                       <span className={`text-[9px] font-bold truncate opacity-70 ${isActive ? "text-white" : "text-slate-400"}`}>
@@ -284,7 +285,7 @@ export default function AdminPurgePage() {
         </div>
 
         {/* Data Fragments Panel */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="flex-1 lg:flex-[8] min-w-[300px] space-y-6">
           <AnimatePresence mode="wait">
             {!selectedUserId ? (
               <motion.div
@@ -312,7 +313,7 @@ export default function AdminPurgePage() {
                 className="space-y-6"
               >
                 {/* Active Selection Hero */}
-                <div className="relative p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl">
+                <div className="relative p-3 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-4 sm:gap-6">
                       <div className="size-16 sm:size-20 rounded-2xl sm:rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary text-xl sm:text-2xl font-black border-2 border-primary/20 shadow-xl shadow-primary/20 shrink-0">
@@ -361,7 +362,7 @@ export default function AdminPurgePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                  <div className="flex gap-2 mt-6 w-full">
                     <StatItem label="Fragment Count" value={deletedItems.length} color="text-rose-500" />
                     <StatItem label="Auth Status" value={localAccounts.some(a => a.uid === selectedUserId) ? "RECOGNIZED" : "UNAUTHORIZED"} color={localAccounts.some(a => a.uid === selectedUserId) ? "text-emerald-500" : "text-amber-500"} />
                     <StatItem label="Sector Safety" value={deletedItems.length > 10 ? "CRITICAL" : "STABLE"} color={deletedItems.length > 10 ? "text-rose-500" : "text-emerald-500"} />
@@ -374,24 +375,24 @@ export default function AdminPurgePage() {
 
                 {/* Listing of fragments */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
                     <div className="flex items-center gap-2">
-                      <Database className="size-4 text-rose-500" />
-                      <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      <Database className="size-4 shrink-0 text-rose-500" />
+                      <h3 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">
                         Data Cleanup Queue
-                        <span className="ml-2 text-slate-400">({filteredItems.length})</span>
+                        <span className="ml-1 sm:ml-2 text-slate-400">({filteredItems.length})</span>
                       </h3>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
                       <button
                         onClick={handlePurgeAll}
                         disabled={itemsLoading || filteredItems.length === 0}
-                        className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 disabled:opacity-30 flex items-center gap-1"
+                        className="text-[8px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 disabled:opacity-30 flex items-center gap-1 whitespace-nowrap"
                       >
-                        <Zap className="size-3 fill-current" />
-                        Purge All Cluster Data
+                        <Zap className="size-3 fill-current shrink-0" />
+                        Purge All Data
                       </button>
-                      <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary">
+                      <button className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary whitespace-nowrap">
                         Latest First
                       </button>
                     </div>
@@ -417,7 +418,7 @@ export default function AdminPurgePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-3">
+                      <div className="flex flex-col gap-3">
                         <AnimatePresence mode="popLayout">
                           {filteredItems.map((item) => (
                             <motion.div
@@ -427,53 +428,55 @@ export default function AdminPurgePage() {
                               exit={{ opacity: 0, scale: 0.9 }}
                               layout
                             >
-                              <Card className="border-slate-100 dark:border-white/5 hover:border-rose-500/20 transition-all group relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
-                                <div className="flex items-center justify-between gap-6">
-                                  <div className="flex items-center gap-5 min-w-0">
-                                    <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center text-[8px] font-black uppercase text-slate-400 shrink-0 border border-slate-100 dark:border-white/5 group-hover:bg-rose-500/5 group-hover:border-rose-500/10 transition-colors">
-                                      <span className="text-[7px]">TYP</span>
-                                      <span className="text-primary group-hover:text-rose-500">{item.collection.charAt(0).toUpperCase()}</span>
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                      <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="text-[9px] font-black text-primary group-hover:text-rose-500 transition-colors uppercase tracking-[0.2em]">
-                                          {item.collection}
-                                        </span>
-                                        <span className="text-[8px] text-slate-400 font-bold opacity-50">•</span>
-                                        <span className="text-[8px] text-slate-400 font-bold uppercase">
-                                          ID: {item.id.slice(0, 8)}
-                                        </span>
+                              <div className="flex-1 min-w-[200px]">
+                                <Card className="border-slate-100 dark:border-white/5 hover:border-rose-500/20 transition-all group relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+                                  <div className="flex items-center justify-between gap-6">
+                                    <div className="flex items-center gap-5 min-w-0">
+                                      <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center text-[8px] font-black uppercase text-slate-400 shrink-0 border border-slate-100 dark:border-white/5 group-hover:bg-rose-500/5 group-hover:border-rose-500/10 transition-colors">
+                                        <span className="text-[7px]">TYP</span>
+                                        <span className="text-primary group-hover:text-rose-500">{item.collection.charAt(0).toUpperCase()}</span>
                                       </div>
-                                      <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate">
-                                        {item.description || item.name || "Untitled Fragment"}
-                                      </span>
-                                      <div className="flex items-center gap-3 mt-1.5">
-                                        <div className="flex items-center gap-1.5 text-[8px] text-slate-400 font-black uppercase tracking-widest">
-                                          <History className="size-2.5" />
-                                          {new Date(item.deletedAt).toLocaleDateString()}
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <span className="text-[9px] font-black text-primary group-hover:text-rose-500 transition-colors uppercase tracking-[0.2em]">
+                                            {item.collection}
+                                          </span>
+                                          <span className="text-[8px] text-slate-400 font-bold opacity-50">•</span>
+                                          <span className="text-[8px] text-slate-400 font-bold uppercase">
+                                            ID: {item.id.slice(0, 8)}
+                                          </span>
                                         </div>
-                                        {item.amount !== undefined && (
-                                          <div className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[8px] font-black uppercase">
-                                            ₹{item.amount.toLocaleString()}
+                                        <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate">
+                                          {item.description || item.name || "Untitled Fragment"}
+                                        </span>
+                                        <div className="flex items-center gap-3 mt-1.5">
+                                          <div className="flex items-center gap-1.5 text-[8px] text-slate-400 font-black uppercase tracking-widest">
+                                            <History className="size-2.5" />
+                                            {new Date(item.deletedAt).toLocaleDateString()}
                                           </div>
-                                        )}
+                                          {item.amount !== undefined && (
+                                            <div className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[8px] font-black uppercase">
+                                              ₹{item.amount.toLocaleString()}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
 
-                                  <button
-                                    onClick={() => setConfirmModal({ isOpen: true, item })}
-                                    disabled={purgingId === item.id}
-                                    className="px-5 h-10 rounded-xl bg-slate-50 dark:bg-white/5 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-slate-100 dark:border-white/5 active:scale-95 disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shrink-0 shadow-sm"
-                                  >
-                                    {purgingId === item.id ? (
-                                      <Loader2 className="size-4 animate-spin mx-auto" />
-                                    ) : (
-                                      "Sanitize"
-                                    )}
-                                  </button>
-                                </div>
-                              </Card>
+                                    <button
+                                      onClick={() => setConfirmModal({ isOpen: true, item })}
+                                      disabled={purgingId === item.id}
+                                      className="px-5 h-10 rounded-xl bg-slate-50 dark:bg-white/5 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-slate-100 dark:border-white/5 active:scale-95 disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shrink-0 shadow-sm"
+                                    >
+                                      {purgingId === item.id ? (
+                                        <Loader2 className="size-4 animate-spin mx-auto" />
+                                      ) : (
+                                        "Sanitize"
+                                      )}
+                                    </button>
+                                  </div>
+                                </Card>
+                              </div>
                             </motion.div>
                           ))}
                         </AnimatePresence>
@@ -515,15 +518,15 @@ export default function AdminPurgePage() {
         onConfirm={handlePurge}
         onCancel={() => setConfirmModal({ isOpen: false, item: null })}
       />
-    </div>
+    </PageContainer>
   );
 }
 
 function StatItem({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex flex-col gap-1">
-      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-      <span className={`text-xs font-black uppercase ${color}`}>{value}</span>
+    <div className="flex-1 p-2.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex flex-col gap-1 items-center justify-center text-center">
+      <span className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest leading-tight">{label}</span>
+      <span className={`text-[10px] sm:text-xs font-black uppercase truncate w-full ${color}`}>{value}</span>
     </div>
   );
 }

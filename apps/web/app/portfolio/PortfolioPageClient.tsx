@@ -122,13 +122,13 @@ export default function PortfolioPageClient() {
 
   if (authLoading || (loading && accounts.length === 0)) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-6 pb-20 animate-pulse">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-6 pb-20">
         <div className="h-10 w-48 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={`skeleton-${i}`}
-              className="h-24 bg-slate-100 dark:bg-slate-800 rounded-2xl"
+              className="h-24 flex-1 min-w-[140px] bg-slate-100 dark:bg-slate-800 rounded-2xl"
             />
           ))}
         </div>
@@ -146,11 +146,11 @@ export default function PortfolioPageClient() {
         subtitle="Unified wealth command"
         className="space-y-3"
         actions={
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-2 w-full lg:w-auto">
+          <div className="grid grid-cols-2 md:flex md:items-center gap-2 w-full lg:w-auto">
             <Button
               size="sm"
               variant="secondary"
-              className="flex-1 lg:flex-initial text-[10px]"
+              className="w-full md:w-auto text-[10px] h-9"
               onClick={() => {
                 setEditingAssetType(null);
                 setIsAssetTypeModalOpen(true);
@@ -159,9 +159,9 @@ export default function PortfolioPageClient() {
               <Plus className="w-3 h-3 mr-1" />
               Class
             </Button>
-            <Button 
-              size="sm" 
-              className="flex-1 lg:flex-initial text-[10px]"
+            <Button
+              size="sm"
+              className="w-full md:w-auto text-[10px] h-9"
               onClick={() => setIsAddInvestmentOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -170,7 +170,7 @@ export default function PortfolioPageClient() {
             <Button
               size="sm"
               variant="danger"
-              className="flex-1 lg:flex-initial text-[10px]"
+              className="w-full md:w-auto text-[10px] h-9"
               onClick={() => setIsAddLiabilityOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -179,7 +179,7 @@ export default function PortfolioPageClient() {
             <Button
               size="sm"
               variant="success"
-              className="flex-1 lg:flex-initial text-[10px]"
+              className="w-full md:w-auto text-[10px] h-9"
               onClick={() => setIsAddAssetOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -278,9 +278,55 @@ export default function PortfolioPageClient() {
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
           Growth Index
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Identity</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Class</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Capital</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Valuation</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Yield</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedInvestments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No growth assets traced</td>
+                </tr>
+              ) : (
+                paginatedInvestments.map((inv) => (
+                  <tr key={inv.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }}>
+                    <td className="px-5 py-3">
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{inv.name}</div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${assetTypes.find(a => a.id === inv.assetType)?.color || "bg-slate-400"}`} />
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">{assetTypes.find(a => a.id === inv.assetType)?.name || inv.assetType || "General"}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">₹{(inv.investedAmount || inv.balance).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">₹{inv.balance.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-black text-[11px]">
+                      <span className={inv.balance >= (inv.investedAmount || inv.balance) ? "text-emerald-500" : "text-rose-500"}>
+                        {(((inv.balance - (inv.investedAmount || inv.balance)) / (inv.investedAmount || inv.balance)) * 100 || 0).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: inv.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="lg:hidden grid grid-cols-2 gap-3">
           {paginatedInvestments.length === 0 ? (
-            <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No growth assets traced
               </p>
@@ -323,7 +369,7 @@ export default function PortfolioPageClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-white/5">
-                  <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="flex gap-4 flex-1">
                     <div className="flex flex-col">
                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
                         Capital
@@ -342,7 +388,7 @@ export default function PortfolioPageClient() {
                         {(
                           ((inv.balance - (inv.investedAmount || inv.balance)) /
                             (inv.investedAmount || inv.balance)) *
-                            100 || 0
+                          100 || 0
                         ).toFixed(1)}
                         %
                       </span>
@@ -362,101 +408,6 @@ export default function PortfolioPageClient() {
               </div>
             ))
           )}
-        </div>
-
-        <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-              <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
-                <tr>
-                  <th className="px-8 py-6" scope="col">
-                    Investment Identity
-                  </th>
-                  <th className="px-8 py-6" scope="col">
-                    Asset Class
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Deployed Capital
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Current Valuation
-                  </th>
-                  <th className="px-8 py-6 text-right w-36" scope="col">
-                    Operations
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {paginatedInvestments.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest text-[10px]"
-                    >
-                      No active wealth nodes.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedInvestments.map((inv) => (
-                    <tr
-                      key={inv.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all"
-                    >
-                      <td className="px-8 py-5">
-                        <div className="font-black text-slate-900 dark:text-white tracking-tight">
-                          {inv.name}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="inline-flex items-center rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 dark:bg-slate-800/50 dark:border-white/5 dark:text-slate-400">
-                          <div
-                            className={`w-1.5 h-1.5 rounded-full mr-2 ${assetTypes.find((a) => a.id === inv.assetType)?.color || "bg-slate-400"}`}
-                          />
-                          {assetTypes.find((a) => a.id === inv.assetType)
-                            ?.name ||
-                            inv.assetType ||
-                            inv.type}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-bold text-slate-900 dark:text-white">
-                          ₹
-                          {(inv.investedAmount || inv.balance).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-black text-emerald-500 text-base tracking-tighter">
-                          ₹{inv.balance.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setEditingInvestment(inv);
-                              setIsAddInvestmentOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setItemToDelete({ id: inv.id, type: "account" });
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
 
         {totalInvestmentPages > 1 && (
@@ -492,9 +443,50 @@ export default function PortfolioPageClient() {
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
           Liability Pulse
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Identity</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Class</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Limit</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Repaid</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Interest</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Net Balance</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedDebts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No exposure clusters traced</td>
+                </tr>
+              ) : (
+                paginatedDebts.map((debt) => (
+                  <tr key={debt.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}>
+                    <td className="px-5 py-3">
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{debt.name}</div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">{debt.type}</span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">₹{(debt.initialAmount || Math.abs(debt.balance) + (debt.repaidCapital || 0)).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-emerald-500">₹{(debt.repaidCapital || 0).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-orange-500">₹{(debt.burnedInterest || 0).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-rose-500">₹{Math.abs(debt.balance).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: debt.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="lg:hidden grid grid-cols-2 gap-3">
           {paginatedDebts.length === 0 ? (
-            <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No exposure clusters
               </p>
@@ -530,7 +522,7 @@ export default function PortfolioPageClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-white/5">
-                  <div className="grid grid-cols-3 gap-2 flex-1">
+                  <div className="flex gap-2 flex-1">
                     <div className="flex flex-col">
                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
                         Limit
@@ -576,114 +568,6 @@ export default function PortfolioPageClient() {
           )}
         </div>
 
-        <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-              <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
-                <tr>
-                  <th className="px-8 py-6" scope="col">
-                    Liability Identity
-                  </th>
-                  <th className="px-8 py-6" scope="col">
-                    Exposure Class
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Principal Debt
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Repaid Capital
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Burned Interest
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Current Balance
-                  </th>
-                  <th className="px-8 py-6 text-right w-36" scope="col">
-                    Operations
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {paginatedDebts.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest text-[10px]"
-                    >
-                      No active debt cycles.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedDebts.map((debt) => (
-                    <tr
-                      key={debt.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all"
-                    >
-                      <td className="px-8 py-5">
-                        <div className="font-black text-slate-900 dark:text-white tracking-tight">
-                          {debt.name}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/5 px-2.5 py-1 rounded-lg border border-rose-500/10">
-                          {debt.type}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          ₹
-                          {(
-                            debt.initialAmount ||
-                            Math.abs(debt.balance) + (debt.repaidCapital || 0)
-                          ).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right text-emerald-500">
-                        <span className="font-bold">
-                          ₹{(debt.repaidCapital || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right text-orange-500">
-                        <span className="font-bold">
-                          ₹{(debt.burnedInterest || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-black text-rose-500 text-base tracking-tighter">
-                          ₹{debt.balance}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setEditingLiability(debt);
-                              setIsAddLiabilityOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setItemToDelete({ id: debt.id, type: "account" });
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         {totalDebtPages > 1 && (
           <div className="flex items-center justify-between px-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -715,9 +599,44 @@ export default function PortfolioPageClient() {
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
           Auxiliary Assets
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Identity</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Class</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Valuation</th>
+                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {otherAssets.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters traced</td>
+                </tr>
+              ) : (
+                otherAssets.map((asset) => (
+                  <tr key={asset.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}>
+                    <td className="px-5 py-3">
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{asset.name}</div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">Fixed Asset Identity</span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">₹{asset.balance.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: asset.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="lg:hidden grid grid-cols-2 gap-3">
           {otherAssets.length === 0 ? (
-            <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No auxiliary wealth clusters
               </p>
@@ -770,81 +689,6 @@ export default function PortfolioPageClient() {
               </div>
             ))
           )}
-        </div>
-
-        <div className="hidden lg:block overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 dark:border-white/5 dark:bg-slate-900 dark:shadow-none">
-          <div className="overflow-x-auto overflow-y-hidden">
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-              <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:bg-slate-800/50">
-                <tr>
-                  <th className="px-8 py-6" scope="col">
-                    Asset Identity
-                  </th>
-                  <th className="px-8 py-6 text-right" scope="col">
-                    Current Valuation
-                  </th>
-                  <th className="px-8 py-6 text-right w-36" scope="col">
-                    Operations
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {otherAssets.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest text-[10px]"
-                    >
-                      No auxiliary wealth clusters.
-                    </td>
-                  </tr>
-                ) : (
-                  otherAssets.map((asset) => (
-                    <tr
-                      key={asset.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all"
-                    >
-                      <td className="px-8 py-5">
-                        <div className="font-black text-slate-900 dark:text-white tracking-tight">
-                          {asset.name}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-black text-emerald-500 text-base tracking-tighter">
-                          ₹{asset.balance.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setEditingAsset(asset);
-                              setIsAddAssetOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-primary/10 text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setItemToDelete({
-                                id: asset.id,
-                                type: "account",
-                              });
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
 

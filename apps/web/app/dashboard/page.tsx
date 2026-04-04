@@ -35,6 +35,7 @@ export default function Home() {
   const { permission, requestPermission } = useSignals();
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [showAllAccounts, setShowAllAccounts] = useState(false);
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
   // Accounts used for analytics/stats (excludes those marked as excluded)
@@ -60,10 +61,10 @@ export default function Home() {
 
   const expiringSoon = useMemo(() => {
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     return reminders.filter(r => {
       const expiry = new Date(r.expiryDate);
-      return expiry > now && expiry <= thirtyDaysFromNow;
+      return expiry > now && expiry <= sevenDaysFromNow;
     });
   }, [reminders]);
 
@@ -248,6 +249,40 @@ export default function Home() {
     }));
   }, [transactions, realTimeNetWorth, user?.monthStartDate]);
 
+  const dashboardStats = useMemo(() => {
+    const monthStartDate = user?.monthStartDate || 1;
+    const currentFiscalStart = getFiscalMonthStart(new Date(), monthStartDate);
+
+    const periodTx = transactions.filter((tx) => {
+      if (tx.status === "pending_confirmation") return false;
+      const d = new Date(tx.date);
+      return d >= currentFiscalStart;
+    });
+
+    const monthlyIncome = periodTx
+      .filter((tx) => tx.type === "income")
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const monthlyExpense = periodTx
+      .filter((tx) => tx.type === "expense")
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const savingsRate = monthlyIncome > 0 
+      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100 
+      : 0;
+
+    const liquidCapital = analyticsRegularAccounts
+      .filter(a => a.type !== 'card')
+      .reduce((sum, a) => sum + a.balance, 0);
+
+    return {
+      monthlyIncome,
+      monthlyExpense,
+      savingsRate: savingsRate.toFixed(1),
+      liquidCapital
+    };
+  }, [transactions, analyticsRegularAccounts, user?.monthStartDate]);
+
   const netWorthChange = useMemo(() => {
     if (computedNetWorthHistory.length < 2) return 0;
     const last =
@@ -258,74 +293,19 @@ export default function Home() {
     return parseFloat((((last - prev) / prev) * 100).toFixed(1));
   }, [computedNetWorthHistory]);
 
-  const insights = useMemo(() => {
-    const monthStartDate = user?.monthStartDate || 1;
-    const currentFiscalStart = getFiscalMonthStart(new Date(), monthStartDate);
-
-    const last30Days = transactions.filter((tx) => {
-      if (tx.status === "pending_confirmation") return false;
-      const d = new Date(tx.date);
-      return d >= currentFiscalStart;
-    });
-
-    const monthlyIncome = last30Days
-      .filter((tx) => tx.type === "income")
-      .reduce((sum, tx) => sum + tx.amount, 0);
-    const monthlyExpense = last30Days
-      .filter((tx) => tx.type === "expense")
-      .reduce((sum, tx) => sum + tx.amount, 0);
-
-    const avgExpense = monthlyExpense || assets * 0.05 || 1;
-    const runwayMonths = (assets / avgExpense).toFixed(1);
-
-    const runwayScore = Math.min(50, (parseFloat(runwayMonths) / 24) * 50);
-    const savingsRate =
-      monthlyIncome > 0 ? (monthlyIncome - monthlyExpense) / monthlyIncome : 0;
-    const savingsScore = Math.min(25, savingsRate * 100);
-    const goalScore =
-      goals.length > 0
-        ? (goals.reduce((sum, g) => sum + g.currentAmount / g.targetAmount, 0) /
-          goals.length) *
-        25
-        : 0;
-
-    const freedomScore = (runwayScore + savingsScore + goalScore).toFixed(1);
-
-    let status = "Stabilizing";
-    const scoreVal = parseFloat(freedomScore);
-    if (scoreVal > 80) status = "Excellent";
-    else if (scoreVal > 60) status = "Strong";
-    else if (scoreVal > 40) status = "Moderate";
-
-    const incompleteGoal = goals.find((g) => g.currentAmount < g.targetAmount);
-    const suggestion = incompleteGoal
-      ? `Increasing saving rate by 5% reaches "${incompleteGoal.name}" approx. ${Math.ceil((incompleteGoal.targetAmount - incompleteGoal.currentAmount) / (avgExpense * 0.05))} days faster.`
-      : "You've reached all your primary goals!";
-
-    return {
-      runwayMonths,
-      freedomScore,
-      status,
-      suggestion,
-      savingsRate: (savingsRate * 100).toFixed(0),
-      monthlyIncome,
-      monthlyExpense,
-      liquidCapital: analyticsRegularAccounts.filter(a => a.type !== 'card').reduce((sum, a) => sum + a.balance, 0)
-    };
-  }, [transactions, assets, goals, analyticsRegularAccounts, user?.monthStartDate]);
 
   if (loading && allAccounts.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-6 lg:space-y-8 animate-pulse">
+      <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-6 lg:space-y-8">
         <div className="space-y-3">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-5 w-96" />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Card
               key={i}
-              className="space-y-3 shadow-none border-slate-100 dark:border-slate-800"
+              className="flex-1 min-w-[140px] space-y-3 shadow-none border-slate-100 dark:border-slate-800"
             >
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-8 w-32" />
@@ -355,7 +335,7 @@ export default function Home() {
           </div>
         }
       />
-      
+
       {expiringSoon.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -373,7 +353,7 @@ export default function Home() {
                     {expiringSoon.length} Signal Horizon{expiringSoon.length > 1 ? 's' : ''} require{expiringSoon.length === 1 ? 's' : ''} immediate attention
                   </h4>
                   <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
-                    Impending expiry detected within 30-day window
+                    Impending expiry detected within 7-day window
                   </p>
                 </div>
               </div>
@@ -383,8 +363,9 @@ export default function Home() {
         </motion.div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <DashboardStatCard
+          className="w-full"
           label="Net Worth"
           subtitle="Total assets minus debt"
           value={realTimeNetWorth}
@@ -396,21 +377,23 @@ export default function Home() {
         />
 
         <DashboardStatCard
+          className="w-full"
           label="Period Inflow"
           subtitle="Total 30-day income"
-          value={insights.monthlyIncome}
+          value={dashboardStats.monthlyIncome}
           valueColor="text-emerald-500"
           trend={{
-            label: `${insights.savingsRate}% Savings Rate`,
-            color: parseFloat(insights.savingsRate) >= 0 ? "bg-emerald-500" : "bg-rose-500",
+            label: `${dashboardStats.savingsRate}% Savings Rate`,
+            color: parseFloat(dashboardStats.savingsRate) >= 0 ? "bg-emerald-500" : "bg-rose-500",
             showPulse: true,
           }}
         />
 
         <DashboardStatCard
+          className="w-full"
           label="Period Outflow"
           subtitle="Total period spending"
-          value={insights.monthlyExpense}
+          value={dashboardStats.monthlyExpense}
           valueColor="text-rose-500"
           trend={{
             label: "Efficiency 100%",
@@ -419,9 +402,10 @@ export default function Home() {
         />
 
         <DashboardStatCard
+          className="w-full"
           label="Liquid Capital"
           subtitle="Bank & Cash reserves"
-          value={insights.liquidCapital}
+          value={dashboardStats.liquidCapital}
           valueColor="text-primary"
           trend={{
             label: "Fluid Assets",
@@ -459,7 +443,19 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="pt-1">
-                  <AccountList accounts={displayRegularAccounts} />
+                  <AccountList accounts={showAllAccounts ? displayRegularAccounts : displayRegularAccounts.slice(0, 4)} />
+                  {displayRegularAccounts.length > 4 && (
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="text-[10px] font-black uppercase tracking-widest px-8"
+                        onClick={() => setShowAllAccounts(!showAllAccounts)}
+                      >
+                        {showAllAccounts ? "Show Less" : `Show ${displayRegularAccounts.length - 4} More Units`}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -467,16 +463,18 @@ export default function Home() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:items-stretch">
-        <AssetAllocationDonut
-          data={
-            realTimeAssetAllocation.length > 0
-              ? realTimeAssetAllocation
-              : stats?.assetAllocation || []
-          }
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
+        <div className="w-full">
+          <AssetAllocationDonut
+            data={
+              realTimeAssetAllocation.length > 0
+                ? realTimeAssetAllocation
+                : stats?.assetAllocation || []
+            }
+          />
+        </div>
 
-        <div className="space-y-4 flex flex-col">
+        <div className="w-full space-y-4 flex flex-col">
           <div className="flex items-center justify-between px-1 group">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               Goal Velocity
@@ -518,35 +516,6 @@ export default function Home() {
           </div>
         </div>
 
-        <Card className="bg-slate-900 border-none relative overflow-hidden group shadow-2xl shadow-indigo-500/10 transition-transform active:scale-[0.98] min-h-[300px] flex flex-col justify-center">
-          <div className="relative z-10">
-            <div className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 leading-none">
-              Portfolio Insights
-            </div>
-            <h4 className="text-white font-black text-xl mb-3 tracking-tight">
-              Financial Freedom Score
-            </h4>
-            <div className="flex items-end gap-3 mb-5">
-              <span className="text-5xl font-black text-white leading-none tracking-tighter">
-                {insights.freedomScore}
-              </span>
-              <span
-                className={`${insights.status === "Excellent" ? "text-emerald-500" : "text-primary"} font-bold text-xs mb-1.5 uppercase tracking-widest`}
-              >
-                {insights.status}
-              </span>
-            </div>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Assets cover{" "}
-              <span className="text-white font-bold tracking-tight">
-                {insights.runwayMonths} months
-              </span>{" "}
-              of expenses.
-              {insights.suggestion}
-            </p>
-          </div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/30 transition-all duration-700" />
-        </Card>
       </div>
 
       <div>
@@ -556,8 +525,6 @@ export default function Home() {
           percentageChange={netWorthChange}
         />
       </div>
-
-
 
 
       <AddAccountModal

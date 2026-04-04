@@ -103,7 +103,7 @@ export function SessionList() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-wrap gap-4">
         {sessions.map((session) => {
             const { isMobile, isPWA: uaIsPWA, browser, os } = parseUserAgent(session.userAgent || "");
             const isPWA = session.isPWA ?? uaIsPWA;
@@ -112,7 +112,7 @@ export function SessionList() {
             return (
               <Card
                 key={session.token}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900/50 hover:border-primary/30 transition-all p-3 ${isCurrent ? 'ring-1 ring-primary/20 shadow-lg shadow-primary/5' : ''}`}
+                className={`flex-1 min-w-[300px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900/50 hover:border-primary/30 transition-all p-3 ${isCurrent ? 'ring-1 ring-primary/20 shadow-lg shadow-primary/5' : ''}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>

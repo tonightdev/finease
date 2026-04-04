@@ -18,6 +18,7 @@ import {
 import {
   fetchReminders,
   createReminder,
+  updateReminder,
   Reminder,
 } from "@/store/slices/remindersSlice";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
@@ -109,7 +110,7 @@ export default function GoalsPageClient() {
         }
         className="space-y-3"
         actions={
-          <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
@@ -145,9 +146,9 @@ export default function GoalsPageClient() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {goals.length === 0 ? (
-              <div className="col-span-2 text-center py-12 px-6 sm:py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/5">
+              <div className="col-span-full text-center py-12 px-6 sm:py-20 bg-white dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-white/5">
                 <Target className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
                   No Goals Set
@@ -167,73 +168,66 @@ export default function GoalsPageClient() {
                 return (
                   <div
                     key={goal.id}
-                    className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-3xl shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between h-full"
+                    className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between h-full min-w-0"
                   >
                     <div className="flex flex-col gap-3">
-                      <div className="flex items-start justify-between min-w-0">
+                      <div className="flex items-start justify-between min-w-0 gap-2">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-slate-900 dark:text-white font-black text-sm tracking-tight truncate leading-none uppercase">
+                          <h3 className="text-slate-900 dark:text-white font-black text-[11px] sm:text-sm tracking-tight truncate leading-none uppercase">
                             {goal.name}
                           </h3>
-                          <p className="text-slate-400 text-[8px] font-bold uppercase tracking-widest mt-1.5">
+                          <p className="text-slate-400 text-[7px] font-bold uppercase tracking-widest mt-1.5">
                             {formatDate(goal.targetDate)}
                           </p>
                         </div>
-                        <div className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 tracking-widest">
+                        <div className="text-[8px] sm:text-[10px] font-black text-primary bg-primary/5 px-1.5 py-0.5 rounded-full border border-primary/10 tracking-widest">
                           {percent}%
                         </div>
                       </div>
 
-                      <div className="mt-2 space-y-2">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-slate-900 dark:text-white font-black text-sm tracking-tighter">
+                      <div className="mt-2 space-y-1.5">
+                        <div className="flex justify-between items-baseline gap-1">
+                          <span className="text-slate-900 dark:text-white font-black text-[11px] sm:text-sm tracking-tighter">
                             ₹{goal.currentAmount.toLocaleString()}
                           </span>
-                          <span className="text-[8px] font-bold text-slate-400">
+                          <span className="text-[7px] font-bold text-slate-400 truncate">
                             Target ₹{goal.targetAmount.toLocaleString()}
                           </span>
                         </div>
-                        <div className="relative h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="relative h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                           <div
                             className="absolute h-full bg-primary rounded-full transition-all duration-1000"
                             style={{ width: `${percent}%` }}
                           />
                         </div>
-                        <div className="flex justify-between items-center text-[7px] font-black uppercase tracking-widest text-slate-400">
-                          <span>
-                            Gap: ₹
-                            {Math.round(
-                              goal.targetAmount - goal.currentAmount,
-                            ).toLocaleString()}
+                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400 mt-2">
+                          <span className="truncate border-r border-slate-100 dark:border-white/5 pr-2.5">
+                            Gap ₹{Math.round(goal.targetAmount - goal.currentAmount).toLocaleString()}
                           </span>
-                          <span className="text-orange-500">
-                            ₹
-                            {reqMonthly.toLocaleString(undefined, {
-                              maximumFractionDigits: 0,
-                            })}
-                            /mo
+                          <span className="text-orange-500 pl-2.5 shrink-0">
+                            ₹{reqMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-50 dark:border-white/5">
+                    <div className="flex flex-col xs:flex-row gap-2 pt-3 border-t border-slate-50 dark:border-white/5">
                       <button
                         onClick={() => {
                           setTopUpGoal(goal);
                           setIsTopUpModalOpen(true);
                         }}
-                        className="px-3 py-2 rounded-xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors active:bg-primary/20"
+                        className="px-2 py-1.5 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors active:bg-primary/20"
                       >
-                        <Wallet className="w-3 h-3" />
+                        <Wallet className="w-3 h-3" /> <span className="xs:hidden">Top Up</span>
                       </button>
-                      <div className="flex gap-3">
+                      <div className="flex flex-1 gap-2">
                         <button
                           onClick={() => {
                             setEditingGoal(goal);
                             setIsGoalModalOpen(true);
                           }}
-                          className="flex-1 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center transition-colors active:bg-slate-200 dark:active:bg-slate-700"
+                          className="flex-1 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center transition-colors active:bg-slate-200 dark:active:bg-slate-700"
                         >
                           <Pencil className="w-3 h-3" />
                         </button>
@@ -242,7 +236,7 @@ export default function GoalsPageClient() {
                             setGoalToDelete(goal);
                             setIsDeleteModalOpen(true);
                           }}
-                          className="flex-1 p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 flex items-center justify-center transition-colors active:bg-rose-100 dark:active:bg-rose-500/20"
+                          className="flex-1 p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 flex items-center justify-center transition-colors active:bg-rose-100 dark:active:bg-rose-500/20"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -334,8 +328,13 @@ export default function GoalsPageClient() {
           setSelectedReminder(null);
         }}
         onSave={async (data) => {
-          await dispatch(createReminder(data)).unwrap();
-          toast.success("Signal established.");
+          if (selectedReminder) {
+            await dispatch(updateReminder({ id: selectedReminder.id, data })).unwrap();
+            toast.success("Signal updated.");
+          } else {
+            await dispatch(createReminder(data)).unwrap();
+            toast.success("Signal established.");
+          }
         }}
         reminder={selectedReminder}
       />

@@ -36,7 +36,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -103,9 +103,9 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="flex flex-wrap gap-6">
             {/* Wealth Command (Large Row) */}
-            <div className="md:col-span-8 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-primary/50 transition-all shadow-sm">
+            <div className="md:flex-[8] min-w-[300px] group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-primary/50 transition-all shadow-sm">
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingUp className="w-32 h-32 text-primary" />
               </div>
@@ -133,7 +133,7 @@ export default function LandingPage() {
             </div>
 
             {/* Smart Automated Ledger */}
-            <div className="md:col-span-4 group relative bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden hover:scale-[1.02] transition-all shadow-2xl">
+            <div className="md:flex-[4] min-w-[300px] group relative bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden hover:scale-[1.02] transition-all shadow-2xl">
               <div className="relative z-10">
                 <div className="size-12 rounded-2xl bg-white/10 dark:bg-slate-900/10 flex items-center justify-center mb-6">
                   <Zap className="w-6 h-6" />
@@ -150,7 +150,7 @@ export default function LandingPage() {
             </div>
 
             {/* Goal Navigator */}
-            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-emerald-500/50 transition-all shadow-sm">
+            <div className="md:flex-[4] min-w-[300px] group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-emerald-500/50 transition-all shadow-sm">
               <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                 <Target className="w-6 h-6" />
               </div>
@@ -165,7 +165,7 @@ export default function LandingPage() {
             </div>
 
             {/* Strategic Simulation (NEW) */}
-            <div className="md:col-span-4 group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-amber-500/50 transition-all shadow-sm">
+            <div className="md:flex-[4] min-w-[300px] group relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-6 sm:p-12 overflow-hidden hover:border-amber-500/50 transition-all shadow-sm">
               <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Activity className="w-24 h-24 text-amber-500" />
               </div>
@@ -182,7 +182,7 @@ export default function LandingPage() {
             </div>
 
             {/* Privacy Shield */}
-            <div className="md:col-span-8 group relative bg-gradient-to-br from-primary to-emerald-500 text-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden shadow-xl">
+            <div className="md:flex-[8] min-w-[300px] group relative bg-gradient-to-br from-primary to-emerald-500 text-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-12 overflow-hidden shadow-xl">
               <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
               <div className="relative z-10 flex flex-col sm:flex-row items-center gap-8">
                 <div className="size-20 rounded-3xl bg-white/20 backdrop-blur-xl flex items-center justify-center flex-shrink-0">
@@ -208,8 +208,8 @@ export default function LandingPage() {
       {/* Social Trust / No Subscription Section */}
       <section className="py-24 bg-white dark:bg-slate-950/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
+          <div className="flex flex-wrap gap-12 items-center">
+            <div className="flex-1 min-w-[320px] space-y-6">
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase">
                 Built for the <br />
                 <span className="text-primary italic">Absolute</span>{" "}

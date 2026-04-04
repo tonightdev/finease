@@ -38,7 +38,8 @@ export function DashboardStatCard({
       </div>
       
       <div className={cn(
-        "font-black tracking-tighter min-w-0 pr-1 leading-none",
+        "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0",
+        typeof value === "string" && value.length > 15 ? "text-sm" : 
         typeof value === "string" && value.length > 12 ? "text-base" : "text-lg",
         valueColor
       )}>
@@ -48,9 +49,7 @@ export function DashboardStatCard({
       {trend && (
         <div className="mt-2 flex items-center gap-1.5">
           <div className={cn(
-            "w-1 h-1 rounded-full",
-            trend.color,
-            trend.showPulse && "animate-pulse"
+            trend.color
           )} />
           <span className={cn(
             "text-[8px] font-black uppercase tracking-widest",

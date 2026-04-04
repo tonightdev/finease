@@ -94,8 +94,8 @@ export function TransactionDetailsModal({
 
         <div className="h-px bg-slate-50 dark:bg-white/5 my-2"></div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-0.5">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[120px] flex flex-col gap-0.5">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Category
             </span>
@@ -105,7 +105,7 @@ export function TransactionDetailsModal({
               {categoryObj?.name || transaction.category}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex-1 min-w-[120px] flex flex-col gap-0.5">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Flow
             </span>

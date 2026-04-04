@@ -161,13 +161,13 @@ export function AddCategoryModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Category Type
           </label>
-          <div className="grid grid-cols-4 gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl ring-1 ring-slate-100 dark:ring-white/5">
+          <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl ring-1 ring-slate-100 dark:ring-white/5">
             {["needs", "wants", "savings", "income"].map((type) => (
               <button
                 key={type}
                 disabled={isSaving || isDeleting}
                 onClick={() => setParentType(type)}
-                className={`py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
                   parentType === type
                     ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                     : "text-slate-500"

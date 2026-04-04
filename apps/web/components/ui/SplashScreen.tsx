@@ -7,7 +7,7 @@ export function SplashScreen() {
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white dark:bg-[#050505] overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[25%] -left-[25%] w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.03)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.05)_0%,transparent_70%)] animate-pulse" />
+        <div className="absolute -top-[25%] -left-[25%] w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.03)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(19,91,236,0.05)_0%,transparent_70%)]" />
       </div>
 
       <div className="relative flex flex-col items-center -mt-12 lg:-mt-16">

@@ -175,8 +175,8 @@ export function TransactionModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
+        <div className="flex flex-wrap gap-3">
+            <div className="flex-1 min-w-[140px] space-y-1">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Flow Type
             </label>
@@ -205,7 +205,7 @@ export function TransactionModal({
             </div>
           </div>
 
-          <div className="space-y-1">
+            <div className="flex-1 min-w-[140px] space-y-1">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Execution
             </label>
@@ -474,16 +474,18 @@ export function TransactionModal({
           )}
         </div>
 
-        <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0">
-          <DateInput
-            label="Date"
-            value={formData.date}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setFormData({ ...formData, date: e.target.value })
-            }
-            disabled={isSaving}
-          />
-          <div className="space-y-1">
+        <div className="flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[140px]">
+            <DateInput
+              label="Date"
+              value={formData.date}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              disabled={isSaving}
+            />
+          </div>
+          <div className="flex-1 min-w-[140px] space-y-1">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Category
             </label>
@@ -509,8 +511,8 @@ export function TransactionModal({
 
         {formData.isAutomated && (
           <div className="p-3 bg-purple-500/5 dark:bg-purple-500/10 rounded-2xl border border-purple-500/10 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[120px] space-y-1">
                 <label className="text-[9px] font-black text-purple-500 uppercase tracking-widest ml-1">
                   Frequency
                 </label>
@@ -533,7 +535,7 @@ export function TransactionModal({
                   </select>
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="flex-1 min-w-[120px] space-y-1">
                 <label className="text-[9px] font-black text-purple-500 uppercase tracking-widest ml-1">
                   Occurrences
                 </label>

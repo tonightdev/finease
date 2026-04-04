@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import api from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { Card } from "@/components/ui/Card";
 import {
   User as UserIcon,
@@ -161,7 +162,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pb-20 lg:pb-8 space-y-6 lg:space-y-8">
+    <PageContainer>
       <PageHeader
         title="User Governance"
         subtitle={`Commanding ${users.length} registered identities`}
@@ -289,7 +290,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Mobile-friendly card list */}
-      <div className="lg:hidden space-y-4">
+      <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
         {filteredUsers.map((u) => (
           <Card
             key={u.id}
@@ -322,10 +323,10 @@ export default function AdminUsersPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => changeUserRole(u.id, u.role)}
-                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${u.role === "admin"
+                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${u.role === "admin"
                   ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
                   : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
                   }`}
@@ -340,14 +341,14 @@ export default function AdminUsersPage() {
 
               <button
                 onClick={() => resetUserTour(u.id)}
-                className="flex items-center justify-center py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                className="flex items-center justify-center p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
               >
                 Reset Tour
               </button>
 
               <button
                 onClick={() => toggleUserStatus(u.id, u.status || "active")}
-                className={`col-span-2 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive"
+                className={`col-span-2 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive"
                   ? "bg-emerald-500 text-white border-emerald-600"
                   : "bg-white dark:bg-slate-900/50 text-rose-500 border-rose-100 dark:border-rose-500/20"
                   }`}
@@ -374,6 +375,6 @@ export default function AdminUsersPage() {
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
-    </div>
+    </PageContainer>
   );
 }

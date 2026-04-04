@@ -99,8 +99,8 @@ export function AddReminderModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[140px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Signal Type
             </label>
@@ -119,7 +119,7 @@ export function AddReminderModal({
               <option value="other">Other</option>
             </select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex-1 min-w-[140px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Renewal Magnitude
             </label>

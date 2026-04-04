@@ -36,7 +36,7 @@ export function ExpenseChart({ data, showBounce }: ExpenseChartProps) {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="p-6 glass-card h-[400px]"
+      className="p-6 glass-card h-[350px] sm:h-[400px]"
     >
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -59,7 +59,7 @@ export function ExpenseChart({ data, showBounce }: ExpenseChartProps) {
         </div>
       </div>
 
-      <div className="h-[280px]">
+      <div className="h-[230px] sm:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={filteredData} layout="vertical">
             <CartesianGrid
@@ -74,7 +74,7 @@ export function ExpenseChart({ data, showBounce }: ExpenseChartProps) {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#94a3b8", fontSize: 12 }}
-              width={100}
+              width={80}
             />
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.05)" }}

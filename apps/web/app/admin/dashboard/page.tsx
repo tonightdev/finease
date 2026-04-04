@@ -27,6 +27,7 @@ import {
   Tooltip as RechartsTooltip,
 } from "recharts";
 
+import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function AdminDashboard() {
@@ -86,10 +87,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader title="Platform Overview" subtitle="Administrative Portal" />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           title="Total Users"
           value={stats?.totalUsers.toLocaleString() ?? "0"}
@@ -119,8 +120,8 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
+      <div className="flex flex-col lg:flex-row gap-5">
+        <div className="flex-1 lg:flex-[2] min-w-0 space-y-5">
           <div className="p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm h-[280px] flex flex-col">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -147,7 +148,7 @@ export default function AdminDashboard() {
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{
-                        height: `${Math.min(100, (g.count / (stats.totalUsers || 1)) * 100)}%`,
+                        height: `${Math.min(100, (g.count / ((stats?.totalUsers) || 1)) * 100)}%`,
                       }}
                       transition={{ delay: i * 0.1, duration: 1 }}
                       className="w-full max-w-[40px] bg-gradient-to-t from-primary/80 to-primary rounded-2xl relative group"
@@ -165,7 +166,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-5 rounded-2xl bg-slate-900 border-none relative overflow-hidden group shadow-2xl shadow-indigo-500/10 transition-transform active:scale-[0.98] min-h-[160px] flex flex-col justify-center">
               <div className="relative z-10">
                 <div className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 leading-none">
@@ -267,7 +268,7 @@ export default function AdminDashboard() {
 
             <div className="space-y-5">
               {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                stats.recentActivities.slice(0, 3).map((activity) => (
+                stats?.recentActivities.slice(0, 3).map((activity: any) => (
                   <div key={activity.id} className="flex gap-4">
                     <div className="mt-1">
                       <div className="size-2 rounded-full bg-primary" />
@@ -342,7 +343,7 @@ export default function AdminDashboard() {
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
-    </div>
+    </PageContainer>
   );
 }
 

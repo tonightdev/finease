@@ -71,7 +71,7 @@ export function AccountList({ accounts }: AccountListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {accounts.map((account, index) => {
           const isLowBalance =
             (account.type === "bank" || account.type === "cash") &&
@@ -160,7 +160,7 @@ export function AccountList({ accounts }: AccountListProps) {
                     </span>
                     {(isLowBalance || isHighUsage) && (
                       <div
-                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"} animate-pulse`}
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLowBalance ? "bg-rose-500" : "bg-amber-500"}`}
                       />
                     )}
                   </div>

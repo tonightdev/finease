@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { Card } from "@/components/ui/Card";
 import {
   XAxis,
@@ -59,15 +60,15 @@ export default function AdminReportsPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 w-full space-y-4 pb-20 lg:pb-8 pt-0">
+    <PageContainer>
       <PageHeader
         title="Usage Analytics"
         subtitle="Comprehensive platform metrics and system health monitoring"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="flex flex-wrap gap-5">
         {/* User Acquisition Velocity */}
-        <Card className="lg:col-span-2 space-y-4 rounded-2xl">
+        <Card className="flex-1 lg:flex-[2] min-w-[320px] space-y-4 rounded-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -141,7 +142,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* System Health */}
-        <Card className="space-y-5 rounded-2xl">
+        <Card className="flex-1 min-w-[320px] space-y-5 rounded-2xl">
           <div>
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest text-center">
               Service Health
@@ -195,7 +196,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* User Engagement */}
-        <Card className="space-y-4 rounded-2xl flex flex-col justify-center">
+        <Card className="flex-1 min-w-[320px] space-y-4 rounded-2xl flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -240,8 +241,8 @@ export default function AdminReportsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+          <div className="flex flex-wrap gap-3">
+            <div className="flex-1 min-w-[120px] bg-slate-50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
               <div className="flex items-center gap-2 mb-1">
                 <div className="size-1.5 rounded-full bg-primary" />
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
@@ -267,7 +268,7 @@ export default function AdminReportsPage() {
         </Card>
 
         {/* Activity Logs */}
-        <Card className="lg:col-span-2 space-y-5 rounded-2xl">
+        <Card className="flex-1 lg:flex-[2] min-w-[320px] space-y-5 rounded-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -321,6 +322,6 @@ export default function AdminReportsPage() {
           </div>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

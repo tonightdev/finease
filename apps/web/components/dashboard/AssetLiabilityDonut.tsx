@@ -98,9 +98,9 @@ export function AssetAllocationDonut({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4 w-full px-4">
+        <div className="flex flex-wrap gap-x-6 gap-y-4 w-full px-4">
           {data.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2.5 group/item">
+            <div key={idx} className="flex items-start gap-2.5 group/item w-[calc(50%-0.75rem)] min-w-[120px]">
               <div
                 className="w-1 h-7 rounded-sm transition-transform group-hover/item:scale-y-110"
                 style={{ backgroundColor: item.color }}
@@ -119,7 +119,7 @@ export function AssetAllocationDonut({
             </div>
           ))}
           {data.length === 0 && (
-            <div className="col-span-2 text-center py-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+            <div className="w-full text-center py-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
               No Asset Data Available
             </div>
           )}

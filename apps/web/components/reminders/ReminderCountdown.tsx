@@ -28,13 +28,19 @@ export function ReminderCountdown({
   const [completedReminder, setCompletedReminder] = useState<Reminder | null>(null);
   const [renewalDate, setRenewalDate] = useState("");
   const [viewArchive, setViewArchive] = useState(false);
-  
+  const [loadingArchived, setLoadingArchived] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const archivedReminders = useSelector((state: RootState) => state.reminders.archivedItems);
 
   useEffect(() => {
     if (viewArchive) {
+      setLoadingArchived(true);
       dispatch(fetchArchivedReminders());
+      setTimeout(() => setLoadingArchived(true), 10); // Trigger loading
+      setTimeout(() => setLoadingArchived(false), 500); // 500ms for smooth skeleton
+    } else {
+      setLoadingArchived(false);
     }
   }, [viewArchive, dispatch]);
 
@@ -48,7 +54,7 @@ export function ReminderCountdown({
 
   const confirmCompletion = async () => {
     if (!completedReminder) return;
-    
+
     // First delete the current one as it's completed
     await dispatch(deleteReminder(completedReminder.id)).unwrap();
     toast.success("Signal successfully completed.");
@@ -67,10 +73,10 @@ export function ReminderCountdown({
         expiryDate: new Date(renewalDate).toISOString(),
         renewalAmount: completedReminder.renewalAmount
       })).unwrap();
-      
+
       // Delete old one
       await dispatch(deleteReminder(completedReminder.id)).unwrap();
-      
+
       toast.success("Signal successfully renewed for next year.");
       setIsRenewModalOpen(false);
       setCompletedReminder(null);
@@ -101,11 +107,10 @@ export function ReminderCountdown({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewArchive(!viewArchive)}
-            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full border transition-all tracking-[0.1em] ${
-              viewArchive 
-                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full border transition-all tracking-[0.1em] ${viewArchive
+                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
                 : "bg-slate-100 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10 hover:border-primary/50"
-            }`}
+              }`}
           >
             {viewArchive ? "Viewing Archive" : "View Archive"}
           </button>
@@ -117,14 +122,21 @@ export function ReminderCountdown({
         </div>
       </div>
 
-      {sortedReminders.length === 0 ? (
-        <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-2xl bg-white/50 dark:bg-slate-900/50">
+      {loadingArchived ? (
+        <div className="py-12 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
+          <Activity className="w-8 h-8 text-primary/40 mx-auto mb-2" />
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Syncing Archive...
+          </p>
+        </div>
+      ) : sortedReminders.length === 0 ? (
+        <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             {viewArchive ? "No archived signals found" : "No active signals configured"}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <AnimatePresence mode="popLayout">
             {sortedReminders.map((reminder) => (
               <CountdownCard
@@ -166,11 +178,11 @@ export function ReminderCountdown({
       <AnimatePresence>
         {isRenewModalOpen && completedReminder && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
               onClick={() => {
                 setIsRenewModalOpen(false);
                 setCompletedReminder(null);
@@ -180,13 +192,13 @@ export function ReminderCountdown({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/10 p-8 overflow-hidden"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-8 overflow-hidden"
             >
               <div className="relative space-y-6 text-center">
-                <div className="size-16 rounded-[2rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                <div className="size-16 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
                   <CheckCircle2 size={32} />
                 </div>
-                
+
                 <div className="space-y-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Signal Completed</h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
@@ -194,13 +206,13 @@ export function ReminderCountdown({
                   </p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
+                <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-xl border border-slate-100 dark:border-white/5 space-y-4">
                   <DateInput
                     label="Next Expiry Node"
                     value={renewalDate}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenewalDate(e.target.value)}
                   />
-                  
+
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={confirmRenewal}
@@ -293,55 +305,52 @@ function CountdownCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       onClick={onClick}
-      className={`group relative p-3.5 rounded-2xl border transition-all h-full flex flex-col justify-between ${
-        !isArchived ? "cursor-pointer hover:border-primary/50" : "opacity-75 grayscale-[0.5]"
-      } ${
-        isCritical
+      className={`group relative p-2.5 sm:p-3.5 rounded-xl border transition-all h-full flex flex-col justify-between ${!isArchived ? "cursor-pointer hover:border-primary/50" : "opacity-75 grayscale-[0.5]"
+        } ${isCritical
           ? "bg-rose-50/20 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/20 shadow-sm"
           : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 shadow-sm"
-      }`}
+        }`}
     >
       <div className="space-y-3">
         <div className="flex justify-between items-start">
           <div
-            className={`p-1.5 rounded-lg border ${isCritical ? "bg-rose-50 dark:bg-rose-500/10 text-rose-500 border-rose-100 dark:border-rose-500/20" : "bg-indigo-50 dark:bg-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20"}`}
+            className={`p-1 rounded-lg border ${isCritical ? "bg-rose-50 dark:bg-rose-500/10 text-rose-500 border-rose-100 dark:border-rose-500/20" : "bg-indigo-50 dark:bg-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20"}`}
           >
-            <Icon className="w-3.5 h-3.5" />
+            <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </div>
           <span
-            className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${
-              isArchived
+            className={`text-[7px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${isArchived
                 ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
                 : isExpired
                   ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
                   : isCritical
                     ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
                     : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
-            }`}
+              }`}
           >
-            {isArchived ? "Completed" : isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
+            {isArchived ? "Archived" : isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
           </span>
         </div>
 
         <div className="min-w-0">
           <h4
-            className={`text-sm font-black truncate tracking-tight ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
+            className={`text-xs sm:text-sm font-black truncate tracking-tight ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
           >
             {reminder.name}
           </h4>
-          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-            {isArchived 
-              ? `Completed on ${reminder.deletedAt ? new Date(reminder.deletedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}` 
-              : isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H REMAINING`}
+          <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mt-0.5">
+            {isArchived
+              ? `Completed ${reminder.deletedAt ? new Date(reminder.deletedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'}`
+              : isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H LEFT`}
           </p>
         </div>
 
         <div className="flex items-end justify-between pt-1 border-t border-slate-50 dark:border-white/5">
-          <div className="flex flex-col">
-            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[6px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">
               Nexus Cost
             </span>
-            <span className={`text-[10px] font-black ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}>
+            <span className={`text-[9px] sm:text-[10px] font-black truncate ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}>
               ₹{reminder.renewalAmount.toLocaleString()}
             </span>
           </div>

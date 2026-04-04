@@ -131,7 +131,7 @@ export function AddAccountModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Node Class
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-wrap gap-2">
             {[
               { id: "bank", icon: Building2, label: "Bank" },
               { id: "card", icon: CreditCard, label: "Card" },
@@ -144,7 +144,7 @@ export function AddAccountModal({
                   e.preventDefault();
                   setFormData({ ...formData, type: node.id });
                 }}
-                className={`h-9 rounded-xl border-none ring-1 flex flex-col items-center justify-center gap-1 transition-all ${
+                className={`flex-1 h-9 rounded-xl border-none ring-1 flex flex-col items-center justify-center gap-1 transition-all ${
                   formData.type === node.id
                     ? "bg-primary text-white ring-primary shadow-lg shadow-primary/20"
                     : "bg-slate-50 dark:bg-slate-950 ring-slate-100 dark:ring-white/5 text-slate-400 hover:ring-slate-200 dark:hover:ring-white/10"
@@ -165,7 +165,7 @@ export function AddAccountModal({
               Liquid Value (₹)
             </label>
             {account && (
-              <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest animate-pulse">
+              <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest">
                 Read-Only
               </span>
             )}

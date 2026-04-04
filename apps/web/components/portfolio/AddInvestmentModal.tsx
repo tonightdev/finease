@@ -167,8 +167,8 @@ export function AddInvestmentModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+        <div className="flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Basis (Capital)
             </label>
@@ -180,7 +180,7 @@ export function AddInvestmentModal({
               className={investment ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed" : ""}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">
               Valuation
             </label>

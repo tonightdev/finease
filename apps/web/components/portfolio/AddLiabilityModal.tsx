@@ -128,8 +128,8 @@ export function AddLiabilityModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+        <div className="flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">
               Repaid Capital (₹)
             </label>
@@ -139,7 +139,7 @@ export function AddLiabilityModal({
               className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 ring-emerald-500/20 focus:ring-emerald-500"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-orange-500 uppercase tracking-widest pl-1">
               Burned Interest (₹)
             </label>

@@ -22,7 +22,7 @@ export function UserMenu() {
 
   if (loading) {
     return (
-      <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
+      <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800" />
     );
   }
 
@@ -98,7 +98,7 @@ export function UserMenu() {
                                         {acc.displayName?.charAt(0) || "U"}
                                     </div>
                                     <span className="truncate flex-1 text-left">{acc.displayName}</span>
-                                    {acc.uid === user.uid && <div className="size-1.5 rounded-full bg-primary animate-pulse" />}
+                                    {acc.uid === user.uid && <div className="size-1.5 rounded-full bg-primary" />}
                                     {acc.uid !== user.uid && <Zap className="size-3 opacity-20 group-hover/item:opacity-50 transition-opacity" />}
                                 </button>
                                 

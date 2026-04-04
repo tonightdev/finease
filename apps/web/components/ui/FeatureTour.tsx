@@ -202,8 +202,8 @@ export function FeatureTour() {
           </div>
 
           {/* Advanced Decorative background elements */}
-          <div className="absolute -bottom-24 -right-24 size-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
-          <div className="absolute -top-24 -left-24 size-72 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+          <div className="absolute -bottom-24 -right-24 size-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -top-24 -left-24 size-72 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-primary/5 via-transparent to-emerald-500/5 pointer-events-none" />
         </motion.div>
       </div>

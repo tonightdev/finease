@@ -13,6 +13,7 @@ import {
 import api from "@/lib/api";
 import { ActivityLog } from "@repo/types";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PageContainer } from "@/components/ui/PageContainer";
 import { formatDate } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 
@@ -70,7 +71,7 @@ export default function ActivitiesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 space-y-6 pb-20 lg:pb-8">
+    <PageContainer>
       <PageHeader
         title="Activity Feed"
         subtitle="System-wide audit trail"
@@ -272,8 +273,8 @@ export default function ActivitiesPage() {
       >
         {selectedActivity && (
           <div className="space-y-6 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px] p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5">
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
                   Timeline
                 </span>
@@ -313,7 +314,7 @@ export default function ActivitiesPage() {
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block px-1">
                   State Delta
                 </span>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="flex flex-col gap-4">
                   {!!selectedActivity.previousState && (
                     <div className="space-y-2">
                       <span className="text-[7px] font-black text-rose-500 uppercase tracking-widest px-1">
@@ -359,6 +360,6 @@ export default function ActivitiesPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

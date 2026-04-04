@@ -475,8 +475,8 @@ export default function TransactionsImportClient() {
       />
 
       {stage === "upload" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className="flex flex-wrap gap-8">
+          <div className="flex-1 lg:flex-[2] min-w-[300px]">
             <div
               className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-3xl p-8 shadow-xl transition-all ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}
             >
@@ -587,8 +587,8 @@ export default function TransactionsImportClient() {
       )}
 
       {stage === "mapping" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="flex flex-wrap gap-8">
+          <div className="flex-1 lg:flex-[2] min-w-[300px] space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-3xl p-8 shadow-xl">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
@@ -608,9 +608,9 @@ export default function TransactionsImportClient() {
                 {MAPPING_FIELDS.map((field) => (
                   <div
                     key={field.key}
-                    className="grid grid-cols-3 items-center gap-4"
+                    className="flex flex-wrap items-center gap-4"
                   >
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    <label className="flex-1 min-w-[120px] text-[10px] font-black text-slate-500 uppercase tracking-widest">
                       {field.label}{" "}
                       {field.required && (
                         <span className="text-rose-500">*</span>
@@ -787,8 +787,8 @@ export default function TransactionsImportClient() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50 dark:border-white/5">
-                  <div className="space-y-1">
+                <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-50 dark:border-white/5">
+                  <div className="flex-1 min-w-[100px] space-y-1">
                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
                       Timeline
                     </label>
@@ -796,7 +796,7 @@ export default function TransactionsImportClient() {
                       {formatDate(t.date || new Date().toISOString())}
                     </p>
                   </div>
-                  <div className="space-y-1 text-right">
+                  <div className="flex-1 min-w-[100px] space-y-1 text-right">
                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
                       Quantum
                     </label>
