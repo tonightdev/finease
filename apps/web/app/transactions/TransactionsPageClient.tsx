@@ -328,7 +328,7 @@ export default function TransactionsPageClient() {
                       {tx.isAutomated && tx.status === "pending_confirmation" && (
                         <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)).then(() => { dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); }); toast.success("Confirmed"); }} className="size-7 flex items-center justify-center bg-emerald-500 text-white rounded-lg"><CheckCircle2 size={12} /></button>
                       )}
-                      {!(tx as any).isVirtual && (
+                      {!("isVirtual" in tx && tx.isVirtual) && (
                         <>
                           <button onClick={(e) => { e.stopPropagation(); setEditingData(tx); setIsModalOpen(true); }} className="size-7 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary rounded-lg transition-colors"><Edit2 size={12} /></button>
                           <button onClick={(e) => { e.stopPropagation(); setTransactionToDelete(tx); }} className="size-7 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-rose-500 rounded-lg transition-colors"><Trash2 size={12} /></button>
@@ -401,7 +401,7 @@ export default function TransactionsPageClient() {
                   {tx.isAutomated && tx.status === "pending_confirmation" && (
                     <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)).then(() => { dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); }); toast.success("Confirmed"); }} className="size-6 flex items-center justify-center bg-emerald-500 text-white rounded-md transition-transform hover:scale-110 active:scale-95"><CheckCircle2 size={10} /></button>
                   )}
-                  {!(tx as any).isVirtual && (
+                  {!("isVirtual" in tx && tx.isVirtual) && (
                     <>
                       <button onClick={(e) => { e.stopPropagation(); setEditingData(tx); setIsModalOpen(true); }} className="size-6 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary rounded-md transition-all hover:scale-110 active:scale-95"><Edit2 size={10} /></button>
                       <button onClick={(e) => { e.stopPropagation(); setTransactionToDelete(tx); }} className="size-6 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-md transition-all hover:scale-110 active:scale-95"><Trash2 size={10} /></button>

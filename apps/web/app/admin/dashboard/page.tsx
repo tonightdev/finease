@@ -268,7 +268,7 @@ export default function AdminDashboard() {
 
             <div className="space-y-5">
               {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                stats?.recentActivities.slice(0, 3).map((activity: any) => (
+                stats?.recentActivities.slice(0, 3).map((activity) => (
                   <div key={activity.id} className="flex gap-4">
                     <div className="mt-1">
                       <div className="size-2 rounded-full bg-primary" />
