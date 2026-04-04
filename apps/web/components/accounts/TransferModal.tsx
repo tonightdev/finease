@@ -111,7 +111,7 @@ export function TransferModal({
             onChange={(val) => setAmount(val)}
             disabled={isSaving}
             placeholder="0.00"
-            className="text-3xl h-auto py-4"
+            className="text-xl h-auto py-4"
           />
         </div>
       </div>

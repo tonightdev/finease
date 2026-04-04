@@ -741,47 +741,29 @@ export default function SimulationPage() {
             ) : (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
                 {/* 1. Primary Metrics Grid (2x2) */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-8">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-8">
                   <div className={`p-3 sm:p-4 rounded-xl border transition-all flex flex-col justify-between min-h-[90px] ${simulationMetrics.surplus < 0 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10' : 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10'}`}>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Net {current?.basis === "yearly" ? "Annual" : "Monthly"} Flow</span>
                     <div className="mt-auto">
-                      <div className={`text-3xl font-black tracking-tighter ${simulationMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{formatCurrency(simulationMetrics.surplus)}</div>
+                      <div className={`text-lg sm:text-xl font-black tracking-tighter truncate w-full ${simulationMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`} title={formatCurrency(simulationMetrics.surplus)}>{formatCurrency(simulationMetrics.surplus)}</div>
                       <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{simulationMetrics.surplus >= 0 ? 'Surplus Projection' : 'Deficit Detected'}</div>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Flow Magnitude</span>
                     <div className="space-y-3 mt-auto">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="text-sm font-mono font-black text-emerald-500 shrink-0">{formatCurrency(simulationMetrics.income)}</div>
-                        <div className="flex-1">
-                          <div className="h-1 w-full bg-emerald-500/20 rounded-full overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="text-sm font-mono font-black text-rose-500 shrink-0">{formatCurrency(simulationMetrics.totalOutflows)}</div>
-                        <div className="flex-1">
-                          <div className="h-1 w-full bg-rose-500/20 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${Math.min(100, (simulationMetrics.totalOutflows / (simulationMetrics.income || 1)) * 100)}%` }}
-                              className="h-full bg-rose-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <div className="text-xs sm:text-sm font-mono font-black text-emerald-500 truncate sm:max-w-max" title={formatCurrency(simulationMetrics.income)}>{formatCurrency(simulationMetrics.income)}</div>
+                      <div className="text-xs sm:text-sm font-mono font-black text-rose-500 truncate sm:max-w-max" title={formatCurrency(simulationMetrics.totalOutflows)}>{formatCurrency(simulationMetrics.totalOutflows)}</div>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 relative overflow-hidden group flex flex-col justify-between min-h-[100px]">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 relative overflow-hidden group flex flex-col justify-between min-h-[100px]">
                     <div className="relative z-10 flex flex-col justify-between h-full">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Efficiency Score</span>
                       <div className="mt-auto">
-                        <div className="flex items-baseline gap-2">
-                          <div className="text-3xl font-black text-primary tracking-tighter">{simulationMetrics.efficiency}</div>
+                        <div className="flex items-baseline justify-start w-full">
+                          <div className="text-lg sm:text-xl font-black text-primary tracking-tighter truncate mr-2" title={simulationMetrics.efficiency.toString()}>{simulationMetrics.efficiency}</div>
                           <div className="text-[10px] font-black text-slate-400 tracking-widest">/ 100</div>
                         </div>
                         <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
@@ -791,10 +773,10 @@ export default function SimulationPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Surplus Velocity</span>
                     <div className="mt-auto">
-                      <div className="text-3xl font-black text-emerald-500 tracking-tighter">+{((simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100).toFixed(1)}%</div>
+                      <div className="text-lg sm:text-xl font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto" title={`+${((simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100).toFixed(1)}%`}>+{((simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100).toFixed(1)}%</div>
                       <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100)}%` }} className="h-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
                       </div>
@@ -901,7 +883,7 @@ export default function SimulationPage() {
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
                     <PieChart className="size-4 text-primary" /> Target vs Actual Variance
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     {[
                       { id: "needs", label: "Needs", actual: simulationMetrics.needsPct, target: protocol.needs, color: "bg-amber-400" },
                       { id: "wants", label: "Wants", actual: simulationMetrics.wantsPct, target: protocol.wants, color: "bg-rose-400" },
@@ -935,7 +917,7 @@ export default function SimulationPage() {
                       </h4>
                       <div className="text-[8px] font-black text-slate-400 tracking-widest uppercase bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded border border-slate-200 dark:border-white/5 w-fit">Net Impact / Account</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       {simulationMetrics.activeAccounts.map(acc => (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
