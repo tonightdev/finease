@@ -799,7 +799,7 @@ export default function SimulationPage() {
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Allocation Flow</span>
                           <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">Needs Focus</span>
                         </div>
-                        <div className="flex h-12 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 p-1">
+                        <div className="flex h-10 sm:h-12 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 relative">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${simulationMetrics.needsPct}%` }}
@@ -908,9 +908,38 @@ export default function SimulationPage() {
                   </div>
                 </div>
 
-                {/* 4. Active Vector Flows (Consolidated) */}
+                {/* 4. Strategem Signals */}
+                <div className="space-y-4 mb-3">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+                    <Lightbulb className="size-4 text-primary" /> Strategem Signal Hub
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {simulationMetrics.suggestions.length > 0 ? (
+                      simulationMetrics.suggestions.map((suggestion, i) => (
+                        <motion.div
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          key={i}
+                          className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm min-h-[70px]"
+                        >
+                          <div className="size-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <ArrowRight className="size-3 text-primary" />
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 leading-tight">{suggestion}</p>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-8 text-center bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
+                        <p className="text-[10px] font-bold text-slate-400 text-center">All systems optimal. No adjustments required.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 5. Active Vector Flows (Consolidated) - Bottom */}
                 {simulationMetrics.activeAccounts.length > 0 && (
-                  <div className="space-y-4 mb-3">
+                  <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
                         <Activity className="size-4 text-primary" /> Simulated Account Vectors
@@ -949,37 +978,6 @@ export default function SimulationPage() {
                     </div>
                   </div>
                 )}
-
-                {/* 5. Strategem Signals (Bottom) */}
-                <div className="pt-6 border-t border-slate-100 dark:border-white/5">
-                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
-                      <Lightbulb className="size-4 text-primary" /> Strategem Signal Hub
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                      {simulationMetrics.suggestions.length > 0 ? (
-                        simulationMetrics.suggestions.map((suggestion, i) => (
-                          <motion.div
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            key={i}
-                            className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm min-h-[70px]"
-                          >
-                            <div className="size-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                              <ArrowRight className="size-3 text-primary" />
-                            </div>
-                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 leading-tight">{suggestion}</p>
-                          </motion.div>
-                        ))
-                      ) : (
-                        <div className="col-span-full py-8 text-center bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
-                          <p className="text-[10px] font-bold text-slate-400 text-center">All systems optimal. No adjustments required.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </Card>

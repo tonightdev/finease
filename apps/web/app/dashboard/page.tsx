@@ -324,6 +324,16 @@ export default function Home() {
         subtitle="Unified wealth landscape"
         actions={
           <div className="flex w-full sm:w-auto gap-2">
+            <Link href="/plans" className="flex-1 sm:flex-initial">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-primary/20 text-primary hover:bg-primary/5"
+                leftIcon={<TargetIcon className="w-3.5 h-3.5" />}
+              >
+                Short Term Plans
+              </Button>
+            </Link>
             <Button
               size="sm"
               onClick={() => setIsAccountModalOpen(true)}

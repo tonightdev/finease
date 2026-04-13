@@ -520,7 +520,7 @@ export default function SettingsPage() {
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 pb-1 block">
                           Standard Fiscal Currency (Locked)
                         </label>
-                        <div className="flex items-center justify-between p-4 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
                           <div className="flex items-center gap-4">
                             <div className="size-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-white/10 flex items-center justify-center text-xl font-black text-primary">₹</div>
                             <div>
@@ -528,7 +528,7 @@ export default function SettingsPage() {
                               <span className="text-[10px] font-bold text-slate-400">Primary localized denomination</span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">Active Node</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 shrink-0">Active Node</span>
                         </div>
                       </div>
                     </div>
@@ -755,16 +755,16 @@ export default function SettingsPage() {
                               : "hover:border-primary/50 border-slate-100 dark:border-white/5"
                               }`}
                           >
-                            <div className="flex items-center gap-3 relative z-10">
-                              <div className={`size-10 rounded-xl flex items-center justify-center text-sm font-black uppercase transition-all duration-500 ${acc.uid === user?.uid ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:scale-110"
+                            <div className="flex items-center gap-3 relative z-10 min-w-0 flex-1 pr-2">
+                              <div className={`size-10 rounded-xl flex items-center justify-center text-sm font-black uppercase transition-all duration-500 shrink-0 ${acc.uid === user?.uid ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:scale-110"
                                 }`}>
                                 {acc.displayName?.[0] || acc.email?.[0] || "?"}
                               </div>
-                              <div>
-                                <h4 className="font-black text-[13px] text-slate-900 dark:text-white uppercase tracking-tight">
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-black text-[13px] text-slate-900 dark:text-white uppercase tracking-tight truncate">
                                   {acc.displayName || "Linked Node"}
                                 </h4>
-                                <p className="text-[9px] font-bold text-slate-400 truncate max-w-[120px]">
+                                <p className="text-[9px] font-bold text-slate-400 truncate w-full">
                                   {acc.email}
                                 </p>
                                 {acc.uid === user?.uid && (
@@ -775,13 +775,13 @@ export default function SettingsPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1 relative z-10">
+                            <div className="flex items-center gap-1.5 relative z-10 shrink-0">
                               {acc.uid !== user?.uid && (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => switchAccount(acc.uid)}
-                                  className="h-8 px-3 rounded-lg border-slate-200 dark:border-white/5 font-black text-[8px] uppercase tracking-widest hover:bg-primary hover:text-white group"
+                                  className="h-8 px-3 rounded-lg border-slate-200 dark:border-white/5 font-black text-[8px] uppercase tracking-widest hover:bg-primary hover:text-white group shrink-0"
                                 >
                                   Switch <ArrowRight className="size-2.5 ml-1 transition-transform group-hover:translate-x-0.5" />
                                 </Button>
@@ -790,10 +790,10 @@ export default function SettingsPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => removeAccount(acc.uid)}
-                                className="size-8 rounded-lg border-rose-500 bg-rose-500/10 p-0 hover:bg-rose-500 hover:text-white text-rose-500 transition-all shadow-none flex items-center justify-center"
+                                className="w-8 h-8 rounded-lg border-rose-500 bg-rose-500/10 p-0 hover:bg-rose-500 hover:text-white text-rose-500 transition-all shadow-none flex items-center justify-center shrink-0"
                                 title="Remove Identity"
                               >
-                                <Trash2 className="size-[18px] stroke-[2px]" />
+                                <Trash2 className="size-4 stroke-[2.5px]" />
                               </Button>
                             </div>
                           </Card>

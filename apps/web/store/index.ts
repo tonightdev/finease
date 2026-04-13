@@ -8,6 +8,7 @@ import categoriesReducer from "./slices/categoriesSlice";
 import assetClassesReducer from "./slices/assetClassesSlice";
 import remindersReducer from "./slices/remindersSlice";
 import simulationReducer from "./slices/simulationSlice";
+import plansReducer from "./slices/plansSlice";
 
 const appReducer = combineReducers({
   accounts: accountsReducer,
@@ -19,6 +20,7 @@ const appReducer = combineReducers({
   assetClasses: assetClassesReducer,
   reminders: remindersReducer,
   simulation: simulationReducer,
+  plans: plansReducer,
 });
 
 const rootReducer = (
