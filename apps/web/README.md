@@ -4,7 +4,7 @@ The main user interface for **FinEase**, providing a premium Wealth Command Cent
 
 ## 🚀 Overview
 
-- **Framework**: Next.js 16 (React 19)
+- **Framework**: Next.js 16 (React 19) 
 - **Styling**: Tailwind CSS 4 with custom glassmorphism, Framer Motion for dynamics.
 - **State Management**: Redux Toolkit (global state), localized React state.
 - **Icons**: Lucide React
