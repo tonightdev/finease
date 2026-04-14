@@ -176,10 +176,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-black mb-2 uppercase tracking-tighter">
-                  Automated Ledgers (Transactions & Sync)
+                  Universal Ledgers (Integrated Hub)
                 </h3>
                 <p className="text-xs font-medium leading-relaxed opacity-80 max-w-3xl">
-                  Hybrid batch processing tracks everything natively. Utilize powerful CSV bulk imports or one-click automated bill synchronization to lock state. Fully equipped with multi-level category splitting and infinite feed tracking via our dedicated Reports module.
+                  Commandeer your fiscal state with high-fidelity ledger tracking. Utilize advanced category splitting and native historical analytics via our integrated Intelligence hub—fully optimized for high-density professional monitoring.
                 </p>
               </div>
             </div>

@@ -144,7 +144,7 @@ export default function PortfolioPageClient() {
       <PageHeader
         title="Portfolio"
         subtitle="Unified wealth command"
-        className="space-y-3"
+        className="space-y-2"
         actions={
           <div className="grid grid-cols-2 md:flex md:items-center gap-2 w-full lg:w-auto">
             <Button
@@ -260,7 +260,7 @@ export default function PortfolioPageClient() {
         ].map((stat, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl shadow-sm"
+            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
           >
             <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
               {stat.label}
@@ -282,12 +282,12 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Identity</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Class</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Capital</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Valuation</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Yield</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Identity</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Class</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Capital</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Valuation</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Yield</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -298,7 +298,7 @@ export default function PortfolioPageClient() {
               ) : (
                 paginatedInvestments.map((inv) => (
                   <tr key={inv.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }}>
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{inv.name}</div>
                     </td>
                     <td className="px-5 py-3">
@@ -314,7 +314,9 @@ export default function PortfolioPageClient() {
                         {(((inv.balance - (inv.investedAmount || inv.balance)) / (inv.investedAmount || inv.balance)) * 100 || 0).toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-4 py-1.5">
+                    </td>
+                    <td className="px-4 py-1.5 text-right">
                       <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: inv.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
@@ -447,13 +449,13 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Identity</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Class</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Limit</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Repaid</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Interest</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Net Balance</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Class</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Limit</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Repaid</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Interest</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Net Balance</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -464,7 +466,7 @@ export default function PortfolioPageClient() {
               ) : (
                 paginatedDebts.map((debt) => (
                   <tr key={debt.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}>
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{debt.name}</div>
                     </td>
                     <td className="px-5 py-3">
@@ -603,10 +605,10 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Identity</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Class</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Valuation</th>
-                <th className="px-5 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Identity</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Class</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Valuation</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -617,7 +619,7 @@ export default function PortfolioPageClient() {
               ) : (
                 otherAssets.map((asset) => (
                   <tr key={asset.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}>
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{asset.name}</div>
                     </td>
                     <td className="px-5 py-3">

@@ -14,6 +14,7 @@ export function TopNav() {
   const userLinks = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/simulation", label: "Strategy" },
+    { href: "/plans", label: "Plans" },
     { href: "/goals", label: "Goals" },
     { href: "/portfolio", label: "Portfolio" },
     { href: "/transactions", label: "Transactions" },

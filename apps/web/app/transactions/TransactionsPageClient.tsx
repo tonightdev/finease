@@ -6,7 +6,7 @@ import { TransactionDetailsModal } from "@/components/transactions/TransactionDe
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { ArrowRight, Download, Trash2, Edit2, Filter, CheckCircle2, Plus, FileUp, History } from "lucide-react";
+import { ArrowRight, Download, Trash2, Edit2, Filter, CheckCircle2, Plus, History } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import {
   fetchTransactions,
@@ -196,7 +196,7 @@ export default function TransactionsPageClient() {
       <PageHeader
         title="Transactions"
         subtitle="Unified financial ledger"
-        className="space-y-3"
+        className="space-y-2"
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <div className="flex gap-2 w-full sm:w-auto">
@@ -209,37 +209,37 @@ export default function TransactionsPageClient() {
                   </div>
                 )}
               </div>
-              <Button variant="secondary" size="sm" onClick={() => toast.success("Import coming soon")} className="flex-1 sm:flex-none" leftIcon={<FileUp className="w-3.5 h-3.5" />}>Import</Button>
+
             </div>
             <Button size="sm" onClick={() => { setEditingData(null); setIsModalOpen(true); }} className="w-full sm:w-auto" leftIcon={<Plus className="w-3.5 h-3.5" />}>Record</Button>
           </div>
         }
       >
-        <div className={`flex items-center gap-2 py-0.5 ${showAllCategories ? "flex-wrap" : "overflow-x-auto no-scrollbar"}`}>
-          <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="size-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center shrink-0"><Plus size={14} /></button>
-          {(showAllCategories ? categories : categories.slice(0, 5)).map(c => (
+        <div className={`flex items-center gap-1.5 py-0.5 ${showAllCategories ? "flex-wrap" : "overflow-x-auto no-scrollbar"}`}>
+          <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="size-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center shrink-0"><Plus size={12} /></button>
+          {(showAllCategories ? categories : categories.slice(0, 7)).map(c => (
             <div key={c.id} className="relative group shrink-0">
-              <button onClick={() => { setFilterCategory(filterCategory === c.id ? "all" : c.id); setCurrentPage(1); }} className={`flex items-center gap-2 pl-3 pr-7 py-1.5 rounded-xl border transition-all ${filterCategory === c.id ? "bg-primary/10 border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"}`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${c.color}`} />
-                <span className={`font-bold text-[9px] uppercase tracking-widest ${filterCategory === c.id ? "text-primary" : "text-slate-500"}`}>{c.name}</span>
+              <button onClick={() => { setFilterCategory(filterCategory === c.id ? "all" : c.id); setCurrentPage(1); }} className={`flex items-center gap-1.5 pl-2.5 pr-6 py-1 rounded-lg border transition-all ${filterCategory === c.id ? "bg-primary/10 border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"}`}>
+                <div className={`w-1 h-1 rounded-full ${c.color}`} />
+                <span className={`font-black text-[8px] uppercase tracking-widest ${filterCategory === c.id ? "text-primary" : "text-slate-500"}`}>{c.name}</span>
               </button>
-              <button onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-primary bg-white dark:bg-slate-800 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Edit2 size={10} /></button>
+              <button onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }} className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-primary bg-white dark:bg-slate-800 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Edit2 size={8} /></button>
             </div>
           ))}
-          {categories.length > 5 && <button onClick={() => setShowAllCategories(!showAllCategories)} className="px-3 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-[9px] font-black uppercase text-slate-500 hover:text-primary transition-all shrink-0">{showAllCategories ? "Less" : `+${categories.length - 5} More`}</button>}
+          {categories.length > 7 && <button onClick={() => setShowAllCategories(!showAllCategories)} className="px-2 h-7 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[8px] font-black uppercase text-slate-500 hover:text-primary transition-all shrink-0">{showAllCategories ? "Less" : `+${categories.length - 7} More`}</button>}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-xl w-full sm:w-64">
-            <button onClick={() => { setActiveTab("actual"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${activeTab === "actual" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Actual</button>
-            <button onClick={() => { setActiveTab("automated"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${activeTab === "automated" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Automated {pendingAutomatedCount > 0 && <span className="bg-primary/10 text-primary px-1 rounded-full text-[7px]">{pendingAutomatedCount}</span>}</button>
+          <div className="flex bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-xl w-full sm:w-56">
+            <button onClick={() => { setActiveTab("actual"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${activeTab === "actual" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Actual</button>
+            <button onClick={() => { setActiveTab("automated"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2 ${activeTab === "automated" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Automated {pendingAutomatedCount > 0 && <span className="bg-primary/10 text-primary px-1 rounded-full text-[7px]">{pendingAutomatedCount}</span>}</button>
           </div>
-          <div className="flex-1 flex gap-2">
+          <div className="flex-1 flex gap-1.5">
             <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">search</span>
-              <input value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="w-full h-8 bg-white dark:bg-slate-900 rounded-xl pl-9 text-[9px] font-bold ring-1 ring-slate-100 dark:ring-white/5 outline-none focus:ring-2 focus:ring-primary" placeholder="Search..." />
+              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">search</span>
+              <input value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="w-full h-7 bg-white dark:bg-slate-900 rounded-lg pl-8 text-[9px] font-bold ring-1 ring-slate-100 dark:ring-white/5 outline-none focus:ring-2 focus:ring-primary" placeholder="Search..." />
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={`h-8 px-3 rounded-xl flex items-center gap-2 transition-all ${showFilters ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-white/5"}`}><Filter size={14} /></button>
+            <button onClick={() => setShowFilters(!showFilters)} className={`h-7 px-2.5 rounded-lg flex items-center gap-2 transition-all ${showFilters ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-white/5"}`}><Filter size={12} /></button>
           </div>
         </div>
 
@@ -273,13 +273,13 @@ export default function TransactionsPageClient() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Date</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Description</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Category</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Source</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Quantum</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Balance</th>
-              <th className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Description</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Category</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Source</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Quantum</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Balance</th>
+              <th className="px-3 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -296,8 +296,8 @@ export default function TransactionsPageClient() {
             ) : (
               paginatedTransactions.map((tx: Transaction) => (
                 <tr key={tx.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => setViewingData(tx)}>
-                  <td className="px-4 py-3 text-[10px] font-bold text-slate-500 whitespace-nowrap">{formatDate(tx.date)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-1.5 text-[10px] font-bold text-slate-500 whitespace-nowrap">{formatDate(tx.date)}</td>
+                  <td className="px-3 py-1.5">
                     <div className="text-[11px] font-black text-slate-900 dark:text-white truncate max-w-[200px]" title={tx.description}>{tx.description}</div>
                   </td>
                   <td className="px-4 py-3">

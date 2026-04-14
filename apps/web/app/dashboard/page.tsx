@@ -322,6 +322,7 @@ export default function Home() {
       <PageHeader
         title="Command Center"
         subtitle="Unified wealth landscape"
+        className="space-y-3"
         actions={
           <div className="flex w-full sm:w-auto gap-2">
             <Link href="/plans" className="flex-1 sm:flex-initial">
@@ -373,7 +374,7 @@ export default function Home() {
         </motion.div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <DashboardStatCard
           className="w-full"
           label="Net Worth"
@@ -425,7 +426,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         {allAccounts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
             <div className="flex flex-col items-center gap-4">
@@ -443,8 +444,8 @@ export default function Home() {
         ) : (
           <>
             {displayRegularAccounts.length > 0 && (
-              <div className="space-y-3">
-                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     Liquid Capital
                   </h3>
@@ -452,7 +453,7 @@ export default function Home() {
                     {displayRegularAccounts.length} Units
                   </span>
                 </div>
-                <div className="pt-1">
+                <div className="pt-0.5">
                   <AccountList accounts={showAllAccounts ? displayRegularAccounts : displayRegularAccounts.slice(0, 4)} />
                   {displayRegularAccounts.length > 4 && (
                     <div className="mt-4 flex justify-center">
@@ -484,7 +485,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="w-full space-y-4 flex flex-col">
+        <div className="w-full space-y-3 flex flex-col">
           <div className="flex items-center justify-between px-1 group">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               Goal Velocity
@@ -498,7 +499,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="space-y-4 lg:space-y-6">
+          <div className="space-y-3">
             {goals.length === 0 ? (
               <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                 <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />

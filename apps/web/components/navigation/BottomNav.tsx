@@ -14,6 +14,7 @@ import {
   BarChart3,
   Trash2,
   Zap,
+  Layers
 } from "lucide-react";
 
 export function BottomNav() {
@@ -25,11 +26,12 @@ export function BottomNav() {
   const isAdmin = user.role === "admin";
 
   const userLinks = [
-    { href: "/dashboard", label: "Dashboard", Icon: Home },
+    { href: "/dashboard", label: "Home", Icon: Home },
+    { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },
     { href: "/simulation", label: "Strategy", Icon: Zap },
+    { href: "/plans", label: "Plans", Icon: Layers },
     { href: "/transactions", label: "Transact", Icon: IndianRupee },
     { href: "/goals", label: "Goals", Icon: Target },
-    { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },
     { href: "/reports", label: "Reports", Icon: FileText },
   ];
 
@@ -43,7 +45,7 @@ export function BottomNav() {
   const links = isAdmin ? adminLinks : userLinks;
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-border-dark px-6 py-3 flex justify-between items-center z-50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020408]/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 px-4 py-2 flex justify-between items-center z-50">
       {links.map((link) => {
         const isActive =
           pathname?.startsWith(link.href) ||
@@ -59,8 +61,8 @@ export function BottomNav() {
                 : "text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white",
             )}
           >
-            <link.Icon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">{link.label}</span>
+            <link.Icon className="w-4.5 h-4.5" />
+            <span className="text-[8px] font-black uppercase tracking-tighter">{link.label}</span>
           </Link>
         );
       })}

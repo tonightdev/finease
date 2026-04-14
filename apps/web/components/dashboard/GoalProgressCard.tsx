@@ -48,17 +48,17 @@ export function GoalProgressCard({
   const currentStatus = statusConfig[status as keyof typeof statusConfig];
 
   return (
-    <Card className="flex flex-col gap-3 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
+    <Card className="flex flex-col gap-2 p-2.5 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">
-            <Target className="w-4 h-4" />
+          <div className="p-1 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 border border-indigo-100 dark:border-indigo-500/20">
+            <Target className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
-            <p className="text-slate-900 dark:text-white text-sm font-black truncate max-w-[100px] sm:max-w-[150px] tracking-tight">
+            <p className="text-slate-900 dark:text-white text-[11px] font-black truncate max-w-[100px] sm:max-w-[150px] tracking-tight">
               {name}
             </p>
-            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-none">
               {Math.round(percentageSaved)}% ARCHIEVED
             </p>
           </div>
@@ -67,13 +67,13 @@ export function GoalProgressCard({
           variant={
             currentStatus.badge as "ahead" | "behind" | "ontrack" | "default"
           }
-          className="text-[9px] px-1.5 py-0 border font-black uppercase tracking-widest"
+          className="text-[8px] px-1.5 py-0 border font-black uppercase tracking-widest"
         >
           {currentStatus.badge}
         </Badge>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <ProgressBar
           progress={percentageSaved}
           expectedPace={expectedPercentage}
@@ -85,7 +85,7 @@ export function GoalProgressCard({
             <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
               Balance
             </span>
-            <span className="text-[10px] font-black text-slate-900 dark:text-white">
+            <span className="text-[9px] font-black text-slate-900 dark:text-white">
               {formatCurrency(currentAmount)}
             </span>
           </div>
@@ -93,7 +93,7 @@ export function GoalProgressCard({
             <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
               Objective
             </span>
-            <span className="text-[10px] font-black text-slate-500">
+            <span className="text-[9px] font-black text-slate-500">
               {formatCurrency(targetAmount)}
             </span>
           </div>

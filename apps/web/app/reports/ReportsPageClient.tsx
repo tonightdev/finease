@@ -63,7 +63,7 @@ function FilterDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 h-9 rounded-xl border transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${isOpen || selectedCount > 0
+        className={`w-full flex items-center justify-between px-2.5 h-8 rounded-lg border transition-all duration-300 text-[9px] font-black uppercase tracking-widest ${isOpen || selectedCount > 0
           ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-sm"
           : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-white/5 text-slate-500 hover:border-primary/40"
           }`}
@@ -559,12 +559,13 @@ export default function ReportsPageClient() {
       <PageHeader
         title="Intelligence"
         subtitle="Unified analytics & predictive insights"
+        className="space-y-2"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`h-9 px-4 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border shadow-sm ${showFilters
+                className={`h-8 px-3.5 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border shadow-sm ${showFilters
                   ? "bg-primary text-white border-primary"
                   : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
                   }`}
@@ -585,22 +586,22 @@ export default function ReportsPageClient() {
                     setSelectedCategoryIds([]);
                     setSelectedType("all");
                   }}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:scale-[1.03] active:scale-95 transition-all shrink-0"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:scale-[1.03] active:scale-95 transition-all shrink-0"
                   title="Clear Filters"
                 >
-                  <X className="size-4" />
+                  <X className="size-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
               {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => {
                     setViewType(type);
                   }}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 h-9 flex items-center justify-center text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${viewType === type
+                  className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${viewType === type
                     ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     }`}
@@ -609,18 +610,18 @@ export default function ReportsPageClient() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-xl p-1 shadow-sm w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-lg p-0.5 shadow-sm w-full sm:w-auto">
               <button
                 onClick={handlePrev}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
                 aria-label="Previous Period"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-2 px-2 min-w-[120px] sm:min-w-[140px] justify-center flex-1 sm:flex-auto">
-                <CalendarIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-                <div className="flex flex-col items-center sm:flex-row sm:gap-2">
-                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate">
+              <div className="flex items-center gap-1.5 px-1.5 min-w-[110px] sm:min-w-[130px] justify-center flex-1 sm:flex-auto">
+                <CalendarIcon className="w-3 h-3 text-primary shrink-0" />
+                <div className="flex flex-col items-center sm:flex-row sm:gap-1.5">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate">
                     {formattedCursorDate}
                   </span>
                 </div>
@@ -628,13 +629,13 @@ export default function ReportsPageClient() {
               <button
                 onClick={handleNext}
                 disabled={cursorDate.getTime() > now.getTime()}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
                   ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
                   : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
                   }`}
                 aria-label="Next Period"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -689,7 +690,7 @@ export default function ReportsPageClient() {
         )}
       </PageHeader>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
           <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-primary transition-colors">
             Net Worth
@@ -749,7 +750,7 @@ export default function ReportsPageClient() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
         <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
