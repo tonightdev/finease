@@ -241,3 +241,27 @@ export interface SimulationResult {
   efficiency: number;
   suggestions: string[];
 }
+
+export interface STAccount {
+  id: string;
+  name: string;
+  balance: number;
+}
+
+export interface STExpense {
+  id: string;
+  name: string;
+  amount: number;
+  accountId: string;
+  isPaid: boolean;
+}
+
+export interface ShortTermPlan {
+  id: string;
+  userId: string;
+  name: string;
+  createdAt: string;
+  accounts: STAccount[];
+  expenses: STExpense[];
+  deletedAt?: string | null;
+}

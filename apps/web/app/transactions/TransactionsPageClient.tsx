@@ -326,7 +326,7 @@ export default function TransactionsPageClient() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5 transition-opacity">
                       {tx.isAutomated && tx.status === "pending_confirmation" && (
-                        <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)).then(() => { dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); }); toast.success("Confirmed"); }} className="size-7 flex items-center justify-center bg-emerald-500 text-white rounded-lg"><CheckCircle2 size={12} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)); toast.success("Confirmed"); }} className="size-7 flex items-center justify-center bg-emerald-500 text-white rounded-lg"><CheckCircle2 size={12} /></button>
                       )}
                       {!("isVirtual" in tx && tx.isVirtual) && (
                         <>
@@ -399,7 +399,7 @@ export default function TransactionsPageClient() {
 
                 <div className="flex items-center gap-1 shrink-0">
                   {tx.isAutomated && tx.status === "pending_confirmation" && (
-                    <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)).then(() => { dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); }); toast.success("Confirmed"); }} className="size-6 flex items-center justify-center bg-emerald-500 text-white rounded-md transition-transform hover:scale-110 active:scale-95"><CheckCircle2 size={10} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); dispatch(confirmTransaction(tx.id)); toast.success("Confirmed"); }} className="size-6 flex items-center justify-center bg-emerald-500 text-white rounded-md transition-transform hover:scale-110 active:scale-95"><CheckCircle2 size={10} /></button>
                   )}
                   {!("isVirtual" in tx && tx.isVirtual) && (
                     <>
@@ -416,11 +416,11 @@ export default function TransactionsPageClient() {
 
       <Pagination currentPage={currentPage} totalPages={totalPages} totalEntries={filtered.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} className="border-t border-slate-100 dark:border-white/5 pt-2" />
 
-      <TransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} transaction={editingData} onSave={async (data) => { if (editingData) { await dispatch(updateTransaction({ id: editingData.id, data })).unwrap(); } else { await dispatch(createTransaction(data)).unwrap(); } dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); dispatch(fetchGoals({ force: true })); }} />
+      <TransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} transaction={editingData} onSave={async (data) => { if (editingData) { await dispatch(updateTransaction({ id: editingData.id, data })).unwrap(); } else { await dispatch(createTransaction(data)).unwrap(); } }} />
       <TransactionDetailsModal isOpen={!!viewingData} onClose={() => setViewingData(null)} transaction={viewingData} accounts={accounts} goals={goals} categories={categories} />
-      <AddAccountModal isOpen={isAccountModalOpen} onClose={() => setIsAccountModalOpen(false)} onSave={async (data) => { await dispatch(createAccount({ ...data, type: data.type as AccountType, balance: parseFloat(data.balance) || 0, minimumBalance: data.minimumBalance ? parseFloat(data.minimumBalance) : undefined, maxLimit: data.maxLimit ? parseFloat(data.maxLimit) : undefined, currency: "INR" })).unwrap(); dispatch(fetchAccounts({ force: true })); }} />
+      <AddAccountModal isOpen={isAccountModalOpen} onClose={() => setIsAccountModalOpen(false)} onSave={async (data) => { await dispatch(createAccount({ ...data, type: data.type as AccountType, balance: parseFloat(data.balance) || 0, minimumBalance: data.minimumBalance ? parseFloat(data.minimumBalance) : undefined, maxLimit: data.maxLimit ? parseFloat(data.maxLimit) : undefined, currency: "INR" })).unwrap(); }} />
       <AddCategoryModal isOpen={isCategoryModalOpen} category={editingCategory} existingCategories={categories} onClose={() => setIsCategoryModalOpen(false)} onSave={async (data) => { const categoryData = { ...data, parentType: data.parentType as CategoryParentType }; if (data.id) { await dispatch(updateCategoryAction({ id: data.id, data: categoryData })).unwrap(); } else { await dispatch(addCategoryAction(categoryData)).unwrap(); } dispatch(fetchCategories()); }} onDelete={async (id) => { await dispatch(removeCategoryAction(id)).unwrap(); dispatch(fetchCategories()); }} />
-      <ConfirmModal isOpen={!!transactionToDelete} title="Destroy Record?" message="Irreversible retroactive update detected." onConfirm={async () => { if (transactionToDelete) { await dispatch(deleteTransaction(transactionToDelete.id)).unwrap(); dispatch(fetchAccounts({ force: true })); dispatch(fetchTransactions({ force: true })); setTransactionToDelete(null); } }} onCancel={() => setTransactionToDelete(null)} />
+      <ConfirmModal isOpen={!!transactionToDelete} title="Destroy Record?" message="Irreversible retroactive update detected." onConfirm={async () => { if (transactionToDelete) { await dispatch(deleteTransaction(transactionToDelete.id)).unwrap(); setTransactionToDelete(null); } }} onCancel={() => setTransactionToDelete(null)} />
     </PageContainer>
   );
 }

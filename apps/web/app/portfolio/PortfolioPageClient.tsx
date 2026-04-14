@@ -46,10 +46,10 @@ export default function PortfolioPageClient() {
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchAccounts({ force: true }));
-      dispatch(fetchAssetClasses({ force: true }));
-      dispatch(fetchTransactions({ force: true }));
-      dispatch(fetchGoals({ force: true }));
+      dispatch(fetchAccounts());
+      dispatch(fetchAssetClasses());
+      dispatch(fetchTransactions());
+      dispatch(fetchGoals());
     }
   }, [dispatch, user]);
 
@@ -731,10 +731,7 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-          dispatch(fetchAccounts({ force: true }));
-          dispatch(fetchAssetClasses({ force: true }));
-          dispatch(fetchTransactions({ force: true }));
-          dispatch(fetchGoals({ force: true }));
+
         }}
       />
 
@@ -781,10 +778,7 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-          dispatch(fetchAccounts({ force: true }));
-          dispatch(fetchAssetClasses({ force: true }));
-          dispatch(fetchTransactions({ force: true }));
-          dispatch(fetchGoals({ force: true }));
+
         }}
       />
 
@@ -820,10 +814,7 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-          dispatch(fetchAccounts({ force: true }));
-          dispatch(fetchAssetClasses({ force: true }));
-          dispatch(fetchTransactions({ force: true }));
-          dispatch(fetchGoals({ force: true }));
+
         }}
       />
 
@@ -853,10 +844,7 @@ export default function PortfolioPageClient() {
             ).unwrap();
             toast.success("Asset Class added");
           }
-          dispatch(fetchAccounts({ force: true }));
-          dispatch(fetchAssetClasses({ force: true }));
-          dispatch(fetchTransactions({ force: true }));
-          dispatch(fetchGoals({ force: true }));
+
         }}
         onDelete={async (id) => {
           setItemToDelete({ id, type: "assetClass" });
@@ -878,10 +866,7 @@ export default function PortfolioPageClient() {
             await dispatch(removeAssetClassAction(itemToDelete.id)).unwrap();
             toast.success("Asset class decommissioned");
           }
-          dispatch(fetchAccounts({ force: true }));
-          dispatch(fetchAssetClasses({ force: true }));
-          dispatch(fetchTransactions({ force: true }));
-          dispatch(fetchGoals({ force: true }));
+
           setIsDeleteModalOpen(false);
           setItemToDelete(null);
         }}

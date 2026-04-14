@@ -8,6 +8,7 @@ import { AssetClassesService } from './asset-classes.service';
 import { FinanceController } from './finance.controller';
 import { RemindersService } from './reminders.service';
 import { SimulationService } from './simulation.service';
+import { PlansService } from './plans.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { AuthModule } from '../auth/auth.module';
     AssetClassesService,
     RemindersService,
     SimulationService,
+    PlansService,
   ],
   exports: [
     GoalService,
@@ -32,6 +34,7 @@ import { AuthModule } from '../auth/auth.module';
     AssetClassesService,
     RemindersService,
     SimulationService,
+    PlansService,
   ],
 })
 export class FinanceModule {}

@@ -19,6 +19,7 @@ import { CategoriesService } from './categories.service';
 import { AssetClassesService } from './asset-classes.service';
 import { RemindersService } from './reminders.service';
 import { SimulationService } from './simulation.service';
+import { PlansService } from './plans.service';
 import type {
   FinancialGoal,
   Transaction,
@@ -29,6 +30,7 @@ import type {
   Reminder,
   BudgetSimulation,
   SimEntry,
+  ShortTermPlan,
 } from '@repo/types';
 import { UsersService } from '../common/services/users.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
@@ -48,6 +50,7 @@ export class FinanceController {
     private readonly usersService: UsersService,
     private readonly remindersService: RemindersService,
     private readonly simulationService: SimulationService,
+    private readonly plansService: PlansService,
   ) {}
 
   // --- Profile ---
@@ -62,6 +65,35 @@ export class FinanceController {
   @Put('profile')
   updateProfile(@Req() req: RequestWithUser, @Body() data: Partial<User>) {
     return this.usersService.update(req.user.uid, data);
+  }
+
+  // --- Short Term Plans ---
+
+  @ApiOperation({ summary: 'List all short term plans' })
+  @Get('plans')
+  findAllPlans(@Req() req: RequestWithUser) {
+    return this.plansService.findAll(req.user.uid);
+  }
+
+  @ApiOperation({ summary: 'Create a short term plan' })
+  @Post('plans')
+  createPlan(
+    @Req() req: RequestWithUser,
+    @Body() plan: Partial<ShortTermPlan>,
+  ) {
+    return this.plansService.create({ ...plan, userId: req.user.uid });
+  }
+
+  @ApiOperation({ summary: 'Update a short term plan' })
+  @Put('plans/:id')
+  updatePlan(@Param('id') id: string, @Body() plan: Partial<ShortTermPlan>) {
+    return this.plansService.update(id, plan);
+  }
+
+  @ApiOperation({ summary: 'Delete a short term plan' })
+  @Delete('plans/:id')
+  removePlan(@Param('id') id: string) {
+    return this.plansService.remove(id);
   }
 
   // --- Accounts ---

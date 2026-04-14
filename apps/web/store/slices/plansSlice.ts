@@ -1,106 +1,97 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface STAccount {
-  id: string;
-  name: string;
-  balance: number;
-}
-
-export interface STExpense {
-  id: string;
-  name: string;
-  amount: number;
-  accountId: string; // The account handling this expense
-  isPaid: boolean;
-}
-
-export interface ShortTermPlan {
-  id: string;
-  name: string;
-  createdAt: string;
-  accounts: STAccount[];
-  expenses: STExpense[];
-}
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "@/lib/api";
+import { ShortTermPlan } from "@repo/types";
 
 export interface PlansState {
   items: ShortTermPlan[];
+  loading: boolean;
+  error: string | null;
+  lastFetched: number | null;
 }
 
 const initialState: PlansState = {
   items: [],
+  loading: false,
+  error: null,
+  lastFetched: null,
 };
 
-// Create a middleware-friendly slice that can be synced with localStorage in components
-const plansSlice = createSlice({
+export const fetchPlans = createAsyncThunk<
+  ShortTermPlan[],
+  { force?: boolean } | void
+>(
+  "plans/fetchAll",
+  async () => {
+    const response = await api.get<ShortTermPlan[]>("/finance/plans");
+    return response.data;
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const state = getState() as { plans: PlansState };
+      if (state.plans.lastFetched !== null || state.plans.loading) {
+        return false;
+      }
+      return true;
+    },
+  }
+);
+
+export const createPlanAction = createAsyncThunk(
+  "plans/create",
+  async (plan: Partial<ShortTermPlan>) => {
+    const response = await api.post<ShortTermPlan>("/finance/plans", plan);
+    return response.data;
+  },
+);
+
+export const updatePlanAction = createAsyncThunk(
+  "plans/update",
+  async ({ id, data }: { id: string; data: Partial<ShortTermPlan> }) => {
+    const response = await api.put<ShortTermPlan>(`/finance/plans/${id}`, data);
+    return response.data;
+  },
+);
+
+export const deletePlanAction = createAsyncThunk(
+  "plans/delete",
+  async (id: string) => {
+    await api.delete(`/finance/plans/${id}`);
+    return id;
+  },
+);
+
+export const plansSlice = createSlice({
   name: "plans",
   initialState,
-  reducers: {
-    setPlans(state, action: PayloadAction<ShortTermPlan[]>) {
-      state.items = action.payload;
-    },
-    createPlan(state, action: PayloadAction<ShortTermPlan>) {
-      state.items.push(action.payload);
-    },
-    updatePlan(state, action: PayloadAction<ShortTermPlan>) {
-      const index = state.items.findIndex(p => p.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = action.payload;
-      }
-    },
-    deletePlan(state, action: PayloadAction<string>) {
-      state.items = state.items.filter(p => p.id !== action.payload);
-    },
-    // Account operations inside a specific plan
-    addAccount(state, action: PayloadAction<{ planId: string; account: STAccount }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) plan.accounts.push(action.payload.account);
-    },
-    updateAccount(state, action: PayloadAction<{ planId: string; account: STAccount }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) {
-        const accIdx = plan.accounts.findIndex(a => a.id === action.payload.account.id);
-        if (accIdx !== -1) plan.accounts[accIdx] = action.payload.account;
-      }
-    },
-    deleteAccount(state, action: PayloadAction<{ planId: string; accountId: string }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) {
-        plan.accounts = plan.accounts.filter(a => a.id !== action.payload.accountId);
-        plan.expenses = plan.expenses.map(e => e.accountId === action.payload.accountId ? { ...e, accountId: '' } : e);
-      }
-    },
-    // Expense operations inside a specific plan
-    addExpense(state, action: PayloadAction<{ planId: string; expense: STExpense }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) plan.expenses.push(action.payload.expense);
-    },
-    updateExpense(state, action: PayloadAction<{ planId: string; expense: STExpense }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) {
-        const expIdx = plan.expenses.findIndex(e => e.id === action.payload.expense.id);
-        if (expIdx !== -1) plan.expenses[expIdx] = action.payload.expense;
-      }
-    },
-    deleteExpense(state, action: PayloadAction<{ planId: string; expenseId: string }>) {
-      const plan = state.items.find(p => p.id === action.payload.planId);
-      if (plan) {
-        plan.expenses = plan.expenses.filter(e => e.id !== action.payload.expenseId);
-      }
-    },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPlans.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchPlans.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+        state.lastFetched = Date.now();
+      })
+      .addCase(fetchPlans.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? "Failed to fetch plans";
+      })
+      .addCase(createPlanAction.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(updatePlanAction.fulfilled, (state, action) => {
+        const index = state.items.findIndex(p => p.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(deletePlanAction.fulfilled, (state, action) => {
+        state.items = state.items.filter(p => p.id !== action.payload);
+      });
   },
 });
-
-export const {
-  setPlans,
-  createPlan,
-  updatePlan,
-  deletePlan,
-  addAccount,
-  updateAccount,
-  deleteAccount,
-  addExpense,
-  updateExpense,
-  deleteExpense
-} = plansSlice.actions;
 
 export default plansSlice.reducer;

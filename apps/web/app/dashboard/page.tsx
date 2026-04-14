@@ -70,10 +70,10 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchAccounts({ force: true }));
-      dispatch(fetchAssetClasses({ force: true }));
-      dispatch(fetchTransactions({ force: true }));
-      dispatch(fetchGoals({ force: true }));
+      dispatch(fetchAccounts());
+      dispatch(fetchAssetClasses());
+      dispatch(fetchTransactions());
+      dispatch(fetchGoals());
       dispatch(fetchReminders());
 
       if (permission === "default") {

@@ -4,21 +4,24 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
+import { AppDispatch } from "@/store";
 import {
-  addAccount, deleteAccount, addExpense, deleteExpense, updatePlan, STAccount, STExpense
+  updatePlanAction, fetchPlans
 } from "@/store/slices/plansSlice";
+import { STAccount, STExpense } from "@repo/types";
 import { ArrowLeft, Plus, Trash2, Wallet, Receipt, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function PlanWorkspace({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const planId = resolvedParams.id;
   const router = useRouter();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const plan = useSelector((state: RootState) => state.plans.items.find(p => p.id === planId));
 
@@ -31,6 +34,10 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
   const [newExpAccount, setNewExpAccount] = useState("");
 
   useEffect(() => {
+    dispatch(fetchPlans());
+  }, [dispatch]);
+
+  useEffect(() => {
     if (!plan && typeof window !== "undefined") {
       router.push("/plans");
     }
@@ -39,8 +46,15 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
   if (!plan) return null;
 
   const handleSaveName = () => {
-    if (planName.trim() !== plan.name) {
-      dispatch(updatePlan({ ...plan, name: planName }));
+    const newName = planName.trim();
+    if (!newName) {
+      toast.error("Plan name cannot be empty");
+      setPlanName(plan.name);
+      return;
+    }
+    if (newName !== plan.name) {
+      dispatch(updatePlanAction({ id: planId, data: { name: newName } }));
+      toast.success("Renamed workspace");
     }
   };
 
@@ -51,7 +65,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
       name: newAccName,
       balance: parseFloat(newAccBalance)
     };
-    dispatch(addAccount({ planId, account }));
+    dispatch(updatePlanAction({ id: planId, data: { accounts: [...plan.accounts, account] } }));
     setNewAccName("");
     setNewAccBalance("");
   };
@@ -65,7 +79,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
       accountId: newExpAccount,
       isPaid: false
     };
-    dispatch(addExpense({ planId, expense }));
+    dispatch(updatePlanAction({ id: planId, data: { expenses: [...plan.expenses, expense] } }));
     setNewExpName("");
     setNewExpAmount("");
     setNewExpAccount("");
@@ -132,7 +146,13 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                         <p className="text-[10px] font-bold text-slate-400 font-mono">₹{acc.balance.toLocaleString()}</p>
                       </div>
                       <button
-                        onClick={() => dispatch(deleteAccount({ planId, accountId: acc.id }))}
+                        onClick={() => dispatch(updatePlanAction({ 
+                          id: planId, 
+                          data: { 
+                            accounts: plan.accounts.filter(a => a.id !== acc.id),
+                            expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
+                          } 
+                        }))}
                         className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl"
                       >
                         <Trash2 className="size-3.5" />
@@ -197,7 +217,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                           </div>
                         </div>
                         <button
-                          onClick={() => dispatch(deleteExpense({ planId, expenseId: exp.id }))}
+                          onClick={() => dispatch(updatePlanAction({ id: planId, data: { expenses: plan.expenses.filter(e => e.id !== exp.id) } }))}
                           className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl"
                         >
                           <Trash2 className="size-3.5" />
