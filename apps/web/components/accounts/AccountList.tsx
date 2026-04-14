@@ -32,8 +32,6 @@ export function AccountList({ accounts }: AccountListProps) {
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
   const [isLiabilityModalOpen, setIsLiabilityModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const hasMore = accounts.length > 4;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -90,7 +88,7 @@ export function AccountList({ accounts }: AccountListProps) {
           return (
             <Card
               key={account.id || index}
-              className={`bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2 ${index >= 4 && !isExpanded ? "hidden lg:flex" : "flex"}`}
+              className="bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm rounded-2xl active:scale-[0.98] transition-all flex flex-col gap-2"
             >
               <div className="flex items-start justify-between">
                 <div
@@ -171,18 +169,6 @@ export function AccountList({ accounts }: AccountListProps) {
         })}
       </div>
 
-      {hasMore && (
-        <div className="flex justify-center lg:hidden pb-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-all border border-slate-200/50 dark:border-white/5 active:scale-95 shadow-sm"
-          >
-            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.1em]">
-              {isExpanded ? "Show Less" : "Show More"}
-            </span>
-          </button>
-        </div>
-      )}
 
       <AddAccountModal
         isOpen={isAccountModalOpen}

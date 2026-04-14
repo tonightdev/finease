@@ -373,12 +373,35 @@ export default function SimulationPage() {
   if (authLoading || (simLoading && !isInitialized)) {
     return (
       <PageContainer>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-48" />
+        <div className="space-y-3 mb-8">
+          <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
-          <div className="flex flex-col lg:flex-row gap-8">
-            <Skeleton className="h-[600px] flex-1" />
-            <Skeleton className="h-[600px] flex-[2]" />
+        </div>
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
+          <div className="xl:w-[380px] w-full shrink-0 space-y-6">
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-white/5 space-y-4">
+              <Skeleton className="h-24 w-full rounded-2xl" />
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 w-full space-y-6">
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-white/5 h-[600px] space-y-6">
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-10 w-48" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
+              <Skeleton className="h-48 w-full rounded-2xl" />
+            </div>
           </div>
         </div>
       </PageContainer>
@@ -388,7 +411,7 @@ export default function SimulationPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Strategy Hub"
+        title="Strategies Hub"
         subtitle="Standalone sandbox for real-time predictive financial modeling."
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
@@ -693,13 +716,13 @@ export default function SimulationPage() {
 
         <div className={`flex-1 w-full min-w-0 ${mobileTab === 'matrix' ? 'block' : 'hidden xl:block'}`}>
           <Card className="h-full min-h-[400px] sm:min-h-[600px] flex flex-col p-4 sm:p-5 border-slate-100 dark:border-white/5 w-full">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4">
                 <div className="size-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
                   <TrendingUp className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Live Strategy Matrix</h3>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Live Strategies Matrix</h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time analysis hub</p>
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
 import toast from "react-hot-toast";
 import { DateInput } from "@/components/ui/DateInput";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface ReminderCountdownProps {
   reminders: Reminder[];
@@ -34,14 +35,12 @@ export function ReminderCountdown({
   const archivedReminders = useSelector((state: RootState) => state.reminders.archivedItems);
 
   useEffect(() => {
+    setLoadingArchived(true);
     if (viewArchive) {
-      setLoadingArchived(true);
       dispatch(fetchArchivedReminders());
-      setTimeout(() => setLoadingArchived(true), 10); // Trigger loading
-      setTimeout(() => setLoadingArchived(false), 500); // 500ms for smooth skeleton
-    } else {
-      setLoadingArchived(false);
     }
+    const timer = setTimeout(() => setLoadingArchived(false), 400);
+    return () => clearTimeout(timer);
   }, [viewArchive, dispatch]);
 
   const handleComplete = (reminder: Reminder) => {
@@ -57,7 +56,7 @@ export function ReminderCountdown({
 
     // First delete the current one as it's completed
     await dispatch(deleteReminder(completedReminder.id)).unwrap();
-    toast.success("Signal successfully completed.");
+    toast.success("Expiry successfully completed.");
     setIsRenewModalOpen(false);
     setCompletedReminder(null);
   };
@@ -77,11 +76,11 @@ export function ReminderCountdown({
       // Delete old one
       await dispatch(deleteReminder(completedReminder.id)).unwrap();
 
-      toast.success("Signal successfully renewed for next year.");
+      toast.success("Expiry successfully renewed for next year.");
       setIsRenewModalOpen(false);
       setCompletedReminder(null);
     } catch {
-      toast.error("Failed to sync renewal signal.");
+      toast.error("Failed to sync renewal expiry.");
     }
   };
 
@@ -95,39 +94,51 @@ export function ReminderCountdown({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-1">
-        <div className="flex flex-col">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-            Signal Horizon
-          </h3>
-          <p className="text-[8px] font-bold text-slate-500 mt-0.5 uppercase tracking-widest leading-none">
-            {viewArchive ? "Historical Expiry Logs" : "Omni-Channel Expiry Nodes"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewArchive(!viewArchive)}
-            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full border transition-all tracking-[0.1em] ${viewArchive
-                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                : "bg-slate-100 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10 hover:border-primary/50"
-              }`}
-          >
-            {viewArchive ? "Viewing Archive" : "View Archive"}
-          </button>
-          {!viewArchive && reminders.length > 0 && (
-            <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded-full border border-primary/20 tracking-[0.1em]">
-              Active Monitoring
-            </span>
-          )}
-        </div>
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-fit">
+        <button
+          onClick={() => setViewArchive(false)}
+          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${!viewArchive
+            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+        >
+          Active Expiries
+        </button>
+        <button
+          onClick={() => setViewArchive(true)}
+          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${viewArchive
+            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+        >
+          Historical Logs
+        </button>
       </div>
 
       {loadingArchived ? (
-        <div className="py-12 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
-          <Activity className="w-8 h-8 text-primary/40 mx-auto mb-2" />
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Syncing Archive...
-          </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={`reminder-sub-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+              <div className="flex justify-between items-start">
+                <Skeleton className="size-6 rounded-lg" />
+                <Skeleton className="h-4 w-12 rounded" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+              <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-end">
+                <div className="space-y-1">
+                  <Skeleton className="h-2 w-10" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <div className="flex gap-1">
+                  <Skeleton className="size-6 rounded-lg" />
+                  <Skeleton className="size-6 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : sortedReminders.length === 0 ? (
         <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
@@ -164,14 +175,14 @@ export function ReminderCountdown({
         onConfirm={async () => {
           if (!reminderToDelete) return;
           await dispatch(deleteReminder(reminderToDelete.id)).unwrap();
-          toast.success("Signal terminated.");
+          toast.success("Expiry removed.");
           setIsDeleteModalOpen(false);
           setReminderToDelete(null);
         }}
         isDestructive={true}
-        title="Terminate Signal"
-        message="Decommissioning this signal node will stop active monitoring of this expiry. This operation is recorded."
-        confirmText="Confirm Termination"
+        title="Remove Expiry"
+        message="Decommissioning this expiry node will stop active monitoring. This operation is recorded."
+        confirmText="Confirm Removal"
       />
 
       {/* Renewal / Completion Modal */}
@@ -200,9 +211,9 @@ export function ReminderCountdown({
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Signal Completed</h3>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Expiry Completed</h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                    Would you like to authorize a renewal signal for the next operational cycle?
+                    Would you like to authorize a renewal for the next operational cycle?
                   </p>
                 </div>
 
@@ -320,12 +331,12 @@ function CountdownCard({
           </div>
           <span
             className={`text-[7px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${isArchived
-                ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
-                : isExpired
-                  ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
-                  : isCritical
-                    ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
-                    : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
+              ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
+              : isExpired
+                ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
+                : isCritical
+                  ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
+                  : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
               }`}
           >
             {isArchived ? "Archived" : isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
@@ -363,7 +374,7 @@ function CountdownCard({
                   onComplete();
                 }}
                 className="p-1 px-2 text-slate-300 hover:text-emerald-500 transition-colors"
-                title="Complete Signal"
+                title="Complete Expiry"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </button>
@@ -373,7 +384,7 @@ function CountdownCard({
                   onDelete();
                 }}
                 className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors"
-                title="Archive Signal"
+                title="Archive Expiry"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

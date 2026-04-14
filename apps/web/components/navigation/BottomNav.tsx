@@ -7,7 +7,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import {
   Home,
   IndianRupee,
-  Target,
   TrendingUp,
   FileText,
   Users,
@@ -28,10 +27,9 @@ export function BottomNav() {
   const userLinks = [
     { href: "/dashboard", label: "Home", Icon: Home },
     { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },
-    { href: "/simulation", label: "Strategy", Icon: Zap },
+    { href: "/strategies", label: "Strategies", Icon: Zap },
     { href: "/plans", label: "Plans", Icon: Layers },
     { href: "/transactions", label: "Transact", Icon: IndianRupee },
-    { href: "/goals", label: "Goals", Icon: Target },
     { href: "/reports", label: "Reports", Icon: FileText },
   ];
 

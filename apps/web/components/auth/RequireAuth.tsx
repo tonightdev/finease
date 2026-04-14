@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/loading";
 
+import toast from "react-hot-toast";
 
 const PUBLIC_ROUTES = ["/", "/login", "/signup"];
 
@@ -27,6 +28,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       pathname &&
       !PUBLIC_ROUTES.includes(pathname)
     ) {
+      toast.error("Logged out");
       router.push("/");
       return;
     }

@@ -56,7 +56,7 @@ export function FeatureTour() {
       icon: <TrendingUp className="w-10 h-10 text-indigo-500" />,
     },
     {
-      title: "Strategic Simulation",
+      title: "Strategies Hub",
       description:
         "Experiment with your capital without risk. Our hybrid engine lets you project future net worth based on custom adherence rules.",
       icon: <Activity className="w-10 h-10 text-amber-500" />,

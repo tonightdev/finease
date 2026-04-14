@@ -9,21 +9,22 @@ import {
   updatePlanAction, fetchPlans
 } from "@/store/slices/plansSlice";
 import { STAccount, STExpense } from "@repo/types";
-import { ArrowLeft, Plus, Trash2, Wallet, Receipt, TrendingUp } from "lucide-react";
-import Link from "next/link";
+import { Plus, Trash2, Wallet, Receipt, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
-export default function PlanWorkspace({ params }: { params: Promise<{ id: string }> }) {
+export default function SimulationEnvironment({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const planId = resolvedParams.id;
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const plan = useSelector((state: RootState) => state.plans.items.find(p => p.id === planId));
+  const { items, loading } = useSelector((state: RootState) => state.plans);
+  const plan = items.find(p => p.id === planId);
 
   const [planName, setPlanName] = useState(plan?.name || "");
   const [newAccName, setNewAccName] = useState("");
@@ -38,10 +39,33 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
   }, [dispatch]);
 
   useEffect(() => {
-    if (!plan && typeof window !== "undefined") {
+    if (!plan && typeof window !== "undefined" && !loading) {
       router.push("/plans");
     }
-  }, [plan, router]);
+  }, [plan, router, loading]);
+
+  useEffect(() => {
+    if (plan) setPlanName(plan.name);
+  }, [plan]);
+
+  if (loading && !plan) {
+    return (
+      <PageContainer>
+        <div className="space-y-3 mb-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div className="space-y-6">
+            <Skeleton className="h-[400px] w-full rounded-[2.5rem]" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-[400px] w-full rounded-[2.5rem]" />
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
 
   if (!plan) return null;
 
@@ -54,7 +78,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
     }
     if (newName !== plan.name) {
       dispatch(updatePlanAction({ id: planId, data: { name: newName } }));
-      toast.success("Renamed workspace");
+      toast.success("Renamed simulation");
     }
   };
 
@@ -101,32 +125,87 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
   return (
     <PageContainer>
       <PageHeader
+        backHref="/plans"
+        backLabel="Back to Directory"
         title={
           <input
             type="text"
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
             onBlur={handleSaveName}
-            className="bg-transparent text-xl font-black uppercase tracking-widest border-none outline-none w-full min-w-[300px]"
+            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-full min-w-[300px]"
           />
         }
-        subtitle="Short Term Plan Workspace"
-        actions={
-          <Link href="/plans">
-            <Button variant="outline" size="sm" className="gap-2 shrink-0 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 shadow-none border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800">
-              <ArrowLeft className="size-4" /> Back to Directory
-            </Button>
-          </Link>
-        }
+        subtitle="Strategic Simulation Environment"
+        className="mb-4"
       />
 
-      <div className="mt-6 space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="space-y-4">
+        {/* Top Section: Flow Visualizer */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm border-t-4 border-t-emerald-500">
+          <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-6">
+            <TrendingUp className="size-4 text-emerald-500" /> Flow Visualizer
+          </h3>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Total Liquidity</p>
+              <p className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">₹{totalBalance.toLocaleString()}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">Net Flow</p>
+              <p className={`text-sm font-black font-mono ${remainingLiquidity >= 0 ? "text-slate-700 dark:text-white" : "text-rose-500"}`}>
+                ₹{remainingLiquidity.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1">Burn Rate</p>
+              <p className="text-sm font-black font-mono text-rose-700 dark:text-rose-300">₹{totalExpenses.toLocaleString()}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wider text-primary mb-1">Nodes Active</p>
+              <p className="text-sm font-black font-mono text-primary">{plan.accounts.length}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {accountStats.map(stat => (
+              <div key={stat.id} className="space-y-2">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider">{stat.name}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                      Spent: ₹{stat.spent.toLocaleString()}
+                    </p>
+                  </div>
+                  <p className={`text-[11px] font-black font-mono ${stat.remaining >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {stat.remaining >= 0 ? 'Balance' : 'Deficit'}: ₹{Math.abs(stat.remaining).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, Math.max(0, 100 - stat.pct))}%` }}
+                    className={`absolute top-0 bottom-0 left-0 ${stat.remaining >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                  />
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${stat.pct}%` }}
+                    className="absolute top-0 bottom-0 right-0 bg-rose-400/50"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
           {/* Left Column: Accounts */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
-              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-4">
                 <Wallet className="size-4 text-primary" /> Nodes (Liquidity)
               </h3>
 
@@ -142,16 +221,16 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                       className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5"
                     >
                       <div>
-                        <p className="text-xs font-black uppercase tracking-widest">{acc.name}</p>
+                        <p className="text-xs font-black uppercase tracking-wider">{acc.name}</p>
                         <p className="text-[10px] font-bold text-slate-400 font-mono">₹{acc.balance.toLocaleString()}</p>
                       </div>
                       <button
-                        onClick={() => dispatch(updatePlanAction({ 
-                          id: planId, 
-                          data: { 
+                        onClick={() => dispatch(updatePlanAction({
+                          id: planId,
+                          data: {
                             accounts: plan.accounts.filter(a => a.id !== acc.id),
                             expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
-                          } 
+                          }
                         }))}
                         className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl"
                       >
@@ -161,7 +240,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                   ))}
                 </AnimatePresence>
                 {plan.accounts.length === 0 && (
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center py-4">No accounts listed</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center py-4">No accounts listed</p>
                 )}
               </div>
 
@@ -180,7 +259,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                   onChange={(e) => setNewAccBalance(e.target.value)}
                   className="w-full text-[10px] font-bold font-mono p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-primary"
                 />
-                <Button onClick={handleAddAccount} className="w-full mt-2 font-black text-[10px] uppercase tracking-widest h-9" disabled={!newAccName || !newAccBalance}>
+                <Button onClick={handleAddAccount} className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9" disabled={!newAccName || !newAccBalance}>
                   <Plus className="size-3.5 mr-1" /> Add Node
                 </Button>
               </div>
@@ -188,9 +267,9 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
           </div>
 
           {/* Center Column: Expenses */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm h-full">
-              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-4">
                 <Receipt className="size-4 text-rose-500" /> Vectors (Expenses)
               </h3>
 
@@ -208,10 +287,10 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                         className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5"
                       >
                         <div>
-                          <p className="text-xs font-black uppercase tracking-widest">{exp.name}</p>
+                          <p className="text-xs font-black uppercase tracking-wider">{exp.name}</p>
                           <div className="flex gap-2 items-center mt-0.5">
                             <span className="text-[10px] font-bold text-rose-500 font-mono">₹{exp.amount.toLocaleString()}</span>
-                            <span className="text-[8px] bg-slate-200 dark:bg-white/10 px-1.5 rounded text-slate-500 font-bold uppercase tracking-widest truncate max-w-[80px]">
+                            <span className="text-[8px] bg-slate-200 dark:bg-white/10 px-1.5 rounded text-slate-500 font-bold uppercase tracking-wider truncate max-w-[80px]">
                               {linkedAcc?.name || "Unknown"}
                             </span>
                           </div>
@@ -227,7 +306,7 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                   })}
                 </AnimatePresence>
                 {plan.expenses.length === 0 && (
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center py-4">No expenses listed</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center py-4">No expenses listed</p>
                 )}
               </div>
 
@@ -249,73 +328,20 @@ export default function PlanWorkspace({ params }: { params: Promise<{ id: string
                 <select
                   value={newExpAccount}
                   onChange={(e) => setNewExpAccount(e.target.value)}
-                  className="w-full text-[10px] font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500 text-slate-500 uppercase tracking-widest appearance-none"
+                  className="w-full text-[10px] font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500 text-slate-500 uppercase tracking-wider appearance-none"
                 >
                   <option value="">Select Node Config...</option>
                   {plan.accounts.map(acc => (
                     <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance})</option>
                   ))}
                 </select>
-                <Button onClick={handleAddExpense} variant="outline" className="w-full mt-2 font-black text-[10px] uppercase tracking-widest h-9 border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white" disabled={!newExpName || !newExpAmount || !newExpAccount}>
+                <Button onClick={handleAddExpense} variant="outline" className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9 border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white" disabled={!newExpName || !newExpAmount || !newExpAccount}>
                   <Plus className="size-3.5 mr-1" /> Add Vector
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Visualizer */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm h-full border-t-4 border-t-emerald-500">
-              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-6">
-                <TrendingUp className="size-4 text-emerald-500" /> Flow Visualizer
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">Total Liquidity</p>
-                  <p className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">₹{totalBalance.toLocaleString()}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Net Flow</p>
-                  <p className={`text-sm font-black font-mono ${remainingLiquidity >= 0 ? "text-slate-700 dark:text-white" : "text-rose-500"}`}>
-                    ₹{remainingLiquidity.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {accountStats.map(stat => (
-                  <div key={stat.id} className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest">{stat.name}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                          Spent: ₹{stat.spent.toLocaleString()}
-                        </p>
-                      </div>
-                      <p className={`text-[11px] font-black font-mono ${stat.remaining >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {stat.remaining >= 0 ? 'Balance' : 'Deficit'}: ₹{Math.abs(stat.remaining).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, Math.max(0, 100 - stat.pct))}%` }}
-                        className={`absolute top-0 bottom-0 left-0 ${stat.remaining >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                      />
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${stat.pct}%` }}
-                        className="absolute top-0 bottom-0 right-0 bg-rose-400/50"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-          </div>
 
         </div>
       </div>

@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import GoalsPageClient from "./GoalsPageClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Goals | FinEase",
-  description: "Track your financial milestones and savings gaps.",
-};
-
-export default function Page() {
-  return <GoalsPageClient />;
+export default function GoalsRedirectPage() {
+  redirect("/plans?tab=Goals");
 }

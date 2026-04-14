@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { ArrowRight, Download, Trash2, Edit2, Filter, CheckCircle2, Plus, History } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   fetchTransactions,
   createTransaction,
@@ -43,12 +44,12 @@ const liquidTypes: AccountType[] = ["bank", "cash", "card"];
 export default function TransactionsPageClient() {
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const transactions = useSelector(
-    (state: RootState) => state.transactions.items,
-  );
-  const accounts = useSelector((state: RootState) => state.accounts.items);
-  const categories = useSelector((state: RootState) => state.categories.items);
-  const goals = useSelector((state: RootState) => state.goals.items);
+  const { items: transactions, loading: transactionsLoading } = useSelector((state: RootState) => state.transactions);
+  const { items: accounts, loading: accountsLoading } = useSelector((state: RootState) => state.accounts);
+  const { items: categories, loading: categoriesLoading } = useSelector((state: RootState) => state.categories);
+  const { items: goals, loading: goalsLoading } = useSelector((state: RootState) => state.goals);
+
+  const isDataLoading = transactionsLoading || accountsLoading || categoriesLoading || goalsLoading;
 
   useEffect(() => {
     if (user) {
@@ -230,7 +231,7 @@ export default function TransactionsPageClient() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-xl w-full sm:w-56">
+          <div className="flex bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-xl w-full">
             <button onClick={() => { setActiveTab("actual"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${activeTab === "actual" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Actual</button>
             <button onClick={() => { setActiveTab("automated"); setCurrentPage(1); }} className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2 ${activeTab === "automated" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}>Automated {pendingAutomatedCount > 0 && <span className="bg-primary/10 text-primary px-1 rounded-full text-[7px]">{pendingAutomatedCount}</span>}</button>
           </div>
@@ -283,7 +284,19 @@ export default function TransactionsPageClient() {
             </tr>
           </thead>
           <tbody>
-            {paginatedTransactions.length === 0 ? (
+            {isDataLoading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={`skeleton-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
+                  <td className="px-3 py-4"><Skeleton className="h-3 w-16" /></td>
+                  <td className="px-3 py-4"><Skeleton className="h-3 w-48" /></td>
+                  <td className="px-3 py-4"><Skeleton className="h-3 w-24" /></td>
+                  <td className="px-3 py-4"><Skeleton className="h-3 w-32" /></td>
+                  <td className="px-3 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-3 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-3 py-4 text-right"><div className="flex justify-end gap-1.5"><Skeleton className="size-7 rounded-lg" /><Skeleton className="size-7 rounded-lg" /></div></td>
+                </tr>
+              ))
+            ) : paginatedTransactions.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-20 text-center flex flex-col items-center justify-center gap-4">
                   <History size={48} className="text-slate-200 dark:text-slate-800" />
@@ -344,7 +357,26 @@ export default function TransactionsPageClient() {
       </div>
 
       <div className="lg:hidden grid grid-cols-2 gap-3 mb-3">
-        {paginatedTransactions.length === 0 ? (
+        {isDataLoading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={`skeleton-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-2 w-16" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-center">
+                <div className="space-y-1">
+                  <Skeleton className="h-2 w-12" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <Skeleton className="size-6 rounded-md" />
+              </div>
+            </div>
+          ))
+        ) : paginatedTransactions.length === 0 ? (
           <div className="col-span-full py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center text-center gap-4">
             <History size={48} className="text-slate-200 dark:text-slate-800" />
             <div className="space-y-1">

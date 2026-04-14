@@ -50,6 +50,7 @@ export interface Account {
   valuationAdjustment?: number;
   institutionName?: string;
   excludeFromAnalytics?: boolean;
+  isClosed?: boolean;
   lastSyncedAt: string;
   deletedAt?: string | null;
 }

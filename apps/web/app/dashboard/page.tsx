@@ -16,7 +16,6 @@ import { fetchReminders } from "@/store/slices/remindersSlice";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { FinancialGoal, AccountType } from "@repo/types";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight } from "lucide-react";
@@ -39,7 +38,7 @@ export default function Home() {
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
   // Accounts used for analytics/stats (excludes those marked as excluded)
-  const analyticsAccounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics), [allAccounts]);
+  const analyticsAccounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics && !a.isClosed), [allAccounts]);
 
   const goals = useSelector((state: RootState) => state.goals.items);
   const assetClasses = useSelector((state: RootState) => state.assetClasses.items);
@@ -85,7 +84,7 @@ export default function Home() {
   // Regular accounts for display (includes excluded ones)
   const displayRegularAccounts = useMemo(() => {
     const filtered = allAccounts.filter(
-      (acc) => acc.type === "bank" || acc.type === "cash" || acc.type === "card",
+      (acc) => !acc.isClosed && (acc.type === "bank" || acc.type === "cash" || acc.type === "card"),
     );
     const order: Record<string, number> = { bank: 0, cash: 1, card: 2 };
     return [...filtered].sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
@@ -267,8 +266,8 @@ export default function Home() {
       .filter((tx) => tx.type === "expense")
       .reduce((sum, tx) => sum + tx.amount, 0);
 
-    const savingsRate = monthlyIncome > 0 
-      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100 
+    const savingsRate = monthlyIncome > 0
+      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
       : 0;
 
     const liquidCapital = analyticsRegularAccounts
@@ -296,23 +295,37 @@ export default function Home() {
 
   if (loading && allAccounts.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-6 lg:space-y-8">
+      <PageContainer className="space-y-6 lg:space-y-8">
         <div className="space-y-3">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-5 w-96" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
-        <div className="flex flex-wrap gap-4">
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {[1, 2, 3, 4].map((i) => (
-            <Card
+            <div
               key={i}
-              className="flex-1 min-w-[140px] space-y-3 shadow-none border-slate-100 dark:border-slate-800"
+              className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm space-y-4"
             >
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-8 w-32" />
-            </Card>
+              <div className="space-y-2">
+                <Skeleton className="h-2 w-12" />
+                <Skeleton className="h-2 w-24" />
+              </div>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-20 rounded-full" />
+            </div>
           ))}
         </div>
-      </div>
+
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full rounded-2xl" />
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </PageContainer>
     );
   }
 
@@ -325,16 +338,6 @@ export default function Home() {
         className="space-y-3"
         actions={
           <div className="flex w-full sm:w-auto gap-2">
-            <Link href="/plans" className="flex-1 sm:flex-initial">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-primary/20 text-primary hover:bg-primary/5"
-                leftIcon={<TargetIcon className="w-3.5 h-3.5" />}
-              >
-                Short Term Plans
-              </Button>
-            </Link>
             <Button
               size="sm"
               onClick={() => setIsAccountModalOpen(true)}
@@ -360,8 +363,8 @@ export default function Home() {
                   <AlertTriangle size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-tight">
-                    {expiringSoon.length} Signal Horizon{expiringSoon.length > 1 ? 's' : ''} require{expiringSoon.length === 1 ? 's' : ''} immediate attention
+                  <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                    {expiringSoon.length} Expiry Horizon{expiringSoon.length > 1 ? 's' : ''} require{expiringSoon.length === 1 ? 's' : ''} immediate attention
                   </h4>
                   <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
                     Impending expiry detected within 7-day window
@@ -489,7 +492,7 @@ export default function Home() {
           <div className="flex items-center justify-between px-1 group">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               Goal Velocity
-              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards milestones</span>
+              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards goals</span>
             </h3>
             <Link
               href="/goals"

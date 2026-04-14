@@ -115,14 +115,14 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Strategic Simulation */}
+            {/* Strategies & Simulations */}
             <div className="md:col-span-6 group relative bg-amber-500 text-white rounded-3xl p-4 overflow-hidden hover:scale-[1.02] transition-all shadow-lg flex flex-col">
               <div className="relative z-10">
                 <div className="size-8 rounded-xl bg-white/20 flex items-center justify-center mb-2 backdrop-blur-sm shadow-inner">
                   <Activity className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-black mb-2 uppercase tracking-tighter">
-                  Live Strategy Matrix
+                  Live Strategies Matrix
                 </h3>
                 <p className="text-xs font-medium leading-relaxed opacity-90">
                   Experiment with dual perspective parameters (yearly/monthly) and zero-latency simulations to construct precise capital strategies before deploying funds.
@@ -192,7 +192,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-[95%] sm:max-w-7xl px-2 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div className="space-y-3">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Zero Fees. <span className="text-primary italic">Absolute Privacy.</span>
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">

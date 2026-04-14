@@ -519,36 +519,38 @@ export default function ReportsPageClient() {
 
   if (authLoading || (loading && transactions.length === 0)) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full space-y-8 text-center">
-        <div className="space-y-3 flex flex-col items-center">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-5 w-96" />
+      <PageContainer>
+        <div className="space-y-3 mb-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {[1, 2, 3, 4].map((i) => (
-            <Card
-              key={`skeleton-${i}`}
-              className="space-y-3 shadow-none border-slate-100 dark:border-slate-800"
+            <div
+              key={`stat-skeleton-${i}`}
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-4 rounded-3xl shadow-sm space-y-4"
             >
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-3 w-24" />
-            </Card>
+              <div className="space-y-2">
+                <Skeleton className="h-2 w-12" />
+                <Skeleton className="h-2 w-24" />
+              </div>
+              <Skeleton className="h-6 w-32" />
+            </div>
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-8">
-          <Card className="h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-white/5 h-[400px] flex flex-col gap-6">
             <Skeleton className="h-4 w-32" />
-            <Skeleton className="flex-1 w-full" />
-          </Card>
-          <Card className="h-[400px] shadow-none border-slate-100 dark:border-slate-800 flex flex-col gap-4">
+            <Skeleton className="flex-1 w-full rounded-2xl" />
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-white/5 h-[400px] flex flex-col gap-6">
             <Skeleton className="h-4 w-32" />
-            <Skeleton className="flex-1 w-full" />
-          </Card>
+            <Skeleton className="flex-1 w-full rounded-2xl" />
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -594,7 +596,7 @@ export default function ReportsPageClient() {
               )}
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full sm:w-auto">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full">
               {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
                 <button
                   key={type}

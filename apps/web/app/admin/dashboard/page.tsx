@@ -123,7 +123,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col lg:flex-row gap-5">
         <div className="flex-1 lg:flex-[2] min-w-0 space-y-5">
           <div className="p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark shadow-sm h-[280px] flex flex-col">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
                   Registration Metrics

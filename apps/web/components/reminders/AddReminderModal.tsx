@@ -80,7 +80,7 @@ export function AddReminderModal({
             className="flex-[2]"
             leftIcon={<Bell className="w-4 h-4" />}
           >
-            Establish Signal
+            Add Expiry
           </Button>
         </div>
       }
@@ -88,7 +88,7 @@ export function AddReminderModal({
       <div className="space-y-6">
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Signal Identifier
+            Expiry Identifier
           </label>
           <input
             type="text"
@@ -102,7 +102,7 @@ export function AddReminderModal({
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[140px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-              Signal Type
+              Expiry Category
             </label>
             <select
               value={formData.type}

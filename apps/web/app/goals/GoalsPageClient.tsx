@@ -139,7 +139,7 @@ export default function GoalsPageClient() {
         <div className="space-y-4">
           <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
             <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Active Milestones
+              Active Goals
             </h3>
             <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
               {goals.length} Targets
@@ -154,7 +154,7 @@ export default function GoalsPageClient() {
                   No Goals Set
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500">
-                  Define your first milestone to start tracking progress.
+                  Define your first goal to start tracking progress.
                 </p>
               </div>
             ) : (
@@ -326,10 +326,10 @@ export default function GoalsPageClient() {
         onSave={async (data) => {
           if (selectedReminder) {
             await dispatch(updateReminder({ id: selectedReminder.id, data })).unwrap();
-            toast.success("Signal updated.");
+            toast.success("Expiry updated.");
           } else {
             await dispatch(createReminder(data)).unwrap();
-            toast.success("Signal established.");
+            toast.success("Expiry added.");
           }
         }}
         reminder={selectedReminder}
@@ -344,12 +344,12 @@ export default function GoalsPageClient() {
         onConfirm={async () => {
           if (!goalToDelete) return;
           await dispatch(deleteGoalAction(goalToDelete.id)).unwrap();
-          toast.success("Milestone decommissioned");
+          toast.success("Goal decommissioned");
 
           setIsDeleteModalOpen(false);
           setGoalToDelete(null);
         }}
-        title="Sanitize Milestone"
+        title="Sanitize Goal"
         message="This operation will permanently remove this financial goal from your roadmap. All historical tracking for this target will be lost."
         confirmText="Confirm Purge"
       />

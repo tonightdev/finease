@@ -59,7 +59,7 @@ export function GoalProgressCard({
               {name}
             </p>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-none">
-              {Math.round(percentageSaved)}% ARCHIEVED
+              {Math.round(percentageSaved)}% ACHIEVED
             </p>
           </div>
         </div>

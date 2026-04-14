@@ -480,7 +480,7 @@ export default function TransactionsImportClient() {
             <div
               className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-3xl p-8 shadow-xl transition-all ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}
             >
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
                     <FileUp className="w-5 h-5" />

@@ -25,6 +25,7 @@ import {
 import { Account } from "@repo/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   Trash2,
   Edit2,
@@ -88,9 +89,10 @@ export default function PortfolioPageClient() {
   const [liabilityPage, setLiabilityPage] = useState(1);
   const itemsPerPage = 10;
 
-  const investments = accounts.filter((a) => a.type === "investment");
-  const debts = accounts.filter((a) => a.type === "debt");
-  const otherAssets = accounts.filter((a) => a.type === "asset");
+  const activeAccounts = accounts.filter(a => !a.isClosed);
+  const investments = activeAccounts.filter((a) => a.type === "investment");
+  const debts = activeAccounts.filter((a) => a.type === "debt");
+  const otherAssets = activeAccounts.filter((a) => a.type === "asset");
 
   const totalInvestmentPages = Math.ceil(investments.length / itemsPerPage);
   const paginatedInvestments = investments.slice(
@@ -238,40 +240,49 @@ export default function PortfolioPageClient() {
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          {
-            label: "Net Worth",
-            value: netWorth,
-            color: "text-slate-900 dark:text-white",
-          },
-          {
-            label: "Capital",
-            value: totalCapitalInvested,
-            color: "text-slate-900 dark:text-white",
-          },
-          {
-            label: "Valuation",
-            value: investments
-              .filter((a) => !a.excludeFromAnalytics)
-              .reduce((sum, item) => sum + item.balance, 0),
-            color: "text-emerald-500",
-          },
-          { label: "Liabilities", value: liabilities, color: "text-rose-500" },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
-          >
-            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-              {stat.label}
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={`skeleton-stat-${i}`} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2">
+              <Skeleton className="h-2 w-12" />
+              <Skeleton className="h-5 w-24" />
             </div>
+          ))
+        ) : (
+          [
+            {
+              label: "Net Worth",
+              value: netWorth,
+              color: "text-slate-900 dark:text-white",
+            },
+            {
+              label: "Capital",
+              value: totalCapitalInvested,
+              color: "text-slate-900 dark:text-white",
+            },
+            {
+              label: "Valuation",
+              value: investments
+                .filter((a) => !a.excludeFromAnalytics)
+                .reduce((sum, item) => sum + item.balance, 0),
+              color: "text-emerald-500",
+            },
+            { label: "Liabilities", value: liabilities, color: "text-rose-500" },
+          ].map((stat, i) => (
             <div
-              className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible`}
+              key={i}
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
             >
-              ₹{stat.value.toLocaleString()}
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                {stat.label}
+              </div>
+              <div
+                className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible`}
+              >
+                ₹{stat.value.toLocaleString()}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="space-y-3">
@@ -291,7 +302,18 @@ export default function PortfolioPageClient() {
               </tr>
             </thead>
             <tbody>
-              {paginatedInvestments.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`skeleton-inv-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
+                  <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
+                  <td className="px-5 py-4"><Skeleton className="h-3 w-24" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-12 ml-auto" /></td>
+                  <td className="px-4 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                </tr>
+              ))
+            ) : paginatedInvestments.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No growth assets traced</td>
                 </tr>
@@ -327,7 +349,23 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="lg:hidden grid grid-cols-2 gap-3">
-          {paginatedInvestments.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={`skeleton-inv-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-2 w-16" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-5 w-20" />
+              </div>
+              <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-center">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="size-7 rounded-lg" />
+              </div>
+            </div>
+          ))
+        ) : paginatedInvestments.length === 0 ? (
             <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No growth assets traced
@@ -459,7 +497,19 @@ export default function PortfolioPageClient() {
               </tr>
             </thead>
             <tbody>
-              {paginatedDebts.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`skeleton-debt-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
+                  <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
+                  <td className="px-5 py-4"><Skeleton className="h-3 w-16" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                </tr>
+              ))
+            ) : paginatedDebts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No exposure clusters traced</td>
                 </tr>
@@ -487,7 +537,23 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="lg:hidden grid grid-cols-2 gap-3">
-          {paginatedDebts.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 2 }).map((_, i) => (
+            <div key={`skeleton-debt-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-2 w-12" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
+                <div className="flex gap-2 flex-1"><Skeleton className="h-6 w-12" /><Skeleton className="h-6 w-12" /></div>
+                <Skeleton className="size-7 rounded-lg" />
+              </div>
+            </div>
+          ))
+        ) : paginatedDebts.length === 0 ? (
             <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No exposure clusters
@@ -612,7 +678,16 @@ export default function PortfolioPageClient() {
               </tr>
             </thead>
             <tbody>
-              {otherAssets.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <tr key={`skeleton-aux-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
+                  <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
+                  <td className="px-5 py-4"><Skeleton className="h-3 w-32" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
+                  <td className="px-5 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                </tr>
+              ))
+            ) : otherAssets.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters traced</td>
                 </tr>
@@ -637,7 +712,23 @@ export default function PortfolioPageClient() {
         </div>
 
         <div className="lg:hidden grid grid-cols-2 gap-3">
-          {otherAssets.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 2 }).map((_, i) => (
+            <div key={`skeleton-aux-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-2 w-16" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="size-7 rounded-lg" />
+              </div>
+            </div>
+          ))
+        ) : otherAssets.length === 0 ? (
             <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No auxiliary wealth clusters
