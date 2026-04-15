@@ -26,7 +26,7 @@ export function PageHeader({
       className={`sticky top-14 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pt-1.5 pb-1.5 border-b border-slate-200 dark:border-white/5 ${className}`}
     >
       <div className="flex flex-col flex-1 md:flex-row md:items-center justify-between gap-2">
-        <div className="flex items-center gap-4 shrink-0 min-w-0">
+        <div className="flex items-center gap-2 shrink-0 min-w-0">
           {backHref && (
             <Link
               href={backHref}

@@ -94,10 +94,10 @@ export function ReminderCountdown({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-fit">
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-full sm:w-fit">
         <button
           onClick={() => setViewArchive(false)}
-          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${!viewArchive
+          className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${!viewArchive
             ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             }`}
@@ -106,7 +106,7 @@ export function ReminderCountdown({
         </button>
         <button
           onClick={() => setViewArchive(true)}
-          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${viewArchive
+          className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${viewArchive
             ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             }`}

@@ -9,7 +9,7 @@ import {
   updatePlanAction, fetchPlans
 } from "@/store/slices/plansSlice";
 import { STAccount, STExpense } from "@repo/types";
-import { Plus, Trash2, Wallet, Receipt, TrendingUp } from "lucide-react";
+import { Plus, Trash2, Wallet, Receipt, TrendingUp, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -133,16 +133,38 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
             onBlur={handleSaveName}
-            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-full min-w-[300px]"
+            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-auto max-w-[200px] shrink truncate focus:ring-0 p-0"
           />
         }
-        subtitle="Strategic Simulation Environment"
+        subtitle=""
+        actions={
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {plan.status === "completed" && (
+              <span className="shrink-0 px-2.5 py-1 bg-slate-100 dark:bg-white/10 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200 dark:border-white/10">
+                Completed
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant={plan.status === "completed" ? "outline" : "primary"}
+              onClick={() => {
+                const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
+                dispatch(updatePlanAction({ id: planId, data: { status: newStatus } }));
+                toast.success(newStatus === "completed" ? "Simulation marked as completed" : "Simulation reopened");
+              }}
+              className="flex-1 sm:flex-initial shrink-0 h-9 sm:h-8 text-[9px] font-black uppercase tracking-widest px-4 shadow-sm"
+              leftIcon={plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
+            >
+              {plan.status === "completed" ? "Reopen Simulation" : "Mark as Completed"}
+            </Button>
+          </div>
+        }
         className="mb-4"
       />
 
       <div className="space-y-4">
         {/* Top Section: Flow Visualizer */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm border-t-4 border-t-emerald-500">
+        <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm border-t-4 ${plan.status === 'completed' ? 'border-t-slate-400' : 'border-t-emerald-500'} ${plan.status === 'completed' ? 'opacity-90' : ''}`}>
           <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-6">
             <TrendingUp className="size-4 text-emerald-500" /> Flow Visualizer
           </h3>

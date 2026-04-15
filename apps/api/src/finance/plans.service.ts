@@ -35,6 +35,7 @@ export class PlansService {
     const docRef = await this.collection.add({
       ...plan,
       deletedAt: null,
+      status: plan.status || 'ongoing',
     });
     const doc = await docRef.get();
     const result = { id: doc.id, ...doc.data() } as ShortTermPlan;

@@ -12,21 +12,22 @@ import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 // Icons
 import {
   Plus,
   Trash2,
-  FileText,
   Pencil,
   Target,
   Bell,
+  CheckCircle2,
+  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 
 // Redux Actions
-import { createPlanAction, deletePlanAction, fetchPlans } from "@/store/slices/plansSlice";
+import { createPlanAction, deletePlanAction, fetchPlans, updatePlanAction } from "@/store/slices/plansSlice";
 import {
   fetchGoals,
   addGoalAction,
@@ -38,7 +39,7 @@ import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 
 // Shared Logic/Types
-import { FinancialGoal } from "@repo/types";
+import { FinancialGoal, ShortTermPlan, STAccount, STExpense } from "@repo/types";
 import { formatDate } from "@/lib/utils";
 
 // Modal Components
@@ -62,6 +63,7 @@ export default function PlansDirectoryPage() {
   const { items: reminders, loading: remindersLoading } = useSelector((state: RootState) => state.reminders);
 
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const [simFilter, setSimFilter] = useState<"ongoing" | "completed">("ongoing");
 
   // Modals Local State
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
@@ -106,11 +108,22 @@ export default function PlansDirectoryPage() {
       name: `Simulation ${plans.length + 1}`,
       createdAt: new Date().toISOString(),
       accounts: [],
-      expenses: []
+      expenses: [],
+      status: "ongoing" as const
     };
     const created = await dispatch(createPlanAction(newPlan)).unwrap();
     router.push(`/plans/${created.id}`);
   };
+
+  const handleTogglePlanStatus = async (plan: ShortTermPlan) => {
+    const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
+    await dispatch(updatePlanAction({ id: plan.id, data: { status: newStatus } })).unwrap();
+    toast.success(newStatus === "completed" ? "Simulation completed" : "Simulation reopened");
+  };
+
+  const filteredPlans = useMemo(() => {
+    return plans.filter(p => (p.status || "ongoing") === simFilter);
+  }, [plans, simFilter]);
 
   return (
     <PageContainer>
@@ -190,85 +203,156 @@ export default function PlansDirectoryPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              {plansLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={`plan-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4">
-                      <div className="space-y-2">
-                        <Skeleton className="h-3 w-32" />
-                        <Skeleton className="h-2 w-20" />
-                      </div>
-                      <div className="space-y-2">
-                        <Skeleton className="h-2 w-full" />
-                        <Skeleton className="h-1 w-full rounded-full" />
-                      </div>
-                      <div className="flex gap-2">
-                        <Skeleton className="h-8 flex-1 rounded-lg" />
-                        <Skeleton className="size-8 rounded-lg" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : plans.length === 0 ? (
-                <EmptyState
-                  icon={<FileText className="size-8" />}
-                  title="No active simulations"
-                  subtitle="Create your first simulation environment to mock accounts and expenses."
-                  actionText="Initialize your first simulation"
-                  onAction={handleCreatePlan}
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {plans.map(plan => (
-                    <Card
-                      key={plan.id}
-                      className="group cursor-pointer hover:shadow-xl hover:shadow-primary/5 transition-all bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 overflow-hidden relative flex flex-col h-full min-h-[110px]"
-                      onClick={() => router.push(`/plans/${plan.id}`)}
-                    >
-                      <div className="flex flex-col">
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <div className="flex flex-col">
-                            <h4 className="text-xs font-black text-slate-900 dark:text-white tracking-wider uppercase leading-none">{plan.name}</h4>
-                            <span className="text-[8px] font-bold text-slate-400 tracking-widest uppercase mt-1.5">
-                              {new Date(plan.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 -mr-1.5 -mt-1 shrink-0">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setPlanToDelete(plan.id); }}
-                              className="p-1.5 text-slate-400 transition-colors hover:text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </div>
-                        </div>
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-full sm:w-fit">
+                    {(["ongoing", "completed"] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSimFilter(s)}
+                        className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${simFilter === s
+                          ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                          }`}
+                      >
+                        {s === "ongoing" ? "Active Simulations" : "Historical Simulations"}
+                      </button>
+                    ))}
+                  </div>
 
-                        <div className="mt-2 space-y-2.5">
-                          <div className="flex justify-between items-end gap-2">
-                            <div className="flex flex-col">
-                              <span className="text-[7px] font-black uppercase tracking-widest text-slate-400">Target Capital / Yield</span>
-                              <div className="flex items-baseline gap-1 mt-0.5">
-                                <span className="text-xs font-black text-emerald-500 leading-none">
-                                  ₹{plan.accounts.reduce((acc, a) => acc + a.balance, 0).toLocaleString()}
-                                </span>
-                                <span className="text-[9px] font-bold text-slate-400">
-                                  / ₹{plan.expenses.reduce((acc, e) => acc + e.amount, 0).toLocaleString()}
-                                </span>
-                              </div>
+                  {plansLoading ? (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={`plan-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+                          <div className="flex justify-between items-start">
+                            <Skeleton className="size-6 rounded-lg" />
+                            <Skeleton className="h-4 w-12 rounded" />
+                          </div>
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-3 w-2/3" />
+                          </div>
+                          <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-end">
+                            <div className="space-y-1">
+                              <Skeleton className="h-2 w-10" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                            <div className="flex gap-1">
+                              <Skeleton className="size-6 rounded-lg" />
+                              <Skeleton className="size-6 rounded-lg" />
                             </div>
                           </div>
-                          <div className="h-0.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full transition-all duration-1000"
-                              style={{ width: `${Math.min(100, (plan.accounts.reduce((acc, a) => acc + a.balance, 0) / (plan.expenses.reduce((acc, e) => acc + e.amount, 0) || 1)) * 100)}%` }}
-                            />
-                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      ))}
+                    </div>
+                  ) : filteredPlans.length === 0 ? (
+                    <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {simFilter === "completed" ? "No historical simulations found" : "No active simulations configured"}
+                      </p>
+                      {simFilter === "ongoing" && (
+                        <Button onClick={handleCreatePlan} variant="outline" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="w-auto mt-4">
+                          Initialize Simulation
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <AnimatePresence mode="popLayout">
+                        {filteredPlans.map(plan => (
+                          <motion.div
+                            layout
+                            key={plan.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            whileHover={{ y: -6, scale: 1.02 }}
+                            onClick={() => router.push(`/plans/${plan.id}`)}
+                            className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all h-full flex flex-col justify-between cursor-pointer ${plan.status === "completed" ? "opacity-75 grayscale-[0.2]" : ""
+                              } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.1)] overflow-hidden`}
+                          >
+                            {/* Animated Background Mesh Gradient (on hover) */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-[radial-gradient(circle_at_top_right,var(--primary-light),transparent),radial-gradient(circle_at_bottom_left,var(--secondary-light),transparent)]" />
+
+                            {/* Accent Edge */}
+                            <div className={`absolute top-0 left-0 w-full h-[3px] transition-all duration-300 ${plan.status === "completed" ? "bg-slate-300 dark:bg-slate-700" : "bg-gradient-to-r from-primary via-indigo-500 to-emerald-500"}`} />
+
+                            <div className="space-y-3.5 sm:space-y-5 relative z-10">
+                              <div className="flex justify-between items-start">
+                                <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl border bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-900/40 dark:to-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </div>
+
+                                <div className="flex flex-col items-end gap-2">
+                                  <div className="flex items-center gap-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-1 rounded-xl border border-slate-100 dark:border-white/10 shadow-sm transition-all">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTogglePlanStatus(plan);
+                                      }}
+                                      className="p-1 px-2 text-slate-400 hover:text-emerald-500 transition-all rounded-lg hover:bg-emerald-500/5"
+                                      title={plan.status === "completed" ? "Reopen Simulation" : "Complete Simulation"}
+                                    >
+                                      {plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPlanToDelete(plan.id);
+                                      }}
+                                      className="p-1 px-2 text-slate-400 hover:text-rose-500 transition-all rounded-lg hover:bg-rose-500/5"
+                                      title="Delete Simulation"
+                                    >
+                                      <Trash2 className="size-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col items-center text-center">
+                                <h4 className="text-[13px] sm:text-[15px] font-black tracking-tighter text-slate-900 dark:text-white uppercase transition-colors group-hover:text-primary leading-tight">
+                                  {plan.name}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-1.5 justify-center">
+                                  <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
+                                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                                    {new Date(plan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  </p>
+                                  <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
+                                </div>
+                              </div>
+
+                              <div className="">
+                                <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                                  {/* Stat Pill: Liquidity */}
+                                  <div className="flex flex-col p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-emerald-50/30 dark:bg-emerald-500/5 border border-emerald-100/50 dark:border-emerald-500/10 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
+                                    <span className="text-[6px] sm:text-[7px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-none mb-1 sm:mb-1.5">
+                                      Liquidity
+                                    </span>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">
+                                      ₹{(plan.accounts || []).reduce((acc: number, a: STAccount) => acc + a.balance, 0).toLocaleString()}
+                                    </span>
+                                  </div>
+
+                                  {/* Stat Pill: Burn Rate */}
+                                  <div className="flex flex-col p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-rose-50/30 dark:bg-rose-500/5 border border-rose-100/50 dark:border-rose-500/10 group-hover:border-rose-300 dark:group-hover:border-rose-500/30 transition-colors">
+                                    <span className="text-[6px] sm:text-[7px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest leading-none mb-1 sm:mb-1.5">
+                                      Burn Rate
+                                    </span>
+                                    <span className="text-xs font-black text-rose-600 dark:text-rose-400 tabular-nums">
+                                      ₹{(plan.expenses || []).reduce((acc: number, e: STExpense) => acc + e.amount, 0).toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </motion.div>
           )}
 
@@ -310,6 +394,7 @@ export default function PlansDirectoryPage() {
                   subtitle="Define your first financial target to track progress with high precision."
                   actionText="Add your first goal"
                   onAction={() => { setEditingGoal(null); setIsGoalModalOpen(true); }}
+                  actionIcon={<Plus className="w-3.5 h-3.5" />}
                 />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -493,7 +578,16 @@ export default function PlansDirectoryPage() {
   );
 }
 
-function EmptyState({ icon, title, subtitle, actionText, onAction }: any) {
+interface EmptyStateProps {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  actionText?: string;
+  onAction?: () => void;
+  actionIcon?: React.ReactNode;
+}
+
+function EmptyState({ icon, title, subtitle, actionText, onAction, actionIcon }: EmptyStateProps) {
   return (
     <div className="py-20 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-slate-900/50">
       <div className="size-16 mx-auto rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
@@ -501,9 +595,11 @@ function EmptyState({ icon, title, subtitle, actionText, onAction }: any) {
       </div>
       <h3 className="text-sm font-black uppercase tracking-widest mb-1">{title}</h3>
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-xs mx-auto mb-6">{subtitle}</p>
-      <Button onClick={onAction} variant="outline" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="w-auto">
-        {actionText}
-      </Button>
+      {actionText && onAction && (
+        <Button onClick={onAction} variant="outline" size="sm" leftIcon={actionIcon} className="w-auto">
+          {actionText}
+        </Button>
+      )}
     </div>
   );
 }

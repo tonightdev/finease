@@ -264,5 +264,6 @@ export interface ShortTermPlan {
   createdAt: string;
   accounts: STAccount[];
   expenses: STExpense[];
+  status?: "ongoing" | "completed";
   deletedAt?: string | null;
 }
