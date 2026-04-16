@@ -41,15 +41,17 @@ export function ClientHeader() {
         {user && <TopNav />}
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => dispatch(setCommandPalette(true))}
-            className="flex items-center justify-center size-9 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-all active:scale-90 sm:hidden"
-            aria-label="Search"
-          >
-            <Search className="w-5 h-5" />
-          </button>
+          {user && (
+            <button
+              onClick={() => dispatch(setCommandPalette(true))}
+              className="flex items-center justify-center size-9 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-all active:scale-90 sm:hidden"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          )}
           
-          <RefreshButton />
+          {user && <RefreshButton />}
           <ThemeToggle />
 
           {!loading && !user && (

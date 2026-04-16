@@ -127,6 +127,25 @@ export default function AdminUsersPage() {
     });
   };
 
+  const purgeUserData = (uid: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "NUCLEAR PURGE PROTOCOL",
+      message:
+        "Engage absolute sanitization for this identity? This will permanently delete all Bank Accounts, Transactions, Goals, and Expiries. This action is irreversible.",
+      onConfirm: async () => {
+        try {
+          await api.delete(`/admin/users/${uid}/purge`);
+          toast.success("Identity node sanitized successfully");
+          // Optionally refresh the list or perform other logic
+        } catch {
+          toast.error("Critical: Purge operation failure");
+        }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
   const enableGlobalTour = () => {
     setConfirmModal({
       isOpen: true,
@@ -270,12 +289,19 @@ export default function AdminUsersPage() {
                         Reset Tour
                       </button>
                       <button
+                        onClick={() => purgeUserData(u.id)}
+                        className="size-8 rounded-lg flex items-center justify-center transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white"
+                        title="Nuclear Purge"
+                      >
+                        <Zap className="size-3.5 fill-current" />
+                      </button>
+                      <button
                         onClick={() =>
                           toggleUserStatus(u.id, u.status || "active")
                         }
                         className={`h-8 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive"
                           ? "bg-emerald-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/20"
-                          : "bg-white dark:bg-slate-900 text-rose-500 border-rose-100 dark:border-rose-500/20"
+                          : "bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:text-rose-500 hover:border-rose-500/20"
                           }`}
                       >
                         {u.status === "inactive" ? "Activate" : "Deactivate"}
@@ -294,68 +320,60 @@ export default function AdminUsersPage() {
         {filteredUsers.map((u) => (
           <Card
             key={u.id}
-            className="space-y-4 border-slate-100 dark:border-white/5 rounded-2xl"
+            className="p-4 space-y-4 border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-[1.5rem]"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
+                <div className="size-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
                   <UserIcon className="size-5 text-slate-500" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
                     {u.displayName}
                   </span>
-                  <span className="text-xs text-slate-500 font-medium truncate max-w-[150px]">
+                  <span className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">
                     {u.email}
                   </span>
                 </div>
               </div>
-              <div
-                className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${u.status === "inactive" ? "text-rose-500" : "text-emerald-500"
-                  }`}
-              >
-                {u.status === "inactive" ? (
-                  <XCircle className="size-3" />
-                ) : (
-                  <CheckCircle2 className="size-3" />
-                )}
-                {u.status || "active"}
+              <div className="flex flex-col items-end gap-1.5">
+                <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.status === "inactive" ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"}`}>
+                  {u.status || "active"}
+                </div>
+                <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.role === "admin" ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-slate-500/10 text-slate-500 border border-slate-500/20"}`}>
+                  {u.role}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50 dark:border-white/5">
               <button
                 onClick={() => changeUserRole(u.id, u.role)}
-                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${u.role === "admin"
-                  ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
-                  : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-                  }`}
+                className="flex items-center justify-center gap-2 p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-white/5"
               >
-                {u.role === "admin" ? (
-                  <ShieldAlert className="size-3" />
-                ) : (
-                  <Shield className="size-3" />
-                )}
-                {u.role}
+                {u.role === "admin" ? <ShieldAlert className="size-3" /> : <Shield className="size-3" />}
+                Mod Role
               </button>
 
               <button
                 onClick={() => resetUserTour(u.id)}
-                className="flex items-center justify-center p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                className="flex items-center justify-center p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-white/5"
               >
                 Reset Tour
               </button>
 
               <button
                 onClick={() => toggleUserStatus(u.id, u.status || "active")}
-                className={`col-span-2 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive"
-                  ? "bg-emerald-500 text-white border-emerald-600"
-                  : "bg-white dark:bg-slate-900/50 text-rose-500 border-rose-100 dark:border-rose-500/20"
-                  }`}
+                className={`p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive" ? "bg-emerald-500 text-white border-emerald-600" : "bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/5"}`}
               >
-                {u.status === "inactive"
-                  ? "Activate Authority"
-                  : "Deactivate Authority"}
+                {u.status === "inactive" ? "Activate" : "Suspend"}
+              </button>
+
+              <button
+                onClick={() => purgeUserData(u.id)}
+                className="p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white flex items-center justify-center gap-2"
+              >
+                <Zap className="size-3 text-rose-500 group-hover:text-white" /> Purge
               </button>
             </div>
           </Card>

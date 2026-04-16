@@ -35,7 +35,7 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    @apply font-body antialiased;
+    @apply font-body antialiased overflow-x-hidden;
   }
 
   /* Hide number input spinners */

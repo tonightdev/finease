@@ -9,7 +9,7 @@ import {
   updateSimulationAction, fetchSimulations
 } from "@/store/slices/simulationsSlice";
 import { SimAccount, SimExpense } from "@repo/types";
-import { Plus, Trash2, Wallet, Receipt, TrendingUp, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Trash2, Wallet, Receipt, TrendingUp, CheckCircle2, RefreshCw, Loader2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -41,6 +41,12 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
   const [newExpAmount, setNewExpAmount] = useState("");
   const [newExpAccount, setNewExpAccount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Editing state
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editNodeForm, setEditNodeForm] = useState({ name: "", balance: "" });
+  const [editingVectorId, setEditingVectorId] = useState<string | null>(null);
+  const [editVectorForm, setEditVectorForm] = useState({ name: "", amount: "", accountId: "" });
 
   useEffect(() => {
     dispatch(fetchSimulations());
@@ -118,6 +124,40 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
     }
   };
 
+  const handleUpdateNode = async (id: string) => {
+    if (!editNodeForm.name || !editNodeForm.balance) return;
+    setIsProcessing(true);
+    try {
+      const updatedAccounts = plan!.accounts.map(a =>
+        a.id === id ? { ...a, name: editNodeForm.name, balance: parseFloat(editNodeForm.balance) } : a
+      );
+      await dispatch(updateSimulationAction({ id: planId, data: { accounts: updatedAccounts } })).unwrap();
+      setEditingNodeId(null);
+      toast.success("Node configuration updated");
+    } catch {
+      toast.error("Failed to update node");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUpdateVector = async (id: string) => {
+    if (!editVectorForm.name || !editVectorForm.amount || !editVectorForm.accountId) return;
+    setIsProcessing(true);
+    try {
+      const updatedExpenses = plan!.expenses.map(e =>
+        e.id === id ? { ...e, name: editVectorForm.name, amount: parseFloat(editVectorForm.amount), accountId: editVectorForm.accountId } : e
+      );
+      await dispatch(updateSimulationAction({ id: planId, data: { expenses: updatedExpenses } })).unwrap();
+      setEditingVectorId(null);
+      toast.success("Vector parameters updated");
+    } catch {
+      toast.error("Failed to update vector");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleAddExpense = async () => {
     if (!newExpName || !newExpAmount || !newExpAccount) return;
     setIsProcessing(true);
@@ -165,12 +205,12 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
             onBlur={handleSaveName}
-            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-auto max-w-[200px] shrink truncate focus:ring-0 p-0"
+            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-auto max-w-[240px] shrink truncate focus:ring-0 p-0"
           />
         }
         subtitle=""
         actions={
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto h-11 sm:h-auto">
             {plan.status === "completed" && (
               <span className="shrink-0 px-2.5 py-1 bg-slate-100 dark:bg-white/10 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200 dark:border-white/10">
                 Completed
@@ -192,22 +232,23 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
                   setIsProcessing(false);
                 }
               }}
-              className="flex-1 sm:flex-initial shrink-0 h-9 sm:h-8 text-[9px] font-black uppercase tracking-widest px-4 shadow-sm"
+              className="flex-1 sm:flex-initial shrink-0 h-full sm:h-8 text-[9px] font-black uppercase tracking-widest px-4 shadow-sm"
               leftIcon={isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : (plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />)}
             >
               {isProcessing ? "Processing..." : (plan.status === "completed" ? "Reopen Simulation" : "Mark as Completed")}
             </Button>
           </div>
         }
-        className="mb-2"
+        className="mb-1"
       />
 
-      <div className="space-y-4">
+      <div className="space-y-6 sm:space-y-4 mt-2">
         {/* Top Section: Flow Visualizer */}
-        <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm border-t-4 ${plan.status === 'completed' ? 'border-t-slate-400' : 'border-t-emerald-500'} ${plan.status === 'completed' ? 'opacity-90' : ''}`}>
-          <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-6">
-            <TrendingUp className="size-4 text-emerald-500" /> Flow Visualizer
-          </h3>
+        <div className={`pt-2 px-3 pb-3 sm:p-5 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-[2rem] rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 border-t-4 ${plan.status === 'completed' ? 'sm:border-t-slate-400' : 'sm:border-t-emerald-500'} ${plan.status === 'completed' ? 'opacity-90' : ''}`}>
+          <div className="flex items-center gap-2.5 py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
+            <TrendingUp className="size-5 text-emerald-500" />
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Flow Visualizer</h3>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
@@ -266,10 +307,11 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
 
           {/* Left Column: Accounts */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
-              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-2">
-                <Wallet className="size-4 text-primary" /> Nodes (Liquidity)
-              </h3>
+            <div className="pt-2 px-3 pb-3 sm:p-5 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-[2rem] rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4">
+              <div className="flex items-center gap-2.5 py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                <Wallet className="size-5 text-primary" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Nodes (Liquidity)</h3>
+              </div>
 
               <div className="space-y-3 mb-2">
                 <AnimatePresence>
@@ -280,35 +322,70 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5"
+                      className="p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-white/5 shadow-sm"
                     >
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-wider">{acc.name}</p>
-                        <p className="text-[10px] font-bold text-slate-400 font-mono">₹{acc.balance.toLocaleString()}</p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          setIsProcessing(true);
-                          try {
-                            await dispatch(updateSimulationAction({
-                              id: planId,
-                              data: {
-                                accounts: plan.accounts.filter(a => a.id !== acc.id),
-                                expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
-                              }
-                            })).unwrap();
-                            toast.success("Node removed");
-                          } catch {
-                            toast.error("Failed to remove node");
-                          } finally {
-                            setIsProcessing(false);
-                          }
-                        }}
-                        disabled={isProcessing}
-                        className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
-                      >
-                        {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                      </button>
+                      {editingNodeId === acc.id ? (
+                        <div className="space-y-2">
+                          <input
+                            autoFocus
+                            type="text"
+                            value={editNodeForm.name}
+                            onChange={e => setEditNodeForm({ ...editNodeForm, name: e.target.value })}
+                            className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                          />
+                          <input
+                            type="number"
+                            value={editNodeForm.balance}
+                            onChange={e => setEditNodeForm({ ...editNodeForm, balance: e.target.value })}
+                            className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                          />
+                          <div className="flex gap-1 pt-1">
+                            <Button size="sm" onClick={() => handleUpdateNode(acc.id)} className="h-7 text-[8px] flex-1">Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingNodeId(null)} className="h-7 text-[8px] flex-1">Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 pr-2">
+                            <p className="text-xs font-black uppercase tracking-wider truncate">{acc.name}</p>
+                            <p className="text-[10px] font-bold text-slate-400 font-mono">₹{acc.balance.toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => {
+                                setEditingNodeId(acc.id);
+                                setEditNodeForm({ name: acc.name, balance: acc.balance.toString() });
+                              }}
+                              className="p-2 text-slate-400 hover:text-primary bg-slate-100 dark:bg-white/10 rounded-xl transition-colors"
+                            >
+                              <Edit2 className="size-3.5" />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                setIsProcessing(true);
+                                try {
+                                  await dispatch(updateSimulationAction({
+                                    id: planId,
+                                    data: {
+                                      accounts: plan.accounts.filter(a => a.id !== acc.id),
+                                      expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
+                                    }
+                                  })).unwrap();
+                                  toast.success("Node removed");
+                                } catch {
+                                  toast.error("Failed to remove node");
+                                } finally {
+                                  setIsProcessing(false);
+                                }
+                              }}
+                              disabled={isProcessing}
+                              className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
+                            >
+                              {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -342,10 +419,11 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
 
           {/* Center Column: Expenses */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm h-full">
-              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-2">
-                <Receipt className="size-4 text-rose-500" /> Vectors (Expenses)
-              </h3>
+            <div className="pt-2 px-3 pb-3 sm:p-5 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-[2rem] rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 h-full">
+              <div className="flex items-center gap-2.5 py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                <Receipt className="size-5 text-rose-500" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Vectors (Expenses)</h3>
+              </div>
 
               <div className="space-y-3 mb-2">
                 <AnimatePresence>
@@ -358,34 +436,84 @@ export default function TacticalSimulationPage({ params }: { params: Promise<{ i
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5"
+                        className="p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-white/5 shadow-sm"
                       >
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-wider">{exp.name}</p>
-                          <div className="flex gap-2 items-center mt-0.5">
-                            <span className="text-[10px] font-bold text-rose-500 font-mono">₹{exp.amount.toLocaleString()}</span>
-                            <span className="text-[8px] bg-slate-200 dark:bg-white/10 px-1.5 rounded text-slate-500 font-bold uppercase tracking-wider truncate max-w-[80px]">
-                              {linkedAcc?.name || "Unknown"}
-                            </span>
+                        {editingVectorId === exp.id ? (
+                          <div className="space-y-2">
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editVectorForm.name}
+                              onChange={e => setEditVectorForm({ ...editVectorForm, name: e.target.value })}
+                              className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="number"
+                                value={editVectorForm.amount}
+                                onChange={e => setEditVectorForm({ ...editVectorForm, amount: e.target.value })}
+                                className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                              />
+                              <Select
+                                value={editVectorForm.accountId}
+                                onValueChange={id => setEditVectorForm({ ...editVectorForm, accountId: id })}
+                              >
+                                <SelectTrigger className="h-8 text-[9px] font-black bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10">
+                                  <SelectValue placeholder="Node..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10">
+                                  {plan.accounts.map(acc => (
+                                    <SelectItem key={acc.id} value={acc.id} className="text-[10px]">{acc.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex gap-1 pt-1">
+                              <Button size="sm" onClick={() => handleUpdateVector(exp.id)} className="h-7 text-[8px] flex-1">Save</Button>
+                              <Button size="sm" variant="outline" onClick={() => setEditingVectorId(null)} className="h-7 text-[8px] flex-1">Cancel</Button>
+                            </div>
                           </div>
-                        </div>
-                        <button
-                          onClick={async () => {
-                            setIsProcessing(true);
-                            try {
-                              await dispatch(updateSimulationAction({ id: planId, data: { expenses: plan.expenses.filter(e => e.id !== exp.id) } })).unwrap();
-                              toast.success("Vector removed");
-                            } catch {
-                              toast.error("Failed to remove vector");
-                            } finally {
-                              setIsProcessing(false);
-                            }
-                          }}
-                          disabled={isProcessing}
-                          className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
-                        >
-                          {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                        </button>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="min-w-0 pr-2">
+                              <p className="text-xs font-black uppercase tracking-wider truncate">{exp.name}</p>
+                              <div className="flex gap-2 items-center mt-0.5">
+                                <span className="text-[10px] font-bold text-rose-500 font-mono">₹{exp.amount.toLocaleString()}</span>
+                                <span className="text-[8px] bg-slate-100 dark:bg-slate-800/80 px-1.5 rounded text-slate-500 font-black uppercase tracking-widest truncate max-w-[80px]">
+                                  {linkedAcc?.name || "Unknown"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditingVectorId(exp.id);
+                                  setEditVectorForm({ name: exp.name, amount: exp.amount.toString(), accountId: exp.accountId });
+                                }}
+                                className="p-2 text-slate-400 hover:text-primary bg-slate-100 dark:bg-white/10 rounded-xl transition-colors"
+                              >
+                                <Edit2 className="size-3.5" />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  setIsProcessing(true);
+                                  try {
+                                    await dispatch(updateSimulationAction({ id: planId, data: { expenses: plan.expenses.filter(e => e.id !== exp.id) } })).unwrap();
+                                    toast.success("Vector removed");
+                                  } catch {
+                                    toast.error("Failed to remove vector");
+                                  } finally {
+                                    setIsProcessing(false);
+                                  }
+                                }}
+                                disabled={isProcessing}
+                                className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
+                              >
+                                {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     );
                   })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ShieldAlert, FileText, Activity, Trash2, CheckCircle2, Loader2, Zap } from "lucide-react";
+import { ShieldAlert, FileText, Activity, Trash2, CheckCircle2, Loader2, Zap, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Expiry } from "@repo/types";
 import { deleteExpiryAction, createExpiryAction, fetchArchivedExpiries } from "@/store/slices/expiriesSlice";
@@ -98,7 +98,7 @@ export function ExpiryCountdown({
   }, [expiries, archivedExpiries, viewArchive]);
 
   return (
-    <div className="space-y-4 py-2 px-1">
+    <div className="space-y-4">
       <PlanningStatusFilter
         activeStatus={viewArchive ? "archived" : "active"}
         onChange={(val) => setViewArchive(val === "archived")}
@@ -122,7 +122,7 @@ export function ExpiryCountdown({
                 key={expiry.id}
                 expiry={expiry}
                 isArchived={viewArchive}
-                onClick={() => !viewArchive && onEdit?.(expiry)}
+                onEdit={(expiry) => !viewArchive && onEdit?.(expiry)}
                 onComplete={() => handleComplete(expiry)}
                 onDelete={() => {
                   setExpiryToDelete(expiry);
@@ -239,13 +239,13 @@ export function ExpiryCountdown({
 function CountdownCard({
   expiry,
   isArchived = false,
-  onClick,
+  onEdit,
   onComplete,
   onDelete,
 }: {
   expiry: Expiry;
   isArchived?: boolean;
-  onClick?: () => void;
+  onEdit?: (expiry: Expiry) => void;
   onComplete: () => void;
   onDelete: () => void;
 }) {
@@ -290,84 +290,93 @@ function CountdownCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      onClick={onClick}
-      className={`group relative p-2.5 sm:p-3.5 rounded-xl border transition-all h-full flex flex-col justify-between ${!isArchived ? "cursor-pointer hover:border-primary/50" : "opacity-75 grayscale-[0.5]"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -2, scale: 1.01 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      className={`group relative p-3 rounded-2xl border transition-all duration-300 h-full flex flex-row gap-3 shadow-sm hover:shadow-lg ${!isArchived ? "cursor-pointer" : "opacity-75 grayscale-[0.3]"
         } ${isCritical
-          ? "bg-rose-50/20 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/20 shadow-sm"
-          : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 shadow-sm"
+          ? "bg-rose-50/10 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/20"
+          : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"
         }`}
     >
-      <div className="space-y-3">
-        <div className="flex justify-between items-start">
-          <div
-            className={`p-1 rounded-lg border ${isCritical ? "bg-rose-50 dark:bg-rose-500/10 text-rose-500 border-rose-100 dark:border-rose-500/20" : "bg-indigo-50 dark:bg-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20"}`}
-          >
-            <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      {/* Left Column: Details */}
+      <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+        <div className="space-y-3">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h4 className={`text-xs font-black truncate tracking-tight uppercase leading-none ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}>
+                {expiry.name}
+              </h4>
+              <div className="flex items-center gap-1 mt-1.5">
+                <Icon className={`size-3 shrink-0 ${isCritical ? "text-rose-500" : "text-primary"}`} />
+                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                  {isArchived ? "Archived" : `By ${new Date(expiry.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`}
+                </p>
+              </div>
+            </div>
           </div>
-          <span
-            className={`text-[7px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border transition-colors ${isArchived
-              ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
-              : isExpired
-                ? "text-rose-600 bg-rose-500/10 border-rose-500/20"
-                : isCritical
-                  ? "text-orange-600 bg-orange-500/10 border-orange-500/20"
-                  : "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
-              }`}
-          >
-            {isArchived ? "Archived" : isExpired ? "Expired" : isCritical ? "Urgent" : "Active"}
+
+          {!isArchived && (
+            <p className={`text-[10px] font-black font-mono tracking-tighter ${isCritical ? "text-rose-500" : "text-slate-600 dark:text-slate-400"}`}>
+              {isExpired ? "TIME EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H LEFT`}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-auto pt-2 border-t border-slate-50 dark:border-white/5 flex flex-col gap-0.5">
+          <span className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.1em] opacity-70">
+            Allocation
+          </span>
+          <span className={`text-[11px] font-black tracking-tight ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}>
+            ₹{expiry.renewalAmount.toLocaleString()}
           </span>
         </div>
+      </div>
 
-        <div className="min-w-0">
-          <h4
-            className={`text-xs sm:text-sm font-black truncate tracking-tight ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
-          >
-            {expiry.name}
-          </h4>
-          <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mt-0.5">
-            {isArchived
-              ? `Completed ${expiry.deletedAt ? new Date(expiry.deletedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'}`
-              : isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H LEFT`}
-          </p>
+      {/* Right Column: Tactical Actions */}
+      <div className="flex flex-col items-center gap-1.5 shrink-0 pl-3 border-l border-slate-100 dark:border-white/5">
+        <div className={`mb-auto px-1.5 py-0.5 text-[6px] font-black rounded border shadow-sm text-center ${isArchived
+          ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
+          : isExpired
+            ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+            : isCritical
+              ? "bg-orange-500/10 text-orange-600 border-orange-500/20"
+              : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+          }`}>
+          {isArchived ? "LOG" : isExpired ? "RENEW" : isCritical ? "!!! " : "Active"}
         </div>
 
-        <div className="flex items-end justify-between pt-1 border-t border-slate-50 dark:border-white/5">
-          <div className="flex flex-col min-w-0">
-            <span className="text-[6px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">
-              Nexus Cost
-            </span>
-            <span className={`text-[9px] sm:text-[10px] font-black truncate ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}>
-              ₹{expiry.renewalAmount.toLocaleString()}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {!isArchived && (
+        <div className="flex flex-col gap-1.5 mt-auto">
+          {!isArchived && (
+            <>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onComplete();
-                }}
-                className="p-1 px-2 text-slate-300 hover:text-emerald-500 transition-colors"
-                title="Complete Expiry"
+                onClick={(e) => { e.stopPropagation(); onComplete(); }}
+                className="size-7 flex items-center justify-center bg-emerald-500/5 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/10 rounded-lg transition-all active:scale-90"
+                title="Complete"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="size-3.5" />
               </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className={`p-1 px-2 transition-colors ${isArchived ? "text-rose-500 hover:bg-rose-500/10 rounded-lg" : "text-slate-300 hover:text-rose-500 group-hover:text-rose-500"}`}
-              title={isArchived ? "Purge Log" : "Archive Expiry"}
-            >
-              {isArchived ? <Zap className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
-            </button>
-          </div>
+              {onEdit && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(expiry); }}
+                  className="size-7 flex items-center justify-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-500 rounded-lg border border-slate-100 dark:border-white/5 transition-all active:scale-90"
+                  title="Edit"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+              )}
+            </>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className={`size-7 flex items-center justify-center border transition-all active:scale-90 rounded-lg ${isArchived
+              ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500 hover:text-white"
+              : "bg-rose-50 dark:bg-rose-500/5 text-rose-500 border-rose-500/5 hover:bg-rose-500 hover:text-white"}`}
+            title={isArchived ? "Purge" : "Archive"}
+          >
+            {isArchived ? <Zap className="size-3.5" /> : <Trash2 className="size-3.5" />}
+          </button>
         </div>
       </div>
     </motion.div>

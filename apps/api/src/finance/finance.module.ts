@@ -9,6 +9,7 @@ import { FinanceController } from './finance.controller';
 import { ExpiriesService } from './expiries.service';
 import { StrategyService } from './strategy.service';
 import { SimulationsService } from './simulations.service';
+import { YearlyExpensesService } from './yearly-expenses.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { AuthModule } from '../auth/auth.module';
     ExpiriesService,
     StrategyService,
     SimulationsService,
+    YearlyExpensesService,
   ],
   exports: [
     GoalService,
@@ -35,6 +37,7 @@ import { AuthModule } from '../auth/auth.module';
     ExpiriesService,
     StrategyService,
     SimulationsService,
+    YearlyExpensesService,
   ],
 })
 export class FinanceModule {}

@@ -661,8 +661,8 @@ export default function SettingsPage() {
                                 )}
                               </div>
                               <h5 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2">
-                                {accountSubTab === "active" 
-                                  ? "No active nodes detected" 
+                                {accountSubTab === "active"
+                                  ? "No active nodes detected"
                                   : "Archives are currently empty"}
                               </h5>
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-[200px] mx-auto leading-relaxed">

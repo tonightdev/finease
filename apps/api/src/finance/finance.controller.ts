@@ -32,7 +32,9 @@ import type {
   BudgetStrategy,
   StrategyEntry,
   Simulation,
+  YearlyExpense,
 } from '@repo/types';
+import { YearlyExpensesService } from './yearly-expenses.service';
 import { UsersService } from '../common/services/users.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
 
@@ -52,6 +54,7 @@ export class FinanceController {
     private readonly expiriesService: ExpiriesService,
     private readonly strategyService: StrategyService,
     private readonly simulationsService: SimulationsService,
+    private readonly yearlyExpensesService: YearlyExpensesService,
   ) {}
 
   // --- Profile ---
@@ -375,5 +378,39 @@ export class FinanceController {
   @Delete('strategy/entries/:id')
   removeStrategyEntry(@Req() req: RequestWithUser, @Param('id') id: string) {
     return this.strategyService.removeEntry(req.user.uid, id);
+  }
+
+  // --- Yearly Expenses ---
+
+  @ApiOperation({ summary: 'List all annual commitments (Yearly Expenses)' })
+  @Get('yearly-expenses')
+  findAllYearlyExpenses(@Req() req: RequestWithUser) {
+    return this.yearlyExpensesService.findAll(req.user.uid);
+  }
+
+  @ApiOperation({ summary: 'Create a new annual commitment' })
+  @Post('yearly-expenses')
+  createYearlyExpense(@Req() req: RequestWithUser, @Body() data: Partial<YearlyExpense>) {
+    return this.yearlyExpensesService.create(req.user.uid, data);
+  }
+
+  @ApiOperation({ summary: 'Update an existing annual commitment' })
+  @Put('yearly-expenses/:id')
+  updateYearlyExpense(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() data: Partial<YearlyExpense>,
+  ) {
+    return this.yearlyExpensesService.update(req.user.uid, id, data);
+  }
+
+  @ApiOperation({ summary: 'Delete an annual commitment' })
+  @Delete('yearly-expenses/:id')
+  removeYearlyExpense(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Query('hard') hard: string,
+  ) {
+    return this.yearlyExpensesService.remove(req.user.uid, id, hard === 'true');
   }
 }

@@ -43,7 +43,8 @@ export function BottomNav() {
   const links = isAdmin ? adminLinks : userLinks;
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020408]/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 px-4 py-2 flex justify-between items-center z-50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020408]/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 px-4 mb-0 flex justify-between items-center z-50 transition-all duration-300"
+         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)', paddingTop: '0.5rem' }}>
       {links.map((link) => {
         const isActive =
           pathname?.startsWith(link.href) ||

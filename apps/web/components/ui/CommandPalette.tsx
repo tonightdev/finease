@@ -34,8 +34,12 @@ interface CommandItem {
 export function CommandPalette() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.user.profile);
   const isOpen = useSelector((state: RootState) => state.ui.commandPalette.isOpen);
   const [query, setQuery] = React.useState("");
+
+  // Do not render or capture shortcuts if user is not authenticated
+  if (!user) return null;
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
   const commands: CommandItem[] = [

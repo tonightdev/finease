@@ -42,6 +42,13 @@ import {
 import { fetchExpiries, createExpiryAction, updateExpiryAction } from "@/store/slices/expiriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
+import {
+  fetchYearlyExpenses,
+  createYearlyExpense,
+  updateYearlyExpense,
+  deleteYearlyExpense,
+  YearlyExpense,
+} from "@/store/slices/yearlySlice";
 
 // Shared Logic/Types
 import { FinancialGoal, Simulation, SimAccount, SimExpense, Expiry } from "@repo/types";
@@ -53,7 +60,12 @@ import { TopUpModal } from "@/components/goals/TopUpModal";
 import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
 import { ExpiryCountdown } from "@/components/expiries/ExpiryCountdown";
 
-type TabType = "Simulations" | "Goals" | "Expiries";
+type TabType = "Simulations" | "Goals" | "Expiries" | "Yearly";
+
+// Sub-components
+import { YearlyExpenseCard } from "@/components/planning/YearlyExpenseCard";
+import { AddYearlyExpenseModal } from "@/components/planning/AddYearlyExpenseModal";
+import { YearlyBurdenCard } from "@/components/planning/YearlyBurdenCard";
 
 function PlansDirectoryPageContent() {
   const dispatch = useDispatch<AppDispatch>();
@@ -67,6 +79,8 @@ function PlansDirectoryPageContent() {
   const { items: plans, loading: plansLoading, lastFetched: plansFetched } = useSelector((state: RootState) => state.simulations);
   const { items: goals, loading: goalsLoading, lastFetched: goalsFetched } = useSelector((state: RootState) => state.goals);
   const { items: expiries, loading: expiriesLoading, lastFetched: expiriesFetched } = useSelector((state: RootState) => state.expiries);
+  const { items: yearlyExpenses, loading: yearlyLoading, lastFetched: yearlyFetched } = useSelector((state: RootState) => state.yearlyExpenses);
+  const { items: accounts } = useSelector((state: RootState) => state.accounts);
 
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [simFilter, setSimFilter] = useState<"ongoing" | "completed">("ongoing");
@@ -79,16 +93,21 @@ function PlansDirectoryPageContent() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false);
+  const [isYearlyModalOpen, setIsYearlyModalOpen] = useState(false);
+
   const [selectedExpiry, setSelectedExpiry] = useState<Expiry | null>(null);
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
   const [topUpGoal, setTopUpGoal] = useState<FinancialGoal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<FinancialGoal | null>(null);
   const [isGoalDeleteModalOpen, setIsGoalDeleteModalOpen] = useState(false);
 
+  const [editingYearly, setEditingYearly] = useState<YearlyExpense | null>(null);
+  const [yearlyToDelete, setYearlyToDelete] = useState<string | null>(null);
+
   // Sync tab with URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "Goals" || tabParam === "Expiries" || tabParam === "Simulations") {
+    if (["Simulations", "Goals", "Expiries", "Yearly"].includes(tabParam || "")) {
       setActiveTab(tabParam as TabType);
     }
   }, [searchParams]);
@@ -98,6 +117,7 @@ function PlansDirectoryPageContent() {
       dispatch(fetchSimulations());
       dispatch(fetchGoals());
       dispatch(fetchExpiries());
+      dispatch(fetchYearlyExpenses());
       dispatch(fetchAccounts());
       dispatch(fetchTransactions());
     }
@@ -118,7 +138,31 @@ function PlansDirectoryPageContent() {
 
   const totalRequiredMonthly = useMemo(() => {
     return goals.reduce((acc: number, goal: FinancialGoal) => acc + calculateGap(goal), 0);
-  }, [goals]);
+  }, [goals, calculateGap]);
+
+  const totalYearlyBurden = useMemo(() => {
+    return (yearlyExpenses || []).reduce((acc: number, exp: YearlyExpense) => {
+      const amount = Number(exp.yearlyAmount) || 0;
+      return acc + (amount / 12);
+    }, 0);
+  }, [yearlyExpenses]);
+
+  const yearlyBurdenByAccount = useMemo(() => {
+    const groups: Record<string, { name: string; amount: number; balance: number; accountId: string }> = {};
+    (yearlyExpenses || []).forEach((exp: YearlyExpense) => {
+      const accountId = exp.accountId || "unlinked";
+      const account = (accounts || []).find(a => a.id === accountId);
+      const accountName = account?.name || exp.accountName || "Unlinked";
+      const balance = account?.balance || 0;
+
+      const monthlyAmount = (Number(exp.yearlyAmount) || 0) / 12;
+      if (!groups[accountId]) {
+        groups[accountId] = { accountId, name: accountName, amount: 0, balance };
+      }
+      groups[accountId].amount += monthlyAmount;
+    });
+    return Object.values(groups);
+  }, [yearlyExpenses, accounts]);
 
   // Handlers
   const handleCreatePlan = async () => {
@@ -170,11 +214,11 @@ function PlansDirectoryPageContent() {
   };
 
   const filteredPlans = useMemo(() => {
-    return plans.filter(p => (p.status || "ongoing") === simFilter);
+    return plans.filter((p: Simulation) => (p.status || "ongoing") === simFilter);
   }, [plans, simFilter]);
 
   const filteredGoals = useMemo(() => {
-    return goals.filter(g => {
+    return goals.filter((g: FinancialGoal) => {
       const isCompleted = g.currentAmount >= g.targetAmount;
       return goalFilter === "completed" ? isCompleted : !isCompleted;
     });
@@ -191,19 +235,21 @@ function PlansDirectoryPageContent() {
             </div>
           ) : activeTab === "Expiries" ? (
             "Active triggers and financial expiries"
+          ) : activeTab === "Yearly" ? (
+            `Monthly capital reserves: ₹${totalYearlyBurden.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo`
           ) : (
             "Tactical simulations for capital management and events"
           )
         }
         className="space-y-2"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mt-2">
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar w-full sm:w-auto">
-            {(["Simulations", "Goals", "Expiries"] as TabType[]).map((tab) => (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl h-11 w-full sm:w-auto">
+            {(["Simulations", "Goals", "Expiries", "Yearly"] as TabType[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab
+                className={`flex-1 sm:flex-none px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab
                   ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                   }`}
@@ -236,15 +282,15 @@ function PlansDirectoryPageContent() {
                 Add Goal
               </Button>
             )}
-            {activeTab === "Expiries" && (
+            {activeTab === "Yearly" && (
               <Button
-                onClick={() => setIsExpiryModalOpen(true)}
+                onClick={() => { setEditingYearly(null); setIsYearlyModalOpen(true); }}
                 disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
-                leftIcon={<Bell className="w-3.5 h-3.5" />}
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
               >
-                Add Expiry
+                Add Commitment
               </Button>
             )}
           </div>
@@ -259,10 +305,14 @@ function PlansDirectoryPageContent() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+              className="space-y-6 sm:space-y-3"
             >
-              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                <div className="space-y-4 py-2 px-1">
+              <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                  <TrendingUp className="size-5 text-primary" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Active Simulations</h3>
+                </div>
+                <div className="space-y-4">
                   <PlanningStatusFilter
                     activeStatus={simFilter}
                     onChange={setSimFilter}
@@ -311,7 +361,7 @@ function PlansDirectoryPageContent() {
                   ) : (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <AnimatePresence mode="popLayout">
-                        {filteredPlans.map(plan => (
+                        {filteredPlans.map((plan: Simulation) => (
                           <motion.div
                             layout
                             key={plan.id}
@@ -418,10 +468,14 @@ function PlansDirectoryPageContent() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+              className="space-y-6 sm:space-y-3"
             >
-              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                <div className="space-y-4 py-2 px-1">
+              <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                  <Target className="size-5 text-primary" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Financial Targets</h3>
+                </div>
+                <div className="space-y-4">
                   <PlanningStatusFilter
                     activeStatus={goalFilter}
                     onChange={setGoalFilter}
@@ -534,41 +588,106 @@ function PlansDirectoryPageContent() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+              className="space-y-6 sm:space-y-3"
             >
-              {expiriesLoading || !expiriesFetched ? (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={`expiry-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
-                      <div className="flex justify-between items-start">
-                        <Skeleton className="size-6 rounded-lg" />
-                        <Skeleton className="h-4 w-12 rounded" />
-                      </div>
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-3 w-2/3" />
-                      </div>
-                      <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-end">
-                        <div className="space-y-1">
-                          <Skeleton className="h-2 w-10" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                        <div className="flex gap-1">
-                          <Skeleton className="size-6 rounded-lg" />
-                          <Skeleton className="size-6 rounded-lg" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                  <Bell className="size-5 text-primary" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Trigger Monitoring</h3>
                 </div>
-              ) : (
-                <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                  <ExpiryCountdown
-                    expiries={expiries}
-                    onEdit={(expiry) => { setSelectedExpiry(expiry); setIsExpiryModalOpen(true); }}
+                {expiriesLoading || !expiriesFetched ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={`expiry-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+                        <div className="flex justify-between items-start">
+                          <Skeleton className="size-6 rounded-lg" />
+                          <Skeleton className="h-4 w-12 rounded" />
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                        <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between items-end">
+                          <div className="space-y-1">
+                            <Skeleton className="h-2 w-10" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                          <div className="flex gap-1">
+                            <Skeleton className="size-6 rounded-lg" />
+                            <Skeleton className="size-6 rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-transparent">
+                    <ExpiryCountdown
+                      expiries={expiries}
+                      onEdit={(expiry) => { setSelectedExpiry(expiry); setIsExpiryModalOpen(true); }}
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+          {activeTab === "Yearly" && (
+            <motion.div
+              key="yearly"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-6"
+            >
+              <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4">
+                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                  <TrendingUp className="size-5 text-primary" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Annual Sinking Funds</h3>
+                </div>
+
+                {yearlyBurdenByAccount.length > 0 && (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
+                    {yearlyBurdenByAccount.map((group) => (
+                      <YearlyBurdenCard
+                        key={group.accountId}
+                        name={group.name}
+                        balance={group.balance}
+                        monthlyAmount={group.amount}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {yearlyLoading || !yearlyFetched ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-[1.5rem]" />
+                    ))}
+                  </div>
+                ) : yearlyExpenses.length === 0 ? (
+                  <EmptyState
+                    icon={<TrendingUp className="size-8" />}
+                    title="No yearly commitments"
+                    subtitle="Track large annual expenses like insurance or taxes and break them into monthly targets."
+                    actionText="Add Commitment"
+                    onAction={() => { setEditingYearly(null); setIsYearlyModalOpen(true); }}
+                    actionIcon={<Plus className="w-3.5 h-3.5" />}
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <AnimatePresence mode="popLayout">
+                      {(yearlyExpenses || []).map((exp: YearlyExpense) => (
+                        <YearlyExpenseCard
+                          key={exp.id}
+                          expense={exp}
+                          onEdit={(e: YearlyExpense) => { setEditingYearly(e); setIsYearlyModalOpen(true); }}
+                          onDelete={(id: string) => setYearlyToDelete(id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -579,11 +698,11 @@ function PlansDirectoryPageContent() {
         isOpen={!!planToDelete}
         onCancel={() => setPlanToDelete(null)}
         onConfirm={() => { if (planToDelete) { handlePurgeSimulation(planToDelete); } }}
-        title={plans.find(p => p.id === planToDelete)?.status === "completed" ? "Purge Simulation" : "Destroy Simulation"}
-        message={plans.find(p => p.id === planToDelete)?.status === "completed"
+        title={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed" ? "Purge Simulation" : "Destroy Simulation"}
+        message={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed"
           ? "This will permanently sanitize this simulation node from the ledger. This action is irreversible."
           : "This will completely remove this simulation environment and all child nodes."}
-        confirmText={plans.find(p => p.id === planToDelete)?.status === "completed" ? "Purge Node" : "Confirm Destruction"}
+        confirmText={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed" ? "Purge Node" : "Confirm Destruction"}
         isDestructive={true}
       />
 
@@ -694,6 +813,54 @@ function PlansDirectoryPageContent() {
           }
         }}
         expiry={selectedExpiry}
+      />
+
+      {/* Modals - Yearly Expenses */}
+      <AddYearlyExpenseModal
+        isOpen={isYearlyModalOpen}
+        onClose={() => { setIsYearlyModalOpen(false); setEditingYearly(null); }}
+        editingExpense={editingYearly}
+        onSave={async (data) => {
+          setIsProcessing(true);
+          try {
+            if (editingYearly) {
+              await dispatch(updateYearlyExpense({ id: editingYearly.id, data })).unwrap();
+              toast.success("Commitment updated");
+            } else {
+              await dispatch(createYearlyExpense(data)).unwrap();
+              toast.success("Annual expenditure synchronized");
+            }
+            setIsYearlyModalOpen(false);
+            setEditingYearly(null);
+          } catch {
+            toast.error("Failed to sync expenditure node");
+          } finally {
+            setIsProcessing(false);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={!!yearlyToDelete}
+        onCancel={() => setYearlyToDelete(null)}
+        onConfirm={async () => {
+          if (yearlyToDelete) {
+            setIsProcessing(true);
+            try {
+              await dispatch(deleteYearlyExpense(yearlyToDelete)).unwrap();
+              toast.success("Commitment sanitized from ledger");
+              setYearlyToDelete(null);
+            } catch {
+              toast.error("Failed to sanitize commitment");
+            } finally {
+              setIsProcessing(false);
+            }
+          }
+        }}
+        isDestructive={true}
+        title="Sanitize Commitment"
+        message="Permanently remove this annual expenditure node? This will clear all historical allocation tracking for this item."
+        confirmText="Confirm Sanitization"
       />
     </PageContainer>
   );

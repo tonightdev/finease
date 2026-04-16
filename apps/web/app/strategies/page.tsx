@@ -63,6 +63,7 @@ export default function StrategiesPage() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [mobileTab, setMobileTab] = useState<"matrix" | "controls">("matrix");
   const [sortBy, setSortBy] = useState<"type" | "amount" | "none">("none");
+  const [projectionMonths, setProjectionMonths] = useState(12);
 
   // Helper for protocol colors
   const getProtocolColor = (parentType: string) => {
@@ -266,15 +267,42 @@ export default function StrategiesPage() {
       } else if (surplus > 0 && efficiency > 90) {
         suggestions.push("Optimal Configuration: Your current vectors and protocol are perfectly aligned. You are maximizing capital efficiency.");
       }
+
+      // 4. Emergency Fund Analysis (New)
+      const monthlyNeeds = current?.basis === "yearly" ? needsTotal / 12 : needsTotal;
+      const targetEF = monthlyNeeds * 6;
+      const currentLiquidSavings = accounts
+        .filter(a => !['debt', 'card', 'asset'].includes(a.type?.toLowerCase() || ""))
+        .reduce((sum, a) => sum + (a.balance || 0), 0);
+
+      const monthlySavingsFlow = current?.basis === "yearly" ? savingsTotal / 12 : savingsTotal;
+
+      if (currentLiquidSavings < targetEF) {
+        const efGap = targetEF - currentLiquidSavings;
+        const monthsToEF = monthlySavingsFlow > 0 ? Math.ceil(efGap / monthlySavingsFlow) : Infinity;
+
+        if (monthsToEF === Infinity) {
+          suggestions.push(`EMERGENCY FUND: You need ${formatCurrency(targetEF)} for 6 months of backup. Increase savings vector to start building this buffer.`);
+        } else {
+          suggestions.push(`ROADMAP: You'll reach your 6-month Emergency Fund of ${formatCurrency(targetEF)} in ${monthsToEF} months at your current ${formatCurrency(monthlySavingsFlow)} monthly rate.`);
+        }
+      } else {
+        suggestions.push(`SECURE: Your liquid reserves (${formatCurrency(currentLiquidSavings)}) fully cover 6 months of essential needs. Optimal safety achieved.`);
+      }
     }
 
-    const activeAccounts = Object.entries(accountFlows).map(([id, data]) => ({
-      id,
-      name: data.name,
-      netFlow: data.netFlow,
-      income: data.income,
-      outflow: data.outflow
-    })).sort((a, b) => b.netFlow - a.netFlow);
+    const activeAccounts = Object.entries(accountFlows).map(([id, data]) => {
+      const liveAccount = accounts.find(a => a.id === id);
+      return {
+        id,
+        name: data.name,
+        netFlow: data.netFlow,
+        income: data.income,
+        outflow: data.outflow,
+        currentBalance: liveAccount?.balance || 0,
+        projectedBalance: (liveAccount?.balance || 0) + (data.netFlow * projectionMonths)
+      }
+    }).sort((a, b) => b.netFlow - a.netFlow);
 
     return {
       income,
@@ -290,7 +318,7 @@ export default function StrategiesPage() {
       efficiency: Math.max(0, Math.min(100, Math.round(efficiency))),
       activeAccounts
     };
-  }, [entries, protocol, current?.basis]);
+  }, [entries, protocol, current?.basis, projectionMonths, accounts]);
 
   const handleAddEntry = () => {
     if (!newEntry.amount || parseFloat(newEntry.amount) <= 0) {
@@ -373,35 +401,33 @@ export default function StrategiesPage() {
   if (authLoading || (strategyLoading && !isInitialized)) {
     return (
       <PageContainer>
-        <div className="space-y-3 mb-8">
+        <div className="space-y-2 mb-3">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
         </div>
-        <div className="flex flex-col xl:flex-row gap-8 items-start">
-          <div className="xl:w-[380px] w-full shrink-0 space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-white/5 space-y-4">
+        <div className="flex flex-col xl:flex-row gap-3 items-start">
+          <div className="xl:w-[380px] w-full shrink-0 space-y-3">
+            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
               <Skeleton className="h-24 w-full rounded-2xl" />
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <Skeleton className="h-10 w-full rounded-xl" />
                 <Skeleton className="h-10 w-full rounded-xl" />
                 <Skeleton className="h-10 w-full rounded-xl" />
               </div>
             </div>
           </div>
-          <div className="flex-1 w-full space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-white/5 h-[600px] space-y-6">
-              <div className="flex justify-between items-center">
-                <Skeleton className="h-10 w-48" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-32 w-full rounded-2xl" />
-                <Skeleton className="h-32 w-full rounded-2xl" />
-                <Skeleton className="h-32 w-full rounded-2xl" />
-                <Skeleton className="h-32 w-full rounded-2xl" />
-              </div>
-              <Skeleton className="h-48 w-full rounded-2xl" />
+          <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 h-[600px] space-y-4">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-6 w-24 rounded-full" />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-32 w-full rounded-2xl" />
+              <Skeleton className="h-32 w-full rounded-2xl" />
+              <Skeleton className="h-32 w-full rounded-2xl" />
+              <Skeleton className="h-32 w-full rounded-2xl" />
+            </div>
+            <Skeleton className="h-48 w-full rounded-2xl" />
           </div>
         </div>
       </PageContainer>
@@ -409,7 +435,7 @@ export default function StrategiesPage() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer className="pb-18">
       <PageHeader
         title="Strategies Hub"
         subtitle="Standalone sandbox for real-time predictive financial modeling."
@@ -430,31 +456,31 @@ export default function StrategiesPage() {
               </button>
             </div>
 
-            <div className="sm:hidden flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+            <div className="sm:hidden flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5 h-11">
               <button
                 onClick={() => handleBasisToggle("monthly")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${(current?.basis || "monthly") === "monthly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
+                className={`flex-1 h-full flex items-center justify-center gap-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${(current?.basis || "monthly") === "monthly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
               >
-                <Clock className="size-3" /> Monthly
+                <Clock className="size-3.5" /> Monthly
               </button>
               <button
                 onClick={() => handleBasisToggle("yearly")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${current?.basis === "yearly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
+                className={`flex-1 h-full flex items-center justify-center gap-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${current?.basis === "yearly" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500"}`}
               >
-                <Calendar className="size-3" /> Yearly
+                <Calendar className="size-3.5" /> Yearly
               </button>
             </div>
 
-            <div className="xl:hidden flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm sm:w-[240px]">
+            <div className="xl:hidden flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm sm:w-[240px] h-11">
               <button
                 onClick={() => setMobileTab('matrix')}
-                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${mobileTab === 'matrix' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 h-full text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${mobileTab === 'matrix' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Matrix
               </button>
               <button
                 onClick={() => setMobileTab('controls')}
-                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${mobileTab === 'controls' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 h-full text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${mobileTab === 'controls' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Editor
               </button>
@@ -463,12 +489,10 @@ export default function StrategiesPage() {
         }
       />
 
-
-
-      <div className="flex flex-col xl:flex-row gap-4 xl:gap-8 items-start">
-        <div className={`xl:w-[380px] shrink-0 space-y-6 w-full min-w-0 ${mobileTab === 'controls' ? 'block' : 'hidden xl:block'}`}>
-          <Card className="p-4 space-y-5 border-slate-100 dark:border-white/5 shadow-none w-full">
-            <div className="flex items-center gap-3">
+      <div className="flex flex-col xl:flex-row gap-6 xl:gap-3 items-start">
+        <div className={`xl:w-[380px] shrink-0 space-y-6 sm:space-y-3 w-full min-w-0 ${mobileTab === 'controls' ? 'block' : 'hidden xl:block'}`}>
+          <Card className="mb-0 pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+            <div className="flex items-center gap-3 py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
               <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Plus className="size-5 text-primary" />
               </div>
@@ -499,16 +523,16 @@ export default function StrategiesPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Amount</label>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">Amount</label>
                 <div className="relative group">
                   <Input
                     type="number"
                     placeholder={`Enter amount...`}
                     value={newEntry.amount}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, amount: e.target.value })}
-                    className={`font-mono h-10 text-xs font-bold pr-16 ${newEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}
+                    className={`font-mono h-9 text-xs font-bold pr-16 ${newEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}
                   />
                   <div className="absolute right-1 top-1 bottom-1 flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-white/5">
                     <button
@@ -523,21 +547,21 @@ export default function StrategiesPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">Description</label>
                 <Input
                   placeholder="E.g., Salary, Rent..."
                   value={newEntry.description}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, description: e.target.value })}
-                  className="h-10 text-xs"
+                  className="h-9 text-xs"
                 />
               </div>
 
-              <div className="flex flex-row gap-3">
-                <div className="flex-1 space-y-1.5 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Routing</label>
+              <div className="flex flex-row gap-2">
+                <div className="flex-1 space-y-1 min-w-0">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">Routing</label>
                   <Select value={newEntry.accountId} onValueChange={(val: string) => setNewEntry({ ...newEntry, accountId: val })}>
-                    <SelectTrigger className="h-10 text-xs font-bold truncate">
+                    <SelectTrigger className="h-9 text-xs font-bold truncate">
                       <SelectValue placeholder="Account..." />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
@@ -547,10 +571,10 @@ export default function StrategiesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1 space-y-1.5 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Classification</label>
+                <div className="flex-1 space-y-1 min-w-0">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">Classification</label>
                   <Select value={newEntry.categoryId} onValueChange={(val: string) => setNewEntry({ ...newEntry, categoryId: val })}>
-                    <SelectTrigger className="h-10 text-xs font-bold truncate">
+                    <SelectTrigger className="h-9 text-xs font-bold truncate">
                       <SelectValue placeholder="Category..." />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
@@ -563,7 +587,7 @@ export default function StrategiesPage() {
               </div>
               <Button
                 onClick={handleAddEntry}
-                className={`w-full h-10 rounded-xl font-black uppercase tracking-widest text-[10px] mt-2 gap-2 shadow-lg transition-all ${newEntry.type === 'income' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20 text-white' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20 text-white'}`}
+                className={`w-full h-9 rounded-xl font-black uppercase tracking-widest text-[10px] mt-0.5 gap-2 shadow-lg transition-all ${newEntry.type === 'income' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20 text-white' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20 text-white'}`}
               >
                 {editingId ? "Update" : "Inject"} {newEntry.type === 'income' ? 'Income' : 'Outflow'} <ArrowRight className="size-3.5" />
               </Button>
@@ -582,8 +606,8 @@ export default function StrategiesPage() {
             </div>
 
             {entries.length > 0 && (
-              <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
-                <div className="flex items-center justify-between px-1">
+              <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
+                <div className="flex items-center justify-between px-0.5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Traction Matrix</span>
                   <div className="flex items-center gap-2">
                     <button
@@ -635,10 +659,10 @@ export default function StrategiesPage() {
             )}
           </Card>
 
-          <Card className="p-4 space-y-5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm w-full">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-9 rounded-xl bg-slate-50 dark:bg-white/10 flex items-center justify-center">
+          <Card className="pt-2 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+            <div className="flex items-center justify-between py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
+              <div className="flex items-center gap-2.5">
+                <div className="size-8 rounded-xl bg-slate-50 dark:bg-white/10 flex items-center justify-center">
                   <Target className="size-5 text-primary" />
                 </div>
                 <div>
@@ -653,7 +677,7 @@ export default function StrategiesPage() {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-3">
               {(['needs', 'wants', 'savings'] as const).map((key) => {
                 const item = {
                   needs: { label: 'Needs', theme: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
@@ -662,8 +686,8 @@ export default function StrategiesPage() {
                 }[key];
                 const target = protocol[key];
                 return (
-                  <div key={key} className="space-y-3">
-                    <div className="flex justify-between items-center px-1">
+                  <div key={key} className="space-y-2">
+                    <div className="flex justify-between items-center px-0.5">
                       <span className={`text-[10px] font-black uppercase tracking-widest ${item.theme}`}>{item.label} Target</span>
                       <div className="flex items-center gap-2">
                         <Input
@@ -706,7 +730,7 @@ export default function StrategiesPage() {
                 variant="primary"
                 onClick={handleSaveProtocol}
                 isLoading={strategyLoading}
-                className={`w-full h-12 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] mt-2 gap-3 shadow-2xl transition-all ${isProtocolDirty ? 'bg-primary text-white shadow-primary/20 hover:opacity-90' : 'bg-slate-100 dark:bg-white/5 text-slate-400 shadow-none border border-slate-200 dark:border-white/5'} hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100`}
+                className={`w-full h-11 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] mt-1 gap-2 shadow-2xl transition-all ${isProtocolDirty ? 'bg-primary text-white shadow-primary/20 hover:opacity-90' : 'bg-slate-100 dark:bg-white/5 text-slate-400 shadow-none border border-slate-200 dark:border-white/5'} hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100`}
               >
                 <Save className="size-4" /> Finalize Protocol
               </Button>
@@ -715,9 +739,9 @@ export default function StrategiesPage() {
         </div>
 
         <div className={`flex-1 w-full min-w-0 ${mobileTab === 'matrix' ? 'block' : 'hidden xl:block'}`}>
-          <Card className="h-full min-h-[400px] sm:min-h-[600px] flex flex-col p-4 sm:p-5 border-slate-100 dark:border-white/5 w-full">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-4">
+          <Card className="h-auto sm:h-full min-h-[400px] sm:min-h-[500px] flex flex-col pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-5 sm:space-y-4">
+            <div className="flex items-center justify-between py-1 mb-4 border-b border-slate-100 dark:border-white/5 sm:border-none">
+              <div className="flex items-center gap-2.5">
                 <div className="size-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
                   <TrendingUp className="size-5 text-primary" />
                 </div>
@@ -762,44 +786,44 @@ export default function StrategiesPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
+              <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
                 {/* 1. Primary Metrics Grid (2x2) */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-8">
-                  <div className={`p-3 sm:p-4 rounded-xl border transition-all flex flex-col justify-between min-h-[90px] ${strategyMetrics.surplus < 0 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10' : 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10'}`}>
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                  <div className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-between min-h-[80px] ${strategyMetrics.surplus < 0 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10' : 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10'}`}>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Net {current?.basis === "yearly" ? "Annual" : "Monthly"} Flow</span>
                     <div className="mt-auto">
-                      <div className={`text-lg sm:text-xl font-black tracking-tighter truncate w-full ${strategyMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`} title={formatCurrency(strategyMetrics.surplus)}>{formatCurrency(strategyMetrics.surplus)}</div>
-                      <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{strategyMetrics.surplus >= 0 ? 'Surplus Projection' : 'Deficit Detected'}</div>
+                      <div className={`text-base sm:text-lg font-black tracking-tighter truncate w-full ${strategyMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`} title={formatCurrency(strategyMetrics.surplus)}>{formatCurrency(strategyMetrics.surplus)}</div>
+                      <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{strategyMetrics.surplus >= 0 ? 'Surplus' : 'Deficit'}</div>
                     </div>
                   </div>
 
-                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Flow Magnitude</span>
-                    <div className="space-y-3 mt-auto">
-                      <div className="text-xs sm:text-sm font-mono font-black text-emerald-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.income)}>{formatCurrency(strategyMetrics.income)}</div>
-                      <div className="text-xs sm:text-sm font-mono font-black text-rose-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.totalOutflows)}>{formatCurrency(strategyMetrics.totalOutflows)}</div>
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[90px]">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5">Flow Magnitude</span>
+                    <div className="space-y-2 mt-auto">
+                      <div className="text-xs font-mono font-black text-emerald-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.income)}>{formatCurrency(strategyMetrics.income)}</div>
+                      <div className="text-xs font-mono font-black text-rose-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.totalOutflows)}>{formatCurrency(strategyMetrics.totalOutflows)}</div>
                     </div>
                   </div>
 
-                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 relative overflow-hidden group flex flex-col justify-between min-h-[100px]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 relative overflow-hidden group flex flex-col justify-between min-h-[90px]">
                     <div className="relative z-10 flex flex-col justify-between h-full">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Efficiency Score</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Efficiency</span>
                       <div className="mt-auto">
                         <div className="flex items-baseline justify-start w-full">
-                          <div className="text-lg sm:text-xl font-black text-primary tracking-tighter truncate mr-2" title={strategyMetrics.efficiency.toString()}>{strategyMetrics.efficiency}</div>
-                          <div className="text-[10px] font-black text-slate-400 tracking-widest">/ 100</div>
+                          <div className="text-base sm:text-lg font-black text-primary tracking-tighter truncate mr-1.5" title={strategyMetrics.efficiency.toString()}>{strategyMetrics.efficiency}</div>
+                          <div className="text-[9px] font-black text-slate-400 tracking-widest">/ 100</div>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${strategyMetrics.efficiency}%` }} className="h-full bg-primary shadow-[0_0_12px_rgba(19,91,236,0.5)]" />
+                        <div className="w-full h-1 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-1.5">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${strategyMetrics.efficiency}%` }} className="h-full bg-primary shadow-[0_0_8px_rgba(19,91,236,0.3)]" />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Surplus Velocity</span>
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[90px]">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Velocity</span>
                     <div className="mt-auto">
-                      <div className="text-lg sm:text-xl font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto" title={`+${((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%`}>+{((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%</div>
+                      <div className="text-base sm:text-lg font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto" title={`+${((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%`}>+{((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%</div>
                       <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100)}%` }} className="h-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
                       </div>
@@ -808,21 +832,21 @@ export default function StrategiesPage() {
                 </div>
 
                 {/* 2. Horizon Composition Matrix */}
-                <div className="space-y-6 mb-4">
+                <div className="space-y-4 sm:space-y-3 mb-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
                       <Activity className="size-4 text-primary" /> Horizon Composition Matrix
                     </h4>
                   </div>
 
-                  <div className="flex flex-col gap-6">
-                    <div className="p-4 rounded-xl bg-slate-50/30 dark:bg-slate-800/10 border border-slate-100 dark:border-white/5 space-y-8">
-                      <div className="space-y-4 mb-3">
+                  <div className="space-y-3 pb-2">
+                    <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-800/10 border border-slate-100 dark:border-white/5 space-y-3">
+                      <div className="space-y-2 mb-2">
                         <div className="flex justify-between items-end">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Allocation Flow</span>
                           <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">Needs Focus</span>
                         </div>
-                        <div className="flex h-10 sm:h-12 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 relative">
+                        <div className="flex h-8 sm:h-9 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 relative">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${strategyMetrics.needsPct}%` }}
@@ -854,31 +878,31 @@ export default function StrategiesPage() {
                             <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-indigo-900 opacity-0 group-hover:opacity-100 transition-opacity">SAVINGS</span>
                           </motion.div>
                         </div>
-                        <div className="flex justify-between px-1">
+                        <div className="flex justify-between px-0.5">
                           <div className="flex flex-col">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Needs</span>
-                            <span className="text-[11px] font-mono font-black text-amber-500">{strategyMetrics.needsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.needsPct > protocol.needs ? 'text-rose-500' : 'text-emerald-500'}`}>
-                              {strategyMetrics.needsPct > protocol.needs ? `+${(strategyMetrics.needsPct - protocol.needs).toFixed(1)}% Delta` : 'Within Protocol'}
+                            <span className="text-[10px] font-mono font-black text-amber-500">{strategyMetrics.needsPct.toFixed(1)}%</span>
+                            <span className={`text-[7px] font-black uppercase ${strategyMetrics.needsPct > protocol.needs ? 'text-rose-500' : 'text-emerald-500'}`}>
+                              {strategyMetrics.needsPct > protocol.needs ? `+${(strategyMetrics.needsPct - protocol.needs).toFixed(1)}%` : 'OK'}
                             </span>
                           </div>
                           <div className="flex flex-col text-center">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wants</span>
-                            <span className="text-[11px] font-mono font-black text-rose-500">{strategyMetrics.wantsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.wantsPct > protocol.wants ? 'text-rose-500' : 'text-emerald-500'}`}>
-                              {strategyMetrics.wantsPct > protocol.wants ? `+${(strategyMetrics.wantsPct - protocol.wants).toFixed(1)}% Delta` : 'Within Protocol'}
+                            <span className="text-[10px] font-mono font-black text-rose-500">{strategyMetrics.wantsPct.toFixed(1)}%</span>
+                            <span className={`text-[7px] font-black uppercase ${strategyMetrics.wantsPct > protocol.wants ? 'text-rose-500' : 'text-emerald-500'}`}>
+                              {strategyMetrics.wantsPct > protocol.wants ? `+${(strategyMetrics.wantsPct - protocol.wants).toFixed(1)}%` : 'OK'}
                             </span>
                           </div>
                           <div className="flex flex-col text-right">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Savings</span>
-                            <span className="text-[11px] font-mono font-black text-indigo-500">{strategyMetrics.savingsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.savingsPct >= protocol.savings ? 'text-emerald-500' : 'text-rose-500'}`}>
-                              {strategyMetrics.savingsPct >= protocol.savings ? 'Protocol Met' : `-${(protocol.savings - strategyMetrics.savingsPct).toFixed(1)}% Gap`}
+                            <span className="text-[10px] font-mono font-black text-indigo-500">{strategyMetrics.savingsPct.toFixed(1)}%</span>
+                            <span className={`text-[7px] font-black uppercase ${strategyMetrics.savingsPct >= protocol.savings ? 'text-emerald-500' : 'text-rose-500'}`}>
+                              {strategyMetrics.savingsPct >= protocol.savings ? 'Met' : `-${(protocol.savings - strategyMetrics.savingsPct).toFixed(1)}%`}
                             </span>
                           </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row gap-4">
+                        <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row gap-2">
                           <div className="flex-1 space-y-1">
                             <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                               <Zap className="size-3 text-amber-500" /> Stress Test
@@ -892,7 +916,7 @@ export default function StrategiesPage() {
                               <TrendingUp className="size-3 text-indigo-500" /> Savings Velocity
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 leading-tight">
-                              At current rates, you reaching your next <span className="text-indigo-500">$100k</span> goal in <span className="text-white">{(100000 / (strategyMetrics.savingsTotal || 1)).toFixed(1)} {current?.basis === "yearly" ? "years" : "months"}</span>.
+                              At current rates, you reaching your next <span className="text-indigo-500">₹100k</span> goal in <span className="text-white">{(100000 / (strategyMetrics.savingsTotal || 1)).toFixed(1)} {current?.basis === "yearly" ? "years" : "months"}</span>.
                             </p>
                           </div>
                         </div>
@@ -902,18 +926,18 @@ export default function StrategiesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
-                    <PieChart className="size-4 text-primary" /> Target vs Actual Variance
+                <div className="space-y-4 sm:space-y-3 mb-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
+                    <PieChart className="size-4 text-primary" /> Target Variance
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                     {[
                       { id: "needs", label: "Needs", actual: strategyMetrics.needsPct, target: protocol.needs, color: "bg-amber-400" },
                       { id: "wants", label: "Wants", actual: strategyMetrics.wantsPct, target: protocol.wants, color: "bg-rose-400" },
                       { id: "savings", label: "Savings", actual: strategyMetrics.savingsPct, target: protocol.savings, color: "bg-indigo-400" },
                     ].map(stat => (
-                      <div key={stat.id} className="p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/10 flex flex-col justify-between min-h-[90px]">
-                        <div className="flex justify-between items-center mb-3">
+                      <div key={stat.id} className="p-2 sm:p-2.5 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/10 flex flex-col justify-between min-h-[75px]">
+                        <div className="flex justify-between items-center mb-2">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stat.color}`} />
                             <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest truncate">{stat.label}</span>
@@ -932,11 +956,11 @@ export default function StrategiesPage() {
                 </div>
 
                 {/* 4. Strategem Insights */}
-                <div className="space-y-4 mb-3">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
-                    <Lightbulb className="size-4 text-primary" /> Strategem Insights Hub
+                <div className="space-y-4 sm:space-y-3 mb-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
+                    <Lightbulb className="size-4 text-primary" /> Insights Hub
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {strategyMetrics.suggestions.length > 0 ? (
                       strategyMetrics.suggestions.map((suggestion, i) => (
                         <motion.div
@@ -944,7 +968,7 @@ export default function StrategiesPage() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1 }}
                           key={i}
-                          className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm min-h-[70px]"
+                          className="flex items-start gap-2 p-3 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm min-h-[60px]"
                         >
                           <div className="size-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                             <ArrowRight className="size-3 text-primary" />
@@ -962,20 +986,31 @@ export default function StrategiesPage() {
 
                 {/* 5. Active Vector Flows (Consolidated) - Bottom */}
                 {strategyMetrics.activeAccounts.length > 0 && (
-                  <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
-                        <Activity className="size-4 text-primary" /> Simulated Account Vectors
+                  <div className="pt-4 sm:pt-3 border-t border-slate-100 dark:border-white/5 space-y-4 sm:space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 shrink-0">
+                        <Activity className="size-4 text-primary" /> Account Vectors ({projectionMonths} Month Projection)
                       </h4>
-                      <div className="text-[8px] font-black text-slate-400 tracking-widest uppercase bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded border border-slate-200 dark:border-white/5 w-fit">Net Impact / Account</div>
+                      <div className="grid grid-cols-6 sm:flex sm:items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-lg border border-slate-200 dark:border-white/5 w-full sm:w-auto">
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                          <button
+                            key={m}
+                            onClick={() => setProjectionMonths(m)}
+                            className={`min-w-[32px] sm:min-w-[28px] h-8 sm:h-auto px-1.5 py-1 sm:py-0.5 rounded-md text-[8px] font-black uppercase transition-all shrink-0 ${projectionMonths === m ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                            {m}m
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="text-[8px] font-black text-slate-400 tracking-widest uppercase bg-slate-100 dark:bg-white/5 px-2 py-1 rounded border border-slate-200 dark:border-white/5 w-fit">Expected Balance Growth / Drain</div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                       {strategyMetrics.activeAccounts.map(acc => (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           key={acc.id}
-                          className="p-2.5 sm:p-3 border border-slate-100 dark:border-white/5 rounded-xl bg-white dark:bg-slate-800/40 shadow-sm flex flex-col justify-between min-h-[110px]"
+                          className="p-2 sm:p-2.5 border border-slate-100 dark:border-white/5 rounded-xl bg-white dark:bg-slate-800/40 shadow-sm flex flex-col justify-between min-h-[90px]"
                         >
                           <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2.5 truncate flex items-center gap-1.5">
                             <div className="w-1 h-1 rounded-full bg-primary shrink-0" /> {acc.name}
@@ -994,6 +1029,14 @@ export default function StrategiesPage() {
                               <span className={`text-[9px] font-mono font-black shrink-0 ${acc.netFlow >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                                 {acc.netFlow > 0 ? '+' : ''}{formatCurrency(acc.netFlow)}
                               </span>
+                            </div>
+                            <div className="pt-1.5 mt-1 border-t border-dashed border-slate-100 dark:border-white/5">
+                              <div className="flex justify-between items-center px-0.5">
+                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Projected</span>
+                                <span className={`text-[10px] font-mono font-black ${acc.projectedBalance >= acc.currentBalance ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                  {formatCurrency(acc.projectedBalance)}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </motion.div>

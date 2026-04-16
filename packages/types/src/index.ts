@@ -202,7 +202,20 @@ export interface Expiry {
   metadata?: Record<string, unknown>;
   createdAt: string;
   deletedAt?: string | null;
-}export interface UserSession {
+}
+
+export interface YearlyExpense {
+  id: string;
+  userId: string;
+  title: string;
+  yearlyAmount: number;
+  accountId: string;
+  accountName?: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+
+export interface UserSession {
   id: string; // Document ID (usually same as token or random ID)
   userId: string;
   token: string;
