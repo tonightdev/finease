@@ -12,6 +12,7 @@ interface GoalProgressProps {
   currentAmount: number;
   percentageSaved: number;
   expectedPercentage: number;
+  requirementPerMonth?: number;
 }
 
 export function GoalProgressCard({
@@ -20,6 +21,7 @@ export function GoalProgressCard({
   currentAmount,
   percentageSaved,
   expectedPercentage,
+  requirementPerMonth,
 }: GoalProgressProps) {
   const diff = percentageSaved - expectedPercentage;
   const status = diff >= 0 ? (diff > 5 ? "ahead" : "ontrack") : "behind";
@@ -80,20 +82,30 @@ export function GoalProgressCard({
           barClassName={status === "behind" ? "bg-red-500" : "bg-indigo-500"}
         />
 
-        <div className="flex justify-between items-center pt-1 border-t border-slate-50 dark:border-white/5">
-          <div className="flex flex-col">
+        <div className="flex justify-between items-center pt-2 border-t border-slate-50 dark:border-white/5">
+          <div className="flex flex-col gap-0.5">
             <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
               Balance
             </span>
-            <span className="text-[9px] font-black text-slate-900 dark:text-white">
+            <span className="text-[10px] font-black text-slate-900 dark:text-white">
               {formatCurrency(currentAmount)}
             </span>
           </div>
-          <div className="flex flex-col items-end">
+          {requirementPerMonth !== undefined && (
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-[7px] font-black text-primary uppercase tracking-widest leading-none">
+                Monthly Target
+              </span>
+              <span className="text-[10px] font-black text-primary">
+                ₹{Math.ceil(requirementPerMonth).toLocaleString()}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-col items-end gap-0.5">
             <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
               Objective
             </span>
-            <span className="text-[9px] font-black text-slate-500">
+            <span className="text-[10px] font-black text-slate-500">
               {formatCurrency(targetAmount)}
             </span>
           </div>

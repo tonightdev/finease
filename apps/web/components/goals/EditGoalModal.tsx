@@ -65,7 +65,7 @@ export function EditGoalModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingGoal ? "Goal Refinement" : "New Milestone"}
+      title={editingGoal ? "Goal Refinement" : "New Goal"}
       maxWidth="max-w-sm"
       footer={
         <div className="flex gap-3 w-full">

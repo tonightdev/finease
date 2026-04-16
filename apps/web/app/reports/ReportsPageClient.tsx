@@ -557,11 +557,11 @@ export default function ReportsPageClient() {
   if (!user) return null;
 
   return (
-    <PageContainer>
+    <PageContainer className="gap-1.5 sm:gap-2">
       <PageHeader
         title="Intelligence"
         subtitle="Unified analytics & predictive insights"
-        className="space-y-2"
+        className="space-y-1.5"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -692,12 +692,12 @@ export default function ReportsPageClient() {
         )}
       </PageHeader>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
-          <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-primary transition-colors">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2 mb-0">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group p-3">
+          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-primary transition-colors uppercase tracking-widest">
             Net Worth
           </div>
-          <div className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mb-2 truncate shrink-0">
+          <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mb-1 truncate shrink-0">
             {formatCurrency(netWorth)}
           </div>
           <div
@@ -713,11 +713,11 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group">
-          <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-emerald-500 transition-colors">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group p-3">
+          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-emerald-500 transition-colors uppercase tracking-widest">
             Total Inflow
           </div>
-          <div className="text-lg sm:text-2xl font-black text-emerald-600 mb-2 truncate shrink-0">
+          <div className="text-base sm:text-xl font-black text-emerald-600 mb-1 truncate shrink-0">
             {formatCurrency(inflow)}
           </div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
@@ -725,11 +725,11 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group">
-          <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-rose-500 transition-colors">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group p-3">
+          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-rose-500 transition-colors uppercase tracking-widest">
             Total Outflow
           </div>
-          <div className="text-lg sm:text-2xl font-black text-rose-500 mb-2 truncate shrink-0">
+          <div className="text-base sm:text-xl font-black text-rose-500 mb-1 truncate shrink-0">
             {formatCurrency(outflow)}
           </div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
@@ -737,12 +737,12 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group">
-          <div className="text-xs font-bold text-slate-400 mb-2 group-hover:text-amber-500 transition-colors">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group p-3">
+          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-amber-500 transition-colors uppercase tracking-widest">
             Net Results
           </div>
           <div
-            className={`text-lg sm:text-2xl font-black mb-2 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
+            className={`text-base sm:text-xl font-black mb-1 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
           >
             {formatCurrency(inflow - outflow)}
           </div>
@@ -752,8 +752,8 @@ export default function ReportsPageClient() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -773,8 +773,8 @@ export default function ReportsPageClient() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-2">
-            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 space-y-4 border border-slate-100 dark:border-white/5">
+          <div className="space-y-3 pt-1">
+            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 space-y-3 border border-slate-100 dark:border-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -800,7 +800,7 @@ export default function ReportsPageClient() {
             </div>
           </div>
 
-          <div className="space-y-8 pt-4">
+          <div className="space-y-4 pt-2">
             {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
               const target = budgetTargets[key as keyof typeof budgetTargets];
               const isOver =
@@ -808,7 +808,7 @@ export default function ReportsPageClient() {
               const diff = Math.abs(data.percent - target);
 
               return (
-                <div key={key} className="space-y-3">
+                <div key={key} className="space-y-2">
                   <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.2em]">
                     <div className="flex flex-col gap-1">
                       <span className="text-slate-400">{key}</span>
@@ -842,7 +842,7 @@ export default function ReportsPageClient() {
           </div>
         </Card>
 
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-6">
+        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -859,7 +859,7 @@ export default function ReportsPageClient() {
             </div>
           </div>
 
-          <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
             {(showAllExpenses
               ? expenseBreakdown
               : expenseBreakdown.slice(0, 6)
@@ -885,7 +885,7 @@ export default function ReportsPageClient() {
               </div>
             ))}
             {expenseBreakdown.length === 0 && (
-              <div className="col-span-full py-12 sm:py-20 text-center">
+              <div className="col-span-full py-6 sm:py-10 text-center">
                 <Activity className="w-8 h-8 text-slate-200 mx-auto mb-4" />
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
                   No transaction data traced
@@ -894,7 +894,7 @@ export default function ReportsPageClient() {
             )}
           </div>
           {expenseBreakdown.length > 6 && (
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 flex justify-center">
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
               <button
                 onClick={() => setShowAllExpenses(!showAllExpenses)}
                 className="flex items-center gap-2 px-6 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
@@ -908,9 +908,9 @@ export default function ReportsPageClient() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 sm:mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
         {/* Account Liquidity Widget */}
-        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-6">
+        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -932,7 +932,7 @@ export default function ReportsPageClient() {
 
           <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
             {(showAllLiquidity ? accounts : accounts.slice(0, 4)).map((acc) => (
-              <div key={acc.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group">
+              <div key={acc.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
                     <Briefcase className="size-3.5 text-slate-400" />
@@ -961,7 +961,7 @@ export default function ReportsPageClient() {
         </Card>
 
         {/* Savings Performance Widget */}
-        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-6 overflow-hidden relative">
+        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5 overflow-hidden relative">
           <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
             <PiggyBank size={140} />
           </div>
@@ -982,7 +982,7 @@ export default function ReportsPageClient() {
             </div>
           </div>
 
-          <div className="relative z-10 space-y-8 py-4">
+          <div className="relative z-10 space-y-4 py-4">
             <div className="flex flex-col items-center justify-center gap-2">
               <div className="text-4xl font-black text-emerald-500 tracking-tighter">
                 {fiftyThirtyTwenty.savings.percent.toFixed(1)}%

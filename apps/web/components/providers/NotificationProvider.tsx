@@ -10,14 +10,14 @@ import {
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 
-interface SignalContextType {
+interface NotificationContextType {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<void>;
   subscribeUser: () => Promise<void>;
 }
 
-const SignalContext = createContext<SignalContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -31,7 +31,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export function SignalProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
@@ -93,14 +93,14 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
     if (!isSupported) {
       if (isIOS && !isStandalone) {
         toast(
-          "To enable signals on iOS: \n1. Share (up arrow) \n2. 'Add to Home Screen' \n3. Open from Home Screen",
+          "To enable notifications on iOS: \n1. Share (up arrow) \n2. 'Add to Home Screen' \n3. Open from Home Screen",
           {
             duration: 6000,
             icon: "📱",
           },
         );
       } else {
-        toast.error("Signals not supported on this browser.");
+        toast.error("Notifications not supported on this browser.");
       }
       return;
     }
@@ -111,17 +111,17 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
       if (result === "granted") {
         await subscribeUser();
         toast.success(
-          "Signals enabled. You will receive intelligent reminders.",
+          "Notifications enabled. You will receive intelligent reminders.",
         );
       } else if (result === "denied") {
         if (isIOS) {
           toast.error(
-            "Signals blocked. Go to Settings > Notifications > FinEase to enable.",
+            "Notifications blocked. Go to Settings > Notifications > FinEase to enable.",
             { duration: 5000 },
           );
         } else {
           toast.error(
-            "Signals blocked. Enable notifications in browser settings.",
+            "Notifications blocked. Enable notifications in browser settings.",
           );
         }
       }
@@ -134,18 +134,18 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
   }, [isSupported, subscribeUser]);
 
   return (
-    <SignalContext.Provider
+    <NotificationContext.Provider
       value={{ isSupported, permission, requestPermission, subscribeUser }}
     >
       {children}
-    </SignalContext.Provider>
+    </NotificationContext.Provider>
   );
 }
 
-export const useSignals = () => {
-  const context = useContext(SignalContext);
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error("useSignals must be used within a SignalProvider");
+    throw new Error("useNotifications must be used within a NotificationProvider");
   }
   return context;
 };

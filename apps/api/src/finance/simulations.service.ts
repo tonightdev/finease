@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { ShortTermPlan } from '@repo/types';
+import { Simulation } from '@repo/types';
 import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
-export class PlansService {
-  private readonly collectionName = 'short-term-plans';
+export class SimulationsService {
+  private readonly collectionName = 'simulations';
 
   constructor(
     private readonly firebaseAdmin: FirebaseAdminService,
@@ -16,38 +16,38 @@ export class PlansService {
     return this.firebaseAdmin.getFirestore().collection(this.collectionName);
   }
 
-  async findAll(userId: string): Promise<ShortTermPlan[]> {
+  async findAll(userId: string): Promise<Simulation[]> {
     const snapshot = await this.collection.where('userId', '==', userId).get();
     return snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }) as ShortTermPlan)
+      .map((doc) => ({ id: doc.id, ...doc.data() }) as Simulation)
       .filter((plan) => !plan.deletedAt);
   }
 
-  async findOne(id: string): Promise<ShortTermPlan> {
+  async findOne(id: string): Promise<Simulation> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists || doc.data()?.deletedAt) {
-      throw new NotFoundException(`Plan with ID ${id} not found`);
+      throw new NotFoundException(`Simulation with ID ${id} not found`);
     }
-    return { id: doc.id, ...doc.data() } as ShortTermPlan;
+    return { id: doc.id, ...doc.data() } as Simulation;
   }
 
-  async create(plan: Partial<ShortTermPlan>): Promise<ShortTermPlan> {
+  async create(plan: Partial<Simulation>): Promise<Simulation> {
     const docRef = await this.collection.add({
       ...plan,
       deletedAt: null,
       status: plan.status || 'ongoing',
     });
     const doc = await docRef.get();
-    const result = { id: doc.id, ...doc.data() } as ShortTermPlan;
+    const result = { id: doc.id, ...doc.data() } as Simulation;
 
     // Log activity
     if (result.userId) {
       await this.activityLogService.logActivity({
         userId: result.userId,
         action: 'create',
-        entityType: 'plan',
+        entityType: 'simulation',
         entityId: doc.id,
-        description: `Created short-term plan: ${result.name}`,
+        description: `Created simulation: ${result.name}`,
       });
     }
 
@@ -56,8 +56,8 @@ export class PlansService {
 
   async update(
     id: string,
-    plan: Partial<ShortTermPlan>,
-  ): Promise<ShortTermPlan> {
+    plan: Partial<Simulation>,
+  ): Promise<Simulation> {
     await this.findOne(id);
 
     await this.collection.doc(id).update({
@@ -71,30 +71,35 @@ export class PlansService {
       await this.activityLogService.logActivity({
         userId: updatedPlan.userId,
         action: 'update',
-        entityType: 'plan',
+        entityType: 'simulation',
         entityId: id,
-        description: `Updated short-term plan: ${updatedPlan.name}`,
+        description: `Updated simulation: ${updatedPlan.name}`,
       });
     }
 
     return updatedPlan;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, hard = false): Promise<void> {
     const plan = await this.findOne(id);
+    const docRef = this.collection.doc(id);
 
-    await this.collection.doc(id).update({
-      deletedAt: new Date().toISOString(),
-    });
+    if (hard) {
+      await docRef.delete();
+    } else {
+      await docRef.update({
+        deletedAt: new Date().toISOString(),
+      });
+    }
 
     // Log activity
     if (plan.userId) {
       await this.activityLogService.logActivity({
         userId: plan.userId,
         action: 'delete',
-        entityType: 'plan',
+        entityType: 'simulation',
         entityId: id,
-        description: `Deleted short-term plan: ${plan.name}`,
+        description: `Deleted simulation: ${plan.name}`,
       });
     }
   }

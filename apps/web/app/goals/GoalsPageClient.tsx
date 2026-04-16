@@ -16,15 +16,14 @@ import {
   fetchTransactions,
 } from "@/store/slices/transactionsSlice";
 import {
-  fetchReminders,
-  createReminder,
-  updateReminder,
-  Reminder,
-} from "@/store/slices/remindersSlice";
+  fetchExpiries,
+  createExpiryAction,
+  updateExpiryAction,
+} from "@/store/slices/expiriesSlice";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
-import { ReminderCountdown } from "@/components/reminders/ReminderCountdown";
-import { AddReminderModal } from "@/components/reminders/AddReminderModal";
-import { FinancialGoal } from "@repo/types";
+import { ExpiryCountdown } from "@/components/expiries/ExpiryCountdown";
+import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
+import { FinancialGoal, Expiry } from "@repo/types";
 import { formatDate } from "@/lib/utils";
 import { TopUpModal } from "@/components/goals/TopUpModal";
 import toast from "react-hot-toast";
@@ -41,8 +40,8 @@ export default function GoalsPageClient() {
 
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
-  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
-  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(
+  const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false);
+  const [selectedExpiry, setSelectedExpiry] = useState<Expiry | null>(
     null,
   );
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
@@ -52,12 +51,12 @@ export default function GoalsPageClient() {
 
   const goals = useSelector((state: RootState) => state.goals.items);
   const loading = useSelector((state: RootState) => state.goals.loading);
-  const reminders = useSelector((state: RootState) => state.reminders.items);
+  const expiries = useSelector((state: RootState) => state.expiries.items);
 
   useEffect(() => {
     if (user) {
       dispatch(fetchGoals());
-      dispatch(fetchReminders());
+      dispatch(fetchExpiries());
       dispatch(fetchAccounts());
       dispatch(fetchTransactions());
     }
@@ -114,7 +113,7 @@ export default function GoalsPageClient() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsReminderModalOpen(true)}
+              onClick={() => setIsExpiryModalOpen(true)}
               className="flex-1 sm:flex-initial"
               leftIcon={<Edit2 className="w-3.5 h-3.5 text-primary" />}
             >
@@ -255,14 +254,14 @@ export default function GoalsPageClient() {
               Financial Expiries
             </h3>
             <span className="text-[8px] font-black text-orange-500 uppercase bg-orange-500/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-              {reminders.length} Alerts
+              {expiries.length} Alerts
             </span>
           </div>
-          <ReminderCountdown
-            reminders={reminders}
-            onEdit={(reminder) => {
-              setSelectedReminder(reminder);
-              setIsReminderModalOpen(true);
+          <ExpiryCountdown
+            expiries={expiries}
+            onEdit={(expiry) => {
+              setSelectedExpiry(expiry);
+              setIsExpiryModalOpen(true);
             }}
           />
         </div>
@@ -317,22 +316,22 @@ export default function GoalsPageClient() {
         }}
       />
 
-      <AddReminderModal
-        isOpen={isReminderModalOpen}
+      <AddExpiryModal
+        isOpen={isExpiryModalOpen}
         onClose={() => {
-          setIsReminderModalOpen(false);
-          setSelectedReminder(null);
+          setIsExpiryModalOpen(false);
+          setSelectedExpiry(null);
         }}
         onSave={async (data) => {
-          if (selectedReminder) {
-            await dispatch(updateReminder({ id: selectedReminder.id, data })).unwrap();
+          if (selectedExpiry) {
+            await dispatch(updateExpiryAction({ id: selectedExpiry.id, data })).unwrap();
             toast.success("Expiry updated.");
           } else {
-            await dispatch(createReminder(data)).unwrap();
+            await dispatch(createExpiryAction(data)).unwrap();
             toast.success("Expiry added.");
           }
         }}
-        reminder={selectedReminder}
+        expiry={selectedExpiry}
       />
 
       <ConfirmModal
@@ -343,7 +342,7 @@ export default function GoalsPageClient() {
         }}
         onConfirm={async () => {
           if (!goalToDelete) return;
-          await dispatch(deleteGoalAction(goalToDelete.id)).unwrap();
+          await dispatch(deleteGoalAction({ id: goalToDelete.id })).unwrap();
           toast.success("Goal decommissioned");
 
           setIsDeleteModalOpen(false);

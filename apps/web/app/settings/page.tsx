@@ -31,7 +31,7 @@ import {
   deleteAccount as deleteBankAccount
 } from "@/store/slices/accountsSlice";
 import { useSecurity } from "@/components/providers/SecurityProvider";
-import { useSignals } from "@/components/providers/SignalProvider";
+import { useNotifications } from "@/components/providers/NotificationProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -56,7 +56,7 @@ import {
   Account,
   Transaction,
   FinancialGoal,
-  Reminder,
+  Expiry,
   Category,
   AssetClass
 } from "@repo/types";
@@ -88,7 +88,7 @@ export default function SettingsPage() {
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [setupPin, setSetupPin] = useState("");
 
-  const { permission, requestPermission } = useSignals();
+  const { permission, requestPermission } = useNotifications();
 
   const [isExporting, setIsExporting] = useState(false);
 
@@ -170,7 +170,7 @@ export default function SettingsPage() {
         accountsRes,
         transactionsRes,
         goalsRes,
-        remindersRes,
+        expiriesRes,
         categoriesRes,
         assetClassesRes
       ] = await Promise.all([
@@ -178,7 +178,7 @@ export default function SettingsPage() {
         api.get("/finance/accounts").then(res => res.data as Account[]),
         api.get("/finance/transactions").then(res => res.data as Transaction[]),
         api.get("/finance/goals").then(res => res.data as FinancialGoal[]),
-        api.get("/finance/reminders").then(res => res.data as Reminder[]),
+        api.get("/finance/expiries").then(res => res.data as Expiry[]),
         api.get("/finance/categories").then(res => res.data as Category[]),
         api.get("/finance/asset-classes").then(res => res.data as AssetClass[])
       ]);
@@ -188,7 +188,7 @@ export default function SettingsPage() {
         accounts: accountsRes,
         transactions: transactionsRes,
         goals: goalsRes,
-        reminders: remindersRes,
+        expiries: expiriesRes,
         categories: categoriesRes,
         assetClasses: assetClassesRes,
         exportedAt: new Date().toISOString(),
@@ -312,7 +312,6 @@ export default function SettingsPage() {
         <PageHeader
           title="System Settings"
           subtitle="Identity Configuration & Security Lattice Control"
-          className="mb-2"
           actions={
             <div className="w-full lg:hidden">
               <Select

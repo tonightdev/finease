@@ -192,7 +192,7 @@ export interface ActivityLog {
   newState?: unknown;
   timestamp: string;
 }
-export interface Reminder {
+export interface Expiry {
   id: string;
   userId: string;
   name: string;
@@ -215,7 +215,7 @@ export interface Reminder {
   userName?: string;
 }
 
-export interface SimEntry {
+export interface StrategyEntry {
   id: string;
   amount: string;
   isMonthly?: boolean;
@@ -228,28 +228,28 @@ export interface SimEntry {
   accountName: string;
 }
 
-export interface BudgetSimulation {
+export interface BudgetStrategy {
   userId: string;
   basis?: "monthly" | "yearly";
   protocol: { needs: number; wants: number; savings: number };
-  entries: SimEntry[];
+  entries: StrategyEntry[];
   updatedAt?: string;
 }
 
-export interface SimulationResult {
+export interface StrategyResult {
   surplus: number;
   adherence: number;
   efficiency: number;
   suggestions: string[];
 }
 
-export interface STAccount {
+export interface SimAccount {
   id: string;
   name: string;
   balance: number;
 }
 
-export interface STExpense {
+export interface SimExpense {
   id: string;
   name: string;
   amount: number;
@@ -257,13 +257,13 @@ export interface STExpense {
   isPaid: boolean;
 }
 
-export interface ShortTermPlan {
+export interface Simulation {
   id: string;
   userId: string;
   name: string;
   createdAt: string;
-  accounts: STAccount[];
-  expenses: STExpense[];
+  accounts: SimAccount[];
+  expenses: SimExpense[];
   status?: "ongoing" | "completed";
   deletedAt?: string | null;
 }

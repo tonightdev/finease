@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/AuthProvider";
 import toast from "react-hot-toast";
@@ -13,73 +13,91 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 
 // Icons
 import {
+  TrendingUp,
+  Loader2,
+  Zap,
   Plus,
   Trash2,
   Pencil,
   Target,
   Bell,
   CheckCircle2,
-  RefreshCw,
-  TrendingUp,
+  RefreshCw
 } from "lucide-react";
 
+import { PlanningStatusFilter } from "@/components/planning/PlanningStatusFilter";
+
 // Redux Actions
-import { createPlanAction, deletePlanAction, fetchPlans, updatePlanAction } from "@/store/slices/plansSlice";
+import { createSimulationAction, deleteSimulationAction, fetchSimulations, updateSimulationAction } from "@/store/slices/simulationsSlice";
 import {
   fetchGoals,
   addGoalAction,
   updateGoalAction,
   deleteGoalAction,
 } from "@/store/slices/goalsSlice";
-import { fetchReminders, createReminder, updateReminder, Reminder } from "@/store/slices/remindersSlice";
+import { fetchExpiries, createExpiryAction, updateExpiryAction } from "@/store/slices/expiriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 
 // Shared Logic/Types
-import { FinancialGoal, ShortTermPlan, STAccount, STExpense } from "@repo/types";
+import { FinancialGoal, Simulation, SimAccount, SimExpense, Expiry } from "@repo/types";
 import { formatDate } from "@/lib/utils";
 
 // Modal Components
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
 import { TopUpModal } from "@/components/goals/TopUpModal";
-import { AddReminderModal } from "@/components/reminders/AddReminderModal";
-import { ReminderCountdown } from "@/components/reminders/ReminderCountdown";
+import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
+import { ExpiryCountdown } from "@/components/expiries/ExpiryCountdown";
 
 type TabType = "Simulations" | "Goals" | "Expiries";
 
-export default function PlansDirectoryPage() {
+function PlansDirectoryPageContent() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
 
   // Tab State
   const [activeTab, setActiveTab] = useState<TabType>("Simulations");
 
-  const { items: plans, loading: plansLoading } = useSelector((state: RootState) => state.plans);
-  const { items: goals, loading: goalsLoading } = useSelector((state: RootState) => state.goals);
-  const { items: reminders, loading: remindersLoading } = useSelector((state: RootState) => state.reminders);
+  const { items: plans, loading: plansLoading, lastFetched: plansFetched } = useSelector((state: RootState) => state.simulations);
+  const { items: goals, loading: goalsLoading, lastFetched: goalsFetched } = useSelector((state: RootState) => state.goals);
+  const { items: expiries, loading: expiriesLoading, lastFetched: expiriesFetched } = useSelector((state: RootState) => state.expiries);
 
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [simFilter, setSimFilter] = useState<"ongoing" | "completed">("ongoing");
+  const [goalFilter, setGoalFilter] = useState<"ongoing" | "completed">("ongoing");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navMessage, setNavMessage] = useState("");
 
   // Modals Local State
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
-  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
-  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
+  const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false);
+  const [selectedExpiry, setSelectedExpiry] = useState<Expiry | null>(null);
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
   const [topUpGoal, setTopUpGoal] = useState<FinancialGoal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<FinancialGoal | null>(null);
   const [isGoalDeleteModalOpen, setIsGoalDeleteModalOpen] = useState(false);
 
+  // Sync tab with URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "Goals" || tabParam === "Expiries" || tabParam === "Simulations") {
+      setActiveTab(tabParam as TabType);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (user) {
-      dispatch(fetchPlans());
+      dispatch(fetchSimulations());
       dispatch(fetchGoals());
-      dispatch(fetchReminders());
+      dispatch(fetchExpiries());
       dispatch(fetchAccounts());
       dispatch(fetchTransactions());
     }
@@ -104,26 +122,63 @@ export default function PlansDirectoryPage() {
 
   // Handlers
   const handleCreatePlan = async () => {
-    const newPlan = {
-      name: `Simulation ${plans.length + 1}`,
-      createdAt: new Date().toISOString(),
-      accounts: [],
-      expenses: [],
-      status: "ongoing" as const
-    };
-    const created = await dispatch(createPlanAction(newPlan)).unwrap();
-    router.push(`/plans/${created.id}`);
+    setIsProcessing(true);
+    try {
+      const newPlan = {
+        name: `Simulation ${plans.length + 1}`,
+        createdAt: new Date().toISOString(),
+        accounts: [],
+        expenses: [],
+        status: "ongoing" as const
+      };
+      setNavMessage("Initializing Simulation...");
+      setIsNavigating(true);
+      const created = await dispatch(createSimulationAction(newPlan)).unwrap();
+      toast.success("Simulation initialized");
+      router.push(`/plans/${created.id}`);
+    } catch {
+      toast.error("Failed to initialize simulation");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleTogglePlanStatus = async (plan: ShortTermPlan) => {
-    const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
-    await dispatch(updatePlanAction({ id: plan.id, data: { status: newStatus } })).unwrap();
-    toast.success(newStatus === "completed" ? "Simulation completed" : "Simulation reopened");
+  const handleTogglePlanStatus = async (plan: Simulation) => {
+    setIsProcessing(true);
+    try {
+      const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
+      await dispatch(updateSimulationAction({ id: plan.id, data: { status: newStatus } })).unwrap();
+      toast.success(newStatus === "completed" ? "Simulation completed" : "Simulation reopened");
+    } catch {
+      toast.error("Failed to update status");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePurgeSimulation = async (id: string) => {
+    setIsProcessing(true);
+    try {
+      await dispatch(deleteSimulationAction({ id, purge: true })).unwrap();
+      toast.success("Simulation purged from lattice");
+      setPlanToDelete(null);
+    } catch {
+      toast.error("Failed to purge simulation");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const filteredPlans = useMemo(() => {
     return plans.filter(p => (p.status || "ongoing") === simFilter);
   }, [plans, simFilter]);
+
+  const filteredGoals = useMemo(() => {
+    return goals.filter(g => {
+      const isCompleted = g.currentAmount >= g.targetAmount;
+      return goalFilter === "completed" ? isCompleted : !isCompleted;
+    });
+  }, [goals, goalFilter]);
 
   return (
     <PageContainer>
@@ -137,7 +192,7 @@ export default function PlansDirectoryPage() {
           ) : activeTab === "Expiries" ? (
             "Active triggers and financial expiries"
           ) : (
-            "Simulated architectural spaces for events and events"
+            "Tactical simulations for capital management and events"
           )
         }
         className="space-y-2"
@@ -162,16 +217,18 @@ export default function PlansDirectoryPage() {
             {activeTab === "Simulations" && (
               <Button
                 onClick={handleCreatePlan}
+                disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
-                leftIcon={<Plus className="w-3.5 h-3.5" />}
+                leftIcon={isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               >
-                Initialize Simulation
+                {isProcessing ? "Initializing..." : "Initialize Simulation"}
               </Button>
             )}
             {activeTab === "Goals" && (
               <Button
                 onClick={() => { setEditingGoal(null); setIsGoalModalOpen(true); }}
+                disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
                 leftIcon={<Target className="w-3.5 h-3.5" />}
@@ -181,7 +238,8 @@ export default function PlansDirectoryPage() {
             )}
             {activeTab === "Expiries" && (
               <Button
-                onClick={() => setIsReminderModalOpen(true)}
+                onClick={() => setIsExpiryModalOpen(true)}
+                disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
                 leftIcon={<Bell className="w-3.5 h-3.5" />}
@@ -193,8 +251,8 @@ export default function PlansDirectoryPage() {
         </div>
       </PageHeader>
 
-      <div className="mt-2 min-h-[400px]">
-        <AnimatePresence mode="wait">
+      <div className="mt-2 min-h-[500px] relative">
+        <AnimatePresence mode="popLayout" initial={false}>
           {activeTab === "Simulations" && (
             <motion.div
               key="simulations"
@@ -203,24 +261,18 @@ export default function PlansDirectoryPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-full sm:w-fit">
-                    {(["ongoing", "completed"] as const).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setSimFilter(s)}
-                        className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${simFilter === s
-                          ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                          }`}
-                      >
-                        {s === "ongoing" ? "Active Simulations" : "Historical Simulations"}
-                      </button>
-                    ))}
-                  </div>
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                <div className="space-y-4 py-2 px-1">
+                  <PlanningStatusFilter
+                    activeStatus={simFilter}
+                    onChange={setSimFilter}
+                    options={[
+                      { value: "ongoing", label: "Active Simulations" },
+                      { value: "completed", label: "Historical Simulations" },
+                    ]}
+                  />
 
-                  {plansLoading ? (
+                  {plansLoading || !plansFetched ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       {Array.from({ length: 4 }).map((_, i) => (
                         <div key={`plan-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
@@ -267,7 +319,11 @@ export default function PlansDirectoryPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
                             whileHover={{ y: -6, scale: 1.02 }}
-                            onClick={() => router.push(`/plans/${plan.id}`)}
+                            onClick={() => {
+                              setNavMessage("Opening Environment...");
+                              setIsNavigating(true);
+                              router.push(`/plans/${plan.id}`);
+                            }}
                             className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all h-full flex flex-col justify-between cursor-pointer ${plan.status === "completed" ? "opacity-75 grayscale-[0.2]" : ""
                               } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.1)] overflow-hidden`}
                           >
@@ -291,7 +347,7 @@ export default function PlansDirectoryPage() {
                                         handleTogglePlanStatus(plan);
                                       }}
                                       className="p-1 px-2 text-slate-400 hover:text-emerald-500 transition-all rounded-lg hover:bg-emerald-500/5"
-                                      title={plan.status === "completed" ? "Reopen Simulation" : "Complete Simulation"}
+                                      title={plan.status === "completed" ? "Reopen Strategy" : "Complete Strategy"}
                                     >
                                       {plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
                                     </button>
@@ -300,10 +356,10 @@ export default function PlansDirectoryPage() {
                                         e.stopPropagation();
                                         setPlanToDelete(plan.id);
                                       }}
-                                      className="p-1 px-2 text-slate-400 hover:text-rose-500 transition-all rounded-lg hover:bg-rose-500/5"
-                                      title="Delete Simulation"
+                                      className={`p-1 px-2 transition-all rounded-lg ${plan.status === "completed" ? "text-rose-500 hover:bg-rose-500/10" : "text-slate-400 hover:text-rose-500 hover:bg-rose-500/5"}`}
+                                      title={plan.status === "completed" ? "Purge Strategy" : "Delete Strategy"}
                                     >
-                                      <Trash2 className="size-3.5" />
+                                      {plan.status === "completed" ? <Zap className="size-3.5" /> : <Trash2 className="size-3.5" />}
                                     </button>
                                   </div>
                                 </div>
@@ -330,7 +386,7 @@ export default function PlansDirectoryPage() {
                                       Liquidity
                                     </span>
                                     <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">
-                                      ₹{(plan.accounts || []).reduce((acc: number, a: STAccount) => acc + a.balance, 0).toLocaleString()}
+                                      ₹{(plan.accounts || []).reduce((acc: number, a: SimAccount) => acc + a.balance, 0).toLocaleString()}
                                     </span>
                                   </div>
 
@@ -340,7 +396,7 @@ export default function PlansDirectoryPage() {
                                       Burn Rate
                                     </span>
                                     <span className="text-xs font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                                      ₹{(plan.expenses || []).reduce((acc: number, e: STExpense) => acc + e.amount, 0).toLocaleString()}
+                                      ₹{(plan.expenses || []).reduce((acc: number, e: SimExpense) => acc + e.amount, 0).toLocaleString()}
                                     </span>
                                   </div>
                                 </div>
@@ -364,94 +420,111 @@ export default function PlansDirectoryPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              {goalsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={`goal-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-3 w-24" />
-                          <Skeleton className="h-2 w-16" />
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                <div className="space-y-4 py-2 px-1">
+                  <PlanningStatusFilter
+                    activeStatus={goalFilter}
+                    onChange={setGoalFilter}
+                    options={[
+                      { value: "ongoing", label: "Active Goals" },
+                      { value: "completed", label: "Completed Goals" },
+                    ]}
+                  />
+
+                  {goalsLoading || !goalsFetched ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={`goal-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="space-y-2 flex-1">
+                              <Skeleton className="h-3 w-24" />
+                              <Skeleton className="h-2 w-16" />
+                            </div>
+                            <Skeleton className="h-5 w-10 rounded-lg" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between"><Skeleton className="h-2 w-12" /><Skeleton className="h-2 w-12" /></div>
+                            <Skeleton className="h-1 w-full rounded-full" />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Skeleton className="h-8 flex-1 rounded-lg" />
+                            <Skeleton className="size-8 rounded-lg" />
+                            <Skeleton className="size-8 rounded-lg" />
+                          </div>
                         </div>
-                        <Skeleton className="h-5 w-10 rounded-lg" />
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between"><Skeleton className="h-2 w-12" /><Skeleton className="h-2 w-12" /></div>
-                        <Skeleton className="h-1 w-full rounded-full" />
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <Skeleton className="h-8 flex-1 rounded-lg" />
-                        <Skeleton className="size-8 rounded-lg" />
-                        <Skeleton className="size-8 rounded-lg" />
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : goals.length === 0 ? (
-                <EmptyState
-                  icon={<Target className="size-8" />}
-                  title="No goals set"
-                  subtitle="Define your first financial target to track progress with high precision."
-                  actionText="Add your first goal"
-                  onAction={() => { setEditingGoal(null); setIsGoalModalOpen(true); }}
-                  actionIcon={<Plus className="w-3.5 h-3.5" />}
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {goals.map((goal: FinancialGoal) => {
-                    const reqMonthly = calculateGap(goal);
-                    const percent = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100).toFixed(1);
-                    return (
-                      <div key={goal.id} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between group">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-slate-900 dark:text-white font-black text-xs tracking-wider uppercase truncate">{goal.name}</h3>
-                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Target: {formatDate(goal.targetDate)}</p>
-                          </div>
-                          <div className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black rounded-lg border border-primary/20">
-                            {percent}%
-                          </div>
-                        </div>
+                  ) : filteredGoals.length === 0 ? (
+                    <EmptyState
+                      icon={<Target className="size-8" />}
+                      title={goalFilter === "completed" ? "No completed goals" : "No active goals set"}
+                      subtitle={goalFilter === "completed" ? "Your achievements will be archived here." : "Define your first financial target to track progress with high precision."}
+                      actionText={goalFilter === "ongoing" ? "Add your first goal" : undefined}
+                      onAction={goalFilter === "ongoing" ? () => { setEditingGoal(null); setIsGoalModalOpen(true); } : undefined}
+                      actionIcon={<Plus className="w-3.5 h-3.5" />}
+                    />
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredGoals.map((goal: FinancialGoal) => {
+                        const reqMonthly = calculateGap(goal);
+                        const isCompleted = goal.currentAmount >= goal.targetAmount;
+                        const percent = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100).toFixed(1);
+                        return (
+                          <div key={goal.id} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between group">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-slate-900 dark:text-white font-black text-xs tracking-wider uppercase truncate">{goal.name}</h3>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Target: {formatDate(goal.targetDate)}</p>
+                              </div>
+                              <div className={`px-1.5 py-0.5 text-[8px] font-black rounded-lg border ${isCompleted ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-primary/10 text-primary border-primary/20"}`}>
+                                {isCompleted ? "COMPLETED" : `${percent}%`}
+                              </div>
+                            </div>
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-baseline text-[10px] font-black uppercase tracking-tight">
-                            <span className="text-slate-900 dark:text-white">₹{goal.currentAmount.toLocaleString()}</span>
-                            <span className="text-slate-400">₹{goal.targetAmount.toLocaleString()}</span>
-                          </div>
-                          <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
-                          </div>
-                          <div className="flex justify-between text-[7px] font-black uppercase tracking-[0.15em] text-slate-400">
-                            <span>Gap: ₹{(goal.targetAmount - goal.currentAmount).toLocaleString()}</span>
-                            <span className="text-orange-500">₹{reqMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</span>
-                          </div>
-                        </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-baseline text-[10px] font-black uppercase tracking-tight">
+                                <span className={isCompleted ? "text-emerald-500" : "text-slate-900 dark:text-white"}>₹{goal.currentAmount.toLocaleString()}</span>
+                                <span className="text-slate-400">₹{goal.targetAmount.toLocaleString()}</span>
+                              </div>
+                              <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-primary"}`} style={{ width: `${percent}%` }} />
+                              </div>
+                              <div className="flex justify-between text-[7px] font-black uppercase tracking-[0.15em] text-slate-400">
+                                <span>{isCompleted ? "Target Achieved" : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString()}`}</span>
+                                {!isCompleted && <span className="text-orange-500">₹{reqMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</span>}
+                              </div>
+                            </div>
 
-                        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-50 dark:border-white/5">
-                          <button
-                            onClick={() => { setTopUpGoal(goal); setIsTopUpModalOpen(true); }}
-                            className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-[8px] font-black uppercase py-1.5 rounded-lg transition-all"
-                          >
-                            Top Up
-                          </button>
-                          <button
-                            onClick={() => { setEditingGoal(goal); setIsGoalModalOpen(true); }}
-                            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 p-1.5 rounded-lg text-slate-500 transition-all"
-                          >
-                            <Pencil className="size-3" />
-                          </button>
-                          <button
-                            onClick={() => { setGoalToDelete(goal); setIsGoalDeleteModalOpen(true); }}
-                            className="bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 p-1.5 rounded-lg text-rose-500 transition-all"
-                          >
-                            <Trash2 className="size-3" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                            <div className="flex gap-2 mt-4 pt-3 border-t border-slate-50 dark:border-white/5">
+                              {!isCompleted && (
+                                <button
+                                  onClick={() => { setTopUpGoal(goal); setIsTopUpModalOpen(true); }}
+                                  className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-[8px] font-black uppercase py-1.5 rounded-lg transition-all"
+                                >
+                                  Top Up
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setEditingGoal(goal); setIsGoalModalOpen(true); }}
+                                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 p-1.5 rounded-lg text-slate-500 transition-all ml-auto"
+                              >
+                                <Pencil className="size-3" />
+                              </button>
+                              <button
+                                onClick={() => { setGoalToDelete(goal); setIsGoalDeleteModalOpen(true); }}
+                                className={`p-1.5 rounded-lg transition-all ${isCompleted ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white" : "bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100"}`}
+                                title={isCompleted ? "Purge Goal" : "Delete Goal"}
+                              >
+                                {isCompleted ? <Zap className="size-3" /> : <Trash2 className="size-3" />}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </motion.div>
           )}
 
@@ -463,10 +536,10 @@ export default function PlansDirectoryPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              {remindersLoading ? (
+              {expiriesLoading || !expiriesFetched ? (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={`reminder-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+                    <div key={`expiry-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
                       <div className="flex justify-between items-start">
                         <Skeleton className="size-6 rounded-lg" />
                         <Skeleton className="h-4 w-12 rounded" />
@@ -489,10 +562,10 @@ export default function PlansDirectoryPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2">
-                  <ReminderCountdown
-                    reminders={reminders}
-                    onEdit={(reminder) => { setSelectedReminder(reminder); setIsReminderModalOpen(true); }}
+                <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                  <ExpiryCountdown
+                    expiries={expiries}
+                    onEdit={(expiry) => { setSelectedExpiry(expiry); setIsExpiryModalOpen(true); }}
                   />
                 </div>
               )}
@@ -505,9 +578,13 @@ export default function PlansDirectoryPage() {
       <ConfirmModal
         isOpen={!!planToDelete}
         onCancel={() => setPlanToDelete(null)}
-        onConfirm={() => { if (planToDelete) { dispatch(deletePlanAction(planToDelete)); setPlanToDelete(null); } }}
-        title="Destroy Simulation"
-        message="This will completely remove this simulated environment and all child nodes."
+        onConfirm={() => { if (planToDelete) { handlePurgeSimulation(planToDelete); } }}
+        title={plans.find(p => p.id === planToDelete)?.status === "completed" ? "Purge Simulation" : "Destroy Simulation"}
+        message={plans.find(p => p.id === planToDelete)?.status === "completed"
+          ? "This will permanently sanitize this simulation node from the ledger. This action is irreversible."
+          : "This will completely remove this simulation environment and all child nodes."}
+        confirmText={plans.find(p => p.id === planToDelete)?.status === "completed" ? "Purge Node" : "Confirm Destruction"}
+        isDestructive={true}
       />
 
       {/* Modals - Goals */}
@@ -516,20 +593,31 @@ export default function PlansDirectoryPage() {
         onClose={() => setIsGoalModalOpen(false)}
         editingGoal={editingGoal}
         onSave={async (id, data) => {
-          if (id) {
-            await dispatch(updateGoalAction({ id, data })).unwrap();
-            toast.success("Goal updated");
-          } else if (user) {
-            await dispatch(addGoalAction({
-              userId: user.uid,
-              name: data.name,
-              targetAmount: data.targetAmount,
-              currentAmount: 0,
-              targetDate: data.targetDate,
-              startDate: new Date().toISOString(),
-              category: "General",
-            })).unwrap();
-            toast.success("Goal added");
+          setIsProcessing(true);
+          try {
+            if (id && editingGoal) {
+              await dispatch(updateGoalAction({
+                id,
+                data: { ...editingGoal, ...data }
+              })).unwrap();
+              toast.success("Goal updated");
+            } else if (user) {
+              await dispatch(addGoalAction({
+                userId: user.uid,
+                name: data.name,
+                targetAmount: data.targetAmount,
+                currentAmount: 0,
+                targetDate: data.targetDate,
+                startDate: new Date().toISOString(),
+                category: "General",
+              })).unwrap();
+              toast.success("Goal synchronized");
+            }
+            setIsGoalModalOpen(false);
+          } catch {
+            toast.error("Failed to sync goal");
+          } finally {
+            setIsProcessing(false);
           }
         }}
       />
@@ -540,8 +628,16 @@ export default function PlansDirectoryPage() {
         goal={topUpGoal}
         onSave={async (amount) => {
           if (topUpGoal) {
-            await dispatch(updateGoalAction({ id: topUpGoal.id, data: { currentAmount: topUpGoal.currentAmount + amount } })).unwrap();
-            toast.success(`Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`);
+            setIsProcessing(true);
+            try {
+              await dispatch(updateGoalAction({ id: topUpGoal.id, data: { currentAmount: topUpGoal.currentAmount + amount } })).unwrap();
+              toast.success(`Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`);
+              setIsTopUpModalOpen(false);
+            } catch {
+              toast.error("Failed to process top-up");
+            } finally {
+              setIsProcessing(false);
+            }
           }
         }}
       />
@@ -551,28 +647,53 @@ export default function PlansDirectoryPage() {
         onCancel={() => setIsGoalDeleteModalOpen(false)}
         onConfirm={async () => {
           if (goalToDelete) {
-            await dispatch(deleteGoalAction(goalToDelete.id)).unwrap();
-            toast.success("Goal removed");
-            setIsGoalDeleteModalOpen(false);
+            setIsProcessing(true);
+            try {
+              await dispatch(deleteGoalAction({ id: goalToDelete.id, purge: goalToDelete.currentAmount >= goalToDelete.targetAmount })).unwrap();
+              toast.success(goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Goal purged" : "Goal removed");
+              setIsGoalDeleteModalOpen(false);
+            } catch {
+              toast.error("Failed to remove goal");
+            } finally {
+              setIsProcessing(false);
+            }
           }
         }}
-        title="Remove Goal"
-        message="Permanently remove this financial target from your trajectory?"
+        title={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Purge Goal" : "Remove Goal"}
+        message={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount
+          ? "This will permanently sanitize this goal artifact from your trajectory. This operation cannot be undone."
+          : "Permanently remove this financial target from your trajectory?"}
+        confirmText={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Purge Artifact" : "Confirm Removal"}
+        isDestructive={true}
       />
 
-      <AddReminderModal
-        isOpen={isReminderModalOpen}
-        onClose={() => { setIsReminderModalOpen(false); setSelectedReminder(null); }}
+      <LoadingOverlay
+        isOpen={isNavigating}
+        message={navMessage}
+        subMessage="Parsing Lattice Fragments..."
+      />
+
+      <AddExpiryModal
+        isOpen={isExpiryModalOpen}
+        onClose={() => { setIsExpiryModalOpen(false); setSelectedExpiry(null); }}
         onSave={async (data) => {
-          if (selectedReminder) {
-            await dispatch(updateReminder({ id: selectedReminder.id, data })).unwrap();
-            toast.success("Expiry updated.");
-          } else {
-            await dispatch(createReminder(data)).unwrap();
-            toast.success("Expiry added.");
+          setIsProcessing(true);
+          try {
+            if (selectedExpiry) {
+              await dispatch(updateExpiryAction({ id: selectedExpiry.id, data })).unwrap();
+              toast.success("Expiry updated.");
+            } else {
+              await dispatch(createExpiryAction(data)).unwrap();
+              toast.success("Expiry synchronized.");
+            }
+            setIsExpiryModalOpen(false);
+          } catch {
+            toast.error("Failed to synchronize expiry");
+          } finally {
+            setIsProcessing(false);
           }
         }}
-        reminder={selectedReminder}
+        expiry={selectedExpiry}
       />
     </PageContainer>
   );
@@ -601,5 +722,27 @@ function EmptyState({ icon, title, subtitle, actionText, onAction, actionIcon }:
         </Button>
       )}
     </div>
+  );
+}
+
+import { Suspense } from "react";
+
+export default function PlansDirectoryPage() {
+  return (
+    <Suspense fallback={
+      <PageContainer>
+        <div className="space-y-3 mb-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+          ))}
+        </div>
+      </PageContainer>
+    }>
+      <PlansDirectoryPageContent />
+    </Suspense>
   );
 }

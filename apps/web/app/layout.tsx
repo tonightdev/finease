@@ -11,7 +11,7 @@ import { PWAInstallGuide } from "@/components/ui/PWAInstallGuide";
 import { ReduxProvider } from "@/components/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
 import { SecurityProvider } from "@/components/providers/SecurityProvider";
-import { SignalProvider } from "@/components/providers/SignalProvider";
+import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { GlobalLoadingBar } from "@/components/ui/GlobalLoadingBar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -86,7 +86,7 @@ export default function RootLayout({
           <ReduxProvider>
             <GlobalLoadingBar />
             <AuthProvider>
-              <SignalProvider>
+              <NotificationProvider>
                 <SecurityProvider>
                   <ClientHeader />
                   <main className="flex flex-col flex-1 w-full">
@@ -107,7 +107,7 @@ export default function RootLayout({
                     }}
                   />
                 </SecurityProvider>
-              </SignalProvider>
+              </NotificationProvider>
             </AuthProvider>
           </ReduxProvider>
         </ThemeProvider>

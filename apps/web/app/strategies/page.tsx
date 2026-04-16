@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
-import { fetchSimulation, saveSimulation, addSimEntry, updateSimEntry, removeSimEntry, setSimulationBasis } from "@/store/slices/simulationSlice";
+import { fetchStrategy, saveStrategy, addStrategyEntry, updateStrategyEntry, removeStrategyEntry, setStrategyBasis } from "@/store/slices/strategiesSlice";
 import { Card } from "@/components/ui/Card";
 import {
   Plus,
@@ -40,23 +40,23 @@ import {
 } from "@/components/ui/Select";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { SimEntry, Account } from "@repo/types";
+import { StrategyEntry, Account } from "@repo/types";
 
-export default function SimulationPage() {
+export default function StrategiesPage() {
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector((state: RootState) => state.categories.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
-  const { current, loading: simLoading, lastFetched } = useSelector((state: RootState) => state.simulation);
+  const { current, loading: strategyLoading, lastFetched } = useSelector((state: RootState) => state.strategies);
 
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchAccounts());
-    dispatch(fetchSimulation());
+    dispatch(fetchStrategy());
   }, [dispatch]);
 
-  // Local state for sandbox simulation
-  const [entries, setEntries] = useState<SimEntry[]>([]);
+  // Local state for sandbox strategy
+  const [entries, setEntries] = useState<StrategyEntry[]>([]);
   const [protocol, setProtocol] = useState({ needs: 50, wants: 30, savings: 20 });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
@@ -105,8 +105,8 @@ export default function SimulationPage() {
 
   // Load persistence state locally
   useEffect(() => {
-    // Wait for the simulation to finish loading from the backend
-    if (simLoading || lastFetched === null) return;
+    // Wait for the strategy to finish loading from the backend
+    if (strategyLoading || lastFetched === null) return;
 
     // Only auto-initialize if we haven't already or if we are stuck in an empty state while data is available
     const hasCloudData = current && (current.entries?.length > 0 || (current.userId && current.userId !== ""));
@@ -117,13 +117,13 @@ export default function SimulationPage() {
       setProtocol(current.protocol || { needs: 50, wants: 30, savings: 20 });
       setIsInitialized(true);
     } else if (current?.userId === "" && !isInitialized) {
-      // Handle case where simulation is truly empty/new (after first fetch)
+      // Handle case where strategy is truly empty/new (after first fetch)
       if (user?.budgetTargets) {
         setProtocol(user.budgetTargets);
       }
       setIsInitialized(true);
     }
-  }, [current, isInitialized, simLoading, user, lastFetched, entries.length]);
+  }, [current, isInitialized, strategyLoading, user, lastFetched, entries.length]);
 
   const isProtocolValid = useMemo(() => {
     const { needs, wants, savings } = protocol;
@@ -145,7 +145,7 @@ export default function SimulationPage() {
   const handleBasisToggle = (newBasis: "monthly" | "yearly") => {
     if (newBasis === current?.basis) return;
     setIsSwitching(true);
-    dispatch(setSimulationBasis(newBasis));
+    dispatch(setStrategyBasis(newBasis));
     toast.success(`Switched to ${newBasis} view`);
     setTimeout(() => setIsSwitching(false), 400);
   };
@@ -160,7 +160,7 @@ export default function SimulationPage() {
       return;
     }
     try {
-      await dispatch(saveSimulation({
+      await dispatch(saveStrategy({
         protocol,
         entries
       })).unwrap();
@@ -186,7 +186,7 @@ export default function SimulationPage() {
   }, [accounts]);
 
   // Derived calculations (Real-time)
-  const simulationMetrics = useMemo(() => {
+  const strategyMetrics = useMemo(() => {
     let income = 0;
     let needsTotal = 0;
     let wantsTotal = 0;
@@ -325,11 +325,11 @@ export default function SimulationPage() {
         type: newEntry.type
       };
       setEntries(prev => prev.map(e => e.id === editingId ? { ...e, ...entryData } : e));
-      dispatch(updateSimEntry({ id: editingId, data: entryData }));
+      dispatch(updateStrategyEntry({ id: editingId, data: entryData }));
       setEditingId(null);
       toast.success("Vector updated.");
     } else {
-      const newSimEntry: SimEntry = {
+      const newStrategyEntry: StrategyEntry = {
         id: Math.random().toString(36).substring(7),
         amount: newEntry.amount,
         isMonthly: newEntry.isMonthly,
@@ -341,14 +341,14 @@ export default function SimulationPage() {
         parentType: selectedCat.parentType || (newEntry.type === "income" ? "income" : "needs"),
         type: newEntry.type
       };
-      setEntries(prev => [...prev, newSimEntry]);
-      dispatch(addSimEntry(newSimEntry));
+      setEntries(prev => [...prev, newStrategyEntry]);
+      dispatch(addStrategyEntry(newStrategyEntry));
       toast.success("Vector recorded.");
     }
     setNewEntry({ amount: "", description: "", categoryId: "", accountId: "", type: "outflow", isMonthly: true });
   };
 
-  const handleEditEntry = (entry: SimEntry) => {
+  const handleEditEntry = (entry: StrategyEntry) => {
     setEditingId(entry.id);
     setNewEntry({
       amount: entry.amount,
@@ -363,14 +363,14 @@ export default function SimulationPage() {
 
   const handleRemoveEntry = (id: string) => {
     setEntries(prev => prev.filter(o => o.id !== id));
-    dispatch(removeSimEntry(id));
+    dispatch(removeStrategyEntry(id));
   };
 
   const handleProtocolChange = (key: keyof typeof protocol, value: number) => {
     setProtocol(prev => ({ ...prev, [key]: value }));
   };
 
-  if (authLoading || (simLoading && !isInitialized)) {
+  if (authLoading || (strategyLoading && !isInitialized)) {
     return (
       <PageContainer>
         <div className="space-y-3 mb-8">
@@ -635,14 +635,14 @@ export default function SimulationPage() {
             )}
           </Card>
 
-          <Card className="p-4 space-y-5 bg-slate-900 border-0 text-white w-full">
+          <Card className="p-4 space-y-5 bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 shadow-sm w-full">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="size-9 rounded-xl bg-white/10 flex items-center justify-center">
-                  <Target className="size-5 text-white" />
+                <div className="size-9 rounded-xl bg-slate-50 dark:bg-white/10 flex items-center justify-center">
+                  <Target className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest text-white">Target Protocol</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Target Protocol</h3>
                   <p className="text-[10px] font-bold text-slate-400">Sandbox constraints</p>
                 </div>
               </div>
@@ -686,7 +686,7 @@ export default function SimulationPage() {
                         step="1"
                         value={target}
                         onChange={(e) => handleProtocolChange(key, parseInt(e.target.value))}
-                        className={`w-full h-1.5 ${item.bg} rounded-xl appearance-none cursor-pointer accent-white`}
+                        className={`w-full h-1.5 ${item.bg} rounded-xl appearance-none cursor-pointer accent-primary`}
                       />
                     </div>
                   </div>
@@ -705,10 +705,10 @@ export default function SimulationPage() {
               <Button
                 variant="primary"
                 onClick={handleSaveProtocol}
-                isLoading={simLoading}
-                className={`w-full h-12 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] mt-2 gap-3 shadow-2xl transition-all border-0 ${isProtocolDirty ? 'bg-white text-slate-900 shadow-primary/40 hover:bg-slate-50' : 'bg-slate-800/20 text-slate-400 shadow-none'} hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100`}
+                isLoading={strategyLoading}
+                className={`w-full h-12 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] mt-2 gap-3 shadow-2xl transition-all ${isProtocolDirty ? 'bg-primary text-white shadow-primary/20 hover:opacity-90' : 'bg-slate-100 dark:bg-white/5 text-slate-400 shadow-none border border-slate-200 dark:border-white/5'} hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100`}
               >
-                <Save className="size-4 text-primary" /> Finalize Protocol
+                <Save className="size-4" /> Finalize Protocol
               </Button>
             </div>
           </Card>
@@ -727,7 +727,7 @@ export default function SimulationPage() {
                 </div>
               </div>
               <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest shrink-0 hidden sm:block">
-                Live Signal
+                Predictive Insight
               </div>
             </div>
 
@@ -758,26 +758,26 @@ export default function SimulationPage() {
                 </div>
                 <div className="max-w-sm space-y-2">
                   <h4 className="text-sm font-black text-slate-900 dark:text-white">Awaiting Injection</h4>
-                  <p className="text-[10px] sm:text-xs font-bold text-slate-400">Add Income and Outflow vectors to start building your simulation model.</p>
+                  <p className="text-[10px] sm:text-xs font-bold text-slate-400">Add Income and Outflow vectors to start building your strategy model.</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
                 {/* 1. Primary Metrics Grid (2x2) */}
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-8">
-                  <div className={`p-3 sm:p-4 rounded-xl border transition-all flex flex-col justify-between min-h-[90px] ${simulationMetrics.surplus < 0 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10' : 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10'}`}>
+                  <div className={`p-3 sm:p-4 rounded-xl border transition-all flex flex-col justify-between min-h-[90px] ${strategyMetrics.surplus < 0 ? 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10' : 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10'}`}>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Net {current?.basis === "yearly" ? "Annual" : "Monthly"} Flow</span>
                     <div className="mt-auto">
-                      <div className={`text-lg sm:text-xl font-black tracking-tighter truncate w-full ${simulationMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`} title={formatCurrency(simulationMetrics.surplus)}>{formatCurrency(simulationMetrics.surplus)}</div>
-                      <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{simulationMetrics.surplus >= 0 ? 'Surplus Projection' : 'Deficit Detected'}</div>
+                      <div className={`text-lg sm:text-xl font-black tracking-tighter truncate w-full ${strategyMetrics.surplus < 0 ? 'text-rose-500' : 'text-emerald-500'}`} title={formatCurrency(strategyMetrics.surplus)}>{formatCurrency(strategyMetrics.surplus)}</div>
+                      <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{strategyMetrics.surplus >= 0 ? 'Surplus Projection' : 'Deficit Detected'}</div>
                     </div>
                   </div>
 
                   <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Flow Magnitude</span>
                     <div className="space-y-3 mt-auto">
-                      <div className="text-xs sm:text-sm font-mono font-black text-emerald-500 truncate sm:max-w-max" title={formatCurrency(simulationMetrics.income)}>{formatCurrency(simulationMetrics.income)}</div>
-                      <div className="text-xs sm:text-sm font-mono font-black text-rose-500 truncate sm:max-w-max" title={formatCurrency(simulationMetrics.totalOutflows)}>{formatCurrency(simulationMetrics.totalOutflows)}</div>
+                      <div className="text-xs sm:text-sm font-mono font-black text-emerald-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.income)}>{formatCurrency(strategyMetrics.income)}</div>
+                      <div className="text-xs sm:text-sm font-mono font-black text-rose-500 truncate sm:max-w-max" title={formatCurrency(strategyMetrics.totalOutflows)}>{formatCurrency(strategyMetrics.totalOutflows)}</div>
                     </div>
                   </div>
 
@@ -786,11 +786,11 @@ export default function SimulationPage() {
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Efficiency Score</span>
                       <div className="mt-auto">
                         <div className="flex items-baseline justify-start w-full">
-                          <div className="text-lg sm:text-xl font-black text-primary tracking-tighter truncate mr-2" title={simulationMetrics.efficiency.toString()}>{simulationMetrics.efficiency}</div>
+                          <div className="text-lg sm:text-xl font-black text-primary tracking-tighter truncate mr-2" title={strategyMetrics.efficiency.toString()}>{strategyMetrics.efficiency}</div>
                           <div className="text-[10px] font-black text-slate-400 tracking-widest">/ 100</div>
                         </div>
                         <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${simulationMetrics.efficiency}%` }} className="h-full bg-primary shadow-[0_0_12px_rgba(19,91,236,0.5)]" />
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${strategyMetrics.efficiency}%` }} className="h-full bg-primary shadow-[0_0_12px_rgba(19,91,236,0.5)]" />
                         </div>
                       </div>
                     </div>
@@ -799,9 +799,9 @@ export default function SimulationPage() {
                   <div className="p-3 sm:p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-white/5 flex flex-col justify-between min-h-[100px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Surplus Velocity</span>
                     <div className="mt-auto">
-                      <div className="text-lg sm:text-xl font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto" title={`+${((simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100).toFixed(1)}%`}>+{((simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100).toFixed(1)}%</div>
+                      <div className="text-lg sm:text-xl font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto" title={`+${((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%`}>+{((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%</div>
                       <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden mt-2">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (simulationMetrics.surplus / (simulationMetrics.income || 1)) * 100)}%` }} className="h-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100)}%` }} className="h-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
                       </div>
                     </div>
                   </div>
@@ -825,7 +825,7 @@ export default function SimulationPage() {
                         <div className="flex h-10 sm:h-12 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 relative">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${simulationMetrics.needsPct}%` }}
+                            animate={{ width: `${strategyMetrics.needsPct}%` }}
                             className="h-full bg-gradient-to-r from-amber-400 to-amber-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
                           >
                             <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
@@ -835,7 +835,7 @@ export default function SimulationPage() {
                           </motion.div>
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${simulationMetrics.wantsPct}%` }}
+                            animate={{ width: `${strategyMetrics.wantsPct}%` }}
                             className="h-full bg-gradient-to-r from-rose-400 to-rose-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
                           >
                             <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
@@ -845,7 +845,7 @@ export default function SimulationPage() {
                           </motion.div>
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${Math.max(0, 100 - simulationMetrics.needsPct - simulationMetrics.wantsPct)}%` }}
+                            animate={{ width: `${Math.max(0, 100 - strategyMetrics.needsPct - strategyMetrics.wantsPct)}%` }}
                             className="h-full bg-gradient-to-r from-indigo-400 to-indigo-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
                           >
                             <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
@@ -857,23 +857,23 @@ export default function SimulationPage() {
                         <div className="flex justify-between px-1">
                           <div className="flex flex-col">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Needs</span>
-                            <span className="text-[11px] font-mono font-black text-amber-500">{simulationMetrics.needsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${simulationMetrics.needsPct > protocol.needs ? 'text-rose-500' : 'text-emerald-500'}`}>
-                              {simulationMetrics.needsPct > protocol.needs ? `+${(simulationMetrics.needsPct - protocol.needs).toFixed(1)}% Delta` : 'Within Protocol'}
+                            <span className="text-[11px] font-mono font-black text-amber-500">{strategyMetrics.needsPct.toFixed(1)}%</span>
+                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.needsPct > protocol.needs ? 'text-rose-500' : 'text-emerald-500'}`}>
+                              {strategyMetrics.needsPct > protocol.needs ? `+${(strategyMetrics.needsPct - protocol.needs).toFixed(1)}% Delta` : 'Within Protocol'}
                             </span>
                           </div>
                           <div className="flex flex-col text-center">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wants</span>
-                            <span className="text-[11px] font-mono font-black text-rose-500">{simulationMetrics.wantsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${simulationMetrics.wantsPct > protocol.wants ? 'text-rose-500' : 'text-emerald-500'}`}>
-                              {simulationMetrics.wantsPct > protocol.wants ? `+${(simulationMetrics.wantsPct - protocol.wants).toFixed(1)}% Delta` : 'Within Protocol'}
+                            <span className="text-[11px] font-mono font-black text-rose-500">{strategyMetrics.wantsPct.toFixed(1)}%</span>
+                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.wantsPct > protocol.wants ? 'text-rose-500' : 'text-emerald-500'}`}>
+                              {strategyMetrics.wantsPct > protocol.wants ? `+${(strategyMetrics.wantsPct - protocol.wants).toFixed(1)}% Delta` : 'Within Protocol'}
                             </span>
                           </div>
                           <div className="flex flex-col text-right">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Savings</span>
-                            <span className="text-[11px] font-mono font-black text-indigo-500">{simulationMetrics.savingsPct.toFixed(1)}%</span>
-                            <span className={`text-[8px] font-black uppercase ${simulationMetrics.savingsPct >= protocol.savings ? 'text-emerald-500' : 'text-rose-500'}`}>
-                              {simulationMetrics.savingsPct >= protocol.savings ? 'Protocol Met' : `-${(protocol.savings - simulationMetrics.savingsPct).toFixed(1)}% Gap`}
+                            <span className="text-[11px] font-mono font-black text-indigo-500">{strategyMetrics.savingsPct.toFixed(1)}%</span>
+                            <span className={`text-[8px] font-black uppercase ${strategyMetrics.savingsPct >= protocol.savings ? 'text-emerald-500' : 'text-rose-500'}`}>
+                              {strategyMetrics.savingsPct >= protocol.savings ? 'Protocol Met' : `-${(protocol.savings - strategyMetrics.savingsPct).toFixed(1)}% Gap`}
                             </span>
                           </div>
                         </div>
@@ -884,7 +884,7 @@ export default function SimulationPage() {
                               <Zap className="size-3 text-amber-500" /> Stress Test
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 leading-tight">
-                              If income drops by 20%, your Needs would consume <span className="text-rose-500">{((simulationMetrics.needsTotal / (simulationMetrics.income * 0.8 || 1)) * 100).toFixed(1)}%</span> of total flow.
+                              If income drops by 20%, your Needs would consume <span className="text-rose-500">{((strategyMetrics.needsTotal / (strategyMetrics.income * 0.8 || 1)) * 100).toFixed(1)}%</span> of total flow.
                             </p>
                           </div>
                           <div className="flex-1 space-y-1">
@@ -892,7 +892,7 @@ export default function SimulationPage() {
                               <TrendingUp className="size-3 text-indigo-500" /> Savings Velocity
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 leading-tight">
-                              At current rates, you reaching your next <span className="text-indigo-500">$100k</span> milestone in <span className="text-white">{(100000 / (simulationMetrics.savingsTotal || 1)).toFixed(1)} {current?.basis === "yearly" ? "years" : "months"}</span>.
+                              At current rates, you reaching your next <span className="text-indigo-500">$100k</span> goal in <span className="text-white">{(100000 / (strategyMetrics.savingsTotal || 1)).toFixed(1)} {current?.basis === "yearly" ? "years" : "months"}</span>.
                             </p>
                           </div>
                         </div>
@@ -908,9 +908,9 @@ export default function SimulationPage() {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     {[
-                      { id: "needs", label: "Needs", actual: simulationMetrics.needsPct, target: protocol.needs, color: "bg-amber-400" },
-                      { id: "wants", label: "Wants", actual: simulationMetrics.wantsPct, target: protocol.wants, color: "bg-rose-400" },
-                      { id: "savings", label: "Savings", actual: simulationMetrics.savingsPct, target: protocol.savings, color: "bg-indigo-400" },
+                      { id: "needs", label: "Needs", actual: strategyMetrics.needsPct, target: protocol.needs, color: "bg-amber-400" },
+                      { id: "wants", label: "Wants", actual: strategyMetrics.wantsPct, target: protocol.wants, color: "bg-rose-400" },
+                      { id: "savings", label: "Savings", actual: strategyMetrics.savingsPct, target: protocol.savings, color: "bg-indigo-400" },
                     ].map(stat => (
                       <div key={stat.id} className="p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/10 flex flex-col justify-between min-h-[90px]">
                         <div className="flex justify-between items-center mb-3">
@@ -931,14 +931,14 @@ export default function SimulationPage() {
                   </div>
                 </div>
 
-                {/* 4. Strategem Signals */}
+                {/* 4. Strategem Insights */}
                 <div className="space-y-4 mb-3">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
-                    <Lightbulb className="size-4 text-primary" /> Strategem Signal Hub
+                    <Lightbulb className="size-4 text-primary" /> Strategem Insights Hub
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {simulationMetrics.suggestions.length > 0 ? (
-                      simulationMetrics.suggestions.map((suggestion, i) => (
+                    {strategyMetrics.suggestions.length > 0 ? (
+                      strategyMetrics.suggestions.map((suggestion, i) => (
                         <motion.div
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -961,7 +961,7 @@ export default function SimulationPage() {
                 </div>
 
                 {/* 5. Active Vector Flows (Consolidated) - Bottom */}
-                {simulationMetrics.activeAccounts.length > 0 && (
+                {strategyMetrics.activeAccounts.length > 0 && (
                   <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
@@ -970,7 +970,7 @@ export default function SimulationPage() {
                       <div className="text-[8px] font-black text-slate-400 tracking-widest uppercase bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded border border-slate-200 dark:border-white/5 w-fit">Net Impact / Account</div>
                     </div>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {simulationMetrics.activeAccounts.map(acc => (
+                      {strategyMetrics.activeAccounts.map(acc => (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}

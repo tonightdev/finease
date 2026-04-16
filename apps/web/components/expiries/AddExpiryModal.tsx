@@ -3,24 +3,24 @@
 import { useState, useEffect } from "react";
 import { Bell, Calendar, IndianRupee } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
-import { Reminder } from "@/store/slices/remindersSlice";
+import { Expiry } from "@repo/types";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
 
-interface AddReminderModalProps {
+interface AddExpiryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Omit<Reminder, "id">) => Promise<void> | void;
-  reminder?: Reminder | null;
+  onSave: (data: Omit<Expiry, "id" | "userId" | "createdAt">) => Promise<void> | void;
+  expiry?: Expiry | null;
 }
 
-export function AddReminderModal({
+export function AddExpiryModal({
   isOpen,
   onClose,
   onSave,
-  reminder,
-}: AddReminderModalProps) {
-  const [formData, setFormData] = useState<Omit<Reminder, "id">>({
+  expiry,
+}: AddExpiryModalProps) {
+  const [formData, setFormData] = useState<Omit<Expiry, "id" | "userId" | "createdAt">>({
     name: "",
     type: "policy",
     expiryDate: "",
@@ -29,12 +29,13 @@ export function AddReminderModal({
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (reminder) {
+    if (expiry) {
       setFormData({
-        name: reminder.name,
-        type: reminder.type,
-        expiryDate: reminder.expiryDate.split("T")[0] || "",
-        renewalAmount: reminder.renewalAmount,
+        name: expiry.name,
+        type: expiry.type,
+        expiryDate: expiry.expiryDate.split("T")[0] || "",
+        renewalAmount: expiry.renewalAmount,
+        metadata: expiry.metadata || {},
       });
     } else {
       setFormData({
@@ -42,9 +43,10 @@ export function AddReminderModal({
         type: "policy",
         expiryDate: "",
         renewalAmount: 0,
+        metadata: {},
       });
     }
-  }, [reminder, isOpen]);
+  }, [expiry, isOpen]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -62,7 +64,7 @@ export function AddReminderModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={reminder ? "Update Sequence" : "New Expiry Node"}
+      title={expiry ? "Update Sequence" : "New Expiry Node"}
       maxWidth="max-w-md"
       footer={
         <div className="flex gap-3 w-full">
@@ -109,7 +111,7 @@ export function AddReminderModal({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  type: e.target.value as Reminder["type"],
+                  type: e.target.value as Expiry["type"],
                 })
               }
               className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-4 text-sm font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none"

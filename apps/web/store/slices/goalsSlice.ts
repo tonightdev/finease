@@ -55,8 +55,8 @@ export const updateGoalAction = createAsyncThunk(
 
 export const deleteGoalAction = createAsyncThunk(
   "goals/delete",
-  async (id: string) => {
-    await api.delete(`/finance/goals/${id}`);
+  async ({ id, purge }: { id: string; purge?: boolean }) => {
+    await api.delete(`/finance/goals/${id}${purge ? "?hard=true" : ""}`);
     return id;
   },
 );

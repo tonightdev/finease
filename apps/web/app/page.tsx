@@ -60,7 +60,7 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-medium"
             >
-              Commandeer your capital with live ledger analytics, strategic adherence limits, and isolated event simulations. Tactical control for the modern architect.
+              Commandeer your capital with live ledger analytics, strategic adherence limits, and isolated event modeling. Tactical control for the modern architect.
             </motion.p>
 
             <motion.div
@@ -115,7 +115,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Strategies & Simulations */}
+            {/* Strategies & Insights */}
             <div className="md:col-span-6 group relative bg-amber-500 text-white rounded-3xl p-4 overflow-hidden hover:scale-[1.02] transition-all shadow-lg flex flex-col">
               <div className="relative z-10">
                 <div className="size-8 rounded-xl bg-white/20 flex items-center justify-center mb-2 backdrop-blur-sm shadow-inner">
@@ -125,7 +125,7 @@ export default function LandingPage() {
                   Live Strategies Matrix
                 </h3>
                 <p className="text-xs font-medium leading-relaxed opacity-90">
-                  Experiment with dual perspective parameters (yearly/monthly) and zero-latency simulations to construct precise capital strategies before deploying funds.
+                  Experiment with dual perspective parameters (yearly/monthly) and zero-latency modeling to construct precise capital strategies before deploying funds.
                 </p>
               </div>
             </div>
@@ -136,10 +136,10 @@ export default function LandingPage() {
                 <Box className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tighter">
-                Short Term Hubs
+                Interactive Simulations
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                Persisted Firebase-driven micro-ledgers. Spin up transient architectures for trips and events to verify exactly which accounts liquidate to hit targets.
+                Persisted micro-ledgers. Spin up high-fidelity simulations for trips and events to verify exactly which accounts liquidate to hit targets.
               </p>
             </div>
 

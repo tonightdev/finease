@@ -70,16 +70,16 @@ export class GoalService {
       const delta = goal.currentAmount - (currentGoal.currentAmount || 0);
       const newInitial = (currentGoal.initialAmount || 0) + delta;
 
-      const updateData = { ...goal };
-      delete updateData.currentAmount;
-
       await this.collection.doc(id).update({
-        ...updateData,
+        ...goal,
         initialAmount: newInitial,
       });
 
       // Trigger recalculation to ensure everything is consistent
       await this.transactionsService.recalculateGoalProgress(id);
+    } else {
+      // General update for non-financial fields
+      await this.collection.doc(id).update(goal);
     }
 
     const updatedDoc = await this.collection.doc(id).get();
@@ -102,10 +102,15 @@ export class GoalService {
     return result;
   }
 
-  async remove(id: string): Promise<void> {
-    await this.collection.doc(id).update({
-      deletedAt: new Date().toISOString(),
-    });
+  async remove(id: string, hard = false): Promise<void> {
+    const docRef = this.collection.doc(id);
+    if (hard) {
+      await docRef.delete();
+    } else {
+      await docRef.update({
+        deletedAt: new Date().toISOString(),
+      });
+    }
 
     // Fetch details for logging
     const goalDoc = await this.collection.doc(id).get();

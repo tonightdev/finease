@@ -1,32 +1,32 @@
 import * as admin from 'firebase-admin';
 import { Injectable } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { Reminder, ActivityType } from '@repo/types';
+import { Expiry, ActivityType } from '@repo/types';
 import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
-export class RemindersService {
-  private readonly collectionName = 'reminders';
+export class ExpiriesService {
+  private readonly collectionName = 'expiries';
 
   constructor(
     private readonly firebaseAdmin: FirebaseAdminService,
     private readonly activityLogService: ActivityLogService,
   ) {}
 
-  private get collection(): admin.firestore.CollectionReference<Reminder> {
+  private get collection(): admin.firestore.CollectionReference<Expiry> {
     return this.firebaseAdmin
       .getFirestore()
       .collection(
         this.collectionName,
-      ) as admin.firestore.CollectionReference<Reminder>;
+      ) as admin.firestore.CollectionReference<Expiry>;
   }
 
-  async getReminders(userId: string): Promise<Reminder[]> {
+  async getExpiries(userId: string): Promise<Expiry[]> {
     const snapshot = await this.collection.where('userId', '==', userId).get();
     return snapshot.docs
-      .map((doc: admin.firestore.QueryDocumentSnapshot<Reminder>) => {
+      .map((doc: admin.firestore.QueryDocumentSnapshot<Expiry>) => {
         const raw = doc.data() as unknown as Record<string, unknown>;
-        const reminder: Reminder = {
+        const expiry: Expiry = {
           id: doc.id,
           userId: (raw.userId as string) || '',
           name: (raw.name as string) || '',
@@ -37,19 +37,19 @@ export class RemindersService {
           createdAt: (raw.createdAt as string) || new Date().toISOString(),
           deletedAt: (raw.deletedAt as string | null) || null,
         };
-        return reminder;
+        return expiry;
       })
-      .filter((reminder) => !reminder.deletedAt);
+      .filter((expiry) => !expiry.deletedAt);
   }
 
-  async createReminder(
+  async createExpiry(
     userId: string,
-    data: Partial<Reminder>,
-  ): Promise<Reminder> {
-    const reminderRef = this.collection.doc();
+    data: Partial<Expiry>,
+  ): Promise<Expiry> {
+    const expiryRef = this.collection.doc();
     const now = new Date().toISOString();
-    const newReminder: Reminder = {
-      id: reminderRef.id,
+    const newExpiry: Expiry = {
+      id: expiryRef.id,
       userId,
       name: data.name ?? '',
       type: data.type ?? 'policy',
@@ -59,45 +59,45 @@ export class RemindersService {
       createdAt: now,
       deletedAt: null,
     };
-    await reminderRef.set(newReminder);
-    return newReminder;
+    await expiryRef.set(newExpiry);
+    return newExpiry;
   }
 
-  async updateReminder(
+  async updateExpiry(
     userId: string,
-    reminderId: string,
-    data: Partial<Reminder>,
-  ): Promise<Reminder> {
-    const reminderRef = this.collection.doc(reminderId);
-    const doc = await reminderRef.get();
+    expiryId: string,
+    data: Partial<Expiry>,
+  ): Promise<Expiry> {
+    const expiryRef = this.collection.doc(expiryId);
+    const doc = await expiryRef.get();
 
     if (!doc.exists || doc.data()?.userId !== userId || doc.data()?.deletedAt) {
-      throw new Error('Reminder not found or unauthorized');
+      throw new Error('Expiry not found or unauthorized');
     }
 
-    const prevReminder = this.mapDocToReminder(doc);
+    const prevExpiry = this.mapDocToExpiry(doc);
 
-    await reminderRef.update(data);
-    const updated = await reminderRef.get();
-    const currentReminder = this.mapDocToReminder(updated);
+    await expiryRef.update(data);
+    const updated = await expiryRef.get();
+    const currentExpiry = this.mapDocToExpiry(updated);
 
     // Log activity
     await this.activityLogService.logActivity({
       userId,
       action: 'update' as ActivityType,
-      entityType: 'reminder',
-      entityId: reminderId,
-      description: `Updated reminder: ${currentReminder.name}`,
-      previousState: prevReminder,
-      newState: currentReminder,
+      entityType: 'expiry',
+      entityId: expiryId,
+      description: `Updated expiry: ${currentExpiry.name}`,
+      previousState: prevExpiry,
+      newState: currentExpiry,
     });
 
-    return currentReminder;
+    return currentExpiry;
   }
 
-  private mapDocToReminder(
-    doc: admin.firestore.DocumentSnapshot<Reminder>,
-  ): Reminder {
+  private mapDocToExpiry(
+    doc: admin.firestore.DocumentSnapshot<Expiry>,
+  ): Expiry {
     const raw = doc.data() as unknown as Record<string, unknown>;
     return {
       id: doc.id,
@@ -112,25 +112,33 @@ export class RemindersService {
     };
   }
 
-  async deleteReminder(userId: string, reminderId: string): Promise<void> {
-    const reminderRef = this.collection.doc(reminderId);
-    const doc = await reminderRef.get();
+  async deleteExpiry(
+    userId: string,
+    expiryId: string,
+    hard = false,
+  ): Promise<void> {
+    const expiryRef = this.collection.doc(expiryId);
+    const doc = await expiryRef.get();
 
     if (doc.exists && doc.data()?.userId === userId) {
-      await reminderRef.update({
-        deletedAt: new Date().toISOString(),
-      });
+      if (hard) {
+        await expiryRef.delete();
+      } else {
+        await expiryRef.update({
+          deletedAt: new Date().toISOString(),
+        });
+      }
     }
   }
 
-  async getArchivedReminders(userId: string): Promise<Reminder[]> {
+  async getArchivedExpiries(userId: string): Promise<Expiry[]> {
     const snapshot = await this.collection.where('userId', '==', userId).get();
 
     return snapshot.docs
-      .map((doc: admin.firestore.QueryDocumentSnapshot<Reminder>) => {
-        return this.mapDocToReminder(doc);
+      .map((doc: admin.firestore.QueryDocumentSnapshot<Expiry>) => {
+        return this.mapDocToExpiry(doc);
       })
-      .filter((reminder) => !!reminder.deletedAt)
+      .filter((expiry) => !!expiry.deletedAt)
       .sort((a, b) => {
         const dateA = a.deletedAt ? new Date(a.deletedAt).getTime() : 0;
         const dateB = b.deletedAt ? new Date(b.deletedAt).getTime() : 0;

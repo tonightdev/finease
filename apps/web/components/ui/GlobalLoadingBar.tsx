@@ -19,8 +19,11 @@ export function GlobalLoadingBar() {
   const assetClassesLoading = useSelector(
     (state: RootState) => state.assetClasses?.loading,
   );
-  const remindersLoading = useSelector(
-    (state: RootState) => state.reminders?.loading,
+  const expiriesLoading = useSelector(
+    (state: RootState) => state.expiries?.loading,
+  );
+  const simulationsLoading = useSelector(
+    (state: RootState) => state.simulations?.loading,
   );
 
   const [apiLoading, setApiLoading] = useState(false);
@@ -38,7 +41,8 @@ export function GlobalLoadingBar() {
     goalsLoading ||
     categoriesLoading ||
     assetClassesLoading ||
-    remindersLoading ||
+    expiriesLoading ||
+    simulationsLoading ||
     apiLoading;
 
   const [visible, setVisible] = useState(false);

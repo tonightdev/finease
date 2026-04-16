@@ -8,6 +8,7 @@ import {
   Delete,
   Put,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../common/guards/auth.guard';
@@ -17,9 +18,9 @@ import { AccountsService } from './accounts.service';
 import { TransactionsService } from './transactions.service';
 import { CategoriesService } from './categories.service';
 import { AssetClassesService } from './asset-classes.service';
-import { RemindersService } from './reminders.service';
-import { SimulationService } from './simulation.service';
-import { PlansService } from './plans.service';
+import { ExpiriesService } from './expiries.service';
+import { StrategyService } from './strategy.service';
+import { SimulationsService } from './simulations.service';
 import type {
   FinancialGoal,
   Transaction,
@@ -27,10 +28,10 @@ import type {
   User,
   Category,
   AssetClass,
-  Reminder,
-  BudgetSimulation,
-  SimEntry,
-  ShortTermPlan,
+  Expiry,
+  BudgetStrategy,
+  StrategyEntry,
+  Simulation,
 } from '@repo/types';
 import { UsersService } from '../common/services/users.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
@@ -48,9 +49,9 @@ export class FinanceController {
     private readonly categoriesService: CategoriesService,
     private readonly assetClassesService: AssetClassesService,
     private readonly usersService: UsersService,
-    private readonly remindersService: RemindersService,
-    private readonly simulationService: SimulationService,
-    private readonly plansService: PlansService,
+    private readonly expiriesService: ExpiriesService,
+    private readonly strategyService: StrategyService,
+    private readonly simulationsService: SimulationsService,
   ) {}
 
   // --- Profile ---
@@ -67,33 +68,33 @@ export class FinanceController {
     return this.usersService.update(req.user.uid, data);
   }
 
-  // --- Short Term Plans ---
+  // --- Simulations ---
 
-  @ApiOperation({ summary: 'List all short term plans' })
-  @Get('plans')
-  findAllPlans(@Req() req: RequestWithUser) {
-    return this.plansService.findAll(req.user.uid);
+  @ApiOperation({ summary: 'List all simulations' })
+  @Get('simulations')
+  findAllSimulations(@Req() req: RequestWithUser) {
+    return this.simulationsService.findAll(req.user.uid);
   }
 
-  @ApiOperation({ summary: 'Create a short term plan' })
-  @Post('plans')
-  createPlan(
+  @ApiOperation({ summary: 'Create a simulation' })
+  @Post('simulations')
+  createSimulation(
     @Req() req: RequestWithUser,
-    @Body() plan: Partial<ShortTermPlan>,
+    @Body() plan: Partial<Simulation>,
   ) {
-    return this.plansService.create({ ...plan, userId: req.user.uid });
+    return this.simulationsService.create({ ...plan, userId: req.user.uid });
   }
 
-  @ApiOperation({ summary: 'Update a short term plan' })
-  @Put('plans/:id')
-  updatePlan(@Param('id') id: string, @Body() plan: Partial<ShortTermPlan>) {
-    return this.plansService.update(id, plan);
+  @ApiOperation({ summary: 'Update a simulation' })
+  @Put('simulations/:id')
+  updateSimulation(@Param('id') id: string, @Body() plan: Partial<Simulation>) {
+    return this.simulationsService.update(id, plan);
   }
 
-  @ApiOperation({ summary: 'Delete a short term plan' })
-  @Delete('plans/:id')
-  removePlan(@Param('id') id: string) {
-    return this.plansService.remove(id);
+  @ApiOperation({ summary: 'Delete a simulation' })
+  @Delete('simulations/:id')
+  removeSimulation(@Param('id') id: string, @Query('hard') hard: string) {
+    return this.simulationsService.remove(id, hard === 'true');
   }
 
   // --- Accounts ---
@@ -199,8 +200,8 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Delete a financial goal' })
   @Delete('goals/:id')
-  removeGoal(@Param('id') id: string) {
-    return this.goalService.remove(id);
+  removeGoal(@Param('id') id: string, @Query('hard') hard: string) {
+    return this.goalService.remove(id, hard === 'true');
   }
 
   @ApiOperation({ summary: 'Calculate monthly savings requirement for a goal' })
@@ -295,76 +296,84 @@ export class FinanceController {
 
   // --- Reminders ---
 
-  @ApiOperation({ summary: 'List all reminders for user' })
-  @Get('reminders')
-  findAllReminders(@Req() req: RequestWithUser) {
-    return this.remindersService.getReminders(req.user.uid);
+  @ApiOperation({ summary: 'List all expiries for user' })
+  @Get('expiries')
+  findAllExpiries(@Req() req: RequestWithUser) {
+    return this.expiriesService.getExpiries(req.user.uid);
   }
 
-  @ApiOperation({ summary: 'List all archived reminders for user' })
-  @Get('reminders/archived')
-  findAllArchivedReminders(@Req() req: RequestWithUser) {
-    return this.remindersService.getArchivedReminders(req.user.uid);
+  @ApiOperation({ summary: 'List all archived expiries for user' })
+  @Get('expiries/archived')
+  findAllArchivedExpiries(@Req() req: RequestWithUser) {
+    return this.expiriesService.getArchivedExpiries(req.user.uid);
   }
 
-  @ApiOperation({ summary: 'Create a new reminder' })
-  @Post('reminders')
-  createReminder(@Req() req: RequestWithUser, @Body() data: Partial<Reminder>) {
-    return this.remindersService.createReminder(req.user.uid, data);
+  @ApiOperation({ summary: 'Create a new expiry' })
+  @Post('expiries')
+  createExpiry(@Req() req: RequestWithUser, @Body() data: Partial<Expiry>) {
+    return this.expiriesService.createExpiry(req.user.uid, data);
   }
 
-  @ApiOperation({ summary: 'Update an existing reminder' })
-  @Put('reminders/:id')
-  updateReminder(
+  @ApiOperation({ summary: 'Update an existing expiry' })
+  @Put('expiries/:id')
+  updateExpiry(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
-    @Body() data: Partial<Reminder>,
+    @Body() data: Partial<Expiry>,
   ) {
-    return this.remindersService.updateReminder(req.user.uid, id, data);
+    return this.expiriesService.updateExpiry(req.user.uid, id, data);
   }
 
-  @ApiOperation({ summary: 'Delete a reminder' })
-  @Delete('reminders/:id')
-  removeReminder(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.remindersService.deleteReminder(req.user.uid, id);
-  }
-
-  // --- Simulation ---
-
-  @ApiOperation({ summary: 'Get persistent budget simulation for user' })
-  @Get('simulation')
-  getSimulation(@Req() req: RequestWithUser) {
-    return this.simulationService.getSimulation(req.user.uid);
-  }
-
-  @ApiOperation({ summary: 'Save budget simulation state' })
-  @Post('simulation')
-  saveSimulation(
-    @Req() req: RequestWithUser,
-    @Body() data: Partial<BudgetSimulation>,
-  ) {
-    return this.simulationService.saveSimulation(req.user.uid, data);
-  }
-
-  @ApiOperation({ summary: 'Add a simulation entry' })
-  @Post('simulation/entries')
-  addSimEntry(@Req() req: RequestWithUser, @Body() entry: SimEntry) {
-    return this.simulationService.addEntry(req.user.uid, entry);
-  }
-
-  @ApiOperation({ summary: 'Update a simulation entry' })
-  @Put('simulation/entries/:id')
-  updateSimEntry(
+  @ApiOperation({ summary: 'Delete an expiry' })
+  @Delete('expiries/:id')
+  removeExpiry(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
-    @Body() data: Partial<SimEntry>,
+    @Query('hard') hard: string,
   ) {
-    return this.simulationService.updateEntry(req.user.uid, id, data);
+    return this.expiriesService.deleteExpiry(
+      req.user.uid,
+      id,
+      hard === 'true',
+    );
   }
 
-  @ApiOperation({ summary: 'Remove a simulation entry' })
-  @Delete('simulation/entries/:id')
-  removeSimEntry(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.simulationService.removeEntry(req.user.uid, id);
+  // --- Strategy ---
+
+  @ApiOperation({ summary: 'Get persistent budget strategy for user' })
+  @Get('strategy')
+  getStrategy(@Req() req: RequestWithUser) {
+    return this.strategyService.getStrategy(req.user.uid);
+  }
+
+  @ApiOperation({ summary: 'Save budget strategy state' })
+  @Post('strategy')
+  saveStrategy(
+    @Req() req: RequestWithUser,
+    @Body() data: Partial<BudgetStrategy>,
+  ) {
+    return this.strategyService.saveStrategy(req.user.uid, data);
+  }
+
+  @ApiOperation({ summary: 'Add a strategy entry' })
+  @Post('strategy/entries')
+  addStrategyEntry(@Req() req: RequestWithUser, @Body() entry: StrategyEntry) {
+    return this.strategyService.addEntry(req.user.uid, entry);
+  }
+
+  @ApiOperation({ summary: 'Update a strategy entry' })
+  @Put('strategy/entries/:id')
+  updateStrategyEntry(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() data: Partial<StrategyEntry>,
+  ) {
+    return this.strategyService.updateEntry(req.user.uid, id, data);
+  }
+
+  @ApiOperation({ summary: 'Remove a strategy entry' })
+  @Delete('strategy/entries/:id')
+  removeStrategyEntry(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.strategyService.removeEntry(req.user.uid, id);
   }
 }

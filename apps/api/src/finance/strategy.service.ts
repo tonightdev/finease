@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-import { BudgetSimulation, SimEntry } from '@repo/types';
+import { BudgetStrategy, StrategyEntry } from '@repo/types';
 import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
-export class SimulationService {
-  private readonly collectionName = 'simulations';
+export class StrategyService {
+  private readonly collectionName = 'strategies';
 
   constructor(
     private readonly firebaseAdmin: FirebaseAdminService,
@@ -16,18 +16,18 @@ export class SimulationService {
     return this.firebaseAdmin.getFirestore().collection(this.collectionName);
   }
 
-  async getSimulation(userId: string): Promise<BudgetSimulation | null> {
+  async getStrategy(userId: string): Promise<BudgetStrategy | null> {
     const doc = await this.collection.doc(userId).get();
     if (!doc.exists) {
       return null;
     }
-    return doc.data() as BudgetSimulation;
+    return doc.data() as BudgetStrategy;
   }
 
-  async saveSimulation(
+  async saveStrategy(
     userId: string,
-    data: Partial<BudgetSimulation>,
-  ): Promise<BudgetSimulation> {
+    data: Partial<BudgetStrategy>,
+  ): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
 
@@ -47,51 +47,51 @@ export class SimulationService {
     await this.activityLogService.logActivity({
       userId,
       action: doc.exists ? 'update' : 'create',
-      entityType: 'simulation',
+      entityType: 'strategy',
       entityId: userId,
-      description: `Saved Budget Simulation state`,
+      description: `Saved Budget Strategy state`,
     });
 
     const updatedDoc = await docRef.get();
-    return updatedDoc.data() as BudgetSimulation;
+    return updatedDoc.data() as BudgetStrategy;
   }
 
-  async addEntry(userId: string, entry: SimEntry): Promise<BudgetSimulation> {
+  async addEntry(userId: string, entry: StrategyEntry): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
-    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
+    const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
     const entries = currentData?.entries || [];
 
     const newEntries = [...entries, entry];
-    return this.saveSimulation(userId, { entries: newEntries });
+    return this.saveStrategy(userId, { entries: newEntries });
   }
 
   async updateEntry(
     userId: string,
     entryId: string,
-    entryData: Partial<SimEntry>,
-  ): Promise<BudgetSimulation> {
+    entryData: Partial<StrategyEntry>,
+  ): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
-    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
-    if (!currentData) throw new Error('Simulation not found');
+    const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
+    if (!currentData) throw new Error('Strategy not found');
 
     const newEntries = currentData.entries.map((e) =>
       e.id === entryId ? { ...e, ...entryData } : e,
     );
-    return this.saveSimulation(userId, { entries: newEntries });
+    return this.saveStrategy(userId, { entries: newEntries });
   }
 
   async removeEntry(
     userId: string,
     entryId: string,
-  ): Promise<BudgetSimulation> {
+  ): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
-    const currentData = doc.exists ? (doc.data() as BudgetSimulation) : null;
-    if (!currentData) throw new Error('Simulation not found');
+    const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
+    if (!currentData) throw new Error('Strategy not found');
 
     const newEntries = currentData.entries.filter((e) => e.id !== entryId);
-    return this.saveSimulation(userId, { entries: newEntries });
+    return this.saveStrategy(userId, { entries: newEntries });
   }
 }

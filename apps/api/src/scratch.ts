@@ -1,6 +1,6 @@
-import { Reminder } from '@repo/types';
+import { Expiry } from '@repo/types';
 
-const r: Reminder = {
+const r: Expiry = {
   id: '1',
   userId: '1',
   name: 'test',

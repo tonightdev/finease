@@ -6,9 +6,9 @@ import statsReducer from "./slices/statsSlice";
 import userReducer from "./slices/userSlice";
 import categoriesReducer from "./slices/categoriesSlice";
 import assetClassesReducer from "./slices/assetClassesSlice";
-import remindersReducer from "./slices/remindersSlice";
-import simulationReducer from "./slices/simulationSlice";
-import plansReducer from "./slices/plansSlice";
+import expiriesReducer from "./slices/expiriesSlice";
+import strategiesReducer from "./slices/strategiesSlice";
+import simulationsReducer from "./slices/simulationsSlice";
 
 const appReducer = combineReducers({
   accounts: accountsReducer,
@@ -18,9 +18,9 @@ const appReducer = combineReducers({
   user: userReducer,
   categories: categoriesReducer,
   assetClasses: assetClassesReducer,
-  reminders: remindersReducer,
-  simulation: simulationReducer,
-  plans: plansReducer,
+  expiries: expiriesReducer,
+  strategies: strategiesReducer,
+  simulations: simulationsReducer,
 });
 
 const rootReducer = (

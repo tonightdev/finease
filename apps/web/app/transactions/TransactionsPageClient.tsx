@@ -197,7 +197,7 @@ export default function TransactionsPageClient() {
       <PageHeader
         title="Transactions"
         subtitle="Unified financial ledger"
-        className="space-y-2"
+        className="space-y-1.5"
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <div className="flex gap-2 w-full sm:w-auto">

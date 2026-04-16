@@ -10,7 +10,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
 
-// Signal System: Push Notification Handling
+// Notification System: Push Notification Handling
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -25,13 +25,13 @@ self.addEventListener("push", (event) => {
         url: data.url || "/",
       },
       actions: [
-        { action: "open", title: "View Signal" },
+        { action: "open", title: "View Notification" },
         { action: "close", title: "Dismiss" },
       ],
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || "FinEase Signal", options)
+      self.registration.showNotification(data.title || "FinEase Notification", options)
     );
   } catch (e) {
     console.error("Error showing notification:", e);

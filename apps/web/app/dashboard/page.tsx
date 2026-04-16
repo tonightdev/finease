@@ -12,7 +12,7 @@ import { createAccount, fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
-import { fetchReminders } from "@/store/slices/remindersSlice";
+import { fetchExpiries } from "@/store/slices/expiriesSlice";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { FinancialGoal, AccountType } from "@repo/types";
 import Link from "next/link";
@@ -21,7 +21,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
-import { useSignals } from "@/components/providers/SignalProvider";
+import { useNotifications } from "@/components/providers/NotificationProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { motion } from "framer-motion";
@@ -31,7 +31,7 @@ import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
 export default function Home() {
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const { permission, requestPermission } = useSignals();
+  const { permission, requestPermission } = useNotifications();
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [showAllAccounts, setShowAllAccounts] = useState(false);
@@ -53,19 +53,19 @@ export default function Home() {
   }, [allTransactions, analyticsAccounts]);
 
   const loading = useSelector(
-    (state: RootState) => state.accounts.loading || state.transactions.loading || state.reminders.loading,
+    (state: RootState) => state.accounts.loading || state.transactions.loading || state.expiries.loading,
   );
 
-  const reminders = useSelector((state: RootState) => state.reminders.items);
+  const expiries = useSelector((state: RootState) => state.expiries.items);
 
   const expiringSoon = useMemo(() => {
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return reminders.filter(r => {
+    return expiries.filter(r => {
       const expiry = new Date(r.expiryDate);
       return expiry > now && expiry <= sevenDaysFromNow;
     });
-  }, [reminders]);
+  }, [expiries]);
 
   useEffect(() => {
     if (user) {
@@ -73,7 +73,7 @@ export default function Home() {
       dispatch(fetchAssetClasses());
       dispatch(fetchTransactions());
       dispatch(fetchGoals());
-      dispatch(fetchReminders());
+      dispatch(fetchExpiries());
 
       if (permission === "default") {
         requestPermission();
@@ -356,7 +356,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mx-auto w-full"
         >
-          <Link href="/goals" className="block">
+          <Link href="/plans?tab=Expiries" className="block">
             <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
@@ -495,34 +495,59 @@ export default function Home() {
               <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards goals</span>
             </h3>
             <Link
-              href="/goals"
-              className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline transition-colors"
+              href="/plans?tab=Goals"
+              className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline transition-colors active:scale-95 flex items-center gap-1.5"
             >
-              View Map
+              View Maps
+              <ArrowRight className="size-3" />
             </Link>
           </div>
 
           <div className="space-y-3">
-            {goals.length === 0 ? (
+            {goals.filter(g => g.currentAmount < g.targetAmount).length === 0 ? (
               <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                 <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
-                  No goals defined
+                  No active goals defined
                 </p>
               </div>
             ) : (
-              goals.slice(0, 3).map((goal: FinancialGoal) => {
-                const pace = stats?.goalPacing.find(
-                  (pByGoal) => pByGoal.goalId === goal.id,
-                );
+              goals
+                .filter(g => g.currentAmount < g.targetAmount)
+                .slice(0, 3)
+                .map((goal: FinancialGoal) => {
+                const percentageSaved = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
+                
+                // Calculate expected pace based on time elapsed
+                const now = new Date();
+                const start = new Date(goal.startDate || now);
+                const target = new Date(goal.targetDate);
+                const totalDuration = target.getTime() - start.getTime();
+                const elapsed = now.getTime() - start.getTime();
+                const expectedPercentage = totalDuration > 0 
+                  ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
+                  : 100;
+
                 return (
                   <GoalProgressCard
                     key={goal.id}
                     name={goal.name}
                     targetAmount={goal.targetAmount}
                     currentAmount={goal.currentAmount}
-                    percentageSaved={pace?.actualPercentage || 0}
-                    expectedPercentage={pace?.expectedPercentage || 0}
+                    percentageSaved={percentageSaved}
+                    expectedPercentage={expectedPercentage}
+                    requirementPerMonth={
+                      (() => {
+                        const today = new Date();
+                        const targetDate = new Date(goal.targetDate);
+                        const monthsRemaining =
+                          (targetDate.getFullYear() - today.getFullYear()) * 12 +
+                          (targetDate.getMonth() - today.getMonth());
+                        if (monthsRemaining <= 0) return 0;
+                        const shortfall = goal.targetAmount - goal.currentAmount;
+                        return shortfall / monthsRemaining;
+                      })()
+                    }
                   />
                 );
               })

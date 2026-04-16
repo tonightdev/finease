@@ -6,24 +6,31 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { AppDispatch } from "@/store";
 import {
-  updatePlanAction, fetchPlans
-} from "@/store/slices/plansSlice";
-import { STAccount, STExpense } from "@repo/types";
-import { Plus, Trash2, Wallet, Receipt, TrendingUp, CheckCircle2, RefreshCw } from "lucide-react";
+  updateSimulationAction, fetchSimulations
+} from "@/store/slices/simulationsSlice";
+import { SimAccount, SimExpense } from "@repo/types";
+import { Plus, Trash2, Wallet, Receipt, TrendingUp, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 
-export default function SimulationEnvironment({ params }: { params: Promise<{ id: string }> }) {
+export default function TacticalSimulationPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const planId = resolvedParams.id;
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const { items, loading } = useSelector((state: RootState) => state.plans);
+  const { items, loading } = useSelector((state: RootState) => state.simulations);
   const plan = items.find(p => p.id === planId);
 
   const [planName, setPlanName] = useState(plan?.name || "");
@@ -33,9 +40,10 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
   const [newExpName, setNewExpName] = useState("");
   const [newExpAmount, setNewExpAmount] = useState("");
   const [newExpAccount, setNewExpAccount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchPlans());
+    dispatch(fetchSimulations());
   }, [dispatch]);
 
   useEffect(() => {
@@ -69,7 +77,7 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
 
   if (!plan) return null;
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     const newName = planName.trim();
     if (!newName) {
       toast.error("Plan name cannot be empty");
@@ -77,36 +85,60 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
       return;
     }
     if (newName !== plan.name) {
-      dispatch(updatePlanAction({ id: planId, data: { name: newName } }));
-      toast.success("Renamed simulation");
+      setIsProcessing(true);
+      try {
+        await dispatch(updateSimulationAction({ id: planId, data: { name: newName } })).unwrap();
+        toast.success("Renamed simulation");
+      } catch {
+        toast.error("Failed to rename simulation");
+        setPlanName(plan.name);
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
-  const handleAddAccount = () => {
+  const handleAddAccount = async () => {
     if (!newAccName || !newAccBalance) return;
-    const account: STAccount = {
-      id: Math.random().toString(36).substring(7),
-      name: newAccName,
-      balance: parseFloat(newAccBalance)
-    };
-    dispatch(updatePlanAction({ id: planId, data: { accounts: [...plan.accounts, account] } }));
-    setNewAccName("");
-    setNewAccBalance("");
+    setIsProcessing(true);
+    try {
+      const account: SimAccount = {
+        id: Math.random().toString(36).substring(7),
+        name: newAccName,
+        balance: parseFloat(newAccBalance)
+      };
+      await dispatch(updateSimulationAction({ id: planId, data: { accounts: [...plan.accounts, account] } })).unwrap();
+      setNewAccName("");
+      setNewAccBalance("");
+      toast.success("Liquidity node added");
+    } catch {
+      toast.error("Failed to add node");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!newExpName || !newExpAmount || !newExpAccount) return;
-    const expense: STExpense = {
-      id: Math.random().toString(36).substring(7),
-      name: newExpName,
-      amount: parseFloat(newExpAmount),
-      accountId: newExpAccount,
-      isPaid: false
-    };
-    dispatch(updatePlanAction({ id: planId, data: { expenses: [...plan.expenses, expense] } }));
-    setNewExpName("");
-    setNewExpAmount("");
-    setNewExpAccount("");
+    setIsProcessing(true);
+    try {
+      const expense: SimExpense = {
+        id: Math.random().toString(36).substring(7),
+        name: newExpName,
+        amount: parseFloat(newExpAmount),
+        accountId: newExpAccount,
+        isPaid: false
+      };
+      await dispatch(updateSimulationAction({ id: planId, data: { expenses: [...plan.expenses, expense] } })).unwrap();
+      setNewExpName("");
+      setNewExpAmount("");
+      setNewExpAccount("");
+      toast.success("Expense vector added");
+    } catch {
+      toast.error("Failed to add vector");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const totalBalance = plan.accounts.reduce((sum, a) => sum + a.balance, 0);
@@ -147,19 +179,27 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
             <Button
               size="sm"
               variant={plan.status === "completed" ? "outline" : "primary"}
-              onClick={() => {
-                const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
-                dispatch(updatePlanAction({ id: planId, data: { status: newStatus } }));
-                toast.success(newStatus === "completed" ? "Simulation marked as completed" : "Simulation reopened");
+              disabled={isProcessing}
+              onClick={async () => {
+                setIsProcessing(true);
+                try {
+                  const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
+                  await dispatch(updateSimulationAction({ id: planId, data: { status: newStatus } })).unwrap();
+                  toast.success(newStatus === "completed" ? "Simulation marked as completed" : "Simulation reopened");
+                } catch {
+                  toast.error("Failed to update simulation state");
+                } finally {
+                  setIsProcessing(false);
+                }
               }}
               className="flex-1 sm:flex-initial shrink-0 h-9 sm:h-8 text-[9px] font-black uppercase tracking-widest px-4 shadow-sm"
-              leftIcon={plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
+              leftIcon={isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : (plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />)}
             >
-              {plan.status === "completed" ? "Reopen Simulation" : "Mark as Completed"}
+              {isProcessing ? "Processing..." : (plan.status === "completed" ? "Reopen Simulation" : "Mark as Completed")}
             </Button>
           </div>
         }
-        className="mb-4"
+        className="mb-2"
       />
 
       <div className="space-y-4">
@@ -227,11 +267,11 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
           {/* Left Column: Accounts */}
           <div className="lg:col-span-6 space-y-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
-              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-2">
                 <Wallet className="size-4 text-primary" /> Nodes (Liquidity)
               </h3>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-2">
                 <AnimatePresence>
                   {plan.accounts.map(acc => (
                     <motion.div
@@ -247,16 +287,27 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
                         <p className="text-[10px] font-bold text-slate-400 font-mono">₹{acc.balance.toLocaleString()}</p>
                       </div>
                       <button
-                        onClick={() => dispatch(updatePlanAction({
-                          id: planId,
-                          data: {
-                            accounts: plan.accounts.filter(a => a.id !== acc.id),
-                            expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
+                        onClick={async () => {
+                          setIsProcessing(true);
+                          try {
+                            await dispatch(updateSimulationAction({
+                              id: planId,
+                              data: {
+                                accounts: plan.accounts.filter(a => a.id !== acc.id),
+                                expenses: plan.expenses.map(e => e.accountId === acc.id ? { ...e, accountId: '' } : e)
+                              }
+                            })).unwrap();
+                            toast.success("Node removed");
+                          } catch {
+                            toast.error("Failed to remove node");
+                          } finally {
+                            setIsProcessing(false);
                           }
-                        }))}
-                        className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl"
+                        }}
+                        disabled={isProcessing}
+                        className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
                       >
-                        <Trash2 className="size-3.5" />
+                        {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
                       </button>
                     </motion.div>
                   ))}
@@ -281,8 +332,9 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
                   onChange={(e) => setNewAccBalance(e.target.value)}
                   className="w-full text-[10px] font-bold font-mono p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-primary"
                 />
-                <Button onClick={handleAddAccount} className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9" disabled={!newAccName || !newAccBalance}>
-                  <Plus className="size-3.5 mr-1" /> Add Node
+                <Button onClick={handleAddAccount} className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9" disabled={!newAccName || !newAccBalance || isProcessing}>
+                  {isProcessing ? <Loader2 className="size-3.5 animate-spin mr-1" /> : <Plus className="size-3.5 mr-1" />}
+                  {isProcessing ? "Adding..." : "Add Node"}
                 </Button>
               </div>
             </div>
@@ -291,11 +343,11 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
           {/* Center Column: Expenses */}
           <div className="lg:col-span-6 space-y-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm h-full">
-              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 mb-2">
                 <Receipt className="size-4 text-rose-500" /> Vectors (Expenses)
               </h3>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-2">
                 <AnimatePresence>
                   {plan.expenses.map(exp => {
                     const linkedAcc = plan.accounts.find(a => a.id === exp.accountId);
@@ -318,10 +370,21 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
                           </div>
                         </div>
                         <button
-                          onClick={() => dispatch(updatePlanAction({ id: planId, data: { expenses: plan.expenses.filter(e => e.id !== exp.id) } }))}
-                          className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl"
+                          onClick={async () => {
+                            setIsProcessing(true);
+                            try {
+                              await dispatch(updateSimulationAction({ id: planId, data: { expenses: plan.expenses.filter(e => e.id !== exp.id) } })).unwrap();
+                              toast.success("Vector removed");
+                            } catch {
+                              toast.error("Failed to remove vector");
+                            } finally {
+                              setIsProcessing(false);
+                            }
+                          }}
+                          disabled={isProcessing}
+                          className="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-colors rounded-xl disabled:opacity-50"
                         >
-                          <Trash2 className="size-3.5" />
+                          {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
                         </button>
                       </motion.div>
                     );
@@ -347,18 +410,24 @@ export default function SimulationEnvironment({ params }: { params: Promise<{ id
                   onChange={(e) => setNewExpAmount(e.target.value)}
                   className="w-full text-[10px] font-bold font-mono p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500"
                 />
-                <select
+                <Select
                   value={newExpAccount}
-                  onChange={(e) => setNewExpAccount(e.target.value)}
-                  className="w-full text-[10px] font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500 text-slate-500 uppercase tracking-wider appearance-none"
+                  onValueChange={setNewExpAccount}
                 >
-                  <option value="">Select Node Config...</option>
-                  {plan.accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance})</option>
-                  ))}
-                </select>
-                <Button onClick={handleAddExpense} variant="outline" className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9 border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white" disabled={!newExpName || !newExpAmount || !newExpAccount}>
-                  <Plus className="size-3.5 mr-1" /> Add Vector
+                  <SelectTrigger className="w-full text-[10px] font-bold h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 rounded-xl">
+                    <SelectValue placeholder="Select Node Config..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 rounded-2xl">
+                    {plan.accounts.map(acc => (
+                      <SelectItem key={acc.id} value={acc.id} className="text-[10px]">
+                        {acc.name} (₹{acc.balance.toLocaleString()})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddExpense} variant="outline" className="w-full mt-2 font-black text-[10px] uppercase tracking-wider h-9 border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white" disabled={!newExpName || !newExpAmount || !newExpAccount || isProcessing}>
+                  {isProcessing ? <Loader2 className="size-3.5 animate-spin mr-1" /> : <Plus className="size-3.5 mr-1" />}
+                  {isProcessing ? "Adding..." : "Add Vector"}
                 </Button>
               </div>
             </div>

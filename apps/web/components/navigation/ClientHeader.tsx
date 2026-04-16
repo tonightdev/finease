@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
+import { RefreshButton } from "@/components/navigation/RefreshButton";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { TopNav } from "@/components/navigation/TopNav";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -36,6 +37,7 @@ export function ClientHeader() {
         {user && <TopNav />}
 
         <div className="flex items-center gap-4">
+          <RefreshButton />
           <ThemeToggle />
 
           {!loading && !user && (
