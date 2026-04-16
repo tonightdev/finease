@@ -9,6 +9,7 @@ import assetClassesReducer from "./slices/assetClassesSlice";
 import expiriesReducer from "./slices/expiriesSlice";
 import strategiesReducer from "./slices/strategiesSlice";
 import simulationsReducer from "./slices/simulationsSlice";
+import uiReducer from "./slices/uiSlice";
 
 const appReducer = combineReducers({
   accounts: accountsReducer,
@@ -21,6 +22,7 @@ const appReducer = combineReducers({
   expiries: expiriesReducer,
   strategies: strategiesReducer,
   simulations: simulationsReducer,
+  ui: uiReducer,
 });
 
 const rootReducer = (

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 interface DashboardStatCardProps {
   label: string;
@@ -43,7 +44,11 @@ export function DashboardStatCard({
         typeof value === "string" && value.length > 12 ? "text-base" : "text-lg",
         valueColor
       )}>
-        {typeof value === "number" ? `₹${value.toLocaleString()}` : value}
+        {typeof value === "number" ? (
+          <AnimatedNumber value={value} prefix="₹" />
+        ) : (
+          value
+        )}
       </div>
 
       {trend && (

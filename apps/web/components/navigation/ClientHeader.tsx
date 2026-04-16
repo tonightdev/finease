@@ -6,10 +6,14 @@ import { RefreshButton } from "@/components/navigation/RefreshButton";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { TopNav } from "@/components/navigation/TopNav";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Wallet } from "lucide-react";
+import { Wallet, Search } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { setCommandPalette } from "@/store/slices/uiSlice";
 
 export function ClientHeader() {
   const { user, loading } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
 
   return (
     <header className="sticky top-0 w-full z-50 border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-black/40 backdrop-blur-xl">
@@ -37,6 +41,14 @@ export function ClientHeader() {
         {user && <TopNav />}
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => dispatch(setCommandPalette(true))}
+            className="flex items-center justify-center size-9 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-all active:scale-90 sm:hidden"
+            aria-label="Search"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+          
           <RefreshButton />
           <ThemeToggle />
 

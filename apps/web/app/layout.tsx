@@ -13,6 +13,8 @@ import { Toaster } from "react-hot-toast";
 import { SecurityProvider } from "@/components/providers/SecurityProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { GlobalLoadingBar } from "@/components/ui/GlobalLoadingBar";
+import { CommandPalette } from "@/components/ui/CommandPalette";
+import { GlobalModals } from "@/components/modals/GlobalModals";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -89,6 +91,8 @@ export default function RootLayout({
               <NotificationProvider>
                 <SecurityProvider>
                   <ClientHeader />
+                  <CommandPalette />
+                  <GlobalModals />
                   <main className="flex flex-col flex-1 w-full">
                     <Suspense fallback={null}>
                       <RequireAuth>{children}</RequireAuth>

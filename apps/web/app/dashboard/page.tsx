@@ -6,15 +6,17 @@ import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut
 import { GoalProgressCard } from "@/components/dashboard/GoalProgressCard";
 import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
 import { AccountList } from "@/components/accounts/AccountList";
+import { WealthIndex } from "@/components/dashboard/WealthIndex";
+import { SmartAssistant } from "@/components/dashboard/SmartAssistant";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { createAccount, fetchAccounts } from "@/store/slices/accountsSlice";
+import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { fetchExpiries } from "@/store/slices/expiriesSlice";
-import { AddAccountModal } from "@/components/accounts/AddAccountModal";
-import { FinancialGoal, AccountType } from "@repo/types";
+import { openModal } from "@/store/slices/uiSlice";
+import { FinancialGoal } from "@repo/types";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -33,7 +35,6 @@ export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const { permission, requestPermission } = useNotifications();
 
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [showAllAccounts, setShowAllAccounts] = useState(false);
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
@@ -333,14 +334,14 @@ export default function Home() {
     <PageContainer>
       <FeatureTour />
       <PageHeader
-        title="Command Center"
+        title="Dashboard"
         subtitle="Unified wealth landscape"
         className="space-y-3"
         actions={
           <div className="flex w-full sm:w-auto gap-2">
             <Button
               size="sm"
-              onClick={() => setIsAccountModalOpen(true)}
+              onClick={() => dispatch(openModal("isAccountModalOpen"))}
               className="flex-1 sm:flex-initial"
               leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
@@ -439,7 +440,7 @@ export default function Home() {
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
                 No accounts configured
               </p>
-              <Button size="sm" onClick={() => setIsAccountModalOpen(true)}>
+              <Button size="sm" onClick={() => dispatch(openModal("isAccountModalOpen"))}>
                 Add your first account
               </Button>
             </div>
@@ -476,6 +477,16 @@ export default function Home() {
           </>
         )}
       </div>
+      
+      {/* Premium Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-1">
+          <WealthIndex />
+        </div>
+        <div className="lg:col-span-2">
+          <SmartAssistant />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
         <div className="w-full">
@@ -491,7 +502,7 @@ export default function Home() {
         <div className="w-full space-y-3 flex flex-col">
           <div className="flex items-center justify-between px-1 group">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              Goal Velocity
+              Goal Progress
               <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards goals</span>
             </h3>
             <Link
@@ -566,24 +577,7 @@ export default function Home() {
       </div>
 
 
-      <AddAccountModal
-        isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
-        onSave={async (data) => {
-          await dispatch(
-            createAccount({
-              name: data.name,
-              type: data.type as AccountType,
-              assetType: "",
-              balance: parseFloat(data.balance) || 0,
-              minimumBalance: parseFloat(data.minimumBalance || "0") || 0,
-              maxLimit: parseFloat(data.maxLimit || "0") || 0,
-              currency: "INR",
-              excludeFromAnalytics: data.excludeFromAnalytics,
-            }),
-          ).unwrap();
-        }}
-      />
+
     </PageContainer>
   );
 }
