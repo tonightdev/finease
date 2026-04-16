@@ -15,7 +15,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   return (
     <div
       className={cn(
-        "mx-auto max-w-7xl w-full pb-20 space-y-4",
+        "mx-auto max-w-7xl w-full pb-32 space-y-4",
         !noPadding && "px-4 sm:px-6 lg:px-8",
         className
       )}
