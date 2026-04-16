@@ -23,7 +23,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className={`sticky top-14 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pt-1 pb-2 border-b border-slate-200 dark:border-white/5 mb-2 ${className}`}
+      className={`sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pt-1 pb-2 border-b border-slate-200 dark:border-white/5 mb-2 ${className}`}
     >
       <div className="flex flex-col flex-1 md:flex-row md:items-center justify-between gap-1">
         <div className="flex items-center gap-2 shrink-0 min-w-0">
