@@ -66,23 +66,27 @@ export function YearlyExpenseCard({
       </div>
 
       {/* Right Column: Tactical Actions */}
-      <div className="flex flex-col gap-2 shrink-0 pl-4 border-l border-slate-100 dark:border-white/5 justify-center">
+      <div className="flex flex-col gap-2 shrink-0 pl-4 border-l border-slate-100 dark:border-white/5 justify-center relative z-20">
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onEdit(expense);
           }}
-          className="size-9 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-primary hover:bg-primary/5 rounded-xl border border-slate-100 dark:border-white/5 transition-all active:scale-90"
+          type="button"
+          className="size-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-primary hover:bg-primary/5 rounded-2xl border border-slate-100 dark:border-white/5 transition-all active:scale-90 cursor-pointer shadow-sm hover:shadow-md"
           title="Update Commitment"
         >
           <Pencil className="size-4" />
         </button>
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onDelete(expense.id);
           }}
-          className="size-9 flex items-center justify-center bg-rose-50 dark:bg-rose-500/5 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-100 dark:border-rose-500/10 rounded-xl transition-all active:scale-90"
+          type="button"
+          className="size-10 flex items-center justify-center bg-rose-50 dark:bg-rose-500/5 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-100 dark:border-rose-500/10 rounded-2xl transition-all active:scale-90 cursor-pointer shadow-sm hover:shadow-md"
           title="Sanitize Record"
         >
           <Trash2 className="size-4" />

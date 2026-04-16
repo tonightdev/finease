@@ -675,13 +675,16 @@ function PlansDirectoryPageContent() {
                   />
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <AnimatePresence mode="popLayout">
+                    <AnimatePresence mode="popLayout" initial={false}>
                       {(yearlyExpenses || []).map((exp: YearlyExpense) => (
                         <YearlyExpenseCard
                           key={exp.id}
                           expense={exp}
-                          onEdit={(e: YearlyExpense) => { setEditingYearly(e); setIsYearlyModalOpen(true); }}
-                          onDelete={(id: string) => setYearlyToDelete(id)}
+                          onEdit={(data) => {
+                            setEditingYearly(data);
+                            setIsYearlyModalOpen(true);
+                          }}
+                          onDelete={(id) => setYearlyToDelete(id)}
                         />
                       ))}
                     </AnimatePresence>
