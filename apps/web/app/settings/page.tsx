@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { DateInput } from "@/components/ui/DateInput";
 import { Card } from "@/components/ui/Card";
 import {
@@ -64,8 +65,9 @@ import {
 
 type TabType = "profile" | "preferences" | "accounts" | "security" | "identities" | "data";
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const [activeTab, setActiveTab] = useState<TabType>("profile");
+  const searchParams = useSearchParams();
   const { user, loading: authLoading, updateProfile, accounts: authAccounts, switchAccount, removeAccount } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const bankAccounts = useSelector((state: RootState) => state.accounts.items);
@@ -104,6 +106,14 @@ export default function SettingsPage() {
       setTheme(user.preferences.theme);
     }
   }, [user?.preferences?.theme, theme, setTheme]);
+
+  // Sync tab with URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (["profile", "preferences", "accounts", "security", "identities", "data"].includes(tabParam || "")) {
+      setActiveTab(tabParam as TabType);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -1068,5 +1078,13 @@ export default function SettingsPage() {
         account={editingBankAccount}
       />
     </>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<Skeleton className="w-full h-full" />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
