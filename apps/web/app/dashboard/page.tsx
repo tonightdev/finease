@@ -20,7 +20,7 @@ import { FinancialGoal } from "@repo/types";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight } from "lucide-react";
+import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight, Landmark } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useNotifications } from "@/components/providers/NotificationProvider";
@@ -434,9 +434,7 @@ export default function Home() {
         {allAccounts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
             <div className="flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-700">
-                account_balance
-              </span>
+              <Landmark className="text-4xl w-10 h-10 text-slate-200 dark:text-slate-700" />
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
                 No accounts configured
               </p>

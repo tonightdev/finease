@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
@@ -15,46 +15,26 @@ import { NotificationProvider } from "@/components/providers/NotificationProvide
 import { GlobalLoadingBar } from "@/components/ui/GlobalLoadingBar";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { GlobalModals } from "@/components/modals/GlobalModals";
+import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
   title: "FinEase | Architectural Wealth Management",
   description:
     "Comprehensive wealth management for modern investors. Track your INR assets, investments, and expenses in one secure place.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "FinEase",
-    startupImage: [
-      {
-        url: "/icon-512x512.png",
-        media:
-          "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
-      },
-      {
-        url: "/icon-512x512.png",
-        media:
-          "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
-      },
-      {
-        url: "/icon-512x512.png",
-        media:
-          "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)",
-      },
-    ],
   },
   icons: {
     icon: "/favicon.svg",
     apple: "/icon-192x192.png",
   },
-  formatDetection: {
-    telephone: false,
-  },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#135bec",
   width: "device-width",
   initialScale: 1,
@@ -70,13 +50,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body
         className={`${inter.variable} min-h-[100dvh] flex flex-col font-body bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased`}
       >
@@ -91,10 +64,11 @@ export default function RootLayout({
             <AuthProvider>
               <NotificationProvider>
                 <SecurityProvider>
+                  <ServiceWorkerRegistration />
                   <ClientHeader />
                   <CommandPalette />
                   <GlobalModals />
-                  <main className="flex flex-col flex-1 w-full">
+                  <main className="flex flex-col flex-1 w-full relative">
                     <Suspense fallback={null}>
                       <RequireAuth>{children}</RequireAuth>
                     </Suspense>
@@ -116,21 +90,8 @@ export default function RootLayout({
             </AuthProvider>
           </ReduxProvider>
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function() {},
-                    function() {}
-                  );
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );
 }
+

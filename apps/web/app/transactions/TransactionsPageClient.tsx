@@ -6,7 +6,7 @@ import { TransactionDetailsModal } from "@/components/transactions/TransactionDe
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { ArrowRight, Download, Trash2, Edit2, Filter, CheckCircle2, Plus, History } from "lucide-react";
+import { ArrowRight, Download, Trash2, Edit2, Filter, CheckCircle2, Plus, History, Search } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
@@ -237,7 +237,7 @@ export default function TransactionsPageClient() {
           </div>
           <div className="flex-1 flex gap-1.5">
             <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">search</span>
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs w-3.5 h-3.5 text-slate-400" />
               <input value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="w-full h-7 bg-white dark:bg-slate-900 rounded-lg pl-8 text-[9px] font-bold ring-1 ring-slate-100 dark:ring-white/5 outline-none focus:ring-2 focus:ring-primary" placeholder="Search..." />
             </div>
             <button onClick={() => setShowFilters(!showFilters)} className={`h-7 px-2.5 rounded-lg flex items-center gap-2 transition-all ${showFilters ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-white/5"}`}><Filter size={12} /></button>

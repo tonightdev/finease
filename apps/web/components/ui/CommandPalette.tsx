@@ -37,12 +37,21 @@ export function CommandPalette() {
   const user = useSelector((state: RootState) => state.user.profile);
   const isOpen = useSelector((state: RootState) => state.ui.commandPalette.isOpen);
   const [query, setQuery] = React.useState("");
-
-  // Do not render or capture shortcuts if user is not authenticated
-  if (!user) return null;
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
-  const commands: CommandItem[] = [
+  const handleAction = React.useCallback(async (action: () => void) => {
+    // For navigation, we want to close the palette first to avoid layout shift 
+    // or interference with the new page's focus.
+    dispatch(setCommandPalette(false));
+    
+    // Small delay to allow the palette to start closing before navigation
+    setTimeout(() => {
+      action();
+      setQuery("");
+    }, 50);
+  }, [dispatch]);
+
+  const commands = React.useMemo(() => [
     // Navigation
     { id: "nav-dash", name: "Dashboard", category: "Pages", icon: <Home className="w-4 h-4" />, action: () => router.push("/dashboard") },
     { id: "nav-plans", name: "Plans & Goals", category: "Pages", icon: <Layout className="w-4 h-4" />, action: () => router.push("/plans") },
@@ -54,12 +63,12 @@ export function CommandPalette() {
     { id: "act-goal", name: "Create New Goal", category: "Actions", icon: <Target className="w-4 h-4" />, action: () => dispatch(openModal("isGoalModalOpen")) },
     { id: "act-exp", name: "Set Reminder", category: "Actions", icon: <Bell className="w-4 h-4" />, action: () => dispatch(openModal("isExpiryModalOpen")) },
     { id: "act-sim", name: "Start Budget Plan", category: "Actions", icon: <TrendingUp className="w-4 h-4" />, action: () => dispatch(openModal("isSimulationModalOpen")) },
-  ];
+  ], [dispatch, router]);
 
-  const filteredCommands = commands.filter(cmd => 
+  const filteredCommands = React.useMemo(() => commands.filter(cmd => 
     cmd.name.toLowerCase().includes(query.toLowerCase()) || 
     cmd.category.toLowerCase().includes(query.toLowerCase())
-  );
+  ), [commands, query]);
 
   React.useEffect(() => {
     setSelectedIndex(0);
@@ -97,19 +106,11 @@ export function CommandPalette() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, isOpen, filteredCommands, selectedIndex]);
+  }, [dispatch, isOpen, filteredCommands, selectedIndex, handleAction]);
 
-  const handleAction = async (action: () => void) => {
-    // For navigation, we want to close the palette first to avoid layout shift 
-    // or interference with the new page's focus.
-    dispatch(setCommandPalette(false));
-    
-    // Small delay to allow the palette to start closing before navigation
-    setTimeout(() => {
-      action();
-      setQuery("");
-    }, 50);
-  };
+  // Do not render or capture shortcuts if user is not authenticated
+  if (!user) return null;
+
 
   return (
     <AnimatePresence>

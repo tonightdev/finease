@@ -54,6 +54,7 @@ import api from "@/lib/api";
 import {
   User as UserType,
   Account,
+  AccountType,
   Transaction,
   FinancialGoal,
   Expiry,
@@ -143,8 +144,8 @@ export default function SettingsPage() {
         }
       });
       toast.success("Identity profile synchronized");
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
       toast.error("Profile synchronization failure");
     } finally {
       setIsUpdating(false);
@@ -203,8 +204,8 @@ export default function SettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Full identity dataset archived and downloaded");
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch (err) {
+      console.error("Export failed:", err);
       toast.error("Dataset serialization failure");
     } finally {
       setIsExporting(false);
@@ -216,17 +217,33 @@ export default function SettingsPage() {
     window.location.href = "/login?mode=add";
   };
 
-  const handleAccountAction = async (data: any) => {
+  const handleAccountAction = async (data: { 
+    name: string; 
+    type: string; 
+    balance: string; 
+    minimumBalance?: string; 
+    maxLimit?: string; 
+    excludeFromAnalytics?: boolean;
+  }) => {
     try {
       if (editingBankAccount) {
-        await dispatch(updateAccount({ id: editingBankAccount.id, data })).unwrap();
+        await dispatch(updateAccount({ 
+          id: editingBankAccount.id, 
+          data: { 
+            ...data, 
+            type: data.type as AccountType,
+            balance: parseFloat(data.balance) || 0,
+            minimumBalance: data.minimumBalance ? parseFloat(data.minimumBalance) : undefined,
+            maxLimit: data.maxLimit ? parseFloat(data.maxLimit) : undefined
+          } 
+        })).unwrap();
         toast.success("Account identity recalculated");
       } else {
         await dispatch(fetchAccounts({ force: true })); // Ensure type sync
         // Note: createAccount is usually in dashboard or portfolio, but we can add it here too
         // For now, let's assume we use the updateAccount generic for closing etc.
       }
-    } catch (error) {
+    } catch {
       toast.error("Account synchronization failure");
     } finally {
       setIsAccountModalOpen(false);
@@ -241,7 +258,7 @@ export default function SettingsPage() {
         data: { isClosed: !account.isClosed }
       })).unwrap();
       toast.success(account.isClosed ? "Account node re-activated" : "Account node decommissioned");
-    } catch (error) {
+    } catch {
       toast.error("Status transition failure");
     }
   };
@@ -251,7 +268,7 @@ export default function SettingsPage() {
     try {
       await dispatch(deleteBankAccount(id)).unwrap();
       toast.success("Financial node purged from lattice");
-    } catch (error) {
+    } catch {
       toast.error("Purge operation failed");
     }
   };
@@ -941,7 +958,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-6">
-                          {authAccounts.map((acc: any) => (
+                          {authAccounts.map((acc: { uid: string; displayName: string | null; email?: string | null }) => (
                             <Card
                               key={acc.uid}
                               className={`flex-1 min-w-[240px] flex items-center justify-between group transition-all duration-300 relative overflow-hidden shadow-none ${acc.uid === user?.uid

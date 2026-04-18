@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -124,7 +124,7 @@ function PlansDirectoryPageContent() {
   }, [user, dispatch]);
 
   // Calculations
-  const calculateGap = (goal: FinancialGoal) => {
+  const calculateGap = useCallback((goal: FinancialGoal) => {
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
     const monthsRemaining =
@@ -134,7 +134,7 @@ function PlansDirectoryPageContent() {
     if (monthsRemaining <= 0) return 0;
     const shortfall = goal.targetAmount - goal.currentAmount;
     return shortfall / monthsRemaining;
-  };
+  }, []);
 
   const totalRequiredMonthly = useMemo(() => {
     return goals.reduce((acc: number, goal: FinancialGoal) => acc + calculateGap(goal), 0);

@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { FinancialGoal, Expiry, Account, Transaction } from "@repo/types";
 
 export interface UIState {
   modals: {
@@ -9,10 +10,10 @@ export interface UIState {
     isSimulationModalOpen: boolean;
   };
   selection: {
-    selectedGoal: any | null;
-    selectedExpiry: any | null;
-    selectedAccount: any | null;
-    selectedTransaction: any | null;
+    selectedGoal: FinancialGoal | null;
+    selectedExpiry: Expiry | null;
+    selectedAccount: Account | null;
+    selectedTransaction: Transaction | null;
   };
   commandPalette: {
     isOpen: boolean;
@@ -58,7 +59,8 @@ const uiSlice = createSlice({
       state.modals = initialState.modals;
       state.selection = initialState.selection;
     },
-    setSelection: (state, action: PayloadAction<{ key: keyof UIState["selection"]; value: any }>) => {
+    setSelection: (state, action: PayloadAction<{ key: keyof UIState["selection"]; value: FinancialGoal | Expiry | Account | Transaction | null }>) => {
+      // @ts-expect-error - indexing with dynamic key is expected for generic setter
       state.selection[action.payload.key] = action.payload.value;
     },
     clearSelection: (state) => {

@@ -51,11 +51,11 @@ export function AddYearlyExpenseModal({
           accountId: editingExpense.accountId,
         });
       } else {
-        setFormData({
+        setFormData(prev => ({
           title: "",
           yearlyAmount: 0,
-          accountId: formData.accountId || accounts[0]?.id || "",
-        });
+          accountId: prev.accountId,
+        }));
       }
     }
   }, [isOpen, editingExpense]);
@@ -134,7 +134,7 @@ export function AddYearlyExpenseModal({
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               className="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-[11px] font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer"
             >
-              {accounts.map((acc: any) => (
+              {accounts.map((acc) => (
                 <option key={acc.id} value={acc.id}>
                   {acc.name} (₹{acc.balance.toLocaleString()})
                 </option>

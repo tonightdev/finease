@@ -28,6 +28,12 @@ interface TooltipProps {
   label?: string;
 }
 
+interface ChartPoint {
+  month: string;
+  value: number;
+  isProjected?: boolean;
+}
+
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
@@ -58,7 +64,7 @@ export function NetWorthChart({
   const [period, setPeriod] = useState("1M");
   const [projectionMonths, setProjectionMonths] = useState(0);
 
-  const chartData = useMemo(() => {
+  const chartData: ChartPoint[] = useMemo(() => {
     if (projectionMonths === 0) return data;
     
     // Calculate velocity (avg growth per month)
@@ -67,7 +73,7 @@ export function NetWorthChart({
     if (!lastPoint || !firstPoint) return data;
     
     const velocity = (lastPoint.value - firstPoint.value) / Math.max(1, data.length - 1);
-    const result = [...data.map(d => ({ ...d, isProjected: false }))];
+    const result: ChartPoint[] = [...data.map(d => ({ ...d, isProjected: false }))];
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const lastMonthIdx = months.indexOf(lastPoint.month);
@@ -78,7 +84,7 @@ export function NetWorthChart({
             month: nextMonth,
             value: Math.max(0, lastPoint.value + (velocity * i)),
             isProjected: true
-        } as any);
+        });
     }
     
     return result;
@@ -158,7 +164,7 @@ export function NetWorthChart({
             />
             <Area
               type="monotone"
-              data={chartData.filter(d => !(d as any).isProjected || d === data[data.length-1])}
+              data={chartData.filter(d => !d.isProjected || d === data[data.length-1])}
               dataKey="value"
               stroke="#135bec"
               strokeWidth={3}
@@ -175,7 +181,7 @@ export function NetWorthChart({
             {projectionMonths > 0 && (
               <Area
                 type="monotone"
-                data={chartData.filter((d, i) => (d as any).isProjected || i === data.length - 1)}
+                data={chartData.filter((d, i) => d.isProjected || i === data.length - 1)}
                 dataKey="value"
                 stroke="#135bec"
                 strokeWidth={3}
