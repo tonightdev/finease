@@ -282,6 +282,17 @@ function PlansDirectoryPageContent() {
                 Add Goal
               </Button>
             )}
+            {activeTab === "Expiries" && (
+              <Button
+                onClick={() => { setSelectedExpiry(null); setIsExpiryModalOpen(true); }}
+                disabled={isProcessing}
+                size="sm"
+                className="w-full sm:w-auto"
+                leftIcon={<Bell className="w-3.5 h-3.5" />}
+              >
+                Add Expiry
+              </Button>
+            )}
             {activeTab === "Yearly" && (
               <Button
                 onClick={() => { setEditingYearly(null); setIsYearlyModalOpen(true); }}
@@ -308,10 +319,6 @@ function PlansDirectoryPageContent() {
               className="space-y-6 sm:space-y-3"
             >
               <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
-                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
-                  <TrendingUp className="size-5 text-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Active Simulations</h3>
-                </div>
                 <div className="space-y-4">
                   <PlanningStatusFilter
                     activeStatus={simFilter}
@@ -471,10 +478,6 @@ function PlansDirectoryPageContent() {
               className="space-y-6 sm:space-y-3"
             >
               <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
-                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
-                  <Target className="size-5 text-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Financial Targets</h3>
-                </div>
                 <div className="space-y-4">
                   <PlanningStatusFilter
                     activeStatus={goalFilter}
@@ -591,10 +594,6 @@ function PlansDirectoryPageContent() {
               className="space-y-6 sm:space-y-3"
             >
               <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
-                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
-                  <Bell className="size-5 text-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Trigger Monitoring</h3>
-                </div>
                 {expiriesLoading || !expiriesFetched ? (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {Array.from({ length: 4 }).map((_, i) => (
@@ -640,10 +639,6 @@ function PlansDirectoryPageContent() {
               className="space-y-6"
             >
               <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4">
-                <div className="flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none">
-                  <TrendingUp className="size-5 text-primary" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Annual Sinking Funds</h3>
-                </div>
 
                 {yearlyBurdenByAccount.length > 0 && (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">

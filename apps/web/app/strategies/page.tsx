@@ -8,7 +8,6 @@ import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchStrategy, saveStrategy, addStrategyEntry, updateStrategyEntry, removeStrategyEntry, setStrategyBasis } from "@/store/slices/strategiesSlice";
 import { Card } from "@/components/ui/Card";
 import {
-  Plus,
   Target,
   Lightbulb,
   ArrowRight,
@@ -533,17 +532,7 @@ export default function StrategiesPage() {
       <div className="flex flex-col xl:flex-row gap-6 xl:gap-3 items-start">
         <div className={`xl:w-[380px] shrink-0 space-y-6 sm:space-y-3 w-full min-w-0 ${mobileTab === 'controls' ? 'block' : 'hidden xl:block'}`}>
           <Card className="mb-0 pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
-            <div className="flex items-center gap-3 py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
-              <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Plus className="size-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Vector Injection</h3>
-                <p className="text-[10px] font-bold text-slate-400">Add conceptual flows</p>
-              </div>
-            </div>
-
-            <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/5">
+            <div className="flex p-1 mb-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/5">
               <button
                 onClick={() => setNewEntry({ ...newEntry, type: "income", categoryId: "" })}
                 className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${newEntry.type === "income"
@@ -781,21 +770,6 @@ export default function StrategiesPage() {
 
         <div className={`flex-1 w-full min-w-0 ${mobileTab === 'matrix' ? 'block' : 'hidden xl:block'}`}>
           <Card className="h-auto sm:h-full min-h-[400px] sm:min-h-[500px] flex flex-col pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-5 sm:space-y-4">
-            <div className="flex items-center justify-between py-1 mb-4 border-b border-slate-100 dark:border-white/5 sm:border-none">
-              <div className="flex items-center gap-2.5">
-                <div className="size-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
-                  <TrendingUp className="size-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Live Strategies Matrix</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time analysis hub</p>
-                </div>
-              </div>
-              <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest shrink-0 hidden sm:block">
-                Predictive Insight
-              </div>
-            </div>
-
             {isSwitching ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-6">
                 <div className="size-24 rounded-xl bg-slate-50 dark:bg-slate-800/30 flex items-center justify-center border border-dashed border-slate-200 dark:border-white/10 relative">

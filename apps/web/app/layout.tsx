@@ -77,6 +77,7 @@ export default function RootLayout({
                   <PWAInstallGuide />
                   <Toaster
                     position="top-right"
+                    containerClassName="toaster-container"
                     toastOptions={{
                       style: {
                         background: "#333",

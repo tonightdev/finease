@@ -135,7 +135,7 @@ export default function AdminUsersPage() {
         "Engage absolute sanitization for this identity? This will permanently delete all Bank Accounts, Transactions, Goals, and Expiries. This action is irreversible.",
       onConfirm: async () => {
         try {
-          await api.delete(`/admin/users/${uid}/purge`);
+          await api.delete(`/admin/purge/user/${uid}`);
           toast.success("Identity node sanitized successfully");
           // Optionally refresh the list or perform other logic
         } catch {
@@ -185,7 +185,6 @@ export default function AdminUsersPage() {
       <PageHeader
         title="User Governance"
         subtitle={`Commanding ${users.length} registered identities`}
-        backHref="/admin/dashboard"
         actions={
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <button

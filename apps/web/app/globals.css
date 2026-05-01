@@ -89,6 +89,17 @@
 }
 
 /* Custom Component Styles - Outside of Tailwind Layers if they use !important to override */
+.toaster-container {
+  z-index: 999999 !important;
+}
+
+@media (max-width: 640px) {
+  .toaster-container {
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem) !important;
+  }
+}
+
 .mobile-toast {
   font-size: 14px !important;
 }
