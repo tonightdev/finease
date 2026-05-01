@@ -168,6 +168,122 @@ export class AdminController {
     };
   }
 
+  @Delete('users/:uid')
+  async hardDeleteUser(@Param('uid') uid: string, @Req() req: RequestWithUser) {
+    const db = this.usersService.getFirestore();
+    const collections = [
+      'accounts',
+      'transactions',
+      'goals',
+      'categories',
+      'asset_classes',
+      'reminders',
+      'yearly_expenses',
+      'expiries',
+      'simulations',
+      'activity_logs',
+      'sessions',
+    ];
+    let totalPurged = 0;
+
+    for (const collectionName of collections) {
+      const snapshot = await db
+        .collection(collectionName)
+        .where('userId', '==', uid)
+        .get();
+
+      const docs = snapshot.docs;
+      for (let i = 0; i < docs.length; i += 500) {
+        const batch = db.batch();
+        const chunk = docs.slice(i, i + 500);
+        chunk.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        totalPurged += chunk.length;
+      }
+    }
+
+    // Delete strategy document
+    await db.collection('strategies').doc(uid).delete();
+    totalPurged++;
+
+    // Finally delete the user document
+    await db.collection('users').doc(uid).delete();
+    totalPurged++;
+
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'delete' as ActivityType,
+      entityType: 'user_hard_delete',
+      entityId: uid,
+      description: `Admin performed a HARD DELETE of user ${uid}. Total records destroyed: ${totalPurged}`,
+    });
+
+    return {
+      message: `User ${uid} and all associated ${totalPurged} records have been permanently destroyed.`,
+      totalPurged,
+    };
+  }
+
+  @Post('users/:uid/nuclear-purge')
+  async nuclearPurge(@Param('uid') uid: string, @Req() req: RequestWithUser) {
+    const db = this.usersService.getFirestore();
+    const collections = [
+      'accounts',
+      'transactions',
+      'goals',
+      'categories',
+      'asset_classes',
+      'reminders',
+      'yearly_expenses',
+      'expiries',
+      'simulations',
+      'activity_logs',
+      'sessions',
+    ];
+    let totalPurged = 0;
+
+    for (const collectionName of collections) {
+      const snapshot = await db
+        .collection(collectionName)
+        .where('userId', '==', uid)
+        .get();
+
+      const docs = snapshot.docs;
+      for (let i = 0; i < docs.length; i += 500) {
+        const batch = db.batch();
+        const chunk = docs.slice(i, i + 500);
+        chunk.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        totalPurged += chunk.length;
+      }
+    }
+
+    // Delete strategy document
+    await db.collection('strategies').doc(uid).delete();
+    totalPurged++;
+
+    // Reset user document instead of deleting it
+    await db.collection('users').doc(uid).update({
+      hasOnboarded: false,
+      lastActiveAt: null,
+      updatedAt: new Date().toISOString(),
+      // Keep email, displayName, role, etc.
+    });
+
+    await this.activityLogService.logActivity({
+      userId: req.user.uid,
+      action: 'update' as ActivityType,
+      entityType: 'user_nuclear_purge',
+      entityId: uid,
+      description: `Admin executed NUCLEAR PURGE PROTOCOL for user ${uid}. Data sanitized, identity preserved.`,
+    });
+
+    return {
+      message: `Nuclear Purge complete for user ${uid}. All data fragments destroyed, user profile reset to fresh state.`,
+      totalPurged,
+    };
+  }
+
   @Post('users/enable-tour')
   async enableTourForAll(@Req() req: RequestWithUser) {
     return this.usersService.enableTourForAll(req.user.uid);

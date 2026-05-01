@@ -135,15 +135,45 @@ export default function AdminPurgePage() {
     }
   };
 
-  const handlePurgeAll = async () => {
-    if (!selectedUserId) return;
+  const handleNuclearPurge = async (uid?: string) => {
+    const targetId = uid || selectedUserId;
+    if (!targetId) return;
+    
+    const confirmed = window.confirm("Execute NUCLEAR PURGE? All financial data for this user will be destroyed, but the account will remain. Proceed?");
+    if (!confirmed) return;
+
     setItemsLoading(true);
     try {
-      await api.delete(`/admin/purge/user/${selectedUserId}`);
-      setDeletedItems([]);
-      toast.success("Sector sanitized: All fragments destroyed");
+      await api.post(`/admin/users/${targetId}/nuclear-purge`);
+      if (targetId === selectedUserId) {
+        setDeletedItems([]);
+      }
+      toast.success("Nuclear Purge Complete: Sector Reset");
     } catch {
-      toast.error("Failed to purge all items");
+      toast.error("Protocol failure: Reset aborted");
+    } finally {
+      setItemsLoading(false);
+    }
+  };
+
+  const handleHardDelete = async (uid?: string) => {
+    const targetId = uid || selectedUserId;
+    if (!targetId) return;
+    
+    const confirmed = window.confirm("WARNING: This will permanently destroy the identity and all associated data. This action is irreversible. Proceed?");
+    if (!confirmed) return;
+
+    setItemsLoading(true);
+    try {
+      await api.delete(`/admin/users/${targetId}`);
+      setUsers(prev => prev.filter(u => u.id !== targetId));
+      if (targetId === selectedUserId) {
+        setSelectedUserId("");
+        setDeletedItems([]);
+      }
+      toast.success("Identity Neutralized: Total Erasure");
+    } catch {
+      toast.error("Erasure failure: Identity remains active");
     } finally {
       setItemsLoading(false);
     }
@@ -383,17 +413,24 @@ export default function AdminPurgePage() {
                         <span className="ml-1 sm:ml-2 text-slate-400">({filteredItems.length})</span>
                       </h3>
                     </div>
-                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
                       <button
-                        onClick={handlePurgeAll}
-                        disabled={itemsLoading || filteredItems.length === 0}
-                        className="text-[8px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 disabled:opacity-30 flex items-center gap-1 whitespace-nowrap"
+                        onClick={() => handleNuclearPurge()}
+                        disabled={itemsLoading}
+                        className="text-[8px] sm:text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-600 disabled:opacity-30 flex items-center gap-1 whitespace-nowrap"
+                        title="Delete all data but keep user account"
                       >
                         <Zap className="size-3 fill-current shrink-0" />
-                        Purge All Data
+                        Nuclear Reset
                       </button>
-                      <button className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary whitespace-nowrap">
-                        Latest First
+                      <button
+                        onClick={() => handleHardDelete()}
+                        disabled={itemsLoading}
+                        className="text-[8px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 disabled:opacity-30 flex items-center gap-1 whitespace-nowrap"
+                        title="Delete everything including user account"
+                      >
+                        <AlertTriangle className="size-3 fill-current shrink-0" />
+                        Hard Delete
                       </button>
                     </div>
                   </div>

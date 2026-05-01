@@ -56,7 +56,10 @@ export class StrategyService {
     return updatedDoc.data() as BudgetStrategy;
   }
 
-  async addEntry(userId: string, entry: StrategyEntry): Promise<BudgetStrategy> {
+  async addEntry(
+    userId: string,
+    entry: StrategyEntry,
+  ): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
     const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
@@ -82,10 +85,7 @@ export class StrategyService {
     return this.saveStrategy(userId, { entries: newEntries });
   }
 
-  async removeEntry(
-    userId: string,
-    entryId: string,
-  ): Promise<BudgetStrategy> {
+  async removeEntry(userId: string, entryId: string): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
     const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;

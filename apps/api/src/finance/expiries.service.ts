@@ -42,10 +42,7 @@ export class ExpiriesService {
       .filter((expiry) => !expiry.deletedAt);
   }
 
-  async createExpiry(
-    userId: string,
-    data: Partial<Expiry>,
-  ): Promise<Expiry> {
+  async createExpiry(userId: string, data: Partial<Expiry>): Promise<Expiry> {
     const expiryRef = this.collection.doc();
     const now = new Date().toISOString();
     const newExpiry: Expiry = {

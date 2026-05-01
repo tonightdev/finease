@@ -54,10 +54,7 @@ export class SimulationsService {
     return result;
   }
 
-  async update(
-    id: string,
-    plan: Partial<Simulation>,
-  ): Promise<Simulation> {
+  async update(id: string, plan: Partial<Simulation>): Promise<Simulation> {
     await this.findOne(id);
 
     await this.collection.doc(id).update({

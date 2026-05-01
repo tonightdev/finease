@@ -52,7 +52,7 @@ export class YearlyExpensesService {
       throw new NotFoundException(`Yearly expense with ID ${id} not found`);
     }
     const item = { id: doc.id, ...doc.data() } as YearlyExpense;
-    
+
     // Hydrate account name
     try {
       const account = await this.accountsService.findOne(item.accountId);
@@ -62,10 +62,13 @@ export class YearlyExpensesService {
     }
   }
 
-  async create(userId: string, data: Partial<YearlyExpense>): Promise<YearlyExpense> {
+  async create(
+    userId: string,
+    data: Partial<YearlyExpense>,
+  ): Promise<YearlyExpense> {
     const docRef = this.collection.doc();
     const now = new Date().toISOString();
-    
+
     const newExpense: YearlyExpense = {
       id: docRef.id,
       userId,
@@ -91,7 +94,11 @@ export class YearlyExpensesService {
     return newExpense;
   }
 
-  async update(userId: string, id: string, data: Partial<YearlyExpense>): Promise<YearlyExpense> {
+  async update(
+    userId: string,
+    id: string,
+    data: Partial<YearlyExpense>,
+  ): Promise<YearlyExpense> {
     const expenseRef = this.collection.doc(id);
     const doc = await expenseRef.get();
 
@@ -100,17 +107,14 @@ export class YearlyExpensesService {
     }
 
     const prevState = { id: doc.id, ...doc.data() } as YearlyExpense;
-    const updateData = {
-      ...data,
-      yearlyAmount: data.yearlyAmount !== undefined ? Number(data.yearlyAmount) : prevState.yearlyAmount,
-    };
-    
-    // Remove ID and other immutable fields from update payload
-    delete (updateData as any).id;
-    delete (updateData as any).userId;
-    delete (updateData as any).createdAt;
+    const finalUpdate: admin.firestore.UpdateData<YearlyExpense> = {};
+    if (data.title !== undefined) finalUpdate.title = data.title;
+    if (data.yearlyAmount !== undefined)
+      finalUpdate.yearlyAmount = Number(data.yearlyAmount);
+    if (data.accountId !== undefined) finalUpdate.accountId = data.accountId;
+    if (data.deletedAt !== undefined) finalUpdate.deletedAt = data.deletedAt;
 
-    await expenseRef.update(updateData);
+    await expenseRef.update(finalUpdate);
     const updated = await this.findOne(userId, id);
 
     // Log activity
@@ -142,7 +146,7 @@ export class YearlyExpensesService {
     } else {
       await expenseRef.update({
         deletedAt: new Date().toISOString(),
-      } as any);
+      } as admin.firestore.UpdateData<YearlyExpense>);
     }
 
     // Log activity

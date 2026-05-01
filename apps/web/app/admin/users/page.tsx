@@ -14,6 +14,7 @@ import {
   Loader2,
   Search,
   Zap,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -127,19 +128,37 @@ export default function AdminUsersPage() {
     });
   };
 
-  const purgeUserData = (uid: string) => {
+  const nuclearPurgeUserData = (uid: string) => {
     setConfirmModal({
       isOpen: true,
       title: "NUCLEAR PURGE PROTOCOL",
       message:
-        "Engage absolute sanitization for this identity? This will permanently delete all Bank Accounts, Transactions, Goals, and Expiries. This action is irreversible.",
+        "Execute absolute sanitization for this identity? This will permanently delete all Bank Accounts, Transactions, Goals, and Expiries. The user account will be preserved but reset to a fresh state.",
       onConfirm: async () => {
         try {
-          await api.delete(`/admin/purge/user/${uid}`);
-          toast.success("Identity node sanitized successfully");
-          // Optionally refresh the list or perform other logic
+          await api.post(`/admin/users/${uid}/nuclear-purge`);
+          toast.success("Identity node sanitized: Data fragments destroyed");
         } catch {
           toast.error("Critical: Purge operation failure");
+        }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
+  const hardDeleteUser = (uid: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "IDENTITY NEUTRALIZATION",
+      message:
+        "DANGER: This will permanently destroy this identity and ALL associated data. This action is absolute and irreversible. Proceed with total erasure?",
+      onConfirm: async () => {
+        try {
+          await api.delete(`/admin/users/${uid}`);
+          setUsers(prev => prev.filter(u => u.id !== uid));
+          toast.success("Identity neutralized: Total erasure complete");
+        } catch {
+          toast.error("Critical: Erasure protocol failure");
         }
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
@@ -288,11 +307,18 @@ export default function AdminUsersPage() {
                         Reset Tour
                       </button>
                       <button
-                        onClick={() => purgeUserData(u.id)}
-                        className="size-8 rounded-lg flex items-center justify-center transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white"
-                        title="Nuclear Purge"
+                        onClick={() => nuclearPurgeUserData(u.id)}
+                        className="size-8 rounded-lg flex items-center justify-center transition-all bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white"
+                        title="Nuclear Reset (Data Only)"
                       >
                         <Zap className="size-3.5 fill-current" />
+                      </button>
+                      <button
+                        onClick={() => hardDeleteUser(u.id)}
+                        className="size-8 rounded-lg flex items-center justify-center transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white"
+                        title="Hard Delete (Identity + Data)"
+                      >
+                        <AlertTriangle className="size-3.5" />
                       </button>
                       <button
                         onClick={() =>
@@ -355,13 +381,6 @@ export default function AdminUsersPage() {
               </button>
 
               <button
-                onClick={() => resetUserTour(u.id)}
-                className="flex items-center justify-center p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-white/5"
-              >
-                Reset Tour
-              </button>
-
-              <button
                 onClick={() => toggleUserStatus(u.id, u.status || "active")}
                 className={`p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive" ? "bg-emerald-500 text-white border-emerald-600" : "bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/5"}`}
               >
@@ -369,10 +388,17 @@ export default function AdminUsersPage() {
               </button>
 
               <button
-                onClick={() => purgeUserData(u.id)}
-                className="p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white flex items-center justify-center gap-2"
+                onClick={() => nuclearPurgeUserData(u.id)}
+                className="p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-amber-500/10 text-amber-500 border border-amber-500/20 active:bg-amber-500 active:text-white flex items-center justify-center gap-2"
               >
-                <Zap className="size-3 text-rose-500 group-hover:text-white" /> Purge
+                <Zap className="size-3 fill-current" /> Reset Data
+              </button>
+
+              <button
+                onClick={() => hardDeleteUser(u.id)}
+                className="p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-rose-500/10 text-rose-500 border border-rose-500/20 active:bg-rose-500 active:text-white flex items-center justify-center gap-2"
+              >
+                <AlertTriangle className="size-3" /> Hard Delete
               </button>
             </div>
           </Card>

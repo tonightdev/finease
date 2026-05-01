@@ -334,11 +334,7 @@ export class FinanceController {
     @Param('id') id: string,
     @Query('hard') hard: string,
   ) {
-    return this.expiriesService.deleteExpiry(
-      req.user.uid,
-      id,
-      hard === 'true',
-    );
+    return this.expiriesService.deleteExpiry(req.user.uid, id, hard === 'true');
   }
 
   // --- Strategy ---
@@ -390,7 +386,10 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Create a new annual commitment' })
   @Post('yearly-expenses')
-  createYearlyExpense(@Req() req: RequestWithUser, @Body() data: Partial<YearlyExpense>) {
+  createYearlyExpense(
+    @Req() req: RequestWithUser,
+    @Body() data: Partial<YearlyExpense>,
+  ) {
     return this.yearlyExpensesService.create(req.user.uid, data);
   }
 
