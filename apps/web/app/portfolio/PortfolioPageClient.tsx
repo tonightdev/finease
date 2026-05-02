@@ -315,11 +315,15 @@ export default function PortfolioPageClient() {
                 ))
               ) : paginatedInvestments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No growth assets traced</td>
+                  <td colSpan={6} className="px-5 py-20">
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No growth assets traced</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                paginatedInvestments.map((inv) => (
-                  <tr key={inv.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }}>
+                paginatedInvestments.map((inv, index) => (
+                  <tr key={inv.id || `inv-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }}>
                     <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{inv.name}</div>
                     </td>
@@ -372,9 +376,9 @@ export default function PortfolioPageClient() {
               </p>
             </div>
           ) : (
-            paginatedInvestments.map((inv) => (
+            paginatedInvestments.map((inv, index) => (
               <div
-                key={inv.id}
+                key={inv.id || `inv-card-${index}`}
                 className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
               >
                 <div
@@ -511,11 +515,15 @@ export default function PortfolioPageClient() {
                 ))
               ) : paginatedDebts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No exposure clusters traced</td>
+                  <td colSpan={7} className="px-5 py-20">
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No exposure clusters traced</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                paginatedDebts.map((debt) => (
-                  <tr key={debt.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}>
+                paginatedDebts.map((debt, index) => (
+                  <tr key={debt.id || `debt-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}>
                     <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{debt.name}</div>
                     </td>
@@ -560,9 +568,9 @@ export default function PortfolioPageClient() {
               </p>
             </div>
           ) : (
-            paginatedDebts.map((debt) => (
+            paginatedDebts.map((debt, index) => (
               <div
-                key={debt.id}
+                key={debt.id || `debt-card-${index}`}
                 className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
               >
                 <div
@@ -689,11 +697,15 @@ export default function PortfolioPageClient() {
                 ))
               ) : otherAssets.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters traced</td>
+                  <td colSpan={4} className="px-5 py-20">
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters traced</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                otherAssets.map((asset) => (
-                  <tr key={asset.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}>
+                otherAssets.map((asset, index) => (
+                  <tr key={asset.id || `asset-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}>
                     <td className="px-4 py-1.5">
                       <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{asset.name}</div>
                     </td>
@@ -735,9 +747,9 @@ export default function PortfolioPageClient() {
               </p>
             </div>
           ) : (
-            otherAssets.map((asset) => (
+            otherAssets.map((asset, index) => (
               <div
-                key={asset.id}
+                key={asset.id || `asset-card-${index}`}
                 className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
               >
                 <div

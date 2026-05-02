@@ -218,13 +218,13 @@ export default function TransactionsPageClient() {
       >
         <div className={`flex items-center gap-1.5 py-0.5 ${showAllCategories ? "flex-wrap" : "overflow-x-auto no-scrollbar"}`}>
           <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="size-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center shrink-0"><Plus size={12} /></button>
-          {(showAllCategories ? categories : categories.slice(0, 7)).map(c => (
-            <div key={c.id} className="relative group shrink-0">
+          {(showAllCategories ? categories : categories.slice(0, 7)).map((c, index) => (
+            <div key={c.id || `category-${index}`} className="relative group shrink-0">
               <button onClick={() => { setFilterCategory(filterCategory === c.id ? "all" : c.id); setCurrentPage(1); }} className={`flex items-center gap-1.5 pl-2.5 pr-6 py-1 rounded-lg border transition-all ${filterCategory === c.id ? "bg-primary/10 border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"}`}>
                 <div className={`w-1 h-1 rounded-full ${c.color}`} />
                 <span className={`font-black text-[8px] uppercase tracking-widest ${filterCategory === c.id ? "text-primary" : "text-slate-500"}`}>{c.name}</span>
               </button>
-              <button onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }} className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-primary bg-white dark:bg-slate-800 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Edit2 size={8} /></button>
+              <button onClick={(e) => { e.stopPropagation(); setEditingCategory(c); setIsCategoryModalOpen(true); }} className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-primary bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-white/5 transition-all hover:scale-110 active:scale-90"><Edit2 size={8} /></button>
             </div>
           ))}
           {categories.length > 7 && <button onClick={() => setShowAllCategories(!showAllCategories)} className="px-2 h-7 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[8px] font-black uppercase text-slate-500 hover:text-primary transition-all shrink-0">{showAllCategories ? "Less" : `+${categories.length - 7} More`}</button>}
@@ -248,7 +248,7 @@ export default function TransactionsPageClient() {
           <div className="mt-2 p-3 bg-white dark:bg-slate-950/80 backdrop-blur-sm rounded-2xl border border-slate-100 dark:border-white/10 shadow-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="space-y-1">
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Source Account</label>
-              <select value={filterAccount} onChange={(e) => { setFilterAccount(e.target.value); setCurrentPage(1); }} className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"><option value="all">All Accounts</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
+              <select value={filterAccount} onChange={(e) => { setFilterAccount(e.target.value); setCurrentPage(1); }} className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"><option value="all">All Accounts</option>{accounts.map((a, index) => <option key={a.id || `account-${index}`} value={a.id}>{a.name}</option>)}</select>
             </div>
             <div className="space-y-1">
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">Flow Type</label>
@@ -298,17 +298,19 @@ export default function TransactionsPageClient() {
               ))
             ) : paginatedTransactions.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-20 text-center flex flex-col items-center justify-center gap-4">
-                  <History size={48} className="text-slate-200 dark:text-slate-800" />
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">No activities recorded</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Expand your filters to view more data</p>
+                <td colSpan={7} className="px-4 py-20">
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <History size={48} className="text-slate-200 dark:text-slate-800" />
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">No activities recorded</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Expand your filters to view more data</p>
+                    </div>
                   </div>
                 </td>
               </tr>
             ) : (
-              paginatedTransactions.map((tx: Transaction) => (
-                <tr key={tx.id} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => setViewingData(tx)}>
+              paginatedTransactions.map((tx: Transaction, index: number) => (
+                <tr key={tx.id || `tx-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => setViewingData(tx)}>
                   <td className="px-3 py-1.5 text-[10px] font-bold text-slate-500 whitespace-nowrap">{formatDate(tx.date)}</td>
                   <td className="px-3 py-1.5">
                     <div className="text-[11px] font-black text-slate-900 dark:text-white truncate max-w-[200px]" title={tx.description}>{tx.description}</div>
@@ -385,8 +387,8 @@ export default function TransactionsPageClient() {
             </div>
           </div>
         ) : (
-          paginatedTransactions.map((tx: Transaction) => (
-            <Card key={tx.id} onClick={() => setViewingData(tx)} className="group p-2.5 hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden flex flex-col gap-2 min-h-[90px] justify-between">
+          paginatedTransactions.map((tx: Transaction, index: number) => (
+            <Card key={tx.id || `tx-card-${index}`} onClick={() => setViewingData(tx)} className="group p-2.5 hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden flex flex-col gap-2 min-h-[90px] justify-between">
               <div className="space-y-1.5">
                 <div className="flex justify-between items-start gap-1.5 min-w-0">
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
