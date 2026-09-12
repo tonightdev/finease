@@ -11,7 +11,7 @@ import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { RootState } from "@/store";
-import api from "@/lib/api";
+import api, { isTokenOlderThanDays, refreshAuthToken } from "@/lib/api";
 
 interface AuthUser {
   uid: string;
@@ -137,6 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (token) {
         try {
+          if (isTokenOlderThanDays(token, 7)) {
+            await refreshAuthToken(token);
+          }
           const res = await api.get<ApiUserResponse>("/finance/profile");
           const activeUser = buildUser(res.data);
           dispatch(setUser(activeUser));
@@ -277,8 +280,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const tokenMap = JSON.parse(
       localStorage.getItem("finease_token_map") || "{}",
     );
-    const token = tokenMap[uid];
+    let token = tokenMap[uid];
     if (token) {
+      if (isTokenOlderThanDays(token, 7)) {
+        const refreshed = await refreshAuthToken(token);
+        if (refreshed) token = refreshed;
+      }
       localStorage.setItem("finease_token", token);
       window.location.href = "/dashboard";
     }

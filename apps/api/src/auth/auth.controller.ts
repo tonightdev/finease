@@ -41,6 +41,22 @@ export class AuthController {
     return this.authService.resetPassword(data);
   }
 
+  @ApiOperation({ summary: 'Refresh an existing or expired JWT token' })
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Body('token') bodyToken?: string) {
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.split(' ')[1]
+      : undefined;
+    const token = bodyToken || headerToken;
+    if (!token) {
+      throw new UnauthorizedException('No token provided for refresh');
+    }
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.ip;
+    return this.authService.refreshToken(token, { userAgent, ipAddress });
+  }
+
   @ApiOperation({ summary: 'Logout and revoke JWT token' })
   @UseGuards(AuthGuard)
   @Post('logout')

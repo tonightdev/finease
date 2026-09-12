@@ -11,7 +11,7 @@ import { NotificationsController } from './notifications.controller';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
-        signOptions: { expiresIn: '365d' },
+        signOptions: { expiresIn: '3650d' },
       }),
     }),
   ],

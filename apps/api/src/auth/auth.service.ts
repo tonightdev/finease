@@ -9,6 +9,7 @@ import { ActivityType } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
 import { ActivityLogService } from '../common/services/activity-log.service';
+import type { JwtPayload } from '../common/interfaces/request.interface';
 
 interface StoredUser {
   id: string;
@@ -248,7 +249,7 @@ export class AuthService {
     },
   ): Promise<void> {
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days session persistence
+    expiresAt.setFullYear(expiresAt.getFullYear() + 10); // 10 years session persistence (permanent login)
 
     await this.sessionCollection.doc(token).set({
       userId,
@@ -261,6 +262,90 @@ export class AuthService {
       isPWA: metadata?.isPWA || false,
       userName: metadata?.userName || null,
     });
+  }
+
+  async refreshToken(
+    oldToken: string,
+    metadata?: {
+      userAgent?: string;
+      ipAddress?: string;
+      isPWA?: boolean;
+    },
+  ) {
+    let payload: JwtPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(oldToken, {
+        secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
+        ignoreExpiration: true,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or unparseable token');
+    }
+
+    if (!payload?.uid) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    const userDoc = await this.collection.doc(payload.uid).get();
+    if (!userDoc.exists) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const userData = userDoc.data() as StoredUser & {
+      deletedAt?: string | null;
+      role?: string;
+    };
+    if (userData.deletedAt) {
+      throw new UnauthorizedException('Identity has been terminated');
+    }
+
+    // Check existing session doc if present
+    const oldSessionDoc = await this.sessionCollection.doc(oldToken).get();
+    const oldSessionData = oldSessionDoc.exists ? oldSessionDoc.data() : null;
+
+    // Remove old session doc if exists to prevent token accumulation
+    if (oldSessionDoc.exists) {
+      await oldSessionDoc.ref.delete().catch(() => {});
+    }
+
+    let role: string = userData.role || payload.role || 'user';
+    if (userData.email === 'devdpadmin@gmail.com') {
+      role = 'admin';
+    }
+
+    const newToken = this.jwtService.sign({
+      uid: userDoc.id,
+      email: userData.email,
+      role: role,
+    });
+
+    const isPWA =
+      metadata?.isPWA ??
+      (typeof oldSessionData?.['isPWA'] === 'boolean'
+        ? oldSessionData['isPWA']
+        : false);
+
+    await this.createSession(userDoc.id, newToken, {
+      userAgent: metadata?.userAgent,
+      ipAddress: metadata?.ipAddress,
+      isPWA,
+      userName: userData.displayName,
+    });
+
+    await userDoc.ref.update({ lastActiveAt: new Date().toISOString() });
+
+    // Log activity
+    await this.activityLogService.logActivity({
+      userId: userDoc.id,
+      action: 'login' as ActivityType,
+      entityType: 'user',
+      entityId: userDoc.id,
+      description: `Session auto-refreshed: ${userData.displayName}`,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pw, id: _id, ...userProfile } = userData;
+    return { user: { id: userDoc.id, ...userProfile }, token: newToken };
   }
 
   async logout(token: string): Promise<void> {

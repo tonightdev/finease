@@ -128,9 +128,11 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       const uint8Id = Uint8Array.from(atob(credentialId), (c) =>
         c.charCodeAt(0),
       );
-      const options: CredentialRequestOptions = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const options: any = {
         publicKey: {
           challenge,
+          rpId: window.location.hostname,
           allowCredentials: [
             {
               id: uint8Id,
@@ -139,6 +141,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
             },
           ],
           userVerification: "required",
+          hints: ["client-device"],
           timeout: 60000,
         },
       };
@@ -248,10 +251,15 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
       // WebAuthn configuration specifically enforcing local platform biometric
       // residentKey: "discouraged" prevents prompting for cloud passkeys in Google Password Manager
-      const options: CredentialCreationOptions = {
+      // hints: ["client-device"] directs Android/iOS to invoke local fingerprint/face sensor directly
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const options: any = {
         publicKey: {
           challenge,
-          rp: { name: "FinEase Vault" },
+          rp: {
+            id: window.location.hostname,
+            name: "FinEase Vault",
+          },
           user: {
             id: new Uint8Array(16),
             name: "vault@finease.local",
@@ -262,6 +270,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
             { type: "public-key", alg: -257 }, // RS256
           ],
           timeout: 60000,
+          hints: ["client-device"],
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             userVerification: "required",

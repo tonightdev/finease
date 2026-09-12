@@ -56,8 +56,21 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Session expired');
       }
 
-      // Update last active
-      await sessionDoc.ref.update({ lastActiveAt: new Date().toISOString() });
+      // Update last active and keep session extended (10 years)
+      const updates: Record<string, any> = {
+        lastActiveAt: new Date().toISOString(),
+      };
+      if (sessionData?.expiresAt) {
+        const expDate = new Date(sessionData.expiresAt);
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+        if (expDate < oneYearFromNow) {
+          const newExp = new Date();
+          newExp.setFullYear(newExp.getFullYear() + 10);
+          updates.expiresAt = newExp.toISOString();
+        }
+      }
+      await sessionDoc.ref.update(updates);
 
       (request as RequestWithUser).user = payload;
       return true;
