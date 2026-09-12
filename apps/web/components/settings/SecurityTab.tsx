@@ -67,8 +67,8 @@ export function SecurityTab() {
         });
       } else if (isAndroid) {
         setDeviceBiometric({
-          label: "Fingerprint / Face",
-          sublabel: "Android Biometrics",
+          label: "Fingerprint / Face Lock",
+          sublabel: "Physical Device Biometrics",
           isFace: false,
         });
       } else {
@@ -100,7 +100,7 @@ export function SecurityTab() {
           const next = setupPin + num;
           setSetupPin(next);
           if (next.length === 4) {
-            setTimeout(() => setSetupStep(2), 220);
+            setTimeout(() => setSetupStep(2), 250);
           }
         }
       } else {
@@ -111,7 +111,6 @@ export function SecurityTab() {
             if (next === setupPin) {
               const success = await toggleLock(true, "pin", next);
               if (success) {
-                toast.success("Security PIN configured successfully");
                 handleClosePinSetup();
               }
             } else {
@@ -119,12 +118,10 @@ export function SecurityTab() {
               if (typeof window !== "undefined" && window.navigator?.vibrate) {
                 window.navigator.vibrate([80, 50, 80]);
               }
-              toast.error("PINs do not match. Please try again.");
+              toast.error("PINs do not match. Try again.");
               setTimeout(() => {
-                setSetupError(false);
                 setConfirmPin("");
-                setSetupPin("");
-                setSetupStep(1);
+                setSetupError(false);
               }, 600);
             }
           }
@@ -208,7 +205,13 @@ export function SecurityTab() {
             title={deviceBiometric.label}
             subtitle={deviceBiometric.sublabel}
             selected={isBiometricActive}
-            onClick={() => toggleLock(true, "biometric")}
+            onClick={() => {
+              if (isBiometricActive) {
+                void toggleLock(false);
+              } else {
+                void toggleLock(true, "biometric");
+              }
+            }}
           />
 
           <SettingsOptionCard
@@ -217,10 +220,14 @@ export function SecurityTab() {
             subtitle="4-Digit Master Code"
             selected={isPinActive}
             onClick={() => {
-              setSetupStep(1);
-              setSetupPin("");
-              setConfirmPin("");
-              setShowPinSetup(true);
+              if (isPinActive) {
+                void toggleLock(false);
+              } else {
+                setSetupStep(1);
+                setSetupPin("");
+                setConfirmPin("");
+                setShowPinSetup(true);
+              }
             }}
           />
         </div>

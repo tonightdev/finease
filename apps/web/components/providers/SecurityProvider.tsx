@@ -55,6 +55,20 @@ const DIAL_KEYS = [
   { num: "9", sub: "WXYZ" },
 ];
 
+function getValidRpId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const hostname = window.location.hostname;
+  // If IP address or empty, omit rpId so browser automatically resolves origin domain
+  if (
+    !hostname ||
+    /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) ||
+    hostname.includes(":")
+  ) {
+    return undefined;
+  }
+  return hostname;
+}
+
 export function SecurityProvider({ children }: { children: React.ReactNode }) {
   const [isLockEnabled, setIsLockEnabled] = useState(() => {
     if (typeof window !== "undefined") {
@@ -109,7 +123,11 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       const available =
         await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (!available) {
-        setIsLocked(false);
+        if (hasStoredPin) {
+          setUsePinFallback(true);
+        } else {
+          setIsLocked(false);
+        }
         isAuthenticatingRef.current = false;
         setAuthenticating(false);
         return true;
@@ -117,6 +135,9 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
       const credentialId = localStorage.getItem("finease_credential_id");
       if (!credentialId) {
+        if (hasStoredPin) {
+          setUsePinFallback(true);
+        }
         isAuthenticatingRef.current = false;
         setAuthenticating(false);
         return false;
@@ -128,23 +149,29 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       const uint8Id = Uint8Array.from(atob(credentialId), (c) =>
         c.charCodeAt(0),
       );
+
+      const rpId = getValidRpId();
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const options: any = {
-        publicKey: {
-          challenge,
-          rpId: window.location.hostname,
-          allowCredentials: [
-            {
-              id: uint8Id,
-              type: "public-key",
-              transports: ["internal"],
-            },
-          ],
-          userVerification: "required",
-          hints: ["client-device"],
-          timeout: 60000,
-        },
+      const publicKeyOptions: any = {
+        challenge,
+        allowCredentials: [
+          {
+            id: uint8Id,
+            type: "public-key",
+            transports: ["internal"],
+          },
+        ],
+        userVerification: "required",
+        hints: ["client-device"],
+        timeout: 60000,
       };
+
+      if (rpId) {
+        publicKeyOptions.rpId = rpId;
+      }
+
+      const options = { publicKey: publicKeyOptions };
 
       const assertion = await navigator.credentials.get(options);
       if (assertion) {
@@ -163,7 +190,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       setAuthenticating(false);
       return false;
     }
-  }, [lockType]);
+  }, [lockType, hasStoredPin]);
 
   const { user, loading: authLoading } = useAuth();
   const accountsLoading = useSelector(
@@ -249,48 +276,47 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
 
+      const userId = new Uint8Array(16);
+      window.crypto.getRandomValues(userId);
+
+      const rpId = getValidRpId();
+
       // WebAuthn configuration specifically enforcing local platform biometric
       // residentKey: "discouraged" prevents prompting for cloud passkeys in Google Password Manager
       // hints: ["client-device"] directs Android/iOS to invoke local fingerprint/face sensor directly
+      // transports: ["internal"] ensures only on-device hardware sensor is targeted
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const options: any = {
-        publicKey: {
-          challenge,
-          rp: {
-            id: window.location.hostname,
-            name: "FinEase Vault",
-          },
-          user: {
-            id: new Uint8Array(16),
-            name: "vault@finease.local",
-            displayName: "FinEase Vault",
-          },
-          pubKeyCredParams: [
-            { type: "public-key", alg: -7 }, // ES256
-            { type: "public-key", alg: -257 }, // RS256
-          ],
-          timeout: 60000,
-          hints: ["client-device"],
-          authenticatorSelection: {
-            authenticatorAttachment: "platform",
-            userVerification: "required",
-            residentKey: "discouraged",
-            requireResidentKey: false,
-          },
-          attestation: "none",
-          excludeCredentials: localStorage.getItem("finease_credential_id")
-            ? [
-                {
-                  id: Uint8Array.from(
-                    atob(localStorage.getItem("finease_credential_id")!),
-                    (c) => c.charCodeAt(0),
-                  ),
-                  type: "public-key",
-                },
-              ]
-            : [],
+      const publicKeyOptions: any = {
+        challenge,
+        rp: {
+          name: "FinEase Vault",
         },
+        user: {
+          id: userId,
+          name: "finease-device-sensor",
+          displayName: "FinEase Biometric Sensor",
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 }, // ES256
+          { type: "public-key", alg: -257 }, // RS256
+        ],
+        timeout: 60000,
+        hints: ["client-device"],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+          residentKey: "discouraged",
+          requireResidentKey: false,
+        },
+        attestation: "none",
+        excludeCredentials: [],
       };
+
+      if (rpId) {
+        publicKeyOptions.rp.id = rpId;
+      }
+
+      const options = { publicKey: publicKeyOptions };
 
       const credential = (await navigator.credentials.create(
         options,
