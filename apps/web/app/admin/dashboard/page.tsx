@@ -57,7 +57,7 @@ export default function AdminDashboard() {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: async () => { },
+    onConfirm: async () => {},
   });
 
   const handleMigrateSoftDelete = () => {
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{
-                        height: `${Math.min(100, (g.count / ((stats?.totalUsers) || 1)) * 100)}%`,
+                        height: `${Math.min(100, (g.count / (stats?.totalUsers || 1)) * 100)}%`,
                       }}
                       transition={{ delay: i * 0.1, duration: 1 }}
                       className="w-full max-w-[40px] bg-gradient-to-t from-primary/80 to-primary rounded-2xl relative group"

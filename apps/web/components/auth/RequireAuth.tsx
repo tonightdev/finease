@@ -23,22 +23,14 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authLoading || !isHydrated) return;
 
-    if (
-      !user &&
-      pathname &&
-      !PUBLIC_ROUTES.includes(pathname)
-    ) {
+    if (!user && pathname && !PUBLIC_ROUTES.includes(pathname)) {
       toast.error("Logged out");
       router.push("/");
       return;
     }
 
     // Admin route protection: Kicking non-admins out of /admin routes
-    if (
-      user &&
-      pathname?.startsWith("/admin") &&
-      user.role !== "admin"
-    ) {
+    if (user && pathname?.startsWith("/admin") && user.role !== "admin") {
       router.push("/dashboard");
       return;
     }
@@ -98,8 +90,17 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     if (pathname?.startsWith("/admin") && user.role !== "admin") {
       return null;
     }
-    const USER_ONLY_ROUTES = ["/dashboard", "/transactions", "/accounts", "/portfolio", "/goals"];
-    if (user.role === "admin" && USER_ONLY_ROUTES.some((route) => pathname?.startsWith(route))) {
+    const USER_ONLY_ROUTES = [
+      "/dashboard",
+      "/transactions",
+      "/accounts",
+      "/portfolio",
+      "/goals",
+    ];
+    if (
+      user.role === "admin" &&
+      USER_ONLY_ROUTES.some((route) => pathname?.startsWith(route))
+    ) {
       return null;
     }
   }

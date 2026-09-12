@@ -76,7 +76,7 @@ export function FeatureTour() {
     {
       title: "Privacy Protocol",
       description:
-        "Your data is encrypted and private. Use biometric locks or PINs to secure your financial architecture on any device.",
+        "Your data is encrypted and private. Use fingerprint, face lock, or PINs to secure your financial architecture on any device.",
       icon: <ShieldCheck className="w-10 h-10 text-primary" />,
     },
     {

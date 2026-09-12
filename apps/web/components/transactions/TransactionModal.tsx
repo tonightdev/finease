@@ -176,7 +176,7 @@ export function TransactionModal({
         </div>
 
         <div className="flex flex-wrap gap-3">
-            <div className="flex-1 min-w-[140px] space-y-1">
+          <div className="flex-1 min-w-[140px] space-y-1">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Flow Type
             </label>
@@ -190,7 +190,9 @@ export function TransactionModal({
               </button>
               <button
                 disabled={isSaving}
-                onClick={() => setFormData({ ...formData, type: "income", toAccountId: "" })}
+                onClick={() =>
+                  setFormData({ ...formData, type: "income", toAccountId: "" })
+                }
                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${formData.type === "income" ? "bg-white dark:bg-slate-800 text-emerald-500 shadow-sm" : "text-slate-500"} disabled:opacity-50`}
               >
                 In
@@ -205,7 +207,7 @@ export function TransactionModal({
             </div>
           </div>
 
-            <div className="flex-1 min-w-[140px] space-y-1">
+          <div className="flex-1 min-w-[140px] space-y-1">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Execution
             </label>
@@ -252,10 +254,11 @@ export function TransactionModal({
                     value={formData.accountId}
                     onChange={(e) => {
                       const newAccId = e.target.value;
-                      setFormData(prev => ({ 
-                        ...prev, 
+                      setFormData((prev) => ({
+                        ...prev,
                         accountId: newAccId,
-                        toAccountId: prev.toAccountId === newAccId ? "" : prev.toAccountId
+                        toAccountId:
+                          prev.toAccountId === newAccId ? "" : prev.toAccountId,
                       }));
                     }}
                     disabled={isSaving}
@@ -265,14 +268,25 @@ export function TransactionModal({
                       Select Source
                     </option>
                     <optgroup label="Bank Accounts">
-                      {accounts.filter(a => !a.isClosed && a.type === 'bank').map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter((a) => !a.isClosed && a.type === "bank")
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts.filter(a => !a.isClosed && ['cash', 'card'].includes(a.type)).map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter(
+                          (a) =>
+                            !a.isClosed && ["cash", "card"].includes(a.type),
+                        )
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -287,13 +301,19 @@ export function TransactionModal({
                     value={formData.toAccountId}
                     onChange={(e) => {
                       const newToId = e.target.value;
-                      const targetAccount = accounts.find(a => a.id === newToId);
-                      const isInternal = targetAccount && ["bank", "cash", "card", "investment"].includes(targetAccount.type);
-                      
-                      setFormData(prev => ({ 
-                        ...prev, 
+                      const targetAccount = accounts.find(
+                        (a) => a.id === newToId,
+                      );
+                      const isInternal =
+                        targetAccount &&
+                        ["bank", "cash", "card", "investment"].includes(
+                          targetAccount.type,
+                        );
+
+                      setFormData((prev) => ({
+                        ...prev,
                         toAccountId: newToId,
-                        type: isInternal ? "transfer" : prev.type
+                        type: isInternal ? "transfer" : prev.type,
                       }));
                     }}
                     disabled={isSaving}
@@ -302,16 +322,27 @@ export function TransactionModal({
                     <option value="">(None)</option>
                     <optgroup label="Debts & Loans">
                       {accounts
-                        .filter(acc => !acc.isClosed && acc.type === 'debt' && acc.id !== formData.accountId)
+                        .filter(
+                          (acc) =>
+                            !acc.isClosed &&
+                            acc.type === "debt" &&
+                            acc.id !== formData.accountId,
+                        )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{Math.abs(acc.balance).toLocaleString()})
+                            {acc.name} (₹
+                            {Math.abs(acc.balance).toLocaleString()})
                           </option>
                         ))}
                     </optgroup>
                     <optgroup label="Bank Accounts">
                       {accounts
-                        .filter(acc => !acc.isClosed && acc.type === 'bank' && acc.id !== formData.accountId)
+                        .filter(
+                          (acc) =>
+                            !acc.isClosed &&
+                            acc.type === "bank" &&
+                            acc.id !== formData.accountId,
+                        )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
                             {acc.name} (₹{acc.balance.toLocaleString()})
@@ -320,7 +351,12 @@ export function TransactionModal({
                     </optgroup>
                     <optgroup label="Cash & Others">
                       {accounts
-                        .filter(acc => !acc.isClosed && ['cash', 'card'].includes(acc.type) && acc.id !== formData.accountId)
+                        .filter(
+                          (acc) =>
+                            !acc.isClosed &&
+                            ["cash", "card"].includes(acc.type) &&
+                            acc.id !== formData.accountId,
+                        )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
                             {acc.name} (₹{acc.balance.toLocaleString()})
@@ -329,7 +365,12 @@ export function TransactionModal({
                     </optgroup>
                     <optgroup label="Investments">
                       {accounts
-                        .filter(acc => !acc.isClosed && acc.type === 'investment' && acc.id !== formData.accountId)
+                        .filter(
+                          (acc) =>
+                            !acc.isClosed &&
+                            acc.type === "investment" &&
+                            acc.id !== formData.accountId,
+                        )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
                             {acc.name} (₹{acc.balance.toLocaleString()})
@@ -388,14 +429,25 @@ export function TransactionModal({
                       Select Source
                     </option>
                     <optgroup label="Bank Accounts">
-                      {accounts.filter(a => !a.isClosed && a.type === 'bank').map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter((a) => !a.isClosed && a.type === "bank")
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts.filter(a => !a.isClosed && ['cash', 'card'].includes(a.type)).map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter(
+                          (a) =>
+                            !a.isClosed && ["cash", "card"].includes(a.type),
+                        )
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -414,21 +466,50 @@ export function TransactionModal({
                     disabled={isSaving}
                     className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
                   >
-                    <option value="" disabled>Select Destination</option>
+                    <option value="" disabled>
+                      Select Destination
+                    </option>
                     <optgroup label="Bank Accounts">
-                      {accounts.filter(a => !a.isClosed && a.type === 'bank' && a.id !== formData.accountId).map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter(
+                          (a) =>
+                            !a.isClosed &&
+                            a.type === "bank" &&
+                            a.id !== formData.accountId,
+                        )
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts.filter(a => !a.isClosed && ['cash', 'card'].includes(a.type) && a.id !== formData.accountId).map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter(
+                          (a) =>
+                            !a.isClosed &&
+                            ["cash", "card"].includes(a.type) &&
+                            a.id !== formData.accountId,
+                        )
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                     <optgroup label="Investments">
-                      {accounts.filter(a => !a.isClosed && a.type === 'investment' && a.id !== formData.accountId).map(acc => (
-                        <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                      ))}
+                      {accounts
+                        .filter(
+                          (a) =>
+                            !a.isClosed &&
+                            a.type === "investment" &&
+                            a.id !== formData.accountId,
+                        )
+                        .map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name} (₹{acc.balance.toLocaleString()})
+                          </option>
+                        ))}
                     </optgroup>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -453,19 +534,33 @@ export function TransactionModal({
                     Select Destination
                   </option>
                   <optgroup label="Bank Accounts">
-                    {accounts.filter(a => !a.isClosed && a.type === 'bank').map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                    ))}
+                    {accounts
+                      .filter((a) => !a.isClosed && a.type === "bank")
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString()})
+                        </option>
+                      ))}
                   </optgroup>
                   <optgroup label="Cash & Others">
-                    {accounts.filter(a => !a.isClosed && ['cash', 'card'].includes(a.type)).map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                    ))}
+                    {accounts
+                      .filter(
+                        (a) => !a.isClosed && ["cash", "card"].includes(a.type),
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString()})
+                        </option>
+                      ))}
                   </optgroup>
                   <optgroup label="Investments">
-                    {accounts.filter(a => !a.isClosed && a.type === 'investment').map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name} (₹{acc.balance.toLocaleString()})</option>
-                    ))}
+                    {accounts
+                      .filter((a) => !a.isClosed && a.type === "investment")
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString()})
+                        </option>
+                      ))}
                   </optgroup>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />

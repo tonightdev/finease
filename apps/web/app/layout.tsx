@@ -17,7 +17,11 @@ import { CommandPalette } from "@/components/ui/CommandPalette";
 import { GlobalModals } from "@/components/modals/GlobalModals";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "FinEase | Architectural Wealth Management",
@@ -95,4 +99,3 @@ export default function RootLayout({
     </html>
   );
 }
-

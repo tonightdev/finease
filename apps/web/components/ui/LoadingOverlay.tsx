@@ -8,7 +8,11 @@ interface LoadingOverlayProps {
   subMessage?: string;
 }
 
-export function LoadingOverlay({ isOpen, message, subMessage }: LoadingOverlayProps) {
+export function LoadingOverlay({
+  isOpen,
+  message,
+  subMessage,
+}: LoadingOverlayProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,7 +39,11 @@ export function LoadingOverlay({ isOpen, message, subMessage }: LoadingOverlayPr
             {/* Central Pulse */}
             <motion.div
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               className="absolute size-3 bg-primary rounded-sm shadow-[0_0_15px_rgba(19,91,236,0.6)]"
             />
           </div>
@@ -64,22 +72,22 @@ export function LoadingOverlay({ isOpen, message, subMessage }: LoadingOverlayPr
 
           {/* Signature Ambience */}
           <div className="absolute bottom-12 flex items-center gap-1.5 opacity-50">
-             {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    height: [4, 12, 4],
-                    opacity: [0.5, 1, 0.5]
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: "easeInOut"
-                  }}
-                  className="w-0.5 bg-primary rounded-full"
-                />
-             ))}
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  height: [4, 12, 4],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.1,
+                  ease: "easeInOut",
+                }}
+                className="w-0.5 bg-primary rounded-full"
+              />
+            ))}
           </div>
         </motion.div>
       )}

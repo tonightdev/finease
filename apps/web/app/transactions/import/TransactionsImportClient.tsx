@@ -108,7 +108,6 @@ export default function TransactionsImportClient() {
     });
   };
 
-
   const addManualRow = () => {
     const newRow: Partial<Transaction> = {
       id: `manual-${Date.now()}`,
@@ -532,8 +531,6 @@ export default function TransactionsImportClient() {
               </p>
             </div>
 
-
-
             <button
               onClick={addManualRow}
               className="w-full h-12 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-primary hover:text-primary transition-all"
@@ -544,8 +541,6 @@ export default function TransactionsImportClient() {
           </div>
         </div>
       )}
-
-
 
       {stage === "password" && (
         <div className="max-w-md mx-auto py-12">
@@ -620,7 +615,7 @@ export default function TransactionsImportClient() {
                       <select
                         value={
                           mappings[
-                          field.key as keyof TransactionImportMapping
+                            field.key as keyof TransactionImportMapping
                           ] || ""
                         }
                         onChange={(e) =>

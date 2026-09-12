@@ -19,10 +19,7 @@ export function Card({
   onClick,
 }: CardProps) {
   return (
-    <div 
-      className={cn("finease-card p-3.5", className)}
-      onClick={onClick}
-    >
+    <div className={cn("finease-card p-3.5", className)} onClick={onClick}>
       {(title || headerAction) && (
         <div className="flex items-center justify-between mb-4">
           <div>

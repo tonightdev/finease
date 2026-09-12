@@ -59,8 +59,13 @@ export function YearlyExpenseCard({
             </span>
           </div>
           <p className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-            ₹{monthlyAllocation.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            <span className="text-[9px] font-bold text-primary ml-1 uppercase tracking-widest">/ month</span>
+            ₹
+            {monthlyAllocation.toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+            })}
+            <span className="text-[9px] font-bold text-primary ml-1 uppercase tracking-widest">
+              / month
+            </span>
           </p>
         </div>
       </div>

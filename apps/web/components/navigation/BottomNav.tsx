@@ -13,7 +13,7 @@ import {
   BarChart3,
   Trash2,
   Zap,
-  Layers
+  Layers,
 } from "lucide-react";
 
 export function BottomNav() {
@@ -43,8 +43,13 @@ export function BottomNav() {
   const links = isAdmin ? adminLinks : userLinks;
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020408]/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 px-4 mb-0 flex justify-between items-center z-50 transition-all duration-300"
-         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)', paddingTop: '0.5rem' }}>
+    <nav
+      className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/85 dark:bg-[#020408]/85 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 px-2 sm:px-4 mb-0 flex justify-around items-center z-50 transition-all duration-300"
+      style={{
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 0.4rem)",
+        paddingTop: "0.45rem",
+      }}
+    >
       {links.map((link) => {
         const isActive =
           pathname?.startsWith(link.href) ||
@@ -54,14 +59,26 @@ export function BottomNav() {
             key={link.href}
             href={link.href}
             className={clsx(
-              "flex flex-col items-center gap-1 group transition-colors",
+              "flex flex-col items-center justify-center gap-1 py-1 px-1.5 min-w-[48px] rounded-xl transition-all active:scale-90 touch-manipulation select-none",
               isActive
                 ? "text-primary"
-                : "text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white",
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white",
             )}
           >
-            <link.Icon className="w-4.5 h-4.5" />
-            <span className="text-[8px] font-black uppercase tracking-tighter">{link.label}</span>
+            <div className="relative">
+              <link.Icon className="w-5 h-5 transition-transform" />
+              {isActive && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-primary" />
+              )}
+            </div>
+            <span
+              className={clsx(
+                "text-[9px] uppercase tracking-tight transition-colors",
+                isActive ? "font-black text-primary" : "font-semibold",
+              )}
+            >
+              {link.label}
+            </span>
           </Link>
         );
       })}

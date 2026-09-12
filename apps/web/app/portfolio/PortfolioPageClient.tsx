@@ -40,7 +40,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
-
 export default function PortfolioPageClient() {
   const { user, loading: authLoading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -89,7 +88,7 @@ export default function PortfolioPageClient() {
   const [liabilityPage, setLiabilityPage] = useState(1);
   const itemsPerPage = 10;
 
-  const activeAccounts = accounts.filter(a => !a.isClosed);
+  const activeAccounts = accounts.filter((a) => !a.isClosed);
   const investments = activeAccounts.filter((a) => a.type === "investment");
   const debts = activeAccounts.filter((a) => a.type === "debt");
   const otherAssets = activeAccounts.filter((a) => a.type === "asset");
@@ -111,10 +110,7 @@ export default function PortfolioPageClient() {
     .reduce((sum, item) => sum + item.balance, 0);
   const totalCapitalInvested = investments
     .filter((a) => !a.excludeFromAnalytics)
-    .reduce(
-      (sum, item) => sum + (item.investedAmount || item.balance),
-      0,
-    );
+    .reduce((sum, item) => sum + (item.investedAmount || item.balance), 0);
   const liabilities = Math.abs(
     debts
       .filter((a) => !a.excludeFromAnalytics)
@@ -124,7 +120,7 @@ export default function PortfolioPageClient() {
 
   if (authLoading || (loading && accounts.length === 0)) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full space-y-6 pb-20">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 w-full space-y-6 pb-20">
         <div className="h-10 w-48 bg-slate-100 dark:bg-slate-800 rounded-lg" />
         <div className="flex flex-wrap gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -240,49 +236,54 @@ export default function PortfolioPageClient() {
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={`skeleton-stat-${i}`} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2">
-              <Skeleton className="h-2 w-12" />
-              <Skeleton className="h-5 w-24" />
-            </div>
-          ))
-        ) : (
-          [
-            {
-              label: "Net Worth",
-              value: netWorth,
-              color: "text-slate-900 dark:text-white",
-            },
-            {
-              label: "Capital",
-              value: totalCapitalInvested,
-              color: "text-slate-900 dark:text-white",
-            },
-            {
-              label: "Valuation",
-              value: investments
-                .filter((a) => !a.excludeFromAnalytics)
-                .reduce((sum, item) => sum + item.balance, 0),
-              color: "text-emerald-500",
-            },
-            { label: "Liabilities", value: liabilities, color: "text-rose-500" },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
-            >
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                {stat.label}
-              </div>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
               <div
-                className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible`}
+                key={`skeleton-stat-${i}`}
+                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
               >
-                ₹{stat.value.toLocaleString()}
+                <Skeleton className="h-2 w-12" />
+                <Skeleton className="h-5 w-24" />
               </div>
-            </div>
-          ))
-        )}
+            ))
+          : [
+              {
+                label: "Net Worth",
+                value: netWorth,
+                color: "text-slate-900 dark:text-white",
+              },
+              {
+                label: "Capital",
+                value: totalCapitalInvested,
+                color: "text-slate-900 dark:text-white",
+              },
+              {
+                label: "Valuation",
+                value: investments
+                  .filter((a) => !a.excludeFromAnalytics)
+                  .reduce((sum, item) => sum + item.balance, 0),
+                color: "text-emerald-500",
+              },
+              {
+                label: "Liabilities",
+                value: liabilities,
+                color: "text-rose-500",
+              },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
+              >
+                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                  {stat.label}
+                </div>
+                <div
+                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible`}
+                >
+                  ₹{stat.value.toLocaleString()}
+                </div>
+              </div>
+            ))}
       </div>
 
       <div className="space-y-3">
@@ -293,57 +294,125 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Identity</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Class</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Capital</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Valuation</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Yield</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Asset Identity
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Asset Class
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Capital
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Valuation
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Yield
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={`skeleton-inv-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
-                    <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
-                    <td className="px-5 py-4"><Skeleton className="h-3 w-24" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-12 ml-auto" /></td>
-                    <td className="px-4 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                  <tr
+                    key={`skeleton-inv-row-${i}`}
+                    className="border-b border-slate-50 dark:border-white/5"
+                  >
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-3 w-40" />
+                    </td>
+                    <td className="px-5 py-4">
+                      <Skeleton className="h-3 w-24" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-12 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    </td>
                   </tr>
                 ))
               ) : paginatedInvestments.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-20">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No growth assets traced</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No growth assets traced
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginatedInvestments.map((inv, index) => (
-                  <tr key={inv.id || `inv-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingInvestment(inv); setIsAddInvestmentOpen(true); }}>
+                  <tr
+                    key={inv.id || `inv-${index}`}
+                    className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      setEditingInvestment(inv);
+                      setIsAddInvestmentOpen(true);
+                    }}
+                  >
                     <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{inv.name}</div>
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                        {inv.name}
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${assetTypes.find(a => a.id === inv.assetType)?.color || "bg-slate-400"}`} />
-                        <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">{assetTypes.find(a => a.id === inv.assetType)?.name || inv.assetType || "General"}</span>
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full ${assetTypes.find((a) => a.id === inv.assetType)?.color || "bg-slate-400"}`}
+                        />
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">
+                          {assetTypes.find((a) => a.id === inv.assetType)
+                            ?.name ||
+                            inv.assetType ||
+                            "General"}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">₹{(inv.investedAmount || inv.balance).toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">₹{inv.balance.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                      ₹{(inv.investedAmount || inv.balance).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
+                      ₹{inv.balance.toLocaleString()}
+                    </td>
                     <td className="px-5 py-3 text-right font-black text-[11px]">
-                      <span className={inv.balance >= (inv.investedAmount || inv.balance) ? "text-emerald-500" : "text-rose-500"}>
-                        {(((inv.balance - (inv.investedAmount || inv.balance)) / (inv.investedAmount || inv.balance)) * 100 || 0).toFixed(1)}%
+                      <span
+                        className={
+                          inv.balance >= (inv.investedAmount || inv.balance)
+                            ? "text-emerald-500"
+                            : "text-rose-500"
+                        }
+                      >
+                        {(
+                          ((inv.balance - (inv.investedAmount || inv.balance)) /
+                            (inv.investedAmount || inv.balance)) *
+                            100 || 0
+                        ).toFixed(1)}
+                        %
                       </span>
                     </td>
-                    <td className="px-4 py-1.5">
-                    </td>
+                    <td className="px-4 py-1.5"></td>
                     <td className="px-4 py-1.5 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: inv.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToDelete({ id: inv.id, type: "account" });
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -355,7 +424,10 @@ export default function PortfolioPageClient() {
         <div className="lg:hidden grid grid-cols-2 gap-3">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={`skeleton-inv-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+              <div
+                key={`skeleton-inv-card-${i}`}
+                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3"
+              >
                 <div className="flex justify-between items-start">
                   <div className="space-y-2 flex-1">
                     <Skeleton className="h-2 w-16" />
@@ -432,7 +504,7 @@ export default function PortfolioPageClient() {
                         {(
                           ((inv.balance - (inv.investedAmount || inv.balance)) /
                             (inv.investedAmount || inv.balance)) *
-                          100 || 0
+                            100 || 0
                         ).toFixed(1)}
                         %
                       </span>
@@ -491,51 +563,116 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Class</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Limit</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Repaid</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Interest</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Net Balance</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Identity
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Class
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Limit
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Repaid
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Interest
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Net Balance
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={`skeleton-debt-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
-                    <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
-                    <td className="px-5 py-4"><Skeleton className="h-3 w-16" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                  <tr
+                    key={`skeleton-debt-row-${i}`}
+                    className="border-b border-slate-50 dark:border-white/5"
+                  >
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-3 w-40" />
+                    </td>
+                    <td className="px-5 py-4">
+                      <Skeleton className="h-3 w-16" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    </td>
                   </tr>
                 ))
               ) : paginatedDebts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-20">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No exposure clusters traced</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No exposure clusters traced
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginatedDebts.map((debt, index) => (
-                  <tr key={debt.id || `debt-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingLiability(debt); setIsAddLiabilityOpen(true); }}>
+                  <tr
+                    key={debt.id || `debt-${index}`}
+                    className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      setEditingLiability(debt);
+                      setIsAddLiabilityOpen(true);
+                    }}
+                  >
                     <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{debt.name}</div>
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                        {debt.name}
+                      </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">{debt.type}</span>
+                      <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">
+                        {debt.type}
+                      </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">₹{(debt.initialAmount || Math.abs(debt.balance) + (debt.repaidCapital || 0)).toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-emerald-500">₹{(debt.repaidCapital || 0).toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-orange-500">₹{(debt.burnedInterest || 0).toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-rose-500">₹{Math.abs(debt.balance).toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                      ₹
+                      {(
+                        debt.initialAmount ||
+                        Math.abs(debt.balance) + (debt.repaidCapital || 0)
+                      ).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-emerald-500">
+                      ₹{(debt.repaidCapital || 0).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-[11px] text-orange-500">
+                      ₹{(debt.burnedInterest || 0).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-rose-500">
+                      ₹{Math.abs(debt.balance).toLocaleString()}
+                    </td>
                     <td className="px-5 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: debt.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToDelete({ id: debt.id, type: "account" });
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -547,7 +684,10 @@ export default function PortfolioPageClient() {
         <div className="lg:hidden grid grid-cols-2 gap-3">
           {loading ? (
             Array.from({ length: 2 }).map((_, i) => (
-              <div key={`skeleton-debt-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+              <div
+                key={`skeleton-debt-card-${i}`}
+                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3"
+              >
                 <div className="flex justify-between items-start">
                   <div className="space-y-2 flex-1">
                     <Skeleton className="h-2 w-12" />
@@ -556,7 +696,10 @@ export default function PortfolioPageClient() {
                   <Skeleton className="h-4 w-16" />
                 </div>
                 <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
-                  <div className="flex gap-2 flex-1"><Skeleton className="h-6 w-12" /><Skeleton className="h-6 w-12" /></div>
+                  <div className="flex gap-2 flex-1">
+                    <Skeleton className="h-6 w-12" />
+                    <Skeleton className="h-6 w-12" />
+                  </div>
                   <Skeleton className="size-7 rounded-lg" />
                 </div>
               </div>
@@ -679,42 +822,85 @@ export default function PortfolioPageClient() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Asset Identity</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Class</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Valuation</th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Asset Identity
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Class
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Valuation
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 2 }).map((_, i) => (
-                  <tr key={`skeleton-aux-row-${i}`} className="border-b border-slate-50 dark:border-white/5">
-                    <td className="px-4 py-4"><Skeleton className="h-3 w-40" /></td>
-                    <td className="px-5 py-4"><Skeleton className="h-3 w-32" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="h-3 w-20 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><Skeleton className="size-7 rounded-lg ml-auto" /></td>
+                  <tr
+                    key={`skeleton-aux-row-${i}`}
+                    className="border-b border-slate-50 dark:border-white/5"
+                  >
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-3 w-40" />
+                    </td>
+                    <td className="px-5 py-4">
+                      <Skeleton className="h-3 w-32" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    </td>
                   </tr>
                 ))
               ) : otherAssets.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-5 py-20">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No auxiliary wealth clusters traced</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No auxiliary wealth clusters traced
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 otherAssets.map((asset, index) => (
-                  <tr key={asset.id || `asset-${index}`} className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setEditingAsset(asset); setIsAddAssetOpen(true); }}>
+                  <tr
+                    key={asset.id || `asset-${index}`}
+                    className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      setEditingAsset(asset);
+                      setIsAddAssetOpen(true);
+                    }}
+                  >
                     <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">{asset.name}</div>
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                        {asset.name}
+                      </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">Fixed Asset Identity</span>
+                      <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">
+                        Fixed Asset Identity
+                      </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">₹{asset.balance.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
+                      ₹{asset.balance.toLocaleString()}
+                    </td>
                     <td className="px-5 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: asset.id, type: "account" }); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToDelete({ id: asset.id, type: "account" });
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -726,7 +912,10 @@ export default function PortfolioPageClient() {
         <div className="lg:hidden grid grid-cols-2 gap-3">
           {loading ? (
             Array.from({ length: 2 }).map((_, i) => (
-              <div key={`skeleton-aux-card-${i}`} className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-3">
+              <div
+                key={`skeleton-aux-card-${i}`}
+                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-3"
+              >
                 <div className="flex justify-between items-start">
                   <div className="space-y-2 flex-1">
                     <Skeleton className="h-2 w-16" />
@@ -836,7 +1025,6 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-
         }}
       />
 
@@ -883,7 +1071,6 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-
         }}
       />
 
@@ -919,7 +1106,6 @@ export default function PortfolioPageClient() {
               }),
             ).unwrap();
           }
-
         }}
       />
 
@@ -949,7 +1135,6 @@ export default function PortfolioPageClient() {
             ).unwrap();
             toast.success("Asset Class added");
           }
-
         }}
         onDelete={async (id) => {
           setItemToDelete({ id, type: "assetClass" });
@@ -979,8 +1164,6 @@ export default function PortfolioPageClient() {
         message="This operation will remove the data node from the synchronized ledger. This cannot be undone."
         confirmText="Execute Purge"
       />
-
-
     </PageContainer>
   );
 }

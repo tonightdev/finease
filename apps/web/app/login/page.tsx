@@ -14,7 +14,7 @@ function LoginContent() {
   const { loginWithGoogle, user, resetPassword } = useAuth();
   const searchParams = useSearchParams();
   const isAddMode = searchParams.get("mode") === "add";
-  
+
   const [userEmail, setUserEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ function LoginContent() {
     // Check URL directly to avoid race conditions with useSearchParams hydration
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get("mode");
-    
+
     // Only redirect if NOT explicitly in add mode
     if (mode !== "add") {
       router.push("/dashboard");
@@ -90,19 +90,19 @@ function LoginContent() {
             {isAddMode ? "Authorize New Node" : "Welcome back."}
           </h1>
           <p className="text-sm font-medium text-slate-500">
-            {isAddMode 
-              ? "Link another identity to your local bridge." 
+            {isAddMode
+              ? "Link another identity to your local bridge."
               : "Sign in to your FinEase command center."}
           </p>
         </div>
 
         {isAddMode && (
-             <button 
-                onClick={() => router.push('/dashboard')}
-                className="text-[10px] font-black uppercase text-primary hover:underline -mt-4 text-center"
-             >
-                Cancel & Return to Dashboard
-             </button>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="text-[10px] font-black uppercase text-primary hover:underline -mt-4 text-center"
+          >
+            Cancel & Return to Dashboard
+          </button>
         )}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
@@ -227,9 +227,9 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <LoginContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
 }

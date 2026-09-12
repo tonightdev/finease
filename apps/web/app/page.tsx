@@ -10,14 +10,13 @@ import {
   Activity,
   Box,
   LayoutDashboard,
-  Target
+  Target,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#020408] selection:bg-primary/30">
-
       {/* Hero Section */}
       <section className="relative pt-4 pb-6 overflow-hidden">
         {/* Background Decorative Elements */}
@@ -60,7 +59,9 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-medium"
             >
-              Commandeer your capital with live ledger analytics, strategic adherence limits, and isolated event modeling. Tactical control for the modern architect.
+              Commandeer your capital with live ledger analytics, strategic
+              adherence limits, and isolated event modeling. Tactical control
+              for the modern architect.
             </motion.p>
 
             <motion.div
@@ -110,7 +111,9 @@ export default function LandingPage() {
                   Wealth Command
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                  The centralized hub syncing Net Worth trajectories, Liability aggregates, and live liquidity metrics across all attached nodes.
+                  The centralized hub syncing Net Worth trajectories, Liability
+                  aggregates, and live liquidity metrics across all attached
+                  nodes.
                 </p>
               </div>
             </div>
@@ -125,7 +128,9 @@ export default function LandingPage() {
                   Live Strategies Matrix
                 </h3>
                 <p className="text-xs font-medium leading-relaxed opacity-90">
-                  Experiment with dual perspective parameters (yearly/monthly) and zero-latency modeling to construct precise capital strategies before deploying funds.
+                  Experiment with dual perspective parameters (yearly/monthly)
+                  and zero-latency modeling to construct precise capital
+                  strategies before deploying funds.
                 </p>
               </div>
             </div>
@@ -139,7 +144,9 @@ export default function LandingPage() {
                 Interactive Simulations
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                Persisted micro-ledgers. Spin up high-fidelity simulations for trips and events to verify exactly which accounts liquidate to hit targets.
+                Persisted micro-ledgers. Spin up high-fidelity simulations for
+                trips and events to verify exactly which accounts liquidate to
+                hit targets.
               </p>
             </div>
 
@@ -152,7 +159,9 @@ export default function LandingPage() {
                 Goal Execution
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                Lock your trajectories to strict end-dates. The engine paces real-world savings against calculated velocities to ensure retirement and assets land perfectly.
+                Lock your trajectories to strict end-dates. The engine paces
+                real-world savings against calculated velocities to ensure
+                retirement and assets land perfectly.
               </p>
             </div>
 
@@ -165,7 +174,9 @@ export default function LandingPage() {
                 Asset Portfolio
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                Deep tracking into fixed deposits, equities, and real estate vectors. Automatically map the delta between input capital against massive long-term valuations.
+                Deep tracking into fixed deposits, equities, and real estate
+                vectors. Automatically map the delta between input capital
+                against massive long-term valuations.
               </p>
             </div>
 
@@ -179,7 +190,10 @@ export default function LandingPage() {
                   Universal Ledgers (Integrated Hub)
                 </h3>
                 <p className="text-xs font-medium leading-relaxed opacity-80 max-w-3xl">
-                  Commandeer your fiscal state with high-fidelity ledger tracking. Utilize advanced category splitting and native historical analytics via our integrated Intelligence hub—fully optimized for high-density professional monitoring.
+                  Commandeer your fiscal state with high-fidelity ledger
+                  tracking. Utilize advanced category splitting and native
+                  historical analytics via our integrated Intelligence hub—fully
+                  optimized for high-density professional monitoring.
                 </p>
               </div>
             </div>
@@ -193,16 +207,20 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div className="space-y-3">
               <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Zero Fees. <span className="text-primary italic">Absolute Privacy.</span>
+                Zero Fees.{" "}
+                <span className="text-primary italic">Absolute Privacy.</span>
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  "No generic \"Budgeting\"",
+                  'No generic "Budgeting"',
                   "Pure Cloud Data Sync",
                   "Universal Platform Scaling",
-                  "End-to-End Encryption"
+                  "End-to-End Encryption",
                 ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400"
+                  >
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     {item}
                   </li>
@@ -212,8 +230,13 @@ export default function LandingPage() {
             <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex items-center gap-4">
               <ShieldCheck className="w-8 h-8 text-emerald-500 flex-shrink-0" />
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Sovereignty Enforced</p>
-                <p className="text-[10px] font-medium text-slate-500 italic">&quot;Data rests fully obfuscated. We intercept zero transactions.&quot;</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  Sovereignty Enforced
+                </p>
+                <p className="text-[10px] font-medium text-slate-500 italic">
+                  &quot;Data rests fully obfuscated. We intercept zero
+                  transactions.&quot;
+                </p>
               </div>
             </div>
           </div>

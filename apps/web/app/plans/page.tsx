@@ -26,20 +26,29 @@ import {
   Target,
   Bell,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 
 import { PlanningStatusFilter } from "@/components/planning/PlanningStatusFilter";
 
 // Redux Actions
-import { createSimulationAction, deleteSimulationAction, fetchSimulations, updateSimulationAction } from "@/store/slices/simulationsSlice";
+import {
+  createSimulationAction,
+  deleteSimulationAction,
+  fetchSimulations,
+  updateSimulationAction,
+} from "@/store/slices/simulationsSlice";
 import {
   fetchGoals,
   addGoalAction,
   updateGoalAction,
   deleteGoalAction,
 } from "@/store/slices/goalsSlice";
-import { fetchExpiries, createExpiryAction, updateExpiryAction } from "@/store/slices/expiriesSlice";
+import {
+  fetchExpiries,
+  createExpiryAction,
+  updateExpiryAction,
+} from "@/store/slices/expiriesSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import {
@@ -51,7 +60,13 @@ import {
 } from "@/store/slices/yearlySlice";
 
 // Shared Logic/Types
-import { FinancialGoal, Simulation, SimAccount, SimExpense, Expiry } from "@repo/types";
+import {
+  FinancialGoal,
+  Simulation,
+  SimAccount,
+  SimExpense,
+  Expiry,
+} from "@repo/types";
 import { formatDate } from "@/lib/utils";
 
 // Modal Components
@@ -76,15 +91,35 @@ function PlansDirectoryPageContent() {
   // Tab State
   const [activeTab, setActiveTab] = useState<TabType>("Simulations");
 
-  const { items: plans, loading: plansLoading, lastFetched: plansFetched } = useSelector((state: RootState) => state.simulations);
-  const { items: goals, loading: goalsLoading, lastFetched: goalsFetched } = useSelector((state: RootState) => state.goals);
-  const { items: expiries, loading: expiriesLoading, lastFetched: expiriesFetched } = useSelector((state: RootState) => state.expiries);
-  const { items: yearlyExpenses, loading: yearlyLoading, lastFetched: yearlyFetched } = useSelector((state: RootState) => state.yearlyExpenses);
+  const {
+    items: plans,
+    loading: plansLoading,
+    lastFetched: plansFetched,
+  } = useSelector((state: RootState) => state.simulations);
+  const {
+    items: goals,
+    loading: goalsLoading,
+    lastFetched: goalsFetched,
+  } = useSelector((state: RootState) => state.goals);
+  const {
+    items: expiries,
+    loading: expiriesLoading,
+    lastFetched: expiriesFetched,
+  } = useSelector((state: RootState) => state.expiries);
+  const {
+    items: yearlyExpenses,
+    loading: yearlyLoading,
+    lastFetched: yearlyFetched,
+  } = useSelector((state: RootState) => state.yearlyExpenses);
   const { items: accounts } = useSelector((state: RootState) => state.accounts);
 
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
-  const [simFilter, setSimFilter] = useState<"ongoing" | "completed">("ongoing");
-  const [goalFilter, setGoalFilter] = useState<"ongoing" | "completed">("ongoing");
+  const [simFilter, setSimFilter] = useState<"ongoing" | "completed">(
+    "ongoing",
+  );
+  const [goalFilter, setGoalFilter] = useState<"ongoing" | "completed">(
+    "ongoing",
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [navMessage, setNavMessage] = useState("");
@@ -101,13 +136,17 @@ function PlansDirectoryPageContent() {
   const [goalToDelete, setGoalToDelete] = useState<FinancialGoal | null>(null);
   const [isGoalDeleteModalOpen, setIsGoalDeleteModalOpen] = useState(false);
 
-  const [editingYearly, setEditingYearly] = useState<YearlyExpense | null>(null);
+  const [editingYearly, setEditingYearly] = useState<YearlyExpense | null>(
+    null,
+  );
   const [yearlyToDelete, setYearlyToDelete] = useState<string | null>(null);
 
   // Sync tab with URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (["Simulations", "Goals", "Expiries", "Yearly"].includes(tabParam || "")) {
+    if (
+      ["Simulations", "Goals", "Expiries", "Yearly"].includes(tabParam || "")
+    ) {
       setActiveTab(tabParam as TabType);
     }
   }, [searchParams]);
@@ -137,27 +176,38 @@ function PlansDirectoryPageContent() {
   }, []);
 
   const totalRequiredMonthly = useMemo(() => {
-    return goals.reduce((acc: number, goal: FinancialGoal) => acc + calculateGap(goal), 0);
+    return goals.reduce(
+      (acc: number, goal: FinancialGoal) => acc + calculateGap(goal),
+      0,
+    );
   }, [goals, calculateGap]);
 
   const totalYearlyBurden = useMemo(() => {
     return (yearlyExpenses || []).reduce((acc: number, exp: YearlyExpense) => {
       const amount = Number(exp.yearlyAmount) || 0;
-      return acc + (amount / 12);
+      return acc + amount / 12;
     }, 0);
   }, [yearlyExpenses]);
 
   const yearlyBurdenByAccount = useMemo(() => {
-    const groups: Record<string, { name: string; amount: number; balance: number; accountId: string }> = {};
+    const groups: Record<
+      string,
+      { name: string; amount: number; balance: number; accountId: string }
+    > = {};
     (yearlyExpenses || []).forEach((exp: YearlyExpense) => {
       const accountId = exp.accountId || "unlinked";
-      const account = (accounts || []).find(a => a.id === accountId);
+      const account = (accounts || []).find((a) => a.id === accountId);
       const accountName = account?.name || exp.accountName || "Unlinked";
       const balance = account?.balance || 0;
 
       const monthlyAmount = (Number(exp.yearlyAmount) || 0) / 12;
       if (!groups[accountId]) {
-        groups[accountId] = { accountId, name: accountName, amount: 0, balance };
+        groups[accountId] = {
+          accountId,
+          name: accountName,
+          amount: 0,
+          balance,
+        };
       }
       groups[accountId].amount += monthlyAmount;
     });
@@ -173,7 +223,7 @@ function PlansDirectoryPageContent() {
         createdAt: new Date().toISOString(),
         accounts: [],
         expenses: [],
-        status: "ongoing" as const
+        status: "ongoing" as const,
       };
       setNavMessage("Initializing Simulation...");
       setIsNavigating(true);
@@ -190,9 +240,16 @@ function PlansDirectoryPageContent() {
   const handleTogglePlanStatus = async (plan: Simulation) => {
     setIsProcessing(true);
     try {
-      const newStatus: "ongoing" | "completed" = plan.status === "completed" ? "ongoing" : "completed";
-      await dispatch(updateSimulationAction({ id: plan.id, data: { status: newStatus } })).unwrap();
-      toast.success(newStatus === "completed" ? "Simulation completed" : "Simulation reopened");
+      const newStatus: "ongoing" | "completed" =
+        plan.status === "completed" ? "ongoing" : "completed";
+      await dispatch(
+        updateSimulationAction({ id: plan.id, data: { status: newStatus } }),
+      ).unwrap();
+      toast.success(
+        newStatus === "completed"
+          ? "Simulation completed"
+          : "Simulation reopened",
+      );
     } catch {
       toast.error("Failed to update status");
     } finally {
@@ -214,7 +271,9 @@ function PlansDirectoryPageContent() {
   };
 
   const filteredPlans = useMemo(() => {
-    return plans.filter((p: Simulation) => (p.status || "ongoing") === simFilter);
+    return plans.filter(
+      (p: Simulation) => (p.status || "ongoing") === simFilter,
+    );
   }, [plans, simFilter]);
 
   const filteredGoals = useMemo(() => {
@@ -231,7 +290,15 @@ function PlansDirectoryPageContent() {
         subtitle={
           activeTab === "Goals" ? (
             <div className="flex items-center gap-1.5 transition-all">
-              Need <span className="text-primary font-bold">₹{totalRequiredMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</span> to meet all targets.
+              Need{" "}
+              <span className="text-primary font-bold">
+                ₹
+                {totalRequiredMonthly.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
+                /mo
+              </span>{" "}
+              to meet all targets.
             </div>
           ) : activeTab === "Expiries" ? (
             "Active triggers and financial expiries"
@@ -245,18 +312,21 @@ function PlansDirectoryPageContent() {
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl h-11 w-full sm:w-auto">
-            {(["Simulations", "Goals", "Expiries", "Yearly"] as TabType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 sm:flex-none px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab
-                  ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            {(["Simulations", "Goals", "Expiries", "Yearly"] as TabType[]).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 sm:flex-none px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    activeTab === tab
+                      ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                   }`}
-              >
-                {tab}
-              </button>
-            ))}
+                >
+                  {tab}
+                </button>
+              ),
+            )}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -266,14 +336,23 @@ function PlansDirectoryPageContent() {
                 disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
-                leftIcon={isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                leftIcon={
+                  isProcessing ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )
+                }
               >
                 {isProcessing ? "Initializing..." : "Initialize Simulation"}
               </Button>
             )}
             {activeTab === "Goals" && (
               <Button
-                onClick={() => { setEditingGoal(null); setIsGoalModalOpen(true); }}
+                onClick={() => {
+                  setEditingGoal(null);
+                  setIsGoalModalOpen(true);
+                }}
                 disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
@@ -284,7 +363,10 @@ function PlansDirectoryPageContent() {
             )}
             {activeTab === "Expiries" && (
               <Button
-                onClick={() => { setSelectedExpiry(null); setIsExpiryModalOpen(true); }}
+                onClick={() => {
+                  setSelectedExpiry(null);
+                  setIsExpiryModalOpen(true);
+                }}
                 disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
@@ -295,7 +377,10 @@ function PlansDirectoryPageContent() {
             )}
             {activeTab === "Yearly" && (
               <Button
-                onClick={() => { setEditingYearly(null); setIsYearlyModalOpen(true); }}
+                onClick={() => {
+                  setEditingYearly(null);
+                  setIsYearlyModalOpen(true);
+                }}
                 disabled={isProcessing}
                 size="sm"
                 className="w-full sm:w-auto"
@@ -332,7 +417,10 @@ function PlansDirectoryPageContent() {
                   {plansLoading || !plansFetched ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={`plan-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+                        <div
+                          key={`plan-skeleton-${i}`}
+                          className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]"
+                        >
                           <div className="flex justify-between items-start">
                             <Skeleton className="size-6 rounded-lg" />
                             <Skeleton className="h-4 w-12 rounded" />
@@ -357,10 +445,18 @@ function PlansDirectoryPageContent() {
                   ) : filteredPlans.length === 0 ? (
                     <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {simFilter === "completed" ? "No historical simulations found" : "No active simulations configured"}
+                        {simFilter === "completed"
+                          ? "No historical simulations found"
+                          : "No active simulations configured"}
                       </p>
                       {simFilter === "ongoing" && (
-                        <Button onClick={handleCreatePlan} variant="outline" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="w-auto mt-4">
+                        <Button
+                          onClick={handleCreatePlan}
+                          variant="outline"
+                          size="sm"
+                          leftIcon={<Plus className="w-3.5 h-3.5" />}
+                          className="w-auto mt-4"
+                        >
                           Initialize Simulation
                         </Button>
                       )}
@@ -381,14 +477,19 @@ function PlansDirectoryPageContent() {
                               setIsNavigating(true);
                               router.push(`/plans/${plan.id}`);
                             }}
-                            className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all h-full flex flex-col justify-between cursor-pointer ${plan.status === "completed" ? "opacity-75 grayscale-[0.2]" : ""
-                              } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.1)] overflow-hidden`}
+                            className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all h-full flex flex-col justify-between cursor-pointer ${
+                              plan.status === "completed"
+                                ? "opacity-75 grayscale-[0.2]"
+                                : ""
+                            } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.1)] overflow-hidden`}
                           >
                             {/* Animated Background Mesh Gradient (on hover) */}
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-[radial-gradient(circle_at_top_right,var(--primary-light),transparent),radial-gradient(circle_at_bottom_left,var(--secondary-light),transparent)]" />
 
                             {/* Accent Edge */}
-                            <div className={`absolute top-0 left-0 w-full h-[3px] transition-all duration-300 ${plan.status === "completed" ? "bg-slate-300 dark:bg-slate-700" : "bg-gradient-to-r from-primary via-indigo-500 to-emerald-500"}`} />
+                            <div
+                              className={`absolute top-0 left-0 w-full h-[3px] transition-all duration-300 ${plan.status === "completed" ? "bg-slate-300 dark:bg-slate-700" : "bg-gradient-to-r from-primary via-indigo-500 to-emerald-500"}`}
+                            />
 
                             <div className="space-y-3.5 sm:space-y-5 relative z-10">
                               <div className="flex justify-between items-start">
@@ -404,9 +505,17 @@ function PlansDirectoryPageContent() {
                                         handleTogglePlanStatus(plan);
                                       }}
                                       className="p-1 px-2 text-slate-400 hover:text-emerald-500 transition-all rounded-lg hover:bg-emerald-500/5"
-                                      title={plan.status === "completed" ? "Reopen Strategy" : "Complete Strategy"}
+                                      title={
+                                        plan.status === "completed"
+                                          ? "Reopen Strategy"
+                                          : "Complete Strategy"
+                                      }
                                     >
-                                      {plan.status === "completed" ? <RefreshCw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
+                                      {plan.status === "completed" ? (
+                                        <RefreshCw className="size-3.5" />
+                                      ) : (
+                                        <CheckCircle2 className="size-3.5" />
+                                      )}
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -414,9 +523,17 @@ function PlansDirectoryPageContent() {
                                         setPlanToDelete(plan.id);
                                       }}
                                       className={`p-1 px-2 transition-all rounded-lg ${plan.status === "completed" ? "text-rose-500 hover:bg-rose-500/10" : "text-slate-400 hover:text-rose-500 hover:bg-rose-500/5"}`}
-                                      title={plan.status === "completed" ? "Purge Strategy" : "Delete Strategy"}
+                                      title={
+                                        plan.status === "completed"
+                                          ? "Purge Strategy"
+                                          : "Delete Strategy"
+                                      }
                                     >
-                                      {plan.status === "completed" ? <Zap className="size-3.5" /> : <Trash2 className="size-3.5" />}
+                                      {plan.status === "completed" ? (
+                                        <Zap className="size-3.5" />
+                                      ) : (
+                                        <Trash2 className="size-3.5" />
+                                      )}
                                     </button>
                                   </div>
                                 </div>
@@ -429,7 +546,13 @@ function PlansDirectoryPageContent() {
                                 <div className="flex items-center gap-2 mt-1.5 justify-center">
                                   <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
                                   <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                                    {new Date(plan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    {new Date(
+                                      plan.createdAt,
+                                    ).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
                                   </p>
                                   <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
                                 </div>
@@ -443,7 +566,14 @@ function PlansDirectoryPageContent() {
                                       Liquidity
                                     </span>
                                     <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">
-                                      ₹{(plan.accounts || []).reduce((acc: number, a: SimAccount) => acc + a.balance, 0).toLocaleString()}
+                                      ₹
+                                      {(plan.accounts || [])
+                                        .reduce(
+                                          (acc: number, a: SimAccount) =>
+                                            acc + a.balance,
+                                          0,
+                                        )
+                                        .toLocaleString()}
                                     </span>
                                   </div>
 
@@ -453,7 +583,14 @@ function PlansDirectoryPageContent() {
                                       Burn Rate
                                     </span>
                                     <span className="text-xs font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                                      ₹{(plan.expenses || []).reduce((acc: number, e: SimExpense) => acc + e.amount, 0).toLocaleString()}
+                                      ₹
+                                      {(plan.expenses || [])
+                                        .reduce(
+                                          (acc: number, e: SimExpense) =>
+                                            acc + e.amount,
+                                          0,
+                                        )
+                                        .toLocaleString()}
                                     </span>
                                   </div>
                                 </div>
@@ -491,7 +628,10 @@ function PlansDirectoryPageContent() {
                   {goalsLoading || !goalsFetched ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={`goal-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4">
+                        <div
+                          key={`goal-skeleton-${i}`}
+                          className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4"
+                        >
                           <div className="flex justify-between items-start mb-3">
                             <div className="space-y-2 flex-1">
                               <Skeleton className="h-3 w-24" />
@@ -500,7 +640,10 @@ function PlansDirectoryPageContent() {
                             <Skeleton className="h-5 w-10 rounded-lg" />
                           </div>
                           <div className="space-y-2">
-                            <div className="flex justify-between"><Skeleton className="h-2 w-12" /><Skeleton className="h-2 w-12" /></div>
+                            <div className="flex justify-between">
+                              <Skeleton className="h-2 w-12" />
+                              <Skeleton className="h-2 w-12" />
+                            </div>
                             <Skeleton className="h-1 w-full rounded-full" />
                           </div>
                           <div className="flex gap-2 pt-2">
@@ -514,65 +657,137 @@ function PlansDirectoryPageContent() {
                   ) : filteredGoals.length === 0 ? (
                     <EmptyState
                       icon={<Target className="size-8" />}
-                      title={goalFilter === "completed" ? "No completed goals" : "No active goals set"}
-                      subtitle={goalFilter === "completed" ? "Your achievements will be archived here." : "Define your first financial target to track progress with high precision."}
-                      actionText={goalFilter === "ongoing" ? "Add your first goal" : undefined}
-                      onAction={goalFilter === "ongoing" ? () => { setEditingGoal(null); setIsGoalModalOpen(true); } : undefined}
+                      title={
+                        goalFilter === "completed"
+                          ? "No completed goals"
+                          : "No active goals set"
+                      }
+                      subtitle={
+                        goalFilter === "completed"
+                          ? "Your achievements will be archived here."
+                          : "Define your first financial target to track progress with high precision."
+                      }
+                      actionText={
+                        goalFilter === "ongoing"
+                          ? "Add your first goal"
+                          : undefined
+                      }
+                      onAction={
+                        goalFilter === "ongoing"
+                          ? () => {
+                              setEditingGoal(null);
+                              setIsGoalModalOpen(true);
+                            }
+                          : undefined
+                      }
                       actionIcon={<Plus className="w-3.5 h-3.5" />}
                     />
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {filteredGoals.map((goal: FinancialGoal) => {
                         const reqMonthly = calculateGap(goal);
-                        const isCompleted = goal.currentAmount >= goal.targetAmount;
-                        const percent = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100).toFixed(1);
+                        const isCompleted =
+                          goal.currentAmount >= goal.targetAmount;
+                        const percent = Math.min(
+                          100,
+                          (goal.currentAmount / goal.targetAmount) * 100,
+                        ).toFixed(1);
                         return (
-                          <div key={goal.id} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between group">
+                          <div
+                            key={goal.id}
+                            className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between group"
+                          >
                             <div className="flex justify-between items-start mb-3">
                               <div className="min-w-0 flex-1">
-                                <h3 className="text-slate-900 dark:text-white font-black text-xs tracking-wider uppercase truncate">{goal.name}</h3>
-                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Target: {formatDate(goal.targetDate)}</p>
+                                <h3 className="text-slate-900 dark:text-white font-black text-xs tracking-wider uppercase truncate">
+                                  {goal.name}
+                                </h3>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                  Target: {formatDate(goal.targetDate)}
+                                </p>
                               </div>
-                              <div className={`px-1.5 py-0.5 text-[8px] font-black rounded-lg border ${isCompleted ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-primary/10 text-primary border-primary/20"}`}>
+                              <div
+                                className={`px-1.5 py-0.5 text-[8px] font-black rounded-lg border ${isCompleted ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-primary/10 text-primary border-primary/20"}`}
+                              >
                                 {isCompleted ? "COMPLETED" : `${percent}%`}
                               </div>
                             </div>
 
                             <div className="space-y-2">
                               <div className="flex justify-between items-baseline text-[10px] font-black uppercase tracking-tight">
-                                <span className={isCompleted ? "text-emerald-500" : "text-slate-900 dark:text-white"}>₹{goal.currentAmount.toLocaleString()}</span>
-                                <span className="text-slate-400">₹{goal.targetAmount.toLocaleString()}</span>
+                                <span
+                                  className={
+                                    isCompleted
+                                      ? "text-emerald-500"
+                                      : "text-slate-900 dark:text-white"
+                                  }
+                                >
+                                  ₹{goal.currentAmount.toLocaleString()}
+                                </span>
+                                <span className="text-slate-400">
+                                  ₹{goal.targetAmount.toLocaleString()}
+                                </span>
                               </div>
                               <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-primary"}`} style={{ width: `${percent}%` }} />
+                                <div
+                                  className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-primary"}`}
+                                  style={{ width: `${percent}%` }}
+                                />
                               </div>
                               <div className="flex justify-between text-[7px] font-black uppercase tracking-[0.15em] text-slate-400">
-                                <span>{isCompleted ? "Target Achieved" : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString()}`}</span>
-                                {!isCompleted && <span className="text-orange-500">₹{reqMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</span>}
+                                <span>
+                                  {isCompleted
+                                    ? "Target Achieved"
+                                    : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString()}`}
+                                </span>
+                                {!isCompleted && (
+                                  <span className="text-orange-500">
+                                    ₹
+                                    {reqMonthly.toLocaleString(undefined, {
+                                      maximumFractionDigits: 0,
+                                    })}
+                                    /mo
+                                  </span>
+                                )}
                               </div>
                             </div>
 
                             <div className="flex gap-2 mt-4 pt-3 border-t border-slate-50 dark:border-white/5">
                               {!isCompleted && (
                                 <button
-                                  onClick={() => { setTopUpGoal(goal); setIsTopUpModalOpen(true); }}
+                                  onClick={() => {
+                                    setTopUpGoal(goal);
+                                    setIsTopUpModalOpen(true);
+                                  }}
                                   className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-[8px] font-black uppercase py-1.5 rounded-lg transition-all"
                                 >
                                   Top Up
                                 </button>
                               )}
                               <button
-                                onClick={() => { setEditingGoal(goal); setIsGoalModalOpen(true); }}
+                                onClick={() => {
+                                  setEditingGoal(goal);
+                                  setIsGoalModalOpen(true);
+                                }}
                                 className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 p-1.5 rounded-lg text-slate-500 transition-all ml-auto"
                               >
                                 <Pencil className="size-3" />
                               </button>
                               <button
-                                onClick={() => { setGoalToDelete(goal); setIsGoalDeleteModalOpen(true); }}
+                                onClick={() => {
+                                  setGoalToDelete(goal);
+                                  setIsGoalDeleteModalOpen(true);
+                                }}
                                 className={`p-1.5 rounded-lg transition-all ${isCompleted ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white" : "bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100"}`}
-                                title={isCompleted ? "Purge Goal" : "Delete Goal"}
+                                title={
+                                  isCompleted ? "Purge Goal" : "Delete Goal"
+                                }
                               >
-                                {isCompleted ? <Zap className="size-3" /> : <Trash2 className="size-3" />}
+                                {isCompleted ? (
+                                  <Zap className="size-3" />
+                                ) : (
+                                  <Trash2 className="size-3" />
+                                )}
                               </button>
                             </div>
                           </div>
@@ -597,7 +812,10 @@ function PlansDirectoryPageContent() {
                 {expiriesLoading || !expiriesFetched ? (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={`expiry-skeleton-${i}`} className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]">
+                      <div
+                        key={`expiry-skeleton-${i}`}
+                        className="bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 p-4 rounded-xl space-y-4 h-full min-h-[140px]"
+                      >
                         <div className="flex justify-between items-start">
                           <Skeleton className="size-6 rounded-lg" />
                           <Skeleton className="h-4 w-12 rounded" />
@@ -623,7 +841,10 @@ function PlansDirectoryPageContent() {
                   <div className="bg-transparent">
                     <ExpiryCountdown
                       expiries={expiries}
-                      onEdit={(expiry) => { setSelectedExpiry(expiry); setIsExpiryModalOpen(true); }}
+                      onEdit={(expiry) => {
+                        setSelectedExpiry(expiry);
+                        setIsExpiryModalOpen(true);
+                      }}
                     />
                   </div>
                 )}
@@ -639,7 +860,6 @@ function PlansDirectoryPageContent() {
               className="space-y-6"
             >
               <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4">
-
                 {yearlyBurdenByAccount.length > 0 && (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
                     {yearlyBurdenByAccount.map((group) => (
@@ -656,7 +876,10 @@ function PlansDirectoryPageContent() {
                 {yearlyLoading || !yearlyFetched ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-32 w-full rounded-[1.5rem]" />
+                      <Skeleton
+                        key={i}
+                        className="h-32 w-full rounded-[1.5rem]"
+                      />
                     ))}
                   </div>
                 ) : yearlyExpenses.length === 0 ? (
@@ -665,7 +888,10 @@ function PlansDirectoryPageContent() {
                     title="No yearly commitments"
                     subtitle="Track large annual expenses like insurance or taxes and break them into monthly targets."
                     actionText="Add Commitment"
-                    onAction={() => { setEditingYearly(null); setIsYearlyModalOpen(true); }}
+                    onAction={() => {
+                      setEditingYearly(null);
+                      setIsYearlyModalOpen(true);
+                    }}
                     actionIcon={<Plus className="w-3.5 h-3.5" />}
                   />
                 ) : (
@@ -695,12 +921,29 @@ function PlansDirectoryPageContent() {
       <ConfirmModal
         isOpen={!!planToDelete}
         onCancel={() => setPlanToDelete(null)}
-        onConfirm={() => { if (planToDelete) { handlePurgeSimulation(planToDelete); } }}
-        title={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed" ? "Purge Simulation" : "Destroy Simulation"}
-        message={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed"
-          ? "This will permanently sanitize this simulation node from the ledger. This action is irreversible."
-          : "This will completely remove this simulation environment and all child nodes."}
-        confirmText={plans.find((p: Simulation) => p.id === planToDelete)?.status === "completed" ? "Purge Node" : "Confirm Destruction"}
+        onConfirm={() => {
+          if (planToDelete) {
+            handlePurgeSimulation(planToDelete);
+          }
+        }}
+        title={
+          plans.find((p: Simulation) => p.id === planToDelete)?.status ===
+          "completed"
+            ? "Purge Simulation"
+            : "Destroy Simulation"
+        }
+        message={
+          plans.find((p: Simulation) => p.id === planToDelete)?.status ===
+          "completed"
+            ? "This will permanently sanitize this simulation node from the ledger. This action is irreversible."
+            : "This will completely remove this simulation environment and all child nodes."
+        }
+        confirmText={
+          plans.find((p: Simulation) => p.id === planToDelete)?.status ===
+          "completed"
+            ? "Purge Node"
+            : "Confirm Destruction"
+        }
         isDestructive={true}
       />
 
@@ -713,21 +956,25 @@ function PlansDirectoryPageContent() {
           setIsProcessing(true);
           try {
             if (id && editingGoal) {
-              await dispatch(updateGoalAction({
-                id,
-                data: { ...editingGoal, ...data }
-              })).unwrap();
+              await dispatch(
+                updateGoalAction({
+                  id,
+                  data: { ...editingGoal, ...data },
+                }),
+              ).unwrap();
               toast.success("Goal updated");
             } else if (user) {
-              await dispatch(addGoalAction({
-                userId: user.uid,
-                name: data.name,
-                targetAmount: data.targetAmount,
-                currentAmount: 0,
-                targetDate: data.targetDate,
-                startDate: new Date().toISOString(),
-                category: "General",
-              })).unwrap();
+              await dispatch(
+                addGoalAction({
+                  userId: user.uid,
+                  name: data.name,
+                  targetAmount: data.targetAmount,
+                  currentAmount: 0,
+                  targetDate: data.targetDate,
+                  startDate: new Date().toISOString(),
+                  category: "General",
+                }),
+              ).unwrap();
               toast.success("Goal synchronized");
             }
             setIsGoalModalOpen(false);
@@ -747,8 +994,15 @@ function PlansDirectoryPageContent() {
           if (topUpGoal) {
             setIsProcessing(true);
             try {
-              await dispatch(updateGoalAction({ id: topUpGoal.id, data: { currentAmount: topUpGoal.currentAmount + amount } })).unwrap();
-              toast.success(`Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`);
+              await dispatch(
+                updateGoalAction({
+                  id: topUpGoal.id,
+                  data: { currentAmount: topUpGoal.currentAmount + amount },
+                }),
+              ).unwrap();
+              toast.success(
+                `Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`,
+              );
               setIsTopUpModalOpen(false);
             } catch {
               toast.error("Failed to process top-up");
@@ -766,8 +1020,18 @@ function PlansDirectoryPageContent() {
           if (goalToDelete) {
             setIsProcessing(true);
             try {
-              await dispatch(deleteGoalAction({ id: goalToDelete.id, purge: goalToDelete.currentAmount >= goalToDelete.targetAmount })).unwrap();
-              toast.success(goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Goal purged" : "Goal removed");
+              await dispatch(
+                deleteGoalAction({
+                  id: goalToDelete.id,
+                  purge:
+                    goalToDelete.currentAmount >= goalToDelete.targetAmount,
+                }),
+              ).unwrap();
+              toast.success(
+                goalToDelete.currentAmount >= goalToDelete.targetAmount
+                  ? "Goal purged"
+                  : "Goal removed",
+              );
               setIsGoalDeleteModalOpen(false);
             } catch {
               toast.error("Failed to remove goal");
@@ -776,11 +1040,24 @@ function PlansDirectoryPageContent() {
             }
           }
         }}
-        title={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Purge Goal" : "Remove Goal"}
-        message={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount
-          ? "This will permanently sanitize this goal artifact from your trajectory. This operation cannot be undone."
-          : "Permanently remove this financial target from your trajectory?"}
-        confirmText={goalToDelete && goalToDelete.currentAmount >= goalToDelete.targetAmount ? "Purge Artifact" : "Confirm Removal"}
+        title={
+          goalToDelete &&
+          goalToDelete.currentAmount >= goalToDelete.targetAmount
+            ? "Purge Goal"
+            : "Remove Goal"
+        }
+        message={
+          goalToDelete &&
+          goalToDelete.currentAmount >= goalToDelete.targetAmount
+            ? "This will permanently sanitize this goal artifact from your trajectory. This operation cannot be undone."
+            : "Permanently remove this financial target from your trajectory?"
+        }
+        confirmText={
+          goalToDelete &&
+          goalToDelete.currentAmount >= goalToDelete.targetAmount
+            ? "Purge Artifact"
+            : "Confirm Removal"
+        }
         isDestructive={true}
       />
 
@@ -792,12 +1069,17 @@ function PlansDirectoryPageContent() {
 
       <AddExpiryModal
         isOpen={isExpiryModalOpen}
-        onClose={() => { setIsExpiryModalOpen(false); setSelectedExpiry(null); }}
+        onClose={() => {
+          setIsExpiryModalOpen(false);
+          setSelectedExpiry(null);
+        }}
         onSave={async (data) => {
           setIsProcessing(true);
           try {
             if (selectedExpiry) {
-              await dispatch(updateExpiryAction({ id: selectedExpiry.id, data })).unwrap();
+              await dispatch(
+                updateExpiryAction({ id: selectedExpiry.id, data }),
+              ).unwrap();
               toast.success("Expiry updated.");
             } else {
               await dispatch(createExpiryAction(data)).unwrap();
@@ -816,13 +1098,18 @@ function PlansDirectoryPageContent() {
       {/* Modals - Yearly Expenses */}
       <AddYearlyExpenseModal
         isOpen={isYearlyModalOpen}
-        onClose={() => { setIsYearlyModalOpen(false); setEditingYearly(null); }}
+        onClose={() => {
+          setIsYearlyModalOpen(false);
+          setEditingYearly(null);
+        }}
         editingExpense={editingYearly}
         onSave={async (data) => {
           setIsProcessing(true);
           try {
             if (editingYearly) {
-              await dispatch(updateYearlyExpense({ id: editingYearly.id, data })).unwrap();
+              await dispatch(
+                updateYearlyExpense({ id: editingYearly.id, data }),
+              ).unwrap();
               toast.success("Commitment updated");
             } else {
               await dispatch(createYearlyExpense(data)).unwrap();
@@ -873,16 +1160,33 @@ interface EmptyStateProps {
   actionIcon?: React.ReactNode;
 }
 
-function EmptyState({ icon, title, subtitle, actionText, onAction, actionIcon }: EmptyStateProps) {
+function EmptyState({
+  icon,
+  title,
+  subtitle,
+  actionText,
+  onAction,
+  actionIcon,
+}: EmptyStateProps) {
   return (
     <div className="py-20 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-slate-900/50">
       <div className="size-16 mx-auto rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
         {icon}
       </div>
-      <h3 className="text-sm font-black uppercase tracking-widest mb-1">{title}</h3>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-xs mx-auto mb-6">{subtitle}</p>
+      <h3 className="text-sm font-black uppercase tracking-widest mb-1">
+        {title}
+      </h3>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-xs mx-auto mb-6">
+        {subtitle}
+      </p>
       {actionText && onAction && (
-        <Button onClick={onAction} variant="outline" size="sm" leftIcon={actionIcon} className="w-auto">
+        <Button
+          onClick={onAction}
+          variant="outline"
+          size="sm"
+          leftIcon={actionIcon}
+          className="w-auto"
+        >
           {actionText}
         </Button>
       )}
@@ -894,19 +1198,21 @@ import { Suspense } from "react";
 
 export default function PlansDirectoryPage() {
   return (
-    <Suspense fallback={
-      <PageContainer>
-        <div className="space-y-3 mb-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-          ))}
-        </div>
-      </PageContainer>
-    }>
+    <Suspense
+      fallback={
+        <PageContainer>
+          <div className="space-y-3 mb-8">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+            ))}
+          </div>
+        </PageContainer>
+      }
+    >
       <PlansDirectoryPageContent />
     </Suspense>
   );

@@ -16,8 +16,8 @@ export function ThemeToggle() {
       updateProfile({
         preferences: {
           ...user.preferences,
-          theme: newTheme
-        }
+          theme: newTheme,
+        },
       });
     }
   };

@@ -9,12 +9,8 @@ import {
   updateGoalAction,
   deleteGoalAction,
 } from "@/store/slices/goalsSlice";
-import {
-  fetchAccounts,
-} from "@/store/slices/accountsSlice";
-import {
-  fetchTransactions,
-} from "@/store/slices/transactionsSlice";
+import { fetchAccounts } from "@/store/slices/accountsSlice";
+import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import {
   fetchExpiries,
   createExpiryAction,
@@ -41,9 +37,7 @@ export default function GoalsPageClient() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false);
-  const [selectedExpiry, setSelectedExpiry] = useState<Expiry | null>(
-    null,
-  );
+  const [selectedExpiry, setSelectedExpiry] = useState<Expiry | null>(null);
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
   const [topUpGoal, setTopUpGoal] = useState<FinancialGoal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<FinancialGoal | null>(null);
@@ -136,7 +130,7 @@ export default function GoalsPageClient() {
 
       <div className="space-y-6 lg:space-y-10">
         <div className="space-y-4">
-          <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center justify-between px-1 py-1">
             <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
               Active Goals
             </h3>
@@ -201,10 +195,17 @@ export default function GoalsPageClient() {
                         </div>
                         <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400 mt-2">
                           <span className="truncate border-r border-slate-100 dark:border-white/5 pr-2.5">
-                            Gap ₹{Math.round(goal.targetAmount - goal.currentAmount).toLocaleString()}
+                            Gap ₹
+                            {Math.round(
+                              goal.targetAmount - goal.currentAmount,
+                            ).toLocaleString()}
                           </span>
                           <span className="text-orange-500 pl-2.5 shrink-0">
-                            ₹{reqMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo
+                            ₹
+                            {reqMonthly.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
+                            /mo
                           </span>
                         </div>
                       </div>
@@ -218,7 +219,8 @@ export default function GoalsPageClient() {
                         }}
                         className="px-2 py-1.5 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors active:bg-primary/20"
                       >
-                        <Wallet className="w-3 h-3" /> <span className="xs:hidden">Top Up</span>
+                        <Wallet className="w-3 h-3" />{" "}
+                        <span className="xs:hidden">Top Up</span>
                       </button>
                       <div className="flex flex-1 gap-2">
                         <button
@@ -249,7 +251,7 @@ export default function GoalsPageClient() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center justify-between px-1 py-1">
             <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
               Financial Expiries
             </h3>
@@ -290,7 +292,6 @@ export default function GoalsPageClient() {
             ).unwrap();
             toast.success("Goal created");
           }
-
         }}
       />
 
@@ -311,7 +312,6 @@ export default function GoalsPageClient() {
             toast.success(
               `Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`,
             );
-
           }
         }}
       />
@@ -324,7 +324,9 @@ export default function GoalsPageClient() {
         }}
         onSave={async (data) => {
           if (selectedExpiry) {
-            await dispatch(updateExpiryAction({ id: selectedExpiry.id, data })).unwrap();
+            await dispatch(
+              updateExpiryAction({ id: selectedExpiry.id, data }),
+            ).unwrap();
             toast.success("Expiry updated.");
           } else {
             await dispatch(createExpiryAction(data)).unwrap();

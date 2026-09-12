@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -60,8 +60,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={clsx(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed",
+        className={cn(
+          "inline-flex items-center justify-center gap-2 rounded-xl font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none",
           variants[variant],
           sizes[size],
           className,

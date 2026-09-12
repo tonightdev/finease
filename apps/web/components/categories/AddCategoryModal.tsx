@@ -83,12 +83,12 @@ export function AddCategoryModal({
 
     setIsSaving(true);
     try {
-      await onSave({ 
-        id: category?.id, 
-        name, 
-        color, 
+      await onSave({
+        id: category?.id,
+        name,
+        color,
         parentType,
-        type: parentType === "income" ? "income" : "expense"
+        type: parentType === "income" ? "income" : "expense",
       });
       onClose();
     } catch {

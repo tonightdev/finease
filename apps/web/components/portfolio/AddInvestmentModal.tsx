@@ -174,10 +174,16 @@ export function AddInvestmentModal({
             </label>
             <AmountInput
               value={formData.investedAmount}
-              onChange={(val) => setFormData({ ...formData, investedAmount: val })}
+              onChange={(val) =>
+                setFormData({ ...formData, investedAmount: val })
+              }
               placeholder="0.00"
               disabled={!!investment || isSaving}
-              className={investment ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed" : ""}
+              className={
+                investment
+                  ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed"
+                  : ""
+              }
             />
           </div>
           <div className="flex-1 min-w-[120px] space-y-1.5">
@@ -186,7 +192,9 @@ export function AddInvestmentModal({
             </label>
             <AmountInput
               value={formData.currentAmount}
-              onChange={(val) => setFormData({ ...formData, currentAmount: val })}
+              onChange={(val) =>
+                setFormData({ ...formData, currentAmount: val })
+              }
               placeholder="0.00"
               className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 ring-emerald-500/20 focus:ring-emerald-500"
             />
@@ -198,24 +206,33 @@ export function AddInvestmentModal({
             type="button"
             role="switch"
             aria-checked={formData.excludeFromAnalytics}
-            onClick={() => setFormData({ ...formData, excludeFromAnalytics: !formData.excludeFromAnalytics })}
+            onClick={() =>
+              setFormData({
+                ...formData,
+                excludeFromAnalytics: !formData.excludeFromAnalytics,
+              })
+            }
             className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-              formData.excludeFromAnalytics ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
+              formData.excludeFromAnalytics
+                ? "bg-primary"
+                : "bg-slate-200 dark:bg-slate-700"
             }`}
           >
             <span
               className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                formData.excludeFromAnalytics ? 'translate-x-3' : 'translate-x-0'
+                formData.excludeFromAnalytics
+                  ? "translate-x-3"
+                  : "translate-x-0"
               }`}
             />
           </button>
           <div className="flex flex-col">
-             <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest leading-none">
-               Exclude from Analytics
-             </label>
-             <span className="text-[8px] text-slate-400 font-medium">
-               Hides node from net worth & dashboard
-             </span>
+            <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest leading-none">
+              Exclude from Analytics
+            </label>
+            <span className="text-[8px] text-slate-400 font-medium">
+              Hides node from net worth & dashboard
+            </span>
           </div>
         </div>
       </div>

@@ -10,7 +10,9 @@ import { AmountInput } from "@/components/ui/AmountInput";
 interface AddExpiryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Omit<Expiry, "id" | "userId" | "createdAt">) => Promise<void> | void;
+  onSave: (
+    data: Omit<Expiry, "id" | "userId" | "createdAt">,
+  ) => Promise<void> | void;
   expiry?: Expiry | null;
 }
 
@@ -20,7 +22,9 @@ export function AddExpiryModal({
   onSave,
   expiry,
 }: AddExpiryModalProps) {
-  const [formData, setFormData] = useState<Omit<Expiry, "id" | "userId" | "createdAt">>({
+  const [formData, setFormData] = useState<
+    Omit<Expiry, "id" | "userId" | "createdAt">
+  >({
     name: "",
     type: "policy",
     expiryDate: "",

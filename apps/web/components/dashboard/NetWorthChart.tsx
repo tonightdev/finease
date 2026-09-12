@@ -66,27 +66,43 @@ export function NetWorthChart({
 
   const chartData: ChartPoint[] = useMemo(() => {
     if (projectionMonths === 0) return data;
-    
+
     // Calculate velocity (avg growth per month)
     const lastPoint = data[data.length - 1];
     const firstPoint = data[0];
     if (!lastPoint || !firstPoint) return data;
-    
-    const velocity = (lastPoint.value - firstPoint.value) / Math.max(1, data.length - 1);
-    const result: ChartPoint[] = [...data.map(d => ({ ...d, isProjected: false }))];
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const velocity =
+      (lastPoint.value - firstPoint.value) / Math.max(1, data.length - 1);
+    const result: ChartPoint[] = [
+      ...data.map((d) => ({ ...d, isProjected: false })),
+    ];
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const lastMonthIdx = months.indexOf(lastPoint.month);
-    
+
     for (let i = 1; i <= projectionMonths; i++) {
-        const nextMonth = months[(lastMonthIdx + i) % 12]!;
-        result.push({
-            month: nextMonth,
-            value: Math.max(0, lastPoint.value + (velocity * i)),
-            isProjected: true
-        });
+      const nextMonth = months[(lastMonthIdx + i) % 12]!;
+      result.push({
+        month: nextMonth,
+        value: Math.max(0, lastPoint.value + velocity * i),
+        isProjected: true,
+      });
     }
-    
+
     return result;
   }, [data, projectionMonths]);
 
@@ -164,7 +180,9 @@ export function NetWorthChart({
             />
             <Area
               type="monotone"
-              data={chartData.filter(d => !d.isProjected || d === data[data.length-1])}
+              data={chartData.filter(
+                (d) => !d.isProjected || d === data[data.length - 1],
+              )}
               dataKey="value"
               stroke="#135bec"
               strokeWidth={3}
@@ -181,7 +199,9 @@ export function NetWorthChart({
             {projectionMonths > 0 && (
               <Area
                 type="monotone"
-                data={chartData.filter((d, i) => d.isProjected || i === data.length - 1)}
+                data={chartData.filter(
+                  (d, i) => d.isProjected || i === data.length - 1,
+                )}
                 dataKey="value"
                 stroke="#135bec"
                 strokeWidth={3}
@@ -208,15 +228,21 @@ export function NetWorthChart({
               <Sunrise className="size-3.5" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Future Projection</p>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em]">Gaze into the future</p>
+              <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                Future Projection
+              </p>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                Gaze into the future
+              </p>
             </div>
           </div>
           <div className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
-            <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase">+{projectionMonths} Months</span>
+            <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase">
+              +{projectionMonths} Months
+            </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <input
             type="range"
@@ -228,15 +254,19 @@ export function NetWorthChart({
             className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary"
           />
         </div>
-        
+
         {projectionMonths > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 p-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-between"
           >
             <p className="text-[9px] font-bold text-primary uppercase tracking-widest leading-none">
-              Projected Net Worth: <span className="font-black underline underline-offset-4 decoration-primary/30">{formatCurrency(chartData[chartData.length - 1]?.value || 0)}</span> by {chartData[chartData.length - 1]?.month}
+              Projected Net Worth:{" "}
+              <span className="font-black underline underline-offset-4 decoration-primary/30">
+                {formatCurrency(chartData[chartData.length - 1]?.value || 0)}
+              </span>{" "}
+              by {chartData[chartData.length - 1]?.month}
             </p>
             <ArrowRight className="size-3 text-primary animate-pulse" />
           </motion.div>

@@ -22,10 +22,11 @@ export function PlanningStatusFilter<T extends string>({
         <button
           key={option.value}
           onClick={() => onChange(option.value)}
-          className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all relative ${activeStatus === option.value
-            ? "text-primary "
-            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
+          className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all relative ${
+            activeStatus === option.value
+              ? "text-primary "
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
         >
           <span className="relative z-10">{option.label}</span>
           {activeStatus === option.value && (

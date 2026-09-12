@@ -20,7 +20,13 @@ import { FinancialGoal } from "@repo/types";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Plus, Target as TargetIcon, AlertTriangle, ArrowRight, Landmark } from "lucide-react";
+import {
+  Plus,
+  Target as TargetIcon,
+  AlertTriangle,
+  ArrowRight,
+  Landmark,
+} from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useNotifications } from "@/components/providers/NotificationProvider";
@@ -28,7 +34,6 @@ import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { motion } from "framer-motion";
 import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
-
 
 export default function Home() {
   const { user } = useAuth();
@@ -39,22 +44,30 @@ export default function Home() {
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
   // Accounts used for analytics/stats (excludes those marked as excluded)
-  const analyticsAccounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics && !a.isClosed), [allAccounts]);
+  const analyticsAccounts = useMemo(
+    () => allAccounts.filter((a) => !a.excludeFromAnalytics && !a.isClosed),
+    [allAccounts],
+  );
 
   const goals = useSelector((state: RootState) => state.goals.items);
-  const assetClasses = useSelector((state: RootState) => state.assetClasses.items);
+  const assetClasses = useSelector(
+    (state: RootState) => state.assetClasses.items,
+  );
   const stats = useSelector((state: RootState) => state.stats.data);
   const allTransactions = useSelector(
     (state: RootState) => state.transactions.items,
   );
 
   const transactions = useMemo(() => {
-    const includedAccountIds = new Set(analyticsAccounts.map(a => a.id));
-    return allTransactions.filter(tx => includedAccountIds.has(tx.accountId));
+    const includedAccountIds = new Set(analyticsAccounts.map((a) => a.id));
+    return allTransactions.filter((tx) => includedAccountIds.has(tx.accountId));
   }, [allTransactions, analyticsAccounts]);
 
   const loading = useSelector(
-    (state: RootState) => state.accounts.loading || state.transactions.loading || state.expiries.loading,
+    (state: RootState) =>
+      state.accounts.loading ||
+      state.transactions.loading ||
+      state.expiries.loading,
   );
 
   const expiries = useSelector((state: RootState) => state.expiries.items);
@@ -62,7 +75,7 @@ export default function Home() {
   const expiringSoon = useMemo(() => {
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return expiries.filter(r => {
+    return expiries.filter((r) => {
       const expiry = new Date(r.expiryDate);
       return expiry > now && expiry <= sevenDaysFromNow;
     });
@@ -85,19 +98,26 @@ export default function Home() {
   // Regular accounts for display (includes excluded ones)
   const displayRegularAccounts = useMemo(() => {
     const filtered = allAccounts.filter(
-      (acc) => !acc.isClosed && (acc.type === "bank" || acc.type === "cash" || acc.type === "card"),
+      (acc) =>
+        !acc.isClosed &&
+        (acc.type === "bank" || acc.type === "cash" || acc.type === "card"),
     );
     const order: Record<string, number> = { bank: 0, cash: 1, card: 2 };
-    return [...filtered].sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
+    return [...filtered].sort(
+      (a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9),
+    );
   }, [allAccounts]);
 
   // Regular accounts for analytics (excludes excluded ones)
-  const analyticsRegularAccounts = useMemo(() =>
-    displayRegularAccounts.filter(a => !a.excludeFromAnalytics),
-    [displayRegularAccounts]
+  const analyticsRegularAccounts = useMemo(
+    () => displayRegularAccounts.filter((a) => !a.excludeFromAnalytics),
+    [displayRegularAccounts],
   );
 
-  const analyticsCards = useMemo(() => analyticsAccounts.filter(acc => acc.type === 'card'), [analyticsAccounts]);
+  const analyticsCards = useMemo(
+    () => analyticsAccounts.filter((acc) => acc.type === "card"),
+    [analyticsAccounts],
+  );
 
   const analyticsInvestmentAccounts = analyticsAccounts.filter(
     (acc) => acc.type === "investment",
@@ -105,15 +125,33 @@ export default function Home() {
   const analyticsDebts = analyticsAccounts.filter((acc) => acc.type === "debt");
 
   const assets = useMemo(() => {
-    const liquid = analyticsRegularAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
-    const invested = analyticsInvestmentAccounts.reduce((sum, a) => sum + Math.max(0, a.balance), 0);
-    const others = analyticsAccounts.filter(a => a.type === 'asset').reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    const liquid = analyticsRegularAccounts.reduce(
+      (sum, a) => sum + Math.max(0, a.balance),
+      0,
+    );
+    const invested = analyticsInvestmentAccounts.reduce(
+      (sum, a) => sum + Math.max(0, a.balance),
+      0,
+    );
+    const others = analyticsAccounts
+      .filter((a) => a.type === "asset")
+      .reduce((sum, a) => sum + Math.max(0, a.balance), 0);
     return liquid + invested + others;
-  }, [analyticsRegularAccounts, analyticsInvestmentAccounts, analyticsAccounts]);
+  }, [
+    analyticsRegularAccounts,
+    analyticsInvestmentAccounts,
+    analyticsAccounts,
+  ]);
 
   const liabilities = useMemo(() => {
-    const debtSum = analyticsDebts.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
-    const cardSum = analyticsCards.reduce((sum, a) => sum + Math.max(0, Math.abs(a.balance)), 0);
+    const debtSum = analyticsDebts.reduce(
+      (sum, a) => sum + Math.max(0, Math.abs(a.balance)),
+      0,
+    );
+    const cardSum = analyticsCards.reduce(
+      (sum, a) => sum + Math.max(0, Math.abs(a.balance)),
+      0,
+    );
     return debtSum + cardSum;
   }, [analyticsDebts, analyticsCards]);
 
@@ -121,7 +159,8 @@ export default function Home() {
 
   const allocationMap = useMemo(() => {
     const assetsMap: Record<string, { value: number; type: "asset" }> = {};
-    const liabilitiesMap: Record<string, { value: number; type: "liability" }> = {};
+    const liabilitiesMap: Record<string, { value: number; type: "liability" }> =
+      {};
 
     // Assets
     analyticsInvestmentAccounts.forEach((inv) => {
@@ -162,31 +201,47 @@ export default function Home() {
     };
 
     const fallbackPalette = [
-      "#6366f1", "#ec4899", "#8b5cf6", "#06b6d4",
-      "#f43f5e", "#10b981", "#f59e0b", "#3b82f6"
+      "#6366f1",
+      "#ec4899",
+      "#8b5cf6",
+      "#06b6d4",
+      "#f43f5e",
+      "#10b981",
+      "#f59e0b",
+      "#3b82f6",
     ];
 
-    const assets = Object.entries(allocationMap.assets).map(([id, data], index) => {
-      const assetClass = assetClasses.find((a) => a.id === id);
-      const rawColor = assetClass?.color || defaultColors[id] || fallbackPalette[index % fallbackPalette.length] || "#94a3b8";
-      return {
-        name: assetClass?.name || id,
-        value: data.value,
-        color: getHexFromTailwind(rawColor as string),
-        type: data.type,
-      };
-    });
+    const assets = Object.entries(allocationMap.assets).map(
+      ([id, data], index) => {
+        const assetClass = assetClasses.find((a) => a.id === id);
+        const rawColor =
+          assetClass?.color ||
+          defaultColors[id] ||
+          fallbackPalette[index % fallbackPalette.length] ||
+          "#94a3b8";
+        return {
+          name: assetClass?.name || id,
+          value: data.value,
+          color: getHexFromTailwind(rawColor as string),
+          type: data.type,
+        };
+      },
+    );
 
-    const liabilities = Object.entries(allocationMap.liabilities).map(([id, data]) => {
-      return {
-        name: id,
-        value: data.value,
-        color: defaultColors[id] || "#f43f5e",
-        type: data.type,
-      };
-    });
+    const liabilities = Object.entries(allocationMap.liabilities).map(
+      ([id, data]) => {
+        return {
+          name: id,
+          value: data.value,
+          color: defaultColors[id] || "#f43f5e",
+          type: data.type,
+        };
+      },
+    );
 
-    return [...assets, ...liabilities].filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+    return [...assets, ...liabilities]
+      .filter((item) => item.value > 0)
+      .sort((a, b) => b.value - a.value);
   }, [allocationMap, assetClasses]);
 
   const computedNetWorthHistory = useMemo(() => {
@@ -229,9 +284,7 @@ export default function Home() {
       const txInNextMonth = transactions.filter((tx) => {
         if (tx.status === "pending_confirmation") return false;
         const txDate = new Date(tx.date);
-        return (
-          txDate.getTime() >= nextMonth.getTime()
-        );
+        return txDate.getTime() >= nextMonth.getTime();
       });
 
       const netFlowNextMonth = txInNextMonth.reduce((acc, tx) => {
@@ -267,19 +320,20 @@ export default function Home() {
       .filter((tx) => tx.type === "expense")
       .reduce((sum, tx) => sum + tx.amount, 0);
 
-    const savingsRate = monthlyIncome > 0
-      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
-      : 0;
+    const savingsRate =
+      monthlyIncome > 0
+        ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
+        : 0;
 
     const liquidCapital = analyticsRegularAccounts
-      .filter(a => a.type !== 'card')
+      .filter((a) => a.type !== "card")
       .reduce((sum, a) => sum + a.balance, 0);
 
     return {
       monthlyIncome,
       monthlyExpense,
       savingsRate: savingsRate.toFixed(1),
-      liquidCapital
+      liquidCapital,
     };
   }, [transactions, analyticsRegularAccounts, user?.monthStartDate]);
 
@@ -293,7 +347,6 @@ export default function Home() {
     return parseFloat((((last - prev) / prev) * 100).toFixed(1));
   }, [computedNetWorthHistory]);
 
-
   if (loading && allAccounts.length === 0) {
     return (
       <PageContainer className="space-y-6 lg:space-y-8">
@@ -301,7 +354,7 @@ export default function Home() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
         </div>
-        
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {[1, 2, 3, 4].map((i) => (
             <div
@@ -321,7 +374,7 @@ export default function Home() {
         <div className="space-y-4">
           <Skeleton className="h-10 w-full rounded-2xl" />
           <div className="space-y-2">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-16 w-full rounded-2xl" />
             ))}
           </div>
@@ -365,7 +418,9 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-                    {expiringSoon.length} Expiry Horizon{expiringSoon.length > 1 ? 's' : ''} require{expiringSoon.length === 1 ? 's' : ''} immediate attention
+                    {expiringSoon.length} Expiry Horizon
+                    {expiringSoon.length > 1 ? "s" : ""} require
+                    {expiringSoon.length === 1 ? "s" : ""} immediate attention
                   </h4>
                   <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
                     Impending expiry detected within 7-day window
@@ -399,7 +454,10 @@ export default function Home() {
           valueColor="text-emerald-500"
           trend={{
             label: `${dashboardStats.savingsRate}% Savings Rate`,
-            color: parseFloat(dashboardStats.savingsRate) >= 0 ? "bg-emerald-500" : "bg-rose-500",
+            color:
+              parseFloat(dashboardStats.savingsRate) >= 0
+                ? "bg-emerald-500"
+                : "bg-rose-500",
             showPulse: true,
           }}
         />
@@ -438,7 +496,10 @@ export default function Home() {
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
                 No accounts configured
               </p>
-              <Button size="sm" onClick={() => dispatch(openModal("isAccountModalOpen"))}>
+              <Button
+                size="sm"
+                onClick={() => dispatch(openModal("isAccountModalOpen"))}
+              >
                 Add your first account
               </Button>
             </div>
@@ -447,7 +508,7 @@ export default function Home() {
           <>
             {displayRegularAccounts.length > 0 && (
               <div className="space-y-2">
-                <div className="bg-slate-50 dark:bg-white/5 -mx-4 px-4 py-1 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                <div className="flex items-center justify-between px-1 py-1">
                   <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     Liquid Capital
                   </h3>
@@ -456,7 +517,13 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="pt-0.5">
-                  <AccountList accounts={showAllAccounts ? displayRegularAccounts : displayRegularAccounts.slice(0, 4)} />
+                  <AccountList
+                    accounts={
+                      showAllAccounts
+                        ? displayRegularAccounts
+                        : displayRegularAccounts.slice(0, 4)
+                    }
+                  />
                   {displayRegularAccounts.length > 4 && (
                     <div className="mt-4 flex justify-center">
                       <Button
@@ -465,7 +532,9 @@ export default function Home() {
                         className="text-[10px] font-black uppercase tracking-widest px-8"
                         onClick={() => setShowAllAccounts(!showAllAccounts)}
                       >
-                        {showAllAccounts ? "Show Less" : `Show ${displayRegularAccounts.length - 4} More Units`}
+                        {showAllAccounts
+                          ? "Show Less"
+                          : `Show ${displayRegularAccounts.length - 4} More Units`}
                       </Button>
                     </div>
                   )}
@@ -475,7 +544,7 @@ export default function Home() {
           </>
         )}
       </div>
-      
+
       {/* Premium Insights Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1">
@@ -501,7 +570,9 @@ export default function Home() {
           <div className="flex items-center justify-between px-1 group">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               Goal Progress
-              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">Pacing towards goals</span>
+              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">
+                Pacing towards goals
+              </span>
             </h3>
             <Link
               href="/plans?tab=Goals"
@@ -513,7 +584,8 @@ export default function Home() {
           </div>
 
           <div className="space-y-3">
-            {goals.filter(g => g.currentAmount < g.targetAmount).length === 0 ? (
+            {goals.filter((g) => g.currentAmount < g.targetAmount).length ===
+            0 ? (
               <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                 <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
@@ -522,48 +594,54 @@ export default function Home() {
               </div>
             ) : (
               goals
-                .filter(g => g.currentAmount < g.targetAmount)
+                .filter((g) => g.currentAmount < g.targetAmount)
                 .slice(0, 3)
                 .map((goal: FinancialGoal) => {
-                const percentageSaved = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
-                
-                // Calculate expected pace based on time elapsed
-                const now = new Date();
-                const start = new Date(goal.startDate || now);
-                const target = new Date(goal.targetDate);
-                const totalDuration = target.getTime() - start.getTime();
-                const elapsed = now.getTime() - start.getTime();
-                const expectedPercentage = totalDuration > 0 
-                  ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
-                  : 100;
+                  const percentageSaved = Math.min(
+                    100,
+                    (goal.currentAmount / goal.targetAmount) * 100,
+                  );
 
-                return (
-                  <GoalProgressCard
-                    key={goal.id}
-                    name={goal.name}
-                    targetAmount={goal.targetAmount}
-                    currentAmount={goal.currentAmount}
-                    percentageSaved={percentageSaved}
-                    expectedPercentage={expectedPercentage}
-                    requirementPerMonth={
-                      (() => {
+                  // Calculate expected pace based on time elapsed
+                  const now = new Date();
+                  const start = new Date(goal.startDate || now);
+                  const target = new Date(goal.targetDate);
+                  const totalDuration = target.getTime() - start.getTime();
+                  const elapsed = now.getTime() - start.getTime();
+                  const expectedPercentage =
+                    totalDuration > 0
+                      ? Math.min(
+                          100,
+                          Math.max(0, (elapsed / totalDuration) * 100),
+                        )
+                      : 100;
+
+                  return (
+                    <GoalProgressCard
+                      key={goal.id}
+                      name={goal.name}
+                      targetAmount={goal.targetAmount}
+                      currentAmount={goal.currentAmount}
+                      percentageSaved={percentageSaved}
+                      expectedPercentage={expectedPercentage}
+                      requirementPerMonth={(() => {
                         const today = new Date();
                         const targetDate = new Date(goal.targetDate);
                         const monthsRemaining =
-                          (targetDate.getFullYear() - today.getFullYear()) * 12 +
+                          (targetDate.getFullYear() - today.getFullYear()) *
+                            12 +
                           (targetDate.getMonth() - today.getMonth());
                         if (monthsRemaining <= 0) return 0;
-                        const shortfall = goal.targetAmount - goal.currentAmount;
+                        const shortfall =
+                          goal.targetAmount - goal.currentAmount;
                         return shortfall / monthsRemaining;
-                      })()
-                    }
-                  />
-                );
-              })
+                      })()}
+                    />
+                  );
+                })
             )}
           </div>
         </div>
-
       </div>
 
       <div>
@@ -573,9 +651,6 @@ export default function Home() {
           percentageChange={netWorthChange}
         />
       </div>
-
-
-
     </PageContainer>
   );
 }

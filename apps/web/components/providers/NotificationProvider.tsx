@@ -17,7 +17,9 @@ interface NotificationContextType {
   subscribeUser: () => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+);
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -31,7 +33,11 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
@@ -52,9 +58,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      
+
       // Check if already subscribed
-      const existingSubscription = await registration.pushManager.getSubscription();
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
       if (existingSubscription) {
         await api.post("/auth/notifications/subscribe", existingSubscription);
         return;
@@ -63,8 +70,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Load VAPID public key from env or use a placeholder
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
-         console.warn("VAPID public key not found. Push subscription might fail.");
-         return;
+        console.warn(
+          "VAPID public key not found. Push subscription might fail.",
+        );
+        return;
       }
 
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
@@ -145,7 +154,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error("useNotifications must be used within a NotificationProvider");
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 };

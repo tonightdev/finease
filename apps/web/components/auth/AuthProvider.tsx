@@ -87,7 +87,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 function buildUser(userData: ApiUserResponse): AuthUser {
   const uid = userData.id ?? userData.uid;
   if (!uid) {
-    console.warn("API returned user without ID/UID, generating fallback", userData.email);
+    console.warn(
+      "API returned user without ID/UID, generating fallback",
+      userData.email,
+    );
   }
   return {
     uid: uid || `tmp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -116,15 +119,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("finease_token");
-      
+
       const storedAccounts = localStorage.getItem("finease_multi_accounts");
-      
+
       if (storedAccounts) {
         try {
           const parsed = JSON.parse(storedAccounts);
           if (Array.isArray(parsed)) {
             // Sanitize: filter out entries with empty UIDs
-            const sanitized = parsed.filter(a => !!a.uid);
+            const sanitized = parsed.filter((a) => !!a.uid);
             setAccounts(sanitized);
           }
         } catch (e) {
@@ -137,14 +140,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const res = await api.get<ApiUserResponse>("/finance/profile");
           const activeUser = buildUser(res.data);
           dispatch(setUser(activeUser));
-          
+
           // Sync accounts list
-          setAccounts(prev => {
-            const exists = prev.find(a => a.uid === activeUser.uid);
-            const updated = exists 
-              ? prev.map(a => a.uid === activeUser.uid ? { ...a, ...activeUser } : a)
+          setAccounts((prev) => {
+            const exists = prev.find((a) => a.uid === activeUser.uid);
+            const updated = exists
+              ? prev.map((a) =>
+                  a.uid === activeUser.uid ? { ...a, ...activeUser } : a,
+                )
               : [...prev, activeUser];
-            localStorage.setItem("finease_multi_accounts", JSON.stringify(updated));
+            localStorage.setItem(
+              "finease_multi_accounts",
+              JSON.stringify(updated),
+            );
             return updated;
           });
 
@@ -187,10 +195,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name?: string,
     password?: string,
   ) => {
-    const isPWA = typeof window !== 'undefined' && 
-                 (window.matchMedia('(display-mode: standalone)').matches || 
-                  (window.navigator as Navigator & { standalone?: boolean }).standalone || 
-                  document.referrer.includes('android-app://'));
+    const isPWA =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as Navigator & { standalone?: boolean }).standalone ||
+        document.referrer.includes("android-app://"));
 
     const endpoint = name ? "/auth/signup" : "/auth/login";
     const payload = name
@@ -202,19 +211,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const loggedUser = buildUser(userData);
     localStorage.setItem("finease_token", token);
-    
+
     // Store token-mapping for switching
-    const tokenMap = JSON.parse(localStorage.getItem("finease_token_map") || "{}");
+    const tokenMap = JSON.parse(
+      localStorage.getItem("finease_token_map") || "{}",
+    );
     tokenMap[loggedUser.uid] = token;
     localStorage.setItem("finease_token_map", JSON.stringify(tokenMap));
 
     dispatch(setUser(loggedUser));
-    setAccounts(prev => {
-        const updated = prev.find(a => a.uid === loggedUser.uid) 
-            ? prev.map(a => a.uid === loggedUser.uid ? loggedUser : a)
-            : [...prev, loggedUser];
-        localStorage.setItem("finease_multi_accounts", JSON.stringify(updated));
-        return updated;
+    setAccounts((prev) => {
+      const updated = prev.find((a) => a.uid === loggedUser.uid)
+        ? prev.map((a) => (a.uid === loggedUser.uid ? loggedUser : a))
+        : [...prev, loggedUser];
+      localStorage.setItem("finease_multi_accounts", JSON.stringify(updated));
+      return updated;
     });
 
     void dispatch(fetchCategories());
@@ -225,25 +236,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     const currentUid = user?.uid;
     localStorage.removeItem("finease_token");
-    
+
     if (currentUid) {
-      const tokenMap = JSON.parse(localStorage.getItem("finease_token_map") || "{}");
+      const tokenMap = JSON.parse(
+        localStorage.getItem("finease_token_map") || "{}",
+      );
       delete tokenMap[currentUid];
       localStorage.setItem("finease_token_map", JSON.stringify(tokenMap));
-      
+
       const remainingUids = Object.keys(tokenMap);
       if (remainingUids.length > 0) {
         // Switch to the next available account
         const nextUid = remainingUids[0];
         const nextToken = tokenMap[nextUid!];
         localStorage.setItem("finease_token", nextToken);
-        
-        setAccounts(prev => {
-          const updated = prev.filter(a => a.uid !== currentUid);
-          localStorage.setItem("finease_multi_accounts", JSON.stringify(updated));
+
+        setAccounts((prev) => {
+          const updated = prev.filter((a) => a.uid !== currentUid);
+          localStorage.setItem(
+            "finease_multi_accounts",
+            JSON.stringify(updated),
+          );
           return updated;
         });
-        
+
         window.location.reload();
         return;
       }
@@ -269,7 +285,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeAccount = (uid: string) => {
-    const tokenMap = JSON.parse(localStorage.getItem("finease_token_map") || "{}");
+    const tokenMap = JSON.parse(
+      localStorage.getItem("finease_token_map") || "{}",
+    );
     const activeUid = user?.uid;
 
     if (uid === activeUid) {
@@ -282,8 +300,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     delete tokenMap[uid];
     localStorage.setItem("finease_token_map", JSON.stringify(tokenMap));
 
-    setAccounts(prev => {
-      const updated = prev.filter(a => a.uid !== uid);
+    setAccounts((prev) => {
+      const updated = prev.filter((a) => a.uid !== uid);
       localStorage.setItem("finease_multi_accounts", JSON.stringify(updated));
       return updated;
     });
@@ -291,7 +309,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const authorizeSubNode = async (uid: string) => {
     try {
-      const res = await api.post<{ token: string }>(`/admin/impersonate/${uid}`);
+      const res = await api.post<{ token: string }>(
+        `/admin/impersonate/${uid}`,
+      );
       const { token } = res.data;
 
       // Temporarily swap tokens to fetch the new profile

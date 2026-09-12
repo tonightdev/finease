@@ -169,7 +169,6 @@ export function AccountList({ accounts }: AccountListProps) {
         })}
       </div>
 
-
       <AddAccountModal
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}

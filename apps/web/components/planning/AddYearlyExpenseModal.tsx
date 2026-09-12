@@ -31,9 +31,13 @@ export function AddYearlyExpenseModal({
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
 
   // Only allow liquid nodes (Bank, Cash, Card) as per user request
-  const accounts = useMemo(() => allAccounts.filter(acc =>
-    ["bank", "cash"].includes(acc.type) && !acc.isClosed
-  ), [allAccounts]);
+  const accounts = useMemo(
+    () =>
+      allAccounts.filter(
+        (acc) => ["bank", "cash"].includes(acc.type) && !acc.isClosed,
+      ),
+    [allAccounts],
+  );
 
   const [formData, setFormData] = useState<YearlyExpenseFormData>({
     title: "",
@@ -51,7 +55,7 @@ export function AddYearlyExpenseModal({
           accountId: editingExpense.accountId,
         });
       } else {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           title: "",
           yearlyAmount: 0,
           accountId: prev.accountId,
@@ -63,12 +67,13 @@ export function AddYearlyExpenseModal({
   // Set default account if none selected and accounts are available
   useEffect(() => {
     if (isOpen && !formData.accountId && accounts.length > 0) {
-      setFormData(prev => ({ ...prev, accountId: accounts[0]?.id || "" }));
+      setFormData((prev) => ({ ...prev, accountId: accounts[0]?.id || "" }));
     }
   }, [accounts, isOpen, formData.accountId]);
 
   const handleSave = async () => {
-    if (!formData.title || formData.yearlyAmount <= 0 || !formData.accountId) return;
+    if (!formData.title || formData.yearlyAmount <= 0 || !formData.accountId)
+      return;
     setIsSaving(true);
     try {
       await onSave(formData);
@@ -116,7 +121,9 @@ export function AddYearlyExpenseModal({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               placeholder="e.g. Life Insurance"
               className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-[11px] font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
@@ -131,7 +138,9 @@ export function AddYearlyExpenseModal({
           <div className="relative group">
             <select
               value={formData.accountId}
-              onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, accountId: e.target.value })
+              }
               className="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-[11px] font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer"
             >
               {accounts.map((acc) => (
@@ -149,14 +158,21 @@ export function AddYearlyExpenseModal({
             Yearly Magnitude (₹)
           </label>
           <AmountInput
-            value={formData.yearlyAmount === 0 ? "" : String(formData.yearlyAmount)}
-            onChange={(val) => setFormData({ ...formData, yearlyAmount: Number(val) })}
+            value={
+              formData.yearlyAmount === 0 ? "" : String(formData.yearlyAmount)
+            }
+            onChange={(val) =>
+              setFormData({ ...formData, yearlyAmount: Number(val) })
+            }
             placeholder="0.00"
             disabled={isSaving}
           />
           <div className="pt-2 px-1">
             <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">
-              Estimated Monthly Burden: ₹{(formData.yearlyAmount / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              Estimated Monthly Burden: ₹
+              {(formData.yearlyAmount / 12).toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
             </p>
           </div>
         </div>

@@ -6,7 +6,22 @@ import { RootState, AppDispatch } from "@/store";
 import { Transaction, Account, Category } from "@repo/types";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
-import { TrendingDown, ArrowUpRight, Activity, Percent, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Filter, X, ChevronDown, Check, Wallet, PiggyBank, Briefcase } from "lucide-react";
+import {
+  TrendingDown,
+  ArrowUpRight,
+  Activity,
+  Percent,
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  Filter,
+  X,
+  ChevronDown,
+  Check,
+  Wallet,
+  PiggyBank,
+  Briefcase,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchAccounts } from "@/store/slices/accountsSlice";
@@ -17,7 +32,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
 
@@ -33,7 +47,7 @@ function FilterDropdown({
   onSelect,
   onClear,
   multi = false,
-  icon: Icon
+  icon: Icon,
 }: {
   label: string;
   value: string | string[];
@@ -48,7 +62,10 @@ function FilterDropdown({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -56,17 +73,23 @@ function FilterDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedCount = multi ? (value as string[]).length : (value === "all" ? 0 : 1);
-  const isSelected = (id: string) => multi ? (value as string[]).includes(id) : value === id;
+  const selectedCount = multi
+    ? (value as string[]).length
+    : value === "all"
+      ? 0
+      : 1;
+  const isSelected = (id: string) =>
+    multi ? (value as string[]).includes(id) : value === id;
 
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-2.5 h-8 rounded-lg border transition-all duration-300 text-[9px] font-black uppercase tracking-widest ${isOpen || selectedCount > 0
-          ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-sm"
-          : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-white/5 text-slate-500 hover:border-primary/40"
-          }`}
+        className={`w-full flex items-center justify-between px-2.5 h-8 rounded-lg border transition-all duration-300 text-[9px] font-black uppercase tracking-widest ${
+          isOpen || selectedCount > 0
+            ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-sm"
+            : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-white/5 text-slate-500 hover:border-primary/40"
+        }`}
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="size-3.5" />}
@@ -77,7 +100,9 @@ function FilterDropdown({
             </span>
           )}
         </div>
-        <ChevronDown className={`size-3.5 transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`size-3.5 transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       <AnimatePresence>
@@ -97,10 +122,11 @@ function FilterDropdown({
                     onSelect(option.id);
                     if (!multi) setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-bold ${isSelected(option.id)
-                    ? "bg-primary/10 text-primary"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    }`}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-bold ${
+                    isSelected(option.id)
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
                 >
                   <span className="truncate">{option.name}</span>
                   {isSelected(option.id) && <Check className="size-3.5" />}
@@ -141,31 +167,42 @@ export default function ReportsPageClient() {
   const dispatch = useDispatch<AppDispatch>();
   const allAccounts =
     useSelector((state: RootState) => state.accounts?.items) ?? EMPTY_ACCOUNTS;
-  const accounts = useMemo(() => allAccounts.filter(a => !a.excludeFromAnalytics), [allAccounts]);
+  const accounts = useMemo(
+    () => allAccounts.filter((a) => !a.excludeFromAnalytics),
+    [allAccounts],
+  );
 
   const allTransactions =
     useSelector((state: RootState) => state.transactions?.items) ??
     EMPTY_TRANSACTIONS;
   const transactions = useMemo(() => {
-    const includedIds = new Set(accounts.map(a => a.id));
-    let filtered = allTransactions.filter(tx => includedIds.has(tx.accountId));
+    const includedIds = new Set(accounts.map((a) => a.id));
+    let filtered = allTransactions.filter((tx) =>
+      includedIds.has(tx.accountId),
+    );
 
     if (selectedAccountIds.length > 0) {
       const selectedSet = new Set(selectedAccountIds);
-      filtered = filtered.filter(tx => selectedSet.has(tx.accountId));
+      filtered = filtered.filter((tx) => selectedSet.has(tx.accountId));
     }
 
     if (selectedCategoryIds.length > 0) {
       const selectedSet = new Set(selectedCategoryIds);
-      filtered = filtered.filter(tx => selectedSet.has(tx.category));
+      filtered = filtered.filter((tx) => selectedSet.has(tx.category));
     }
 
     if (selectedType !== "all") {
-      filtered = filtered.filter(tx => tx.type === selectedType);
+      filtered = filtered.filter((tx) => tx.type === selectedType);
     }
 
     return filtered;
-  }, [allTransactions, accounts, selectedAccountIds, selectedCategoryIds, selectedType]);
+  }, [
+    allTransactions,
+    accounts,
+    selectedAccountIds,
+    selectedCategoryIds,
+    selectedType,
+  ]);
 
   const categories =
     useSelector((state: RootState) => state.categories?.items) ??
@@ -291,8 +328,18 @@ export default function ReportsPageClient() {
   const computedNetWorthHistory = useMemo(() => {
     const history: { month: string; value: number; dateObj: Date }[] = [];
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const monthStartDate = user?.monthStartDate || 1;
@@ -350,8 +397,6 @@ export default function ReportsPageClient() {
 
   const currentYear = cursorDate.getFullYear();
 
-
-
   // Filtering logic based on viewType
   const filteredTx = useMemo(() => {
     const monthStartDate = user?.monthStartDate || 1;
@@ -376,13 +421,21 @@ export default function ReportsPageClient() {
           d.getFullYear() === cursorDate.getFullYear()
         );
       } else if (viewType === "Week") {
-        return d.getTime() >= dStartOfWeek.getTime() && d.getTime() <= dEndOfWeek.getTime();
+        return (
+          d.getTime() >= dStartOfWeek.getTime() &&
+          d.getTime() <= dEndOfWeek.getTime()
+        );
       } else if (viewType === "Month") {
         // Find end of month based on start of month
         const currentFiscalEnd = new Date(currentFiscalStart);
         currentFiscalEnd.setMonth(currentFiscalEnd.getMonth() + 1);
-        currentFiscalEnd.setMilliseconds(currentFiscalEnd.getMilliseconds() - 1);
-        return d.getTime() >= currentFiscalStart.getTime() && d.getTime() <= currentFiscalEnd.getTime();
+        currentFiscalEnd.setMilliseconds(
+          currentFiscalEnd.getMilliseconds() - 1,
+        );
+        return (
+          d.getTime() >= currentFiscalStart.getTime() &&
+          d.getTime() <= currentFiscalEnd.getTime()
+        );
       } else {
         return d.getFullYear() === currentYear;
       }
@@ -458,24 +511,28 @@ export default function ReportsPageClient() {
       .filter((tx) => tx.type === "expense")
       .reduce((sum, tx) => sum + tx.amount, 0);
 
-    const savingsRate = monthlyIncome > 0
-      ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
-      : 0;
+    const savingsRate =
+      monthlyIncome > 0
+        ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
+        : 0;
 
     const liquidCapital = accounts
-      .filter(a => !a.excludeFromAnalytics && a.type !== 'card')
+      .filter((a) => !a.excludeFromAnalytics && a.type !== "card")
       .reduce((sum, a) => sum + a.balance, 0);
 
-    const score = monthlyExpense > 0
-      ? (liquidCapital / monthlyExpense).toFixed(1)
-      : (liquidCapital > 0 ? "100+" : "0");
+    const score =
+      monthlyExpense > 0
+        ? (liquidCapital / monthlyExpense).toFixed(1)
+        : liquidCapital > 0
+          ? "100+"
+          : "0";
 
     return {
       monthlyIncome,
       monthlyExpense,
       savingsRate: savingsRate.toFixed(1),
       liquidCapital,
-      score: parseFloat(score)
+      score: parseFloat(score),
     };
   }, [transactions, accounts, user?.monthStartDate]);
 
@@ -567,21 +624,32 @@ export default function ReportsPageClient() {
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`h-8 px-3.5 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border shadow-sm ${showFilters
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
-                  }`}
+                className={`h-8 px-3.5 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border shadow-sm ${
+                  showFilters
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
+                }`}
               >
-                {showFilters ? <X className="size-3.5" /> : <Filter className="size-3.5" />}
+                {showFilters ? (
+                  <X className="size-3.5" />
+                ) : (
+                  <Filter className="size-3.5" />
+                )}
                 <span>Filters</span>
-                {(selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all") && (
+                {(selectedAccountIds.length > 0 ||
+                  selectedCategoryIds.length > 0 ||
+                  selectedType !== "all") && (
                   <span className="size-4 rounded-full bg-rose-500 text-white text-[8px] flex items-center justify-center">
-                    {selectedAccountIds.length + selectedCategoryIds.length + (selectedType !== "all" ? 1 : 0)}
+                    {selectedAccountIds.length +
+                      selectedCategoryIds.length +
+                      (selectedType !== "all" ? 1 : 0)}
                   </span>
                 )}
               </button>
 
-              {(selectedAccountIds.length > 0 || selectedCategoryIds.length > 0 || selectedType !== "all") && (
+              {(selectedAccountIds.length > 0 ||
+                selectedCategoryIds.length > 0 ||
+                selectedType !== "all") && (
                 <button
                   onClick={() => {
                     setSelectedAccountIds([]);
@@ -603,10 +671,11 @@ export default function ReportsPageClient() {
                   onClick={() => {
                     setViewType(type);
                   }}
-                  className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${viewType === type
-                    ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                    }`}
+                  className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                    viewType === type
+                      ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
                   {type}
                 </button>
@@ -631,10 +700,11 @@ export default function ReportsPageClient() {
               <button
                 onClick={handleNext}
                 disabled={cursorDate.getTime() > now.getTime()}
-                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
-                  ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
-                  : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
-                  }`}
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors shrink-0 ${
+                  cursorDate.getTime() > now.getTime()
+                    ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
+                }`}
                 aria-label="Next Period"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -650,10 +720,12 @@ export default function ReportsPageClient() {
                 label="Account"
                 multi
                 value={selectedAccountIds}
-                options={accounts.map(a => ({ id: a.id, name: a.name }))}
+                options={accounts.map((a) => ({ id: a.id, name: a.name }))}
                 onSelect={(id) => {
-                  setSelectedAccountIds(prev =>
-                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  setSelectedAccountIds((prev) =>
+                    prev.includes(id)
+                      ? prev.filter((x) => x !== id)
+                      : [...prev, id],
                   );
                 }}
                 onClear={() => setSelectedAccountIds([])}
@@ -665,10 +737,12 @@ export default function ReportsPageClient() {
                 label="Category"
                 multi
                 value={selectedCategoryIds}
-                options={categories.map(c => ({ id: c.id, name: c.name }))}
+                options={categories.map((c) => ({ id: c.id, name: c.name }))}
                 onSelect={(id) => {
-                  setSelectedCategoryIds(prev =>
-                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  setSelectedCategoryIds((prev) =>
+                    prev.includes(id)
+                      ? prev.filter((x) => x !== id)
+                      : [...prev, id],
                   );
                 }}
                 onClear={() => setSelectedCategoryIds([])}
@@ -733,7 +807,8 @@ export default function ReportsPageClient() {
             {formatCurrency(outflow)}
           </div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-            {filteredTx.filter((t) => t.type !== "income").length} Authorizations
+            {filteredTx.filter((t) => t.type !== "income").length}{" "}
+            Authorizations
           </div>
         </Card>
 
@@ -780,7 +855,9 @@ export default function ReportsPageClient() {
                   <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
                     <Activity className="size-3 text-primary" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Financial Freedom Score</span>
+                  <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                    Financial Freedom Score
+                  </span>
                 </div>
                 <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg tracking-widest">
                   SCORE: {insights.score}
@@ -789,12 +866,21 @@ export default function ReportsPageClient() {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-end">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capital Endurance</span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">{insights.score} Months</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    Capital Endurance
+                  </span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">
+                    {insights.score} Months
+                  </span>
                 </div>
-                <ProgressBar progress={Math.min((insights.score / 6) * 100, 100)} className="h-1.5" />
+                <ProgressBar
+                  progress={Math.min((insights.score / 6) * 100, 100)}
+                  className="h-1.5"
+                />
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                  Your liquid capital covers <span className="text-primary">{insights.score} months</span> of current expansion. Target is 6.0 units.
+                  Your liquid capital covers{" "}
+                  <span className="text-primary">{insights.score} months</span>{" "}
+                  of current expansion. Target is 6.0 units.
                 </p>
               </div>
             </div>
@@ -804,7 +890,9 @@ export default function ReportsPageClient() {
             {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
               const target = budgetTargets[key as keyof typeof budgetTargets];
               const isOver =
-                key !== "savings" ? data.percent > target : data.percent < target;
+                key !== "savings"
+                  ? data.percent > target
+                  : data.percent < target;
               const diff = Math.abs(data.percent - target);
 
               return (
@@ -819,7 +907,9 @@ export default function ReportsPageClient() {
                     <div className="flex flex-col items-end gap-1">
                       <span
                         className={
-                          isOver && diff > 5 ? "text-rose-500" : "text-emerald-500"
+                          isOver && diff > 5
+                            ? "text-rose-500"
+                            : "text-emerald-500"
                         }
                       >
                         {data.percent.toFixed(1)}% / {target}%
@@ -870,7 +960,9 @@ export default function ReportsPageClient() {
                     {e.category}
                   </span>
                   <div className="flex gap-3">
-                    <span className="text-slate-400">{e.percent.toFixed(1)}%</span>
+                    <span className="text-slate-400">
+                      {e.percent.toFixed(1)}%
+                    </span>
                     <span className="text-slate-900 dark:text-white">
                       {formatCurrency(e.amount)}
                     </span>
@@ -932,14 +1024,21 @@ export default function ReportsPageClient() {
 
           <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
             {(showAllLiquidity ? accounts : accounts.slice(0, 4)).map((acc) => (
-              <div key={acc.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group">
+              <div
+                key={acc.id}
+                className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
                     <Briefcase className="size-3.5 text-slate-400" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">{acc.name}</div>
-                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{acc.type}</div>
+                    <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">
+                      {acc.name}
+                    </div>
+                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                      {acc.type}
+                    </div>
                   </div>
                 </div>
                 <div className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
@@ -954,7 +1053,9 @@ export default function ReportsPageClient() {
                 onClick={() => setShowAllLiquidity(!showAllLiquidity)}
                 className="flex items-center gap-2 px-6 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all"
               >
-                {showAllLiquidity ? "Minimize View" : `Audit ${accounts.length - 4} More Nodes`}
+                {showAllLiquidity
+                  ? "Minimize View"
+                  : `Audit ${accounts.length - 4} More Nodes`}
               </button>
             </div>
           )}
@@ -1000,8 +1101,10 @@ export default function ReportsPageClient() {
               <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%` }}
-                  className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-primary'}`}
+                  animate={{
+                    width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%`,
+                  }}
+                  className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-primary"}`}
                 />
               </div>
               <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">

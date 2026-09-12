@@ -36,10 +36,14 @@ export function AssetAllocationDonut({
 }: {
   data: (AssetAllocationData & { type?: "asset" | "liability" })[];
 }) {
-  const assetsTotal = data.filter(d => d.type !== 'liability').reduce((acc, curr) => acc + curr.value, 0);
-  const liabilitiesTotal = data.filter(d => d.type === 'liability').reduce((acc, curr) => acc + curr.value, 0);
+  const assetsTotal = data
+    .filter((d) => d.type !== "liability")
+    .reduce((acc, curr) => acc + curr.value, 0);
+  const liabilitiesTotal = data
+    .filter((d) => d.type === "liability")
+    .reduce((acc, curr) => acc + curr.value, 0);
   const netWorth = assetsTotal - liabilitiesTotal;
-  
+
   const ghostData = [{ value: 1 }];
 
   return (
@@ -100,7 +104,10 @@ export function AssetAllocationDonut({
 
         <div className="flex flex-wrap gap-x-6 gap-y-4 w-full px-4">
           {data.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2.5 group/item w-[calc(50%-0.75rem)] min-w-[120px]">
+            <div
+              key={idx}
+              className="flex items-start gap-2.5 group/item w-[calc(50%-0.75rem)] min-w-[120px]"
+            >
               <div
                 className="w-1 h-7 rounded-sm transition-transform group-hover/item:scale-y-110"
                 style={{ backgroundColor: item.color }}
@@ -108,12 +115,19 @@ export function AssetAllocationDonut({
               <div className="flex flex-col min-w-0">
                 <span className="text-[7px] text-slate-400 font-black uppercase tracking-[0.15em] mb-0.5 flex items-center gap-1.5 truncate">
                   {item.name}
-                  <span className={`text-[8px] font-bold ${item.type === 'liability' ? 'text-rose-500' : 'text-primary'}`}>
-                    {assetsTotal > 0 ? `${item.type === 'liability' ? '-' : ''}${Math.round((item.value / assetsTotal) * 100)}%` : '0%'}
+                  <span
+                    className={`text-[8px] font-bold ${item.type === "liability" ? "text-rose-500" : "text-primary"}`}
+                  >
+                    {assetsTotal > 0
+                      ? `${item.type === "liability" ? "-" : ""}${Math.round((item.value / assetsTotal) * 100)}%`
+                      : "0%"}
                   </span>
                 </span>
-                <span className={`text-[11px] font-black truncate ${item.type === 'liability' ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
-                  {item.type === 'liability' ? '-' : ''}{formatCurrency(item.value)}
+                <span
+                  className={`text-[11px] font-black truncate ${item.type === "liability" ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
+                >
+                  {item.type === "liability" ? "-" : ""}
+                  {formatCurrency(item.value)}
                 </span>
               </div>
             </div>

@@ -31,14 +31,17 @@ export function Pagination({
   const endEntry = Math.min(currentPage * itemsPerPage, totalEntries);
 
   return (
-    <div className={cn("flex items-center justify-between py-1 px-1", className)}>
+    <div
+      className={cn("flex items-center justify-between py-1 px-1", className)}
+    >
       <div className="flex items-center gap-2.5">
         <p className="text-[10px] font-black uppercase tracking-tight text-slate-400">
           Page {currentPage} / {totalPages}
         </p>
         <span className="hidden sm:inline w-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-full" />
         <p className="hidden sm:inline text-[9px] font-bold text-slate-500/50 uppercase tracking-widest">
-          {startEntry}-{endEntry} <span className="lowercase">of</span> {totalEntries}
+          {startEntry}-{endEntry} <span className="lowercase">of</span>{" "}
+          {totalEntries}
         </p>
       </div>
 
@@ -52,7 +55,9 @@ export function Pagination({
         </button>
 
         <button
-          onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+          onClick={() =>
+            handlePageChange(Math.min(currentPage + 1, totalPages))
+          }
           disabled={currentPage === totalPages}
           className="flex items-center justify-center size-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 text-slate-500 disabled:opacity-20 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95"
         >

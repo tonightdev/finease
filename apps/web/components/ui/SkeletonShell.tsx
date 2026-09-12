@@ -21,7 +21,10 @@ export function SkeletonShell() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-4 space-y-3">
+            <div
+              key={i}
+              className="h-32 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-4 space-y-3"
+            >
               <div className="w-1/3 h-4 rounded bg-slate-100 dark:bg-slate-800" />
               <div className="w-2/3 h-8 rounded bg-slate-100 dark:bg-slate-800" />
             </div>

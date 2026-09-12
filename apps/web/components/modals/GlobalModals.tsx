@@ -62,15 +62,17 @@ export function GlobalModals() {
         editingGoal={selection.selectedGoal}
         onSave={async (id, data) => {
           if (id) {
-             // update logic handled by slice usually, but we keep it here for parity
+            // update logic handled by slice usually, but we keep it here for parity
           } else {
-            await dispatch(addGoalAction({
-              userId: user.uid,
-              ...data,
-              currentAmount: 0,
-              startDate: new Date().toISOString(),
-              category: "General",
-            })).unwrap();
+            await dispatch(
+              addGoalAction({
+                userId: user.uid,
+                ...data,
+                currentAmount: 0,
+                startDate: new Date().toISOString(),
+                category: "General",
+              }),
+            ).unwrap();
           }
         }}
       />

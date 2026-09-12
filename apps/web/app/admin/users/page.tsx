@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: async () => { },
+    onConfirm: async () => {},
   });
 
   const fetchUsers = useCallback(async () => {
@@ -155,7 +155,7 @@ export default function AdminUsersPage() {
       onConfirm: async () => {
         try {
           await api.delete(`/admin/users/${uid}`);
-          setUsers(prev => prev.filter(u => u.id !== uid));
+          setUsers((prev) => prev.filter((u) => u.id !== uid));
           toast.success("Identity neutralized: Total erasure complete");
         } catch {
           toast.error("Critical: Erasure protocol failure");
@@ -269,10 +269,11 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-6">
                     <button
                       onClick={() => changeUserRole(u.id, u.role)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${u.role === "admin"
-                        ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
-                        : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-                        }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                        u.role === "admin"
+                          ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                          : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+                      }`}
                     >
                       {u.role === "admin" ? (
                         <ShieldAlert className="size-3" />
@@ -284,10 +285,11 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-6">
                     <div
-                      className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${u.status === "inactive"
-                        ? "text-rose-500"
-                        : "text-emerald-500"
-                        }`}
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${
+                        u.status === "inactive"
+                          ? "text-rose-500"
+                          : "text-emerald-500"
+                      }`}
                     >
                       {u.status === "inactive" ? (
                         <XCircle className="size-3" />
@@ -324,10 +326,11 @@ export default function AdminUsersPage() {
                         onClick={() =>
                           toggleUserStatus(u.id, u.status || "active")
                         }
-                        className={`h-8 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${u.status === "inactive"
-                          ? "bg-emerald-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/20"
-                          : "bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:text-rose-500 hover:border-rose-500/20"
-                          }`}
+                        className={`h-8 px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${
+                          u.status === "inactive"
+                            ? "bg-emerald-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/20"
+                            : "bg-white dark:bg-slate-900 text-slate-500 border-slate-100 dark:border-white/5 hover:text-rose-500 hover:border-rose-500/20"
+                        }`}
                       >
                         {u.status === "inactive" ? "Activate" : "Deactivate"}
                       </button>
@@ -362,10 +365,14 @@ export default function AdminUsersPage() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.status === "inactive" ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"}`}>
+                <div
+                  className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.status === "inactive" ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"}`}
+                >
                   {u.status || "active"}
                 </div>
-                <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.role === "admin" ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-slate-500/10 text-slate-500 border border-slate-500/20"}`}>
+                <div
+                  className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${u.role === "admin" ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-slate-500/10 text-slate-500 border border-slate-500/20"}`}
+                >
                   {u.role}
                 </div>
               </div>
@@ -376,7 +383,11 @@ export default function AdminUsersPage() {
                 onClick={() => changeUserRole(u.id, u.role)}
                 className="flex items-center justify-center gap-2 p-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-white/5"
               >
-                {u.role === "admin" ? <ShieldAlert className="size-3" /> : <Shield className="size-3" />}
+                {u.role === "admin" ? (
+                  <ShieldAlert className="size-3" />
+                ) : (
+                  <Shield className="size-3" />
+                )}
                 Mod Role
               </button>
 

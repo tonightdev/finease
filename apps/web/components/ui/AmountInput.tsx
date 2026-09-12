@@ -22,7 +22,6 @@ export function AmountInput({
 }: AmountInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-
   // Prevent scroll change
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -30,7 +29,7 @@ export function AmountInput({
         e.preventDefault();
       }
     };
-    
+
     const input = inputRef.current;
     if (input) {
       input.addEventListener("wheel", handleWheel, { passive: false });
@@ -59,7 +58,6 @@ export function AmountInput({
     }
   };
 
-
   return (
     <input
       ref={inputRef}
@@ -79,7 +77,7 @@ export function AmountInput({
       }}
       className={cn(
         "w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-black ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed",
-        className
+        className,
       )}
     />
   );

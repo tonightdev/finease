@@ -18,19 +18,20 @@ import { formatDate } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 
 export default function ActivitiesPage() {
-  const [activities, setActivities] = useState<(ActivityLog & { id: string })[]>(
-    [],
-  );
+  const [activities, setActivities] = useState<
+    (ActivityLog & { id: string })[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedActivity, setSelectedActivity] = useState<(ActivityLog & { id: string }) | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<
+    (ActivityLog & { id: string }) | null
+  >(null);
 
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await api.get<(ActivityLog & { id: string })[]>(
-          "/admin/activities",
-        );
+        const res =
+          await api.get<(ActivityLog & { id: string })[]>("/admin/activities");
         setActivities(res.data);
       } catch (error) {
         console.error("Failed to fetch activities", error);
@@ -309,7 +310,9 @@ export default function ActivitiesPage() {
               </div>
             </div>
 
-            {!!(selectedActivity.previousState || selectedActivity.newState) && (
+            {!!(
+              selectedActivity.previousState || selectedActivity.newState
+            ) && (
               <div className="space-y-4">
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block px-1">
                   State Delta
@@ -321,7 +324,11 @@ export default function ActivitiesPage() {
                         Previous Config
                       </span>
                       <pre className="p-4 bg-slate-900 text-slate-300 rounded-2xl text-[10px] font-mono overflow-x-auto whitespace-pre-wrap">
-                        {JSON.stringify(selectedActivity.previousState, null, 2)}
+                        {JSON.stringify(
+                          selectedActivity.previousState,
+                          null,
+                          2,
+                        )}
                       </pre>
                     </div>
                   )}
@@ -344,7 +351,9 @@ export default function ActivitiesPage() {
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
                   Action
                 </span>
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getActionColor(selectedActivity.action)}`}>
+                <span
+                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getActionColor(selectedActivity.action)}`}
+                >
                   {selectedActivity.action}
                 </span>
               </div>
