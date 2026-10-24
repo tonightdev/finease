@@ -10,6 +10,7 @@ import { Wallet, Search } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
 import { setCommandPalette } from "@/store/slices/uiSlice";
+import { GhostModeToggle } from "@/components/navigation/GhostModeToggle";
 
 export function ClientHeader() {
   const { user, loading } = useAuth();
@@ -71,6 +72,7 @@ export function ClientHeader() {
             </>
           )}
 
+          {user && <GhostModeToggle />}
           {user && <RefreshButton />}
           <ThemeToggle />
 

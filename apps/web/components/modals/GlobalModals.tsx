@@ -13,6 +13,8 @@ import { AddAccountModal } from "@/components/accounts/AddAccountModal";
 import { TransactionModal } from "@/components/transactions/TransactionModal";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
 import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
+import { WealthPulseModal } from "@/components/dashboard/WealthPulseModal";
+import { TrajectoryHistoryModal } from "@/components/dashboard/TrajectoryHistoryModal";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AccountType } from "@repo/types";
 
@@ -86,6 +88,10 @@ export function GlobalModals() {
         }}
         expiry={selection.selectedExpiry}
       />
+
+      {/* Global Wealth Pulse & Trajectory Modals */}
+      <WealthPulseModal />
+      <TrajectoryHistoryModal />
     </>
   );
 }

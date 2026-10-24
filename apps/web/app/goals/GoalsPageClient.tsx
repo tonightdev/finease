@@ -153,10 +153,38 @@ export default function GoalsPageClient() {
             ) : (
               goals.map((goal: FinancialGoal) => {
                 const reqMonthly = calculateGap(goal);
-                const percent = Math.min(
+                const percentNum =
+                  (goal.currentAmount / goal.targetAmount) * 100;
+                const percent = Math.min(100, percentNum).toFixed(1);
+
+                const today = new Date();
+                const targetDate = new Date(goal.targetDate);
+                const createdDate = goal.startDate
+                  ? new Date(goal.startDate)
+                  : goal.createdAt
+                    ? new Date(goal.createdAt)
+                    : new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+                const totalDays = Math.max(
+                  1,
+                  (targetDate.getTime() - createdDate.getTime()) /
+                    (1000 * 60 * 60 * 24),
+                );
+                const elapsedDays = Math.max(
+                  0,
+                  (today.getTime() - createdDate.getTime()) /
+                    (1000 * 60 * 60 * 24),
+                );
+                const expectedPace = Math.min(
                   100,
-                  (goal.currentAmount / goal.targetAmount) * 100,
-                ).toFixed(1);
+                  (elapsedDays / totalDays) * 100,
+                );
+                const paceDiff = percentNum - expectedPace;
+                const paceStatus =
+                  paceDiff >= 0
+                    ? paceDiff > 5
+                      ? "ahead"
+                      : "ontrack"
+                    : "behind";
 
                 return (
                   <div
@@ -173,8 +201,25 @@ export default function GoalsPageClient() {
                             {formatDate(goal.targetDate)}
                           </p>
                         </div>
-                        <div className="text-[8px] sm:text-[10px] font-black text-primary bg-primary/5 px-1.5 py-0.5 rounded-full border border-primary/10 tracking-widest">
-                          {percent}%
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span
+                            className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full border ${
+                              paceStatus === "ahead"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                : paceStatus === "ontrack"
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                            }`}
+                          >
+                            {paceStatus === "ahead"
+                              ? "⚡ Ahead"
+                              : paceStatus === "ontrack"
+                                ? "🎯 On Track"
+                                : "⏳ Lagging"}
+                          </span>
+                          <div className="text-[8px] sm:text-[10px] font-black text-primary bg-primary/5 px-1.5 py-0.5 rounded-full border border-primary/10 tracking-widest">
+                            {percent}%
+                          </div>
                         </div>
                       </div>
 
@@ -187,9 +232,15 @@ export default function GoalsPageClient() {
                             Target ₹{goal.targetAmount.toLocaleString()}
                           </span>
                         </div>
-                        <div className="relative h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="relative h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className="absolute h-full bg-primary rounded-full transition-all duration-1000"
+                            className={`absolute h-full rounded-full transition-all duration-1000 ${
+                              paceStatus === "ahead"
+                                ? "bg-emerald-500"
+                                : paceStatus === "ontrack"
+                                  ? "bg-primary"
+                                  : "bg-amber-500"
+                            }`}
                             style={{ width: `${percent}%` }}
                           />
                         </div>

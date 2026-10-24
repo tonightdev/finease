@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect } from "react";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
 import { GoalProgressCard } from "@/components/dashboard/GoalProgressCard";
 import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
-import { AccountList } from "@/components/accounts/AccountList";
 import { WealthIndex } from "@/components/dashboard/WealthIndex";
 import { SmartAssistant } from "@/components/dashboard/SmartAssistant";
 import { useSelector, useDispatch } from "react-redux";
@@ -21,11 +20,11 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
-  Plus,
   Target as TargetIcon,
   AlertTriangle,
   ArrowRight,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
@@ -34,13 +33,13 @@ import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { motion } from "framer-motion";
 import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
+import { MonthlyGrowthDebrief } from "@/components/dashboard/MonthlyGrowthDebrief";
+import { LiquidCapitalCard } from "@/components/dashboard/LiquidCapitalCard";
 
 export default function Home() {
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { permission, requestPermission } = useNotifications();
-
-  const [showAllAccounts, setShowAllAccounts] = useState(false);
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
   // Accounts used for analytics/stats (excludes those marked as excluded)
@@ -391,18 +390,27 @@ export default function Home() {
         subtitle="Unified wealth landscape"
         className="space-y-3"
         actions={
-          <div className="flex w-full sm:w-auto gap-2">
+          <div className="flex w-full sm:w-auto items-center gap-2">
             <Button
               size="sm"
-              onClick={() => dispatch(openModal("isAccountModalOpen"))}
-              className="flex-1 sm:flex-initial"
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
+              onClick={() => dispatch(openModal("isWealthPulseOpen"))}
+              className="flex-1 sm:flex-initial bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md shadow-primary/20"
+              leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-300" />}
             >
-              Account
+              60s Wealth Pulse
             </Button>
           </div>
         }
       />
+
+      {/* Executive Minimalist Summary Bars */}
+      <div className="space-y-2">
+        <MonthlyGrowthDebrief />
+        <LiquidCapitalCard
+          accounts={displayRegularAccounts}
+          totalBalance={dashboardStats.liquidCapital}
+        />
+      </div>
 
       {expiringSoon.length > 0 && (
         <motion.div
@@ -488,62 +496,22 @@ export default function Home() {
         />
       </div>
 
-      <div className="space-y-1">
-        {allAccounts.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 text-center border border-slate-100 dark:border-white/5 shadow-sm mx-4 sm:mx-0">
-            <div className="flex flex-col items-center gap-4">
-              <Landmark className="text-4xl w-10 h-10 text-slate-200 dark:text-slate-700" />
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                No accounts configured
-              </p>
-              <Button
-                size="sm"
-                onClick={() => dispatch(openModal("isAccountModalOpen"))}
-              >
-                Add your first account
-              </Button>
-            </div>
+      {allAccounts.length === 0 && (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 text-center border border-slate-100 dark:border-white/5 shadow-sm">
+          <div className="flex flex-col items-center gap-3">
+            <Landmark className="w-8 h-8 text-slate-300 dark:text-slate-700" />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              No accounts configured
+            </p>
+            <Button
+              size="sm"
+              onClick={() => dispatch(openModal("isAccountModalOpen"))}
+            >
+              Add your first account
+            </Button>
           </div>
-        ) : (
-          <>
-            {displayRegularAccounts.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-1 py-1">
-                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Liquid Capital
-                  </h3>
-                  <span className="text-[8px] font-black text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded tracking-[0.1em]">
-                    {displayRegularAccounts.length} Units
-                  </span>
-                </div>
-                <div className="pt-0.5">
-                  <AccountList
-                    accounts={
-                      showAllAccounts
-                        ? displayRegularAccounts
-                        : displayRegularAccounts.slice(0, 4)
-                    }
-                  />
-                  {displayRegularAccounts.length > 4 && (
-                    <div className="mt-4 flex justify-center">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="text-[10px] font-black uppercase tracking-widest px-8"
-                        onClick={() => setShowAllAccounts(!showAllAccounts)}
-                      >
-                        {showAllAccounts
-                          ? "Show Less"
-                          : `Show ${displayRegularAccounts.length - 4} More Units`}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Premium Insights Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -650,6 +618,18 @@ export default function Home() {
           currentNetWorth={realTimeNetWorth}
           percentageChange={netWorthChange}
         />
+      </div>
+
+      {/* Floating Action for PWA Mobile */}
+      <div className="lg:hidden fixed bottom-18 right-4 z-40">
+        <button
+          type="button"
+          onClick={() => dispatch(openModal("isWealthPulseOpen"))}
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/40 active:scale-95 transition-all"
+        >
+          <Sparkles className="size-4 text-amber-300" />
+          <span>Pulse</span>
+        </button>
       </div>
     </PageContainer>
   );

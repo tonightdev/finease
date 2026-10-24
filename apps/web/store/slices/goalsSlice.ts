@@ -34,7 +34,7 @@ export const fetchGoals = createAsyncThunk<
       }
       return true;
     },
-  }
+  },
 );
 
 export const addGoalAction = createAsyncThunk(

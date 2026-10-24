@@ -278,7 +278,8 @@ export default function PortfolioPageClient() {
                   {stat.label}
                 </div>
                 <div
-                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible`}
+                  data-balance="true"
+                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
                 >
                   ₹{stat.value.toLocaleString()}
                 </div>

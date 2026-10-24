@@ -14,13 +14,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  Filter,
-  X,
   ChevronDown,
   Check,
   Wallet,
   PiggyBank,
   Briefcase,
+  History,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
@@ -32,6 +31,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { TrajectoryHistoryView } from "@/components/dashboard/TrajectoryHistoryView";
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
 
@@ -48,6 +48,7 @@ function FilterDropdown({
   onClear,
   multi = false,
   icon: Icon,
+  placeholder,
 }: {
   label: string;
   value: string | string[];
@@ -56,12 +57,13 @@ function FilterDropdown({
   onClear?: () => void;
   multi?: boolean;
   icon?: React.ElementType;
+  placeholder?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
@@ -70,7 +72,11 @@ function FilterDropdown({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const selectedCount = multi
@@ -78,69 +84,92 @@ function FilterDropdown({
     : value === "all"
       ? 0
       : 1;
+
   const isSelected = (id: string) =>
     multi ? (value as string[]).includes(id) : value === id;
 
+  const displayText = useMemo(() => {
+    if (multi) {
+      const arr = value as string[];
+      if (arr.length === 0) return placeholder || `All ${label}s`;
+      if (arr.length === 1) {
+        const match = options.find((o) => o.id === arr[0]);
+        return match?.name || arr[0];
+      }
+      return `${arr.length} ${label}s`;
+    }
+    if (value === "all") return placeholder || `All ${label}s`;
+    const match = options.find((o) => o.id === value);
+    return match?.name || (value as string);
+  }, [multi, value, options, placeholder, label]);
+
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-2.5 h-8 rounded-lg border transition-all duration-300 text-[9px] font-black uppercase tracking-widest ${
+        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${
           isOpen || selectedCount > 0
-            ? "bg-white dark:bg-slate-800 border-primary text-primary shadow-sm"
-            : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-white/5 text-slate-500 hover:border-primary/40"
+            ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
+            : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
         }`}
       >
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="size-3.5" />}
-          <span className="truncate">{label}</span>
-          {selectedCount > 0 && (
-            <span className="bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-lg ml-1 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {Icon && <Icon className="size-3.5 shrink-0" />}
+          <span className="truncate">{displayText}</span>
+          {selectedCount > 1 && (
+            <span className="bg-primary text-white text-[9px] px-1.5 py-0.2 rounded-md shrink-0">
               {selectedCount}
             </span>
           )}
         </div>
         <ChevronDown
-          className={`size-3.5 transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`}
+          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${
+            isOpen ? "rotate-180 text-primary" : ""
+          }`}
         />
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 min-w-[220px]"
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 mt-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/20 min-w-[200px] w-full max-w-[calc(100vw-32px)]"
           >
-            <div className="p-2 max-h-[280px] overflow-y-auto no-scrollbar">
+            <div className="p-1.5 max-h-[260px] overflow-y-auto no-scrollbar">
               {options.map((option) => (
                 <button
+                  type="button"
                   key={option.id}
                   onClick={() => {
                     onSelect(option.id);
                     if (!multi) setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-xs font-bold ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${
                     isSelected(option.id)
                       ? "bg-primary/10 text-primary"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   <span className="truncate">{option.name}</span>
-                  {isSelected(option.id) && <Check className="size-3.5" />}
+                  {isSelected(option.id) && (
+                    <Check className="size-3.5 text-primary shrink-0 ml-2" />
+                  )}
                 </button>
               ))}
             </div>
             {onClear && selectedCount > 0 && (
               <div className="p-2 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
                 <button
+                  type="button"
                   onClick={() => {
                     onClear();
                     setIsOpen(false);
                   }}
-                  className="w-full py-2 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                  className="w-full py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
                 >
                   Clear Selection
                 </button>
@@ -154,13 +183,13 @@ function FilterDropdown({
 }
 
 export default function ReportsPageClient() {
+  const [activeTab, setActiveTab] = useState<"trajectory" | "analytics">(
+    "trajectory",
+  );
   const [viewType, setViewType] = useState<ViewType>("Month");
   const [cursorDate, setCursorDate] = useState<Date>(new Date());
   const [showAllExpenses, setShowAllExpenses] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedType, setSelectedType] = useState<string>("all");
   const [showAllLiquidity, setShowAllLiquidity] = useState(false);
 
   const { user, loading: authLoading } = useAuth();
@@ -172,41 +201,32 @@ export default function ReportsPageClient() {
     [allAccounts],
   );
 
+  const categories =
+    useSelector((state: RootState) => state.categories?.items) ??
+    EMPTY_CATEGORIES;
+
   const allTransactions =
     useSelector((state: RootState) => state.transactions?.items) ??
     EMPTY_TRANSACTIONS;
   const transactions = useMemo(() => {
     const includedIds = new Set(accounts.map((a) => a.id));
-    let filtered = allTransactions.filter((tx) =>
-      includedIds.has(tx.accountId),
+    let filtered = allTransactions.filter(
+      (tx) =>
+        includedIds.has(tx.accountId) ||
+        (tx.toAccountId && includedIds.has(tx.toAccountId)),
     );
 
     if (selectedAccountIds.length > 0) {
       const selectedSet = new Set(selectedAccountIds);
-      filtered = filtered.filter((tx) => selectedSet.has(tx.accountId));
-    }
-
-    if (selectedCategoryIds.length > 0) {
-      const selectedSet = new Set(selectedCategoryIds);
-      filtered = filtered.filter((tx) => selectedSet.has(tx.category));
-    }
-
-    if (selectedType !== "all") {
-      filtered = filtered.filter((tx) => tx.type === selectedType);
+      filtered = filtered.filter(
+        (tx) =>
+          selectedSet.has(tx.accountId) ||
+          (tx.toAccountId && selectedSet.has(tx.toAccountId)),
+      );
     }
 
     return filtered;
-  }, [
-    allTransactions,
-    accounts,
-    selectedAccountIds,
-    selectedCategoryIds,
-    selectedType,
-  ]);
-
-  const categories =
-    useSelector((state: RootState) => state.categories?.items) ??
-    EMPTY_CATEGORIES;
+  }, [allTransactions, accounts, selectedAccountIds]);
   const loading = useSelector(
     (state: RootState) =>
       state.transactions?.loading || state.accounts?.loading,
@@ -311,11 +331,17 @@ export default function ReportsPageClient() {
     savings: 20,
   };
 
-  const assets = accounts
+  const filteredAccounts = useMemo(() => {
+    if (selectedAccountIds.length === 0) return accounts;
+    const set = new Set(selectedAccountIds);
+    return accounts.filter((a) => set.has(a.id));
+  }, [accounts, selectedAccountIds]);
+
+  const assets = filteredAccounts
     .filter((acc: { type: string }) => acc.type !== "debt")
     .reduce((sum: number, item: { balance: number }) => sum + item.balance, 0);
   const liabilities = Math.abs(
-    accounts
+    filteredAccounts
       .filter((acc: { type: string }) => acc.type === "debt")
       .reduce(
         (sum: number, item: { balance: number }) => sum + item.balance,
@@ -516,7 +542,7 @@ export default function ReportsPageClient() {
         ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
         : 0;
 
-    const liquidCapital = accounts
+    const liquidCapital = filteredAccounts
       .filter((a) => !a.excludeFromAnalytics && a.type !== "card")
       .reduce((sum, a) => sum + a.balance, 0);
 
@@ -534,7 +560,7 @@ export default function ReportsPageClient() {
       liquidCapital,
       score: parseFloat(score),
     };
-  }, [transactions, accounts, user?.monthStartDate]);
+  }, [transactions, filteredAccounts, user?.monthStartDate]);
 
   const expenseBreakdown = useMemo(() => {
     const totals = filteredTx
@@ -616,506 +642,485 @@ export default function ReportsPageClient() {
   return (
     <PageContainer className="gap-1.5 sm:gap-2">
       <PageHeader
-        title="Intelligence"
-        subtitle="Unified analytics & predictive insights"
+        title="Review & Trajectory"
+        subtitle="Periodic wealth trajectory & deep analytics"
         className="space-y-1.5"
         actions={
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`h-8 px-3.5 flex-1 sm:flex-none flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border shadow-sm ${
-                  showFilters
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200/50 dark:border-white/5 hover:border-primary/50"
-                }`}
-              >
-                {showFilters ? (
-                  <X className="size-3.5" />
-                ) : (
-                  <Filter className="size-3.5" />
-                )}
-                <span>Filters</span>
-                {(selectedAccountIds.length > 0 ||
-                  selectedCategoryIds.length > 0 ||
-                  selectedType !== "all") && (
-                  <span className="size-4 rounded-full bg-rose-500 text-white text-[8px] flex items-center justify-center">
-                    {selectedAccountIds.length +
-                      selectedCategoryIds.length +
-                      (selectedType !== "all" ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-
-              {(selectedAccountIds.length > 0 ||
-                selectedCategoryIds.length > 0 ||
-                selectedType !== "all") && (
-                <button
-                  onClick={() => {
-                    setSelectedAccountIds([]);
-                    setSelectedCategoryIds([]);
-                    setSelectedType("all");
+          activeTab === "analytics" ? (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+              {/* Account Filter button directly replacing the Filter button */}
+              <div className="w-full sm:w-auto min-w-[140px] sm:min-w-[170px]">
+                <FilterDropdown
+                  label="Account"
+                  placeholder="All Accounts"
+                  multi
+                  value={selectedAccountIds}
+                  options={accounts.map((a) => ({ id: a.id, name: a.name }))}
+                  onSelect={(id) => {
+                    setSelectedAccountIds((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((x) => x !== id)
+                        : [...prev, id],
+                    );
                   }}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:scale-[1.03] active:scale-95 transition-all shrink-0"
-                  title="Clear Filters"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
+                  onClear={() => setSelectedAccountIds([])}
+                  icon={Wallet}
+                />
+              </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-sm w-full">
-              {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-xs w-full sm:w-auto">
+                {(["Day", "Week", "Month", "Year"] as ViewType[]).map(
+                  (type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setViewType(type);
+                      }}
+                      className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                        viewType === type
+                          ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ),
+                )}
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-xl p-0.5 shadow-xs w-full sm:w-auto">
                 <button
-                  key={type}
-                  onClick={() => {
-                    setViewType(type);
-                  }}
-                  className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
-                    viewType === type
-                      ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                  }`}
+                  type="button"
+                  onClick={handlePrev}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
+                  aria-label="Previous Period"
                 >
-                  {type}
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
-              ))}
-            </div>
-            <div className="flex items-center justify-between sm:justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-lg p-0.5 shadow-sm w-full sm:w-auto">
-              <button
-                onClick={handlePrev}
-                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
-                aria-label="Previous Period"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-1.5 px-1.5 min-w-[110px] sm:min-w-[130px] justify-center flex-1 sm:flex-auto">
-                <CalendarIcon className="w-3 h-3 text-primary shrink-0" />
-                <div className="flex flex-col items-center sm:flex-row sm:gap-1.5">
+                <div className="flex items-center gap-1.5 px-2 min-w-[110px] sm:min-w-[130px] justify-center flex-1 sm:flex-auto">
+                  <CalendarIcon className="w-3 h-3 text-primary shrink-0" />
                   <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate">
                     {formattedCursorDate}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={cursorDate.getTime() > now.getTime()}
+                  className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                    cursorDate.getTime() > now.getTime()
+                      ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
+                  }`}
+                  aria-label="Next Period"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={handleNext}
-                disabled={cursorDate.getTime() > now.getTime()}
-                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors shrink-0 ${
-                  cursorDate.getTime() > now.getTime()
-                    ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
-                }`}
-                aria-label="Next Period"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
-          </div>
+          ) : null
         }
-      >
-        {showFilters && (
-          <div className="bg-slate-50/50 dark:bg-slate-900/40 p-2.5 rounded-2xl border border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm flex flex-wrap gap-2.5 mt-2">
-            <div className="flex-1 min-w-[130px]">
-              <FilterDropdown
-                label="Account"
-                multi
-                value={selectedAccountIds}
-                options={accounts.map((a) => ({ id: a.id, name: a.name }))}
-                onSelect={(id) => {
-                  setSelectedAccountIds((prev) =>
-                    prev.includes(id)
-                      ? prev.filter((x) => x !== id)
-                      : [...prev, id],
-                  );
-                }}
-                onClear={() => setSelectedAccountIds([])}
-              />
-            </div>
+      />
 
-            <div className="flex-1 min-w-[130px]">
-              <FilterDropdown
-                label="Category"
-                multi
-                value={selectedCategoryIds}
-                options={categories.map((c) => ({ id: c.id, name: c.name }))}
-                onSelect={(id) => {
-                  setSelectedCategoryIds((prev) =>
-                    prev.includes(id)
-                      ? prev.filter((x) => x !== id)
-                      : [...prev, id],
-                  );
-                }}
-                onClear={() => setSelectedCategoryIds([])}
-              />
-            </div>
-
-            <div className="flex-1 min-w-[130px]">
-              <FilterDropdown
-                label="Type"
-                value={selectedType}
-                options={[
-                  { id: "all", name: "All Types" },
-                  { id: "income", name: "Income" },
-                  { id: "expense", name: "Expense" },
-                  { id: "transfer", name: "Transfers" },
-                ]}
-                onSelect={setSelectedType}
-              />
-            </div>
-          </div>
-        )}
-      </PageHeader>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2 mb-0">
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group p-3">
-          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-primary transition-colors uppercase tracking-widest">
-            Net Worth
-          </div>
-          <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mb-1 truncate shrink-0">
-            {formatCurrency(netWorth)}
-          </div>
-          <div
-            className={`flex items-center gap-1.5 text-[10px] font-black ${netWorthChange >= 0 ? "text-emerald-500" : "text-rose-500"}`}
-          >
-            <ArrowUpRight
-              className={`w-3 h-3 ${netWorthChange < 0 ? "rotate-90" : ""}`}
-            />
-            <span className="truncate">
-              {netWorthChange >= 0 ? "+" : ""}
-              {netWorthChange}%
-            </span>
-          </div>
-        </Card>
-
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group p-3">
-          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-emerald-500 transition-colors uppercase tracking-widest">
-            Total Inflow
-          </div>
-          <div className="text-base sm:text-xl font-black text-emerald-600 mb-1 truncate shrink-0">
-            {formatCurrency(inflow)}
-          </div>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-            {filteredTx.filter((t) => t.type === "income").length} Confirmations
-          </div>
-        </Card>
-
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group p-3">
-          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-rose-500 transition-colors uppercase tracking-widest">
-            Total Outflow
-          </div>
-          <div className="text-base sm:text-xl font-black text-rose-500 mb-1 truncate shrink-0">
-            {formatCurrency(outflow)}
-          </div>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-            {filteredTx.filter((t) => t.type !== "income").length}{" "}
-            Authorizations
-          </div>
-        </Card>
-
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group p-3">
-          <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-amber-500 transition-colors uppercase tracking-widest">
-            Net Results
-          </div>
-          <div
-            className={`text-base sm:text-xl font-black mb-1 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
-          >
-            {formatCurrency(inflow - outflow)}
-          </div>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-            Final Balance
-          </div>
-        </Card>
+      {/* Top Tab Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl w-full sm:w-fit my-2 sm:my-3 border border-slate-200/50 dark:border-white/5">
+        <button
+          type="button"
+          onClick={() => setActiveTab("trajectory")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "trajectory"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <History className="size-3.5" />
+          <span>Trajectory</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("analytics")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "analytics"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Activity className="size-3.5" />
+          <span>Analytics</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Percent className="w-4 h-4 text-primary" />
+      {activeTab === "trajectory" ? (
+        <TrajectoryHistoryView />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2 mb-0">
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group p-3">
+              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-primary transition-colors uppercase tracking-widest truncate">
+                {selectedAccountIds.length > 0
+                  ? selectedAccountIds.length === 1
+                    ? accounts.find((a) => a.id === selectedAccountIds[0])
+                        ?.name || "Account Balance"
+                    : `${selectedAccountIds.length} Accounts Balance`
+                  : "Net Worth"}
               </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Equilibrium Scan
-                </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Target Protocol Analysis
-                </p>
+              <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mb-1 truncate shrink-0">
+                {formatCurrency(netWorth)}
               </div>
-            </div>
-            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">
-              {viewType} Status
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-1">
-            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 space-y-3 border border-slate-100 dark:border-white/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Activity className="size-3 text-primary" />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    Financial Freedom Score
-                  </span>
-                </div>
-                <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg tracking-widest">
-                  SCORE: {insights.score}
+              <div
+                className={`flex items-center gap-1.5 text-[10px] font-black ${netWorthChange >= 0 ? "text-emerald-500" : "text-rose-500"}`}
+              >
+                <ArrowUpRight
+                  className={`w-3 h-3 ${netWorthChange < 0 ? "rotate-90" : ""}`}
+                />
+                <span className="truncate">
+                  {netWorthChange >= 0 ? "+" : ""}
+                  {netWorthChange}%
                 </span>
               </div>
+            </Card>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-end">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    Capital Endurance
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    {insights.score} Months
-                  </span>
-                </div>
-                <ProgressBar
-                  progress={Math.min((insights.score / 6) * 100, 100)}
-                  className="h-1.5"
-                />
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                  Your liquid capital covers{" "}
-                  <span className="text-primary">{insights.score} months</span>{" "}
-                  of current expansion. Target is 6.0 units.
-                </p>
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group p-3">
+              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-emerald-500 transition-colors uppercase tracking-widest">
+                Total Inflow
               </div>
-            </div>
-          </div>
+              <div className="text-base sm:text-xl font-black text-emerald-600 mb-1 truncate shrink-0">
+                {formatCurrency(inflow)}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                {filteredTx.filter((t) => t.type === "income").length}{" "}
+                Confirmations
+              </div>
+            </Card>
 
-          <div className="space-y-4 pt-2">
-            {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
-              const target = budgetTargets[key as keyof typeof budgetTargets];
-              const isOver =
-                key !== "savings"
-                  ? data.percent > target
-                  : data.percent < target;
-              const diff = Math.abs(data.percent - target);
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group p-3">
+              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-rose-500 transition-colors uppercase tracking-widest">
+                Total Outflow
+              </div>
+              <div className="text-base sm:text-xl font-black text-rose-500 mb-1 truncate shrink-0">
+                {formatCurrency(outflow)}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                {filteredTx.filter((t) => t.type !== "income").length}{" "}
+                Authorizations
+              </div>
+            </Card>
 
-              return (
-                <div key={key} className="space-y-2">
-                  <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.2em]">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-slate-400">{key}</span>
-                      <span className="text-slate-900 dark:text-white text-xs">
-                        {formatCurrency(data.amount)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span
-                        className={
-                          isOver && diff > 5
-                            ? "text-rose-500"
-                            : "text-emerald-500"
-                        }
-                      >
-                        {data.percent.toFixed(1)}% / {target}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                    <div
-                      className="absolute top-0 bottom-0 left-0 bg-primary/20 p-px z-10 border-r-2 border-primary/40"
-                      style={{ width: `${target}%` }}
-                    />
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${isOver && diff > 5 ? "bg-rose-500" : "bg-emerald-500"}`}
-                      style={{ width: `${Math.min(data.percent, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <TrendingDown className="w-4 h-4 text-rose-500" />
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group p-3">
+              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-amber-500 transition-colors uppercase tracking-widest">
+                Net Results
               </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Absorption Grid
-                </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Top Outflow Categories
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
-            {(showAllExpenses
-              ? expenseBreakdown
-              : expenseBreakdown.slice(0, 6)
-            ).map((e) => (
-              <div key={e.category} className="space-y-2 group">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-slate-400 group-hover:text-primary transition-colors">
-                    {e.category}
-                  </span>
-                  <div className="flex gap-3">
-                    <span className="text-slate-400">
-                      {e.percent.toFixed(1)}%
-                    </span>
-                    <span className="text-slate-900 dark:text-white">
-                      {formatCurrency(e.amount)}
-                    </span>
-                  </div>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className={`${e.color} h-full rounded-full`}
-                    style={{ width: `${e.percent}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-            {expenseBreakdown.length === 0 && (
-              <div className="col-span-full py-6 sm:py-10 text-center">
-                <Activity className="w-8 h-8 text-slate-200 mx-auto mb-4" />
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                  No transaction data traced
-                </p>
-              </div>
-            )}
-          </div>
-          {expenseBreakdown.length > 6 && (
-            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
-              <button
-                onClick={() => setShowAllExpenses(!showAllExpenses)}
-                className="flex items-center gap-2 px-6 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-              >
-                {showAllExpenses
-                  ? "Collapse Breakdown"
-                  : `Show ${expenseBreakdown.length - 6} More Categories`}
-              </button>
-            </div>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
-        {/* Account Liquidity Widget */}
-        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Wallet className="size-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Liquidity Grid
-                </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Active Asset Distribution
-                </p>
-              </div>
-            </div>
-            <div className="text-[10px] font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
-              {accounts.length} Nodes
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
-            {(showAllLiquidity ? accounts : accounts.slice(0, 4)).map((acc) => (
               <div
-                key={acc.id}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group"
+                className={`text-base sm:text-xl font-black mb-1 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
-                    <Briefcase className="size-3.5 text-slate-400" />
+                {formatCurrency(inflow - outflow)}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                Final Balance
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <Percent className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">
-                      {acc.name}
-                    </div>
-                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                      {acc.type}
-                    </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      Equilibrium Scan
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      Target Protocol Analysis
+                    </p>
                   </div>
                 </div>
-                <div className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
-                  {formatCurrency(acc.balance)}
+                <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  {viewType} Status
                 </div>
               </div>
-            ))}
-          </div>
-          {accounts.length > 4 && (
-            <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
-              <button
-                onClick={() => setShowAllLiquidity(!showAllLiquidity)}
-                className="flex items-center gap-2 px-6 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all"
-              >
-                {showAllLiquidity
-                  ? "Minimize View"
-                  : `Audit ${accounts.length - 4} More Nodes`}
-              </button>
-            </div>
-          )}
-        </Card>
 
-        {/* Savings Performance Widget */}
-        <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5 overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-            <PiggyBank size={140} />
+              <div className="space-y-3 pt-1">
+                <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 space-y-3 border border-slate-100 dark:border-white/5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <Activity className="size-3 text-primary" />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                        Financial Freedom Score
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg tracking-widest">
+                      SCORE: {insights.score}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        Capital Endurance
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        {insights.score} Months
+                      </span>
+                    </div>
+                    <ProgressBar
+                      progress={Math.min((insights.score / 6) * 100, 100)}
+                      className="h-1.5"
+                    />
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                      Your liquid capital covers{" "}
+                      <span className="text-primary">
+                        {insights.score} months
+                      </span>{" "}
+                      of current expansion. Target is 6.0 units.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
+                  const target =
+                    budgetTargets[key as keyof typeof budgetTargets];
+                  const isOver =
+                    key !== "savings"
+                      ? data.percent > target
+                      : data.percent < target;
+                  const diff = Math.abs(data.percent - target);
+
+                  return (
+                    <div key={key} className="space-y-2">
+                      <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.2em]">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-400">{key}</span>
+                          <span className="text-slate-900 dark:text-white text-xs">
+                            {formatCurrency(data.amount)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span
+                            className={
+                              isOver && diff > 5
+                                ? "text-rose-500"
+                                : "text-emerald-500"
+                            }
+                          >
+                            {data.percent.toFixed(1)}% / {target}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                        <div
+                          className="absolute top-0 bottom-0 left-0 bg-primary/20 p-px z-10 border-r-2 border-primary/40"
+                          style={{ width: `${target}%` }}
+                        />
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${isOver && diff > 5 ? "bg-rose-500" : "bg-emerald-500"}`}
+                          style={{ width: `${Math.min(data.percent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <TrendingDown className="w-4 h-4 text-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      Absorption Grid
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      Top Outflow Categories
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                {(showAllExpenses
+                  ? expenseBreakdown
+                  : expenseBreakdown.slice(0, 6)
+                ).map((e) => (
+                  <div key={e.category} className="space-y-2 group">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                      <span className="text-slate-400 group-hover:text-primary transition-colors">
+                        {e.category}
+                      </span>
+                      <div className="flex gap-3">
+                        <span className="text-slate-400">
+                          {e.percent.toFixed(1)}%
+                        </span>
+                        <span className="text-slate-900 dark:text-white">
+                          {formatCurrency(e.amount)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`${e.color} h-full rounded-full`}
+                        style={{ width: `${e.percent}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {expenseBreakdown.length === 0 && (
+                  <div className="col-span-full py-6 sm:py-10 text-center">
+                    <Activity className="w-8 h-8 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                      No transaction data traced
+                    </p>
+                  </div>
+                )}
+              </div>
+              {expenseBreakdown.length > 6 && (
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
+                  <button
+                    onClick={() => setShowAllExpenses(!showAllExpenses)}
+                    className="flex items-center gap-2 px-6 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
+                  >
+                    {showAllExpenses
+                      ? "Collapse Breakdown"
+                      : `Show ${expenseBreakdown.length - 6} More Categories`}
+                  </button>
+                </div>
+              )}
+            </Card>
           </div>
 
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <PiggyBank className="size-4 text-emerald-500" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
+            {/* Account Liquidity Widget */}
+            <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Wallet className="size-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      Liquidity Grid
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      Active Asset Distribution
+                    </p>
+                  </div>
+                </div>
+                <div className="text-[10px] font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
+                  {filteredAccounts.length} Nodes
+                </div>
               </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Savings Vector
-                </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Accumulation Performance
-                </p>
-              </div>
-            </div>
-          </div>
 
-          <div className="relative z-10 space-y-4 py-4">
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="text-4xl font-black text-emerald-500 tracking-tighter">
-                {fiftyThirtyTwenty.savings.percent.toFixed(1)}%
+              <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
+                {(showAllLiquidity
+                  ? filteredAccounts
+                  : filteredAccounts.slice(0, 4)
+                ).map((acc) => (
+                  <div
+                    key={acc.id}
+                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
+                        <Briefcase className="size-3.5 text-slate-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">
+                          {acc.name}
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                          {acc.type}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
+                      {formatCurrency(acc.balance)}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                Current Savings Rate
-              </div>
-            </div>
+              {filteredAccounts.length > 4 && (
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
+                  <button
+                    onClick={() => setShowAllLiquidity(!showAllLiquidity)}
+                    className="flex items-center gap-2 px-6 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all"
+                  >
+                    {showAllLiquidity
+                      ? "Minimize View"
+                      : `Audit ${filteredAccounts.length - 4} More Nodes`}
+                  </button>
+                </div>
+              )}
+            </Card>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
-                <span className="text-slate-400">Target Efficiency</span>
-                <span className="text-primary">{budgetTargets.savings}%</span>
+            {/* Savings Performance Widget */}
+            <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                <PiggyBank size={140} />
               </div>
-              <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{
-                    width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%`,
-                  }}
-                  className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-primary"}`}
-                />
+
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <PiggyBank className="size-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                      Savings Vector
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      Accumulation Performance
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">
-                {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings
-                  ? "EXCELLENT: Your accumulation vector is outperforming the target protocol. Surplus capital identified."
-                  : `ATTENTION: You are currently operating at ${(budgetTargets.savings - fiftyThirtyTwenty.savings.percent).toFixed(1)}% below your defined savings architecture.`}
-              </p>
-            </div>
+
+              <div className="relative z-10 space-y-4 py-4">
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="text-4xl font-black text-emerald-500 tracking-tighter">
+                    {fiftyThirtyTwenty.savings.percent.toFixed(1)}%
+                  </div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    Current Savings Rate
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
+                    <span className="text-slate-400">Target Efficiency</span>
+                    <span className="text-primary">
+                      {budgetTargets.savings}%
+                    </span>
+                  </div>
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%`,
+                      }}
+                      className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-primary"}`}
+                    />
+                  </div>
+                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">
+                    {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings
+                      ? "EXCELLENT: Your accumulation vector is outperforming the target protocol. Surplus capital identified."
+                      : `ATTENTION: You are currently operating at ${(budgetTargets.savings - fiftyThirtyTwenty.savings.percent).toFixed(1)}% below your defined savings architecture.`}
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
+        </>
+      )}
     </PageContainer>
   );
 }

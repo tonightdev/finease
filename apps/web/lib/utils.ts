@@ -5,7 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number) {
+export function formatCurrency(amount: number, forceGhost?: boolean) {
+  if (
+    forceGhost ||
+    (typeof document !== "undefined" &&
+      document.documentElement.classList.contains("ghost-mode"))
+  ) {
+    return "*****";
+  }
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -124,7 +131,8 @@ export function getFiscalMonthStart(date: Date, startDay: number): Date {
 }
 
 export function parseUserAgent(ua: string) {
-  if (!ua) return { isMobile: false, isPWA: false, browser: "Unknown", os: "Unknown" };
+  if (!ua)
+    return { isMobile: false, isPWA: false, browser: "Unknown", os: "Unknown" };
 
   const isMobile = /mobile|android|iphone|ipad|phone/i.test(ua);
   const isPWA = /standalone|pwa|finEase-app/i.test(ua);

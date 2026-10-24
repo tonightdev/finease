@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { useMotionValue, useSpring, useTransform, motion } from "framer-motion";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 interface AnimatedNumberProps {
   value: number;
@@ -20,6 +22,7 @@ export function AnimatedNumber({
   precision = 0,
   format = true,
 }: AnimatedNumberProps) {
+  const ghostMode = useSelector((state: RootState) => state.ui.ghostMode);
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, {
     damping: 30,
@@ -27,7 +30,6 @@ export function AnimatedNumber({
   });
 
   useEffect(() => {
-    // Immediate set if it's the first render or if we want faster reaction
     motionValue.set(value);
   }, [value, motionValue]);
 
@@ -35,15 +37,25 @@ export function AnimatedNumber({
     const rounded = latest.toFixed(precision);
     if (!format) return rounded;
 
-    // Standard currency/number formatting
     return Number(rounded).toLocaleString(undefined, {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision,
     });
   });
 
+  if (ghostMode) {
+    return (
+      <span
+        data-balance="true"
+        className={`cloaked-balance select-none ${className || ""}`}
+      >
+        *****
+      </span>
+    );
+  }
+
   return (
-    <span className={className}>
+    <span data-balance="true" className={`cloaked-balance ${className || ""}`}>
       {prefix}
       <motion.span>{displayValue}</motion.span>
       {suffix}

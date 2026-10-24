@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Delete,
   Bell,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -278,7 +279,6 @@ export function SecurityTab() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-slate-950/70 backdrop-blur-md"
-              onClick={handleClosePinSetup}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -286,6 +286,15 @@ export function SecurityTab() {
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200/80 dark:border-white/10 p-6 sm:p-8 overflow-hidden select-none"
             >
+              <button
+                type="button"
+                onClick={handleClosePinSetup}
+                aria-label="Close modal"
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X size={18} />
+              </button>
+
               <div className="relative space-y-6 text-center">
                 {/* Header Icon & Step Badge */}
                 <div className="space-y-2">

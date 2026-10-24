@@ -31,23 +31,29 @@ export const fetchYearlyExpenses = createAsyncThunk(
   async () => {
     const response = await api.get<YearlyExpense[]>("/finance/yearly-expenses");
     return response.data;
-  }
+  },
 );
 
 export const createYearlyExpense = createAsyncThunk(
   "yearly/create",
   async (data: Partial<YearlyExpense>) => {
-    const response = await api.post<YearlyExpense>("/finance/yearly-expenses", data);
+    const response = await api.post<YearlyExpense>(
+      "/finance/yearly-expenses",
+      data,
+    );
     return response.data;
-  }
+  },
 );
 
 export const updateYearlyExpense = createAsyncThunk(
   "yearly/update",
   async ({ id, data }: { id: string; data: Partial<YearlyExpense> }) => {
-    const response = await api.put<YearlyExpense>(`/finance/yearly-expenses/${id}`, data);
+    const response = await api.put<YearlyExpense>(
+      `/finance/yearly-expenses/${id}`,
+      data,
+    );
     return response.data;
-  }
+  },
 );
 
 export const deleteYearlyExpense = createAsyncThunk(
@@ -55,7 +61,7 @@ export const deleteYearlyExpense = createAsyncThunk(
   async (id: string) => {
     await api.delete(`/finance/yearly-expenses/${id}`);
     return id;
-  }
+  },
 );
 
 export const yearlySlice = createSlice({

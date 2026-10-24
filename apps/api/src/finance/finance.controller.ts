@@ -33,6 +33,7 @@ import type {
   StrategyEntry,
   Simulation,
   YearlyExpense,
+  BatchSyncAccountsDto,
 } from '@repo/types';
 import { YearlyExpensesService } from './yearly-expenses.service';
 import { UsersService } from '../common/services/users.service';
@@ -127,6 +128,69 @@ export class FinanceController {
   @Delete('accounts/:id')
   removeAccount(@Param('id') id: string) {
     return this.accountsService.remove(id);
+  }
+
+  @ApiOperation({
+    summary: 'Batch sync account balances (Monthly Wealth Pulse)',
+  })
+  @Post('accounts/batch-sync')
+  batchSyncAccounts(
+    @Req() req: RequestWithUser,
+    @Body() dto: BatchSyncAccountsDto,
+  ) {
+    return this.accountsService.batchSync(req.user.uid, dto);
+  }
+
+  @ApiOperation({ summary: 'Get historical wealth snapshots' })
+  @Get('snapshots')
+  getSnapshots(@Req() req: RequestWithUser, @Query('limit') limit?: string) {
+    return this.accountsService.getSnapshots(
+      req.user.uid,
+      limit ? parseInt(limit, 10) : 12,
+    );
+  }
+
+  @ApiOperation({ summary: 'Delete a wealth pulse snapshot entry' })
+  @Delete('snapshots/:id')
+  deleteSnapshot(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.accountsService.deleteSnapshot(req.user.uid, id);
+  }
+
+  @ApiOperation({ summary: 'Update a wealth pulse snapshot entry' })
+  @Put('snapshots/:id')
+  updateSnapshot(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: { note?: string; accountBalances?: Record<string, number> },
+  ) {
+    return this.accountsService.updateSnapshot(req.user.uid, id, dto);
+  }
+
+  @ApiOperation({
+    summary: 'Get monthly growth debrief & intelligence summary',
+  })
+  @Get('debrief')
+  getMonthlyDebrief(@Req() req: RequestWithUser) {
+    return this.accountsService.getMonthlyDebrief(req.user.uid);
+  }
+
+  @ApiOperation({
+    summary: 'Get scheduled Wealth Pulse cadence and next review date',
+  })
+  @Get('pulse-schedule')
+  getPulseSchedule(@Req() req: RequestWithUser) {
+    return this.accountsService.getPulseSchedule(req.user.uid);
+  }
+
+  @ApiOperation({
+    summary: 'Update scheduled Wealth Pulse cadence and payday anchor',
+  })
+  @Put('pulse-schedule')
+  updatePulseSchedule(
+    @Req() req: RequestWithUser,
+    @Body() body: { cadence?: string; targetDay?: number },
+  ) {
+    return this.accountsService.updatePulseSchedule(req.user.uid, body);
   }
 
   // --- Transactions ---

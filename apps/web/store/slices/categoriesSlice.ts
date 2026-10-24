@@ -34,7 +34,7 @@ export const fetchCategories = createAsyncThunk<
       }
       return true;
     },
-  }
+  },
 );
 
 export const addCategoryAction = createAsyncThunk(

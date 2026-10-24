@@ -21,7 +21,7 @@ export function YearlyExpenseCard({
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -4, scale: 1.02 }}
+      whileHover={{ y: -2 }}
       exit={{ opacity: 0, scale: 0.98 }}
       className="group relative p-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-[1.5rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-row gap-4 overflow-hidden"
     >

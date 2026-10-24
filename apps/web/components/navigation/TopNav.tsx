@@ -16,7 +16,6 @@ export function TopNav() {
     { href: "/portfolio", label: "Portfolio" },
     { href: "/strategies", label: "Strategies" },
     { href: "/plans", label: "Plans" },
-    { href: "/transactions", label: "Transactions" },
     { href: "/reports", label: "Reports" },
   ];
 

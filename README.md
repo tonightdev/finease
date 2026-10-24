@@ -1,8 +1,8 @@
-# FinEase — Wealth Architect & Goal Navigator
+# FinEase — Sovereign Wealth Architect & Goal Navigator 💎
 
-A premium monorepo personal finance application built with **Next.js**, **NestJS**, **Firebase**, and **Turborepo**.
+A monorepo personal finance and wealth management platform built with **Next.js 16**, **NestJS 11**, **Firebase Firestore**, and **Turborepo**.
 
-FinEase is designed for those who view finance as an architecture. It provides the tools to build, monitor, and scale your personal wealth with precision.
+FinEase treats personal finance as an architectural discipline, providing the precision, telemetry, and governance needed to monitor, model, and scale multi-asset capital.
 
 ---
 
@@ -11,64 +11,94 @@ FinEase is designed for those who view finance as an architecture. It provides t
 ```
 finease/
 ├── apps/
-│   ├── api/          # NestJS backend REST API
-│   └── web/          # Next.js frontend application (Wealth Command Center)
-└── packages/
-    ├── types/        # Shared TypeScript interfaces & types
-    ├── ui/           # Shared UI components (Modern Glassmorphism)
-    ├── eslint-config/ # Shared ESLint config
-    └── typescript-config/ # Shared TS config
+│   ├── web/                    # Next.js 16 App Router (Wealth Command Center)
+│   └── api/                    # NestJS 11 REST API & Analytics Service
+├── packages/
+│   ├── types/                  # Shared TypeScript interfaces & DTO contracts
+│   ├── ui/                     # Shared glassmorphic UI components
+│   ├── eslint-config/          # Standard ESLint configuration
+│   └── typescript-config/      # Root tsconfig definitions
+└── docs/                       # Centralized engineering & functional documentation
+    ├── architecture.md         # Monorepo architecture & data flow
+    ├── transaction-logic.md    # Ledger replay, flow types, & batch sync rules
+    ├── roadmap.md              # Strategic product roadmap & completed phases
+    └── audit-history.md        # Engine audit findings & resolved edge cases
 ```
 
 ---
 
 ## 🚀 Key Features
 
-### 📊 Wealth Intelligence
-- **Growth Velocity Dashboard**: Real-time tracking of net worth, asset allocation, and capital retention rates.
-- **Predictive Analytics**: Automated calculation of FIRE (Financial Independence) dates based on current velocity.
-- **Micro-Trend Analysis**: Deep-dive breakdown of income vs. outflow patterns.
+### 📊 Wealth Intelligence & Command Center
 
-### 💳 Transaction Governance
-- **Smart Ledgers**: Manual and automated transaction tracking with status confirmation flows.
-- **Category Protocol**: Sophisticated categorization with parent/child type relationships for granular tracking.
+- **Executive Net Worth Trajectory**: Real-time tracking of net worth, asset allocation, and capital retention velocity.
+- **Minimalist Monthly Growth Debrief**: Automated debrief card spotlighting top capital gainers, savings efficiency, and leakage areas.
+- **Liquid Capital Widget**: Consolidated view of all cash reserves and bank accounts without dashboard clutter.
+- **Goal Velocity Navigator**: Financial North Stars (Retirement, Emergency Fund, Home) with automated monthly pacing requirements.
 
-### 🎯 Strategic Goals
-- **Financial North Stars**: Set complex goals (Retirement, Emergency Fund, Home) with automated monthly requirement calculations.
-- **Velocity Tracking**: Monitor exactly how fast you are moving toward each objective.
+### ⚡ Wealth Pulse & Trajectory Protocol
 
-### 🏦 Portfolio Architecture
-- **Asset Class Breakdown**: Manage stocks, mutual funds, cash, and liabilities in a unified view.
-- **Net Worth Synchro**: Holistic view of global capital across all accounts.
+- **Atomic Multi-Account Sync**: Instant checkpoint synchronizations across liquid, investment, and liability accounts.
+- **Point-in-Time Wealth Snapshots**: Historical trajectory logs with delta calculations.
+- **Bidirectional Account Synchronization**: Editing or deleting a snapshot automatically synchronizes or rolls back actual account balances in Firestore and Redux.
+- **Cadence Scheduling**: Configurable monthly cadence with next review countdowns.
 
-### 🔒 Security & Privacy
-- **Privacy Protocol**: Encrypted data architecture with biometric lock support.
-- **Identity Gateway**: Rapid profile switching for family or business ledger management.
+### 🔒 Privacy & Security Protocols
+
+- **Ghost Mode**: One-click global toggle that masks all financial numbers with `*****` for screen sharing or public spaces.
+- **Non-Dismissible Modals**: Strict modal protection preventing accidental closing on backdrop clicks.
+- **Biometric & PIN Lock**: Client-side security gateway supporting biometric and passkey protection.
+
+### 📈 Analytics & Reports
+
+- **Inline Account Filter**: Account selector integrated into the header bar without drawer clutter.
+- **Mobile-Optimized Growth Log**: Clean collapsed cards with expandable details displaying full timestamp and check-in notes.
 
 ---
 
-## ✅ Prerequisites
+## 🛠️ Quick Start
+
+### Prerequisites
 
 - **Node.js**: v20+
-- **npm**: v10+
-- A [Firebase](https://firebase.google.com/) project with **Authentication** and **Firestore** enabled
+- **Yarn**: v4+ (Berry)
+- A [Firebase](https://firebase.google.com/) project with **Authentication** and **Firestore** enabled.
+
+### Commands
+
+```bash
+# Install dependencies
+yarn install
+
+# Start development servers (Web on :3000, API on :3001)
+yarn dev
+
+# Validate TypeScript across all packages
+yarn check-types
+
+# Run ESLint across all workspaces
+yarn lint
+
+# Format code with Prettier
+yarn format
+
+# Build all applications for production
+yarn build
+```
 
 ---
 
-## 🏗️ Technical Architecture
+## 📖 Detailed Documentation
 
-### Backend (NestJS)
-- **Architecture**: Modular NestJS services with centralized Auth and Finance nodes.
-- **Auth**: JWT-based security with Firebase integration.
-- **Intelligence**: Aggregation logic for real-time financial metrics.
+All comprehensive documentation is consolidated in the [`/docs`](./docs/README.md) directory:
 
-### Frontend (Next.js 16)
-- **Interface**: High-end Tailwind CSS with custom glassmorphism and motion dynamics.
-- **State**: Redux Toolkit for unified synchronization across all domains.
-- **Onboarding**: Progressive feature discovery tour for new wealth pilots.
+- 🏛️ **[Architecture & Systems Overview](./docs/architecture.md)**
+- 💳 **[Transaction Engine & Synchronization Logic](./docs/transaction-logic.md)**
+- 🚀 **[Strategic Product Roadmap](./docs/roadmap.md)**
+- 🛡️ **[Engine Audit & Resolution History](./docs/audit-history.md)**
 
 ---
 
 ## 📝 License
 
-UNLICENSED — Private project.
+UNLICENSED — Private sovereign project.

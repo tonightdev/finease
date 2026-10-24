@@ -10,6 +10,7 @@ import {
   Loader2,
   Zap,
   Pencil,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Expiry } from "@repo/types";
@@ -192,17 +193,25 @@ export function ExpiryCountdown({ expiries, onEdit }: ExpiryCountdownProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-              onClick={() => {
-                setIsRenewModalOpen(false);
-                setCompletedExpiry(null);
-              }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 p-8 overflow-hidden"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 p-6 sm:p-8 overflow-hidden"
             >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRenewModalOpen(false);
+                  setCompletedExpiry(null);
+                }}
+                aria-label="Close modal"
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X size={18} />
+              </button>
+
               <div className="relative space-y-6 text-center">
                 <div className="size-16 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
                   <CheckCircle2 size={32} />
@@ -328,7 +337,7 @@ function CountdownCard({
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -2, scale: 1.01 }}
+      whileHover={{ y: -2 }}
       exit={{ opacity: 0, scale: 0.98 }}
       className={`group relative p-3 rounded-2xl border transition-all duration-300 h-full flex flex-row gap-3 shadow-sm hover:shadow-lg ${
         !isArchived ? "cursor-pointer" : "opacity-75 grayscale-[0.3]"

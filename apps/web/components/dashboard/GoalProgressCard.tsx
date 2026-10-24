@@ -1,8 +1,7 @@
 "use client";
 
-import { Target, CheckCircle, AlertCircle } from "lucide-react";
+import { Target } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatCurrency } from "@/lib/utils";
 
@@ -26,29 +25,6 @@ export function GoalProgressCard({
   const diff = percentageSaved - expectedPercentage;
   const status = diff >= 0 ? (diff > 5 ? "ahead" : "ontrack") : "behind";
 
-  const statusConfig = {
-    ahead: {
-      label: "Ahead of schedule",
-      badge: "ahead",
-      icon: <CheckCircle className="w-3.5 h-3.5" />,
-      color: "text-emerald-600",
-    },
-    ontrack: {
-      label: "On Track",
-      badge: "ontrack",
-      icon: <CheckCircle className="w-3.5 h-3.5" />,
-      color: "text-blue-600",
-    },
-    behind: {
-      label: `Behind by ${Math.abs(Math.round(diff))}%`,
-      badge: "behind",
-      icon: <AlertCircle className="w-3.5 h-3.5" />,
-      color: "text-red-500",
-    },
-  };
-
-  const currentStatus = statusConfig[status as keyof typeof statusConfig];
-
   return (
     <Card className="flex flex-col gap-2 p-2.5 bg-white dark:bg-surface-dark border-slate-200 dark:border-border-dark group hover:border-primary/50 transition-all shadow-sm rounded-2xl">
       <div className="flex justify-between items-start">
@@ -65,21 +41,34 @@ export function GoalProgressCard({
             </p>
           </div>
         </div>
-        <Badge
-          variant={
-            currentStatus.badge as "ahead" | "behind" | "ontrack" | "default"
-          }
-          className="text-[8px] px-1.5 py-0 border font-black uppercase tracking-widest"
+        <div
+          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border shrink-0 ${
+            status === "ahead"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : status === "ontrack"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+          }`}
         >
-          {currentStatus.badge}
-        </Badge>
+          {status === "ahead"
+            ? "⚡ Ahead"
+            : status === "ontrack"
+              ? "🎯 On Track"
+              : `⏳ Lagging ${Math.abs(Math.round(diff))}%`}
+        </div>
       </div>
 
       <div className="space-y-1.5">
         <ProgressBar
           progress={percentageSaved}
           expectedPace={expectedPercentage}
-          barClassName={status === "behind" ? "bg-red-500" : "bg-indigo-500"}
+          barClassName={
+            status === "ahead"
+              ? "bg-emerald-500"
+              : status === "ontrack"
+                ? "bg-indigo-500"
+                : "bg-amber-500"
+          }
         />
 
         <div className="flex justify-between items-center pt-2 border-t border-slate-50 dark:border-white/5">
@@ -97,7 +86,7 @@ export function GoalProgressCard({
                 Monthly Target
               </span>
               <span className="text-[10px] font-black text-primary">
-                ₹{Math.ceil(requirementPerMonth).toLocaleString()}
+                {formatCurrency(Math.ceil(requirementPerMonth))}
               </span>
             </div>
           )}

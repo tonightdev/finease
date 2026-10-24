@@ -20,7 +20,7 @@ export function YearlyBurdenCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ y: -2 }}
       className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm transition-all hover:shadow-md cursor-default"
     >
       <div className="flex items-center justify-between gap-3">

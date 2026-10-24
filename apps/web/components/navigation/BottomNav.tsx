@@ -6,7 +6,6 @@ import { clsx } from "clsx";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   Home,
-  IndianRupee,
   TrendingUp,
   FileText,
   Users,
@@ -29,8 +28,7 @@ export function BottomNav() {
     { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },
     { href: "/strategies", label: "Strategies", Icon: Zap },
     { href: "/plans", label: "Plans", Icon: Layers },
-    { href: "/transactions", label: "Transact", Icon: IndianRupee },
-    { href: "/reports", label: "Reports", Icon: FileText },
+    { href: "/reports", label: "Review", Icon: FileText },
   ];
 
   const adminLinks = [

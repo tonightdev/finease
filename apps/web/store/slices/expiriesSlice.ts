@@ -92,7 +92,9 @@ const expiriesSlice = createSlice({
       })
       .addCase(deleteExpiryAction.fulfilled, (state, action) => {
         state.items = state.items.filter((item) => item.id !== action.payload);
-        state.archivedItems = state.archivedItems.filter((item) => item.id !== action.payload);
+        state.archivedItems = state.archivedItems.filter(
+          (item) => item.id !== action.payload,
+        );
       });
   },
 });

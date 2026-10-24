@@ -93,10 +93,10 @@ export function AssetAllocationDonut({
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center overflow-hidden">
-            <span className="text-slate-400 text-[8px] font-black uppercase tracking-[0.2em] mb-0.5 truncate w-full">
+            <span className="text-slate-400 text-[8px] font-black uppercase tracking-[0.2em] mb-0.5 truncate w-full text-center">
               Net Worth
             </span>
-            <span className="text-slate-900 dark:text-white text-lg font-black tracking-tighter leading-none truncate w-full">
+            <span className="text-slate-900 dark:text-white text-lg font-black tracking-tighter leading-none truncate w-full text-center block">
               {formatCurrency(netWorth)}
             </span>
           </div>
@@ -109,7 +109,7 @@ export function AssetAllocationDonut({
               className="flex items-start gap-2.5 group/item w-[calc(50%-0.75rem)] min-w-[120px]"
             >
               <div
-                className="w-1 h-7 rounded-sm transition-transform group-hover/item:scale-y-110"
+                className="w-1 h-7 rounded-sm"
                 style={{ backgroundColor: item.color }}
               />
               <div className="flex flex-col min-w-0">

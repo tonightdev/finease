@@ -34,7 +34,7 @@ export const fetchSimulations = createAsyncThunk<
       }
       return true;
     },
-  }
+  },
 );
 
 export const createSimulationAction = createAsyncThunk(
@@ -48,7 +48,10 @@ export const createSimulationAction = createAsyncThunk(
 export const updateSimulationAction = createAsyncThunk(
   "simulations/update",
   async ({ id, data }: { id: string; data: Partial<Simulation> }) => {
-    const response = await api.put<Simulation>(`/finance/simulations/${id}`, data);
+    const response = await api.put<Simulation>(
+      `/finance/simulations/${id}`,
+      data,
+    );
     return response.data;
   },
 );
@@ -83,13 +86,13 @@ export const simulationsSlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(updateSimulationAction.fulfilled, (state, action) => {
-        const index = state.items.findIndex(p => p.id === action.payload.id);
+        const index = state.items.findIndex((p) => p.id === action.payload.id);
         if (index !== -1) {
           state.items[index] = action.payload;
         }
       })
       .addCase(deleteSimulationAction.fulfilled, (state, action) => {
-        state.items = state.items.filter(p => p.id !== action.payload);
+        state.items = state.items.filter((p) => p.id !== action.payload);
       });
   },
 });

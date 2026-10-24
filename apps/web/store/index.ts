@@ -29,7 +29,7 @@ const appReducer = combineReducers({
 
 const rootReducer = (
   state: Parameters<typeof appReducer>[0] | undefined,
-  action: Action
+  action: Action,
 ) => {
   if (action.type === "USER_LOGOUT") {
     // Reset state completely to prevent data leaking across users

@@ -29,12 +29,15 @@ export const fetchTransactions = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { transactions: TransactionsState };
-      if (state.transactions.lastFetched !== null || state.transactions.loading) {
+      if (
+        state.transactions.lastFetched !== null ||
+        state.transactions.loading
+      ) {
         return false;
       }
       return true;
     },
-  }
+  },
 );
 
 export const createTransaction = createAsyncThunk(
@@ -88,8 +91,8 @@ export const transactionsSlice = createSlice({
       })
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = [...action.payload].sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        state.items = [...action.payload].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         );
         state.lastFetched = Date.now();
       })
@@ -99,8 +102,8 @@ export const transactionsSlice = createSlice({
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
-        state.items.sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        state.items.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         );
       })
       .addCase(deleteTransaction.fulfilled, (state, action) => {

@@ -466,12 +466,10 @@ function PlansDirectoryPageContent() {
                       <AnimatePresence mode="popLayout">
                         {filteredPlans.map((plan: Simulation) => (
                           <motion.div
-                            layout
                             key={plan.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            whileHover={{ y: -6, scale: 1.02 }}
                             onClick={() => {
                               setNavMessage("Opening Environment...");
                               setIsNavigating(true);
@@ -481,7 +479,7 @@ function PlansDirectoryPageContent() {
                               plan.status === "completed"
                                 ? "opacity-75 grayscale-[0.2]"
                                 : ""
-                            } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.1)] overflow-hidden`}
+                            } bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border-slate-100 dark:border-white/5 hover:border-primary/40 hover:shadow-md overflow-hidden`}
                           >
                             {/* Animated Background Mesh Gradient (on hover) */}
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-[radial-gradient(circle_at_top_right,var(--primary-light),transparent),radial-gradient(circle_at_bottom_left,var(--secondary-light),transparent)]" />
@@ -493,7 +491,7 @@ function PlansDirectoryPageContent() {
 
                             <div className="space-y-3.5 sm:space-y-5 relative z-10">
                               <div className="flex justify-between items-start">
-                                <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl border bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-900/40 dark:to-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl border bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-900/40 dark:to-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner">
                                   <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
 

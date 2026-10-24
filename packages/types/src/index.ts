@@ -66,6 +66,7 @@ export interface FinancialGoal {
   category: string;
   icon?: string;
   initialAmount?: number;
+  createdAt?: string;
   deletedAt?: string | null;
 }
 
@@ -279,4 +280,75 @@ export interface Simulation {
   expenses: SimExpense[];
   status?: "ongoing" | "completed";
   deletedAt?: string | null;
+}
+
+export interface BatchSyncAccountItem {
+  accountId: string;
+  balance: number;
+}
+
+export interface BatchSyncAccountsDto {
+  accounts: BatchSyncAccountItem[];
+  note?: string;
+  timestamp?: string;
+}
+
+export interface AccountSnapshotItem {
+  accountId: string;
+  accountName: string;
+  type: AccountType;
+  previousBalance: number;
+  balance: number;
+  delta: number;
+}
+
+export interface WealthSnapshot {
+  id: string;
+  userId: string;
+  date: string;
+  netWorth: number;
+  previousNetWorth?: number;
+  netWorthDelta?: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  liquidCapital?: number;
+  investedCapital?: number;
+  accountSnapshots: AccountSnapshotItem[];
+  note?: string;
+  createdAt: string;
+}
+
+export interface LeakageAlert {
+  id: string;
+  type: "warning" | "opportunity" | "achievement";
+  title: string;
+  message: string;
+  impactAmount?: number;
+}
+
+export interface MonthlyDebrief {
+  period: string;
+  netWorth: number;
+  netWorthDelta: number;
+  percentageDelta: number;
+  topGainer?: {
+    accountId: string;
+    accountName: string;
+    delta: number;
+    type: string;
+  } | null;
+  topLeak?: {
+    accountId: string;
+    accountName: string;
+    delta: number;
+    type: string;
+  } | null;
+  allocation: {
+    liquid: number;
+    invested: number;
+    debt: number;
+  };
+  alerts: LeakageAlert[];
+  insight: string;
+  hasSufficientData: boolean;
 }

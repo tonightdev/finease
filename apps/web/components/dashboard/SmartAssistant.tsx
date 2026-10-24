@@ -143,7 +143,7 @@ export function SmartAssistant() {
         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
           Assistant: Online
         </span>
-        <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="size-1.5 rounded-full bg-emerald-500" />
       </div>
     </div>
   );

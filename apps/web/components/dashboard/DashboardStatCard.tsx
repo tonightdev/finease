@@ -41,8 +41,9 @@ export function DashboardStatCard({
       </div>
 
       <div
+        data-balance="true"
         className={cn(
-          "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0",
+          "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0 cloaked-balance",
           typeof value === "string" && value.length > 15
             ? "text-sm"
             : typeof value === "string" && value.length > 12

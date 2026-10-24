@@ -1,55 +1,66 @@
-# FinEase Web App (Frontend)
+# FinEase Web App (Frontend) 💻
 
-The main user interface for **FinEase**, providing a premium Wealth Command Center experience. Built with [Next.js](https://nextjs.org/) (App Router).
+The Wealth Command Center interface for **FinEase**, built with [Next.js 16](https://nextjs.org/) (App Router) and [React 19](https://react.dev/).
+
+---
 
 ## 🚀 Overview
 
-- **Framework**: Next.js 16 (React 19) 
-- **Styling**: Tailwind CSS 4 with custom glassmorphism, Framer Motion for dynamics.
-- **State Management**: Redux Toolkit (global state), localized React state.
+- **Framework**: Next.js 16 (Turbopack, App Router)
+- **State Management**: Redux Toolkit (`accounts`, `transactions`, `goals`, `strategies`, `ui`)
+- **Styling**: Tailwind CSS with custom glassmorphism and executive dark-mode palettes
+- **Motion & Dynamics**: Framer Motion for micro-animations and spring transitions
+- **Data Visualization**: Recharts for Net Worth history and asset distribution
 - **Icons**: Lucide React
-- **Data Visualization**: Recharts
+
+---
 
 ## 📥 Getting Started
 
 ### Prerequisites
 
 - Node.js (v20+)
-- npm (v10+)
-- Backend API running locally for full functionality
+- Yarn v4+
+- Backend API running on `http://localhost:3001` (or configured via `.env.local`)
 
-### Installation
-
-Navigate to this directory (or run from the monorepo root) and install dependencies:
+### Installation & Execution
 
 ```bash
-$ npm install
+# Run from workspace or root
+yarn dev
+
+# Validate types
+yarn check-types
+
+# Production build
+yarn build
 ```
 
-### Running the App
+The web application runs on [http://localhost:3000](http://localhost:3000).
 
-Ensure your environment variables (Firebase config, API endpoints) are correctly set up in a `.env.local` file.
+---
 
-```bash
-$ npm run dev
-```
+## 🎨 Key Interface Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+1. **Wealth Command Center (`/dashboard`)**:
+   - Hero Net Worth Trajectory with custom time horizons.
+   - Minimalist Monthly Growth Debrief & Liquid Capital reserve widgets.
+   - Pacing metrics for strategic financial goals.
+2. **Wealth Pulse & Historical Trajectory**:
+   - Multi-account batch sync modal.
+   - Point-in-time snapshot editing with live Net Worth recalculation.
+   - Modal-confirmed snapshot deletion with automatic Firestore rollback.
+3. **Ghost Mode**:
+   - One-click global privacy toggle masking all balances with `*****`.
+4. **Analytics & Reports (`/reports`)**:
+   - Inline Account dropdown filter and responsive Growth Log.
 
-### Building for Production
+---
 
-```bash
-$ npm run build
-$ npm run start
-```
+## 📚 Documentation Links
 
-## 🎨 UI/UX Philosophy
+Full documentation is available in the root [`docs/`](../../docs/README.md) directory:
 
-The frontend prioritizes a premium, low-latency user experience. Heavy emphasis is placed on:
-- **Responsive Layouts**: Consistent experiences across Desktop and Mobile viewports.
-- **Subtle Animations**: Leveraging `framer-motion` to guide user attention and interactions seamlessly.
-- **Glassmorphism**: Minimalist aesthetics avoiding visual clutter while retaining depth and structure.
-
-## 📝 License
-
-This project is part of FinEase — UNLICENSED.
+- [Architecture & Systems Overview](../../docs/architecture.md)
+- [Transaction Logic & Wealth Synchronization](../../docs/transaction-logic.md)
+- [Strategic Roadmap](../../docs/roadmap.md)

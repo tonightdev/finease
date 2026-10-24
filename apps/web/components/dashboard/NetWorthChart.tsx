@@ -268,7 +268,7 @@ export function NetWorthChart({
               </span>{" "}
               by {chartData[chartData.length - 1]?.month}
             </p>
-            <ArrowRight className="size-3 text-primary animate-pulse" />
+            <ArrowRight className="size-3 text-primary" />
           </motion.div>
         )}
       </div>

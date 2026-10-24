@@ -26,50 +26,62 @@ const initialState: StrategyState = {
 export const fetchStrategy = createAsyncThunk<
   BudgetStrategy | null,
   { force?: boolean } | void
->("strategies/fetch", async () => {
-  const response = await api.get<BudgetStrategy | null>("/finance/strategy");
-  return response.data;
-}, {
-  condition: (arg, { getState }) => {
-    if (arg?.force) return true;
-    const state = getState() as { strategies: StrategyState };
-    if (state.strategies.lastFetched !== null || state.strategies.loading) {
-      return false;
-    }
-    return true;
-  }
-});
+>(
+  "strategies/fetch",
+  async () => {
+    const response = await api.get<BudgetStrategy | null>("/finance/strategy");
+    return response.data;
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const state = getState() as { strategies: StrategyState };
+      if (state.strategies.lastFetched !== null || state.strategies.loading) {
+        return false;
+      }
+      return true;
+    },
+  },
+);
 
 export const saveStrategy = createAsyncThunk(
   "strategies/save",
   async (data: Partial<BudgetStrategy>) => {
     const response = await api.post<BudgetStrategy>("/finance/strategy", data);
     return response.data;
-  }
+  },
 );
 
 export const addStrategyEntry = createAsyncThunk(
   "strategies/addEntry",
   async (entry: StrategyEntry) => {
-    const response = await api.post<BudgetStrategy>("/finance/strategy/entries", entry);
+    const response = await api.post<BudgetStrategy>(
+      "/finance/strategy/entries",
+      entry,
+    );
     return response.data;
-  }
+  },
 );
 
 export const updateStrategyEntry = createAsyncThunk(
   "strategies/updateEntry",
   async ({ id, data }: { id: string; data: Partial<StrategyEntry> }) => {
-    const response = await api.put<BudgetStrategy>(`/finance/strategy/entries/${id}`, data);
+    const response = await api.put<BudgetStrategy>(
+      `/finance/strategy/entries/${id}`,
+      data,
+    );
     return response.data;
-  }
+  },
 );
 
 export const removeStrategyEntry = createAsyncThunk(
   "strategies/removeEntry",
   async (id: string) => {
-    const response = await api.delete<BudgetStrategy>(`/finance/strategy/entries/${id}`);
+    const response = await api.delete<BudgetStrategy>(
+      `/finance/strategy/entries/${id}`,
+    );
     return response.data;
-  }
+  },
 );
 
 export const strategiesSlice = createSlice({
@@ -77,11 +89,18 @@ export const strategiesSlice = createSlice({
   initialState,
   reducers: {
     resetStrategy: (state) => {
-      state.current = { userId: "", entries: [], protocol: { needs: 50, wants: 30, savings: 20 } };
+      state.current = {
+        userId: "",
+        entries: [],
+        protocol: { needs: 50, wants: 30, savings: 20 },
+      };
     },
-    setStrategyProtocol: (state, action: PayloadAction<{ needs: number, wants: number, savings: number }>) => {
+    setStrategyProtocol: (
+      state,
+      action: PayloadAction<{ needs: number; wants: number; savings: number }>,
+    ) => {
       if (state.current) {
-         state.current.protocol = action.payload;
+        state.current.protocol = action.payload;
       }
     },
     setStrategyEntries: (state, action: PayloadAction<StrategyEntry[]>) => {
@@ -93,7 +112,7 @@ export const strategiesSlice = createSlice({
       if (state.current) {
         state.current.basis = action.payload;
       }
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -130,5 +149,10 @@ export const strategiesSlice = createSlice({
   },
 });
 
-export const { resetStrategy, setStrategyProtocol, setStrategyEntries, setStrategyBasis } = strategiesSlice.actions;
+export const {
+  resetStrategy,
+  setStrategyProtocol,
+  setStrategyEntries,
+  setStrategyBasis,
+} = strategiesSlice.actions;
 export default strategiesSlice.reducer;
