@@ -356,7 +356,7 @@ export class AuthService {
     const snapshot = await this.sessionCollection
       .where('userId', '==', userId)
       .get();
-    return snapshot.docs.map((doc) => doc.data());
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 
   async revokeSession(userId: string, targetToken: string) {

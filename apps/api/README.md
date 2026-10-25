@@ -43,23 +43,35 @@ The API service runs on `http://localhost:3001` (Swagger docs available at `http
 
 ### 1. Finance & Accounts (`FinanceModule`)
 
+- `GET /finance/profile` — Fetch current user profile metadata (passwords strictly sanitized).
+- `PUT /finance/profile` — Update user profile details.
 - `GET /finance/accounts` — Fetch all accounts belonging to the authenticated user.
 - `POST /finance/accounts/batch-sync` — Atomic multi-account balance update with Wealth Snapshot generation.
 - `GET /finance/snapshots` — Retrieve historical wealth snapshots and trajectory log.
 - `PUT /finance/snapshots/:id` — Update snapshot note and balances with live account sync in Firestore.
 - `DELETE /finance/snapshots/:id` — Delete snapshot and roll back accounts to their previous balance.
-- `GET /finance/debrief` — Compute monthly growth debrief, top gainers, and capital leakage metrics.
+- `GET /finance/debrief` — Compute 30-day cash flow debrief (`inflow`, `outflow`, `netCashFlow`, `savingsRate`, `topGainer`, `topLeak`, `insight`).
 - `GET /finance/pulse-schedule` — Get scheduled review cadence and countdown.
 
 ### 2. Transactions & Ledger
 
 - `GET /finance/transactions` — Ledger query with pagination, category, and date filtering.
 - `POST /finance/transactions` — Create transaction and trigger ledger replay (`recalculateBalances`).
+- `POST /finance/recalculate` — System repair tool recalculating all account balances and goal pacing from ledger.
 
-### 3. Goals & Strategies
+### 3. Authentication & Sessions (`AuthModule`)
 
-- `GET /goals` — Goal velocity pacing and target milestone monitoring.
-- `GET /strategies` — 50/30/20 and custom budget strategy protocol calculations.
+- `POST /auth/login` & `POST /auth/signup` — Token authentication with device metadata tracking.
+- `GET /auth/sessions` — Active authorization sessions registry (`UserSession`).
+- `POST /auth/sessions/revoke` — Revoke individual session token.
+- `POST /auth/sessions/revoke-others` — Revoke all other active device sessions.
+
+### 4. Goals, Strategies & Simulations
+
+- `GET /finance/goals` — Goal velocity pacing and target milestone monitoring.
+- `GET /finance/strategy` & `POST /finance/strategy` — 50/30/20 and custom budget strategy protocol state.
+- `GET /finance/simulations` — Forward-looking scenario sandbox for major life capital events.
+- `GET /finance/yearly-expenses` — Annual commitments and recurring obligations.
 
 ---
 

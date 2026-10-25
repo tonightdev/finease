@@ -110,7 +110,17 @@ export default function PortfolioPageClient() {
     .reduce((sum, item) => sum + item.balance, 0);
   const totalCapitalInvested = investments
     .filter((a) => !a.excludeFromAnalytics)
-    .reduce((sum, item) => sum + (item.investedAmount || item.balance), 0);
+    .reduce((sum, item) => {
+      const invested =
+        item.investedAmount && item.investedAmount > 0
+          ? item.investedAmount
+          : item.initialAmount && item.initialAmount > 0
+            ? item.initialAmount
+            : item.valuationAdjustment
+              ? item.balance - item.valuationAdjustment
+              : item.balance;
+      return sum + invested;
+    }, 0);
   const liabilities = Math.abs(
     debts
       .filter((a) => !a.excludeFromAnalytics)
@@ -141,7 +151,7 @@ export default function PortfolioPageClient() {
     <PageContainer>
       <PageHeader
         title="Portfolio"
-        subtitle="Unified wealth command"
+        subtitle="Investments, Loans & Asset Management"
         className="space-y-2"
         actions={
           <div className="grid grid-cols-2 md:flex md:items-center gap-2 w-full lg:w-auto">
@@ -155,7 +165,7 @@ export default function PortfolioPageClient() {
               }}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Class
+              Category
             </Button>
             <Button
               size="sm"
@@ -163,7 +173,7 @@ export default function PortfolioPageClient() {
               onClick={() => setIsAddInvestmentOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Invest
+              Add Investment
             </Button>
             <Button
               size="sm"
@@ -172,7 +182,7 @@ export default function PortfolioPageClient() {
               onClick={() => setIsAddLiabilityOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Debt
+              Add Loan
             </Button>
             <Button
               size="sm"
@@ -181,7 +191,7 @@ export default function PortfolioPageClient() {
               onClick={() => setIsAddAssetOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Asset
+              Add Asset
             </Button>
           </div>
         }
@@ -238,77 +248,77 @@ export default function PortfolioPageClient() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={`skeleton-stat-${i}`}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
-              >
-                <Skeleton className="h-2 w-12" />
-                <Skeleton className="h-5 w-24" />
-              </div>
-            ))
+            <div
+              key={`skeleton-stat-${i}`}
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
+            >
+              <Skeleton className="h-2 w-12" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+          ))
           : [
-              {
-                label: "Net Worth",
-                value: netWorth,
-                color: "text-slate-900 dark:text-white",
-              },
-              {
-                label: "Capital",
-                value: totalCapitalInvested,
-                color: "text-slate-900 dark:text-white",
-              },
-              {
-                label: "Valuation",
-                value: investments
-                  .filter((a) => !a.excludeFromAnalytics)
-                  .reduce((sum, item) => sum + item.balance, 0),
-                color: "text-emerald-500",
-              },
-              {
-                label: "Liabilities",
-                value: liabilities,
-                color: "text-rose-500",
-              },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
-              >
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                  {stat.label}
-                </div>
-                <div
-                  data-balance="true"
-                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
-                >
-                  ₹{stat.value.toLocaleString()}
-                </div>
+            {
+              label: "Net Worth",
+              value: netWorth,
+              color: "text-slate-900 dark:text-white",
+            },
+            {
+              label: "Total Invested",
+              value: totalCapitalInvested,
+              color: "text-slate-900 dark:text-white",
+            },
+            {
+              label: "Current Value",
+              value: investments
+                .filter((a) => !a.excludeFromAnalytics)
+                .reduce((sum, item) => sum + item.balance, 0),
+              color: "text-emerald-500",
+            },
+            {
+              label: "Total Liabilities",
+              value: liabilities,
+              color: "text-rose-500",
+            },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
+            >
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                {stat.label}
               </div>
-            ))}
+              <div
+                data-balance="true"
+                className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
+              >
+                ₹{stat.value.toLocaleString()}
+              </div>
+            </div>
+          ))}
       </div>
 
       <div className="space-y-3">
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Growth Index
+          Investments
         </h3>
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Asset Identity
+                  Investment Name
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Asset Class
+                  Category
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Capital
+                  Invested Amount
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Valuation
+                  Current Value
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Yield
+                  Returns
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
                   Actions
@@ -347,7 +357,7 @@ export default function PortfolioPageClient() {
                   <td colSpan={6} className="px-5 py-20">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        No growth assets traced
+                        No investments found
                       </p>
                     </div>
                   </td>
@@ -380,29 +390,38 @@ export default function PortfolioPageClient() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
-                      ₹{(inv.investedAmount || inv.balance).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
-                      ₹{inv.balance.toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right font-black text-[11px]">
-                      <span
-                        className={
-                          inv.balance >= (inv.investedAmount || inv.balance)
-                            ? "text-emerald-500"
-                            : "text-rose-500"
-                        }
-                      >
-                        {(
-                          ((inv.balance - (inv.investedAmount || inv.balance)) /
-                            (inv.investedAmount || inv.balance)) *
-                            100 || 0
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </td>
-                    <td className="px-4 py-1.5"></td>
+                    {(() => {
+                      const invested =
+                        inv.investedAmount && inv.investedAmount > 0
+                          ? inv.investedAmount
+                          : inv.initialAmount && inv.initialAmount > 0
+                            ? inv.initialAmount
+                            : inv.valuationAdjustment
+                              ? inv.balance - inv.valuationAdjustment
+                              : inv.balance;
+                      const gain = inv.balance - invested;
+                      const pct = invested > 0 ? (gain / invested) * 100 : 0;
+                      return (
+                        <>
+                          <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                            ₹{invested.toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
+                            ₹{inv.balance.toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3 text-right font-black text-[11px]">
+                            <span
+                              className={
+                                gain >= 0 ? "text-emerald-500" : "text-rose-500"
+                              }
+                            >
+                              {gain >= 0 ? "+" : ""}
+                              {pct.toFixed(1)}%
+                            </span>
+                          </td>
+                        </>
+                      );
+                    })()}
                     <td className="px-4 py-1.5 text-right">
                       <button
                         onClick={(e) => {
@@ -445,7 +464,7 @@ export default function PortfolioPageClient() {
           ) : paginatedInvestments.length === 0 ? (
             <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                No growth assets traced
+                No investments found
               </p>
             </div>
           ) : (
@@ -486,31 +505,41 @@ export default function PortfolioPageClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-white/5">
-                  <div className="flex gap-4 flex-1">
-                    <div className="flex flex-col">
-                      <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                        Capital
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-900 dark:text-slate-200">
-                        ₹{(inv.investedAmount || inv.balance).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                        Yield
-                      </span>
-                      <span
-                        className={`text-[10px] font-black ${inv.balance >= (inv.investedAmount || inv.balance) ? "text-emerald-500" : "text-rose-500"}`}
-                      >
-                        {(
-                          ((inv.balance - (inv.investedAmount || inv.balance)) /
-                            (inv.investedAmount || inv.balance)) *
-                            100 || 0
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const invested =
+                      inv.investedAmount && inv.investedAmount > 0
+                        ? inv.investedAmount
+                        : inv.initialAmount && inv.initialAmount > 0
+                          ? inv.initialAmount
+                          : inv.valuationAdjustment
+                            ? inv.balance - inv.valuationAdjustment
+                            : inv.balance;
+                    const gain = inv.balance - invested;
+                    const pct = invested > 0 ? (gain / invested) * 100 : 0;
+                    return (
+                      <div className="flex gap-4 flex-1">
+                        <div className="flex flex-col">
+                          <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                            Capital
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-900 dark:text-slate-200">
+                            ₹{invested.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                            Yield
+                          </span>
+                          <span
+                            className={`text-[10px] font-black ${gain >= 0 ? "text-emerald-500" : "text-rose-500"}`}
+                          >
+                            {gain >= 0 ? "+" : ""}
+                            {pct.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -558,279 +587,20 @@ export default function PortfolioPageClient() {
 
       <div className="space-y-3">
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Liability Pulse
+          Other Assets
         </h3>
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Identity
+                  Asset Name
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Class
+                  Type
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Limit
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Repaid
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Interest
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Net Balance
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr
-                    key={`skeleton-debt-row-${i}`}
-                    className="border-b border-slate-50 dark:border-white/5"
-                  >
-                    <td className="px-4 py-4">
-                      <Skeleton className="h-3 w-40" />
-                    </td>
-                    <td className="px-5 py-4">
-                      <Skeleton className="h-3 w-16" />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="size-7 rounded-lg ml-auto" />
-                    </td>
-                  </tr>
-                ))
-              ) : paginatedDebts.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-5 py-20">
-                    <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        No exposure clusters traced
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedDebts.map((debt, index) => (
-                  <tr
-                    key={debt.id || `debt-${index}`}
-                    className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group"
-                    onClick={() => {
-                      setEditingLiability(debt);
-                      setIsAddLiabilityOpen(true);
-                    }}
-                  >
-                    <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
-                        {debt.name}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">
-                        {debt.type}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
-                      ₹
-                      {(
-                        debt.initialAmount ||
-                        Math.abs(debt.balance) + (debt.repaidCapital || 0)
-                      ).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-emerald-500">
-                      ₹{(debt.repaidCapital || 0).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right font-bold text-[11px] text-orange-500">
-                      ₹{(debt.burnedInterest || 0).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-rose-500">
-                      ₹{Math.abs(debt.balance).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setItemToDelete({ id: debt.id, type: "account" });
-                          setIsDeleteModalOpen(true);
-                        }}
-                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="lg:hidden grid grid-cols-2 gap-3">
-          {loading ? (
-            Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={`skeleton-debt-card-${i}`}
-                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-2 w-12" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
-                  <div className="flex gap-2 flex-1">
-                    <Skeleton className="h-6 w-12" />
-                    <Skeleton className="h-6 w-12" />
-                  </div>
-                  <Skeleton className="size-7 rounded-lg" />
-                </div>
-              </div>
-            ))
-          ) : paginatedDebts.length === 0 ? (
-            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                No exposure clusters
-              </p>
-            </div>
-          ) : (
-            paginatedDebts.map((debt, index) => (
-              <div
-                key={debt.id || `debt-card-${index}`}
-                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
-              >
-                <div
-                  className="flex justify-between items-start"
-                  onClick={() => {
-                    setEditingLiability(debt);
-                    setIsAddLiabilityOpen(true);
-                  }}
-                >
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-rose-400">
-                      {debt.type}
-                    </span>
-                    <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate">
-                      {debt.name}
-                    </h4>
-                  </div>
-                  <div className="flex flex-col items-end shrink-0">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                      Balance
-                    </span>
-                    <span className="text-sm font-black text-rose-500 tracking-tighter">
-                      ₹{Math.abs(debt.balance).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-white/5">
-                  <div className="flex gap-2 flex-1">
-                    <div className="flex flex-col">
-                      <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                        Limit
-                      </span>
-                      <span className="text-[9px] font-bold text-slate-900 dark:text-slate-200">
-                        ₹
-                        {(
-                          debt.initialAmount ||
-                          Math.abs(debt.balance) + (debt.repaidCapital || 0)
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                        Paid
-                      </span>
-                      <span className="text-[9px] font-bold text-emerald-500">
-                        ₹{(debt.repaidCapital || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                        Cost
-                      </span>
-                      <span className="text-[9px] font-bold text-orange-500">
-                        ₹{(debt.burnedInterest || 0).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setItemToDelete({ id: debt.id, type: "account" });
-                      setIsDeleteModalOpen(true);
-                    }}
-                    className="ml-4 p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 border border-rose-100 dark:border-rose-500/20"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {totalDebtPages > 1 && (
-          <div className="flex items-center justify-between px-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              {liabilityPage} / {totalDebtPages}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setLiabilityPage((p) => Math.max(p - 1, 1))}
-                disabled={liabilityPage === 1}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() =>
-                  setLiabilityPage((p) => Math.min(p + 1, totalDebtPages))
-                }
-                disabled={liabilityPage === totalDebtPages}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Auxiliary Assets
-        </h3>
-        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Asset Identity
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  Class
-                </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
-                  Valuation
+                  Estimated Value
                 </th>
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
                   Actions
@@ -863,7 +633,7 @@ export default function PortfolioPageClient() {
                   <td colSpan={4} className="px-5 py-20">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        No auxiliary wealth clusters traced
+                        No other assets found
                       </p>
                     </div>
                   </td>
@@ -885,7 +655,7 @@ export default function PortfolioPageClient() {
                     </td>
                     <td className="px-5 py-3">
                       <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">
-                        Fixed Asset Identity
+                        Fixed Asset
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
@@ -987,6 +757,331 @@ export default function PortfolioPageClient() {
         </div>
       </div>
 
+
+      <div className="space-y-3">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
+          Loans & Liabilities
+        </h3>
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Loan / Liability
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Type
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Total Amount
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Paid Actual Amount
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Paid Interest
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Total Amount Paid
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Net Balance
+                </th>
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr
+                    key={`skeleton-debt-row-${i}`}
+                    className="border-b border-slate-50 dark:border-white/5"
+                  >
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-3 w-40" />
+                    </td>
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-3 w-16" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="h-3 w-20 ml-auto" />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    </td>
+                  </tr>
+                ))
+              ) : paginatedDebts.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-20">
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No loans or liabilities found
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedDebts.map((debt, index) => {
+                  const totalAmount =
+                    debt.initialAmount && debt.initialAmount > 0
+                      ? debt.initialAmount
+                      : Math.abs(debt.balance) + (debt.repaidCapital || 0);
+                  const paidActual = debt.repaidCapital || 0;
+                  const paidInterest = debt.burnedInterest || 0;
+                  const totalPaid = paidActual + paidInterest;
+                  const netBalance = Math.abs(debt.balance);
+
+                  return (
+                    <tr
+                      key={debt.id || `debt-${index}`}
+                      className="border-b border-slate-50 dark:border-white/5 hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                      onClick={() => {
+                        setEditingLiability(debt);
+                        setIsAddLiabilityOpen(true);
+                      }}
+                    >
+                      <td className="px-4 py-2.5">
+                        <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                          {debt.name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">
+                          {debt.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                        ₹{totalAmount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-emerald-500">
+                        ₹{paidActual.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-orange-500">
+                        ₹{paidInterest.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
+                        ₹{totalPaid.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-black text-xs text-rose-500">
+                        ₹{netBalance.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setItemToDelete({ id: debt.id, type: "account" });
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 transition-colors"
+                          title="Delete Loan"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {loading ? (
+            Array.from({ length: 2 }).map((_, i) => (
+              <div
+                key={`skeleton-debt-card-${i}`}
+                className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-5 w-20" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+                <div className="pt-2 border-t border-slate-50 dark:border-white/5 grid grid-cols-2 gap-2">
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              </div>
+            ))
+          ) : paginatedDebts.length === 0 ? (
+            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                No loans or liabilities found
+              </p>
+            </div>
+          ) : (
+            paginatedDebts.map((debt, index) => {
+              const totalAmount =
+                debt.initialAmount && debt.initialAmount > 0
+                  ? debt.initialAmount
+                  : Math.abs(debt.balance) + (debt.repaidCapital || 0);
+              const paidActual = debt.repaidCapital || 0;
+              const paidInterest = debt.burnedInterest || 0;
+              const totalPaid = paidActual + paidInterest;
+              const netBalance = Math.abs(debt.balance);
+              const progressPct =
+                totalAmount > 0
+                  ? Math.min(100, Math.round((paidActual / totalAmount) * 100))
+                  : 0;
+
+              return (
+                <div
+                  key={debt.id || `debt-card-${index}`}
+                  onClick={() => {
+                    setEditingLiability(debt);
+                    setIsAddLiabilityOpen(true);
+                  }}
+                  className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-sm hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer flex flex-col gap-3 group"
+                >
+                  {/* Card Header: Type, Name & Delete button */}
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                          {debt.type || "Loan"}
+                        </span>
+                        {debt.excludeFromAnalytics && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-400">
+                            Excluded
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary transition-colors">
+                        {debt.name}
+                      </h4>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setItemToDelete({ id: debt.id, type: "account" });
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="size-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0"
+                      title="Delete Loan"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Net Balance & Progress Row */}
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-2">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Net Balance Remaining
+                      </span>
+                      <span className="text-base font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight">
+                        ₹{netBalance.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-400">
+                        <span>Repayment Progress</span>
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">
+                          {progressPct}% paid
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-slate-200/70 dark:bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 Financial Figures Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-0.5">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Total Amount
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono block">
+                        ₹{totalAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 space-y-0.5">
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                        Paid Actual
+                      </span>
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono block">
+                        ₹{paidActual.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-orange-50/50 dark:bg-orange-500/5 border border-orange-100 dark:border-orange-500/10 space-y-0.5">
+                      <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider block">
+                        Paid Interest
+                      </span>
+                      <span className="text-xs font-black text-orange-500 font-mono block">
+                        ₹{paidInterest.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-0.5">
+                      <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
+                        Total Paid
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono block">
+                        ₹{totalPaid.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {totalDebtPages > 1 && (
+          <div className="flex items-center justify-between px-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {liabilityPage} / {totalDebtPages}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setLiabilityPage((p) => Math.max(p - 1, 1))}
+                disabled={liabilityPage === 1}
+                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() =>
+                  setLiabilityPage((p) => Math.min(p + 1, totalDebtPages))
+                }
+                disabled={liabilityPage === totalDebtPages}
+                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <AddInvestmentModal
         isOpen={isAddInvestmentOpen}
         investment={editingInvestment}
@@ -1004,10 +1099,9 @@ export default function PortfolioPageClient() {
                   assetType: data.assetType || "",
                   balance:
                     parseFloat(data.currentAmount) || editingInvestment.balance,
-                  investedAmount:
-                    parseFloat(data.investedAmount) ||
-                    editingInvestment.investedAmount ||
-                    editingInvestment.balance,
+                  investedAmount: isNaN(parseFloat(data.investedAmount))
+                    ? (editingInvestment.investedAmount ?? editingInvestment.balance)
+                    : parseFloat(data.investedAmount),
                   excludeFromAnalytics: data.excludeFromAnalytics,
                 },
               }),
@@ -1040,7 +1134,7 @@ export default function PortfolioPageClient() {
           const totalLoan = parseFloat(data.initialAmount) || 0;
           const paidAmt = parseFloat(data.repaidCapital) || 0;
           const interestPaidVal = parseFloat(data.burnedInterest) || 0;
-          const remainingBalance = totalLoan - paidAmt;
+          const remainingBalance = Math.max(0, totalLoan - paidAmt);
 
           if (editingLiability) {
             await dispatch(
@@ -1048,7 +1142,7 @@ export default function PortfolioPageClient() {
                 id: editingLiability.id,
                 data: {
                   name: data.name,
-                  type: data.type as "debt",
+                  type: "debt",
                   initialAmount: totalLoan,
                   repaidCapital: paidAmt,
                   burnedInterest: interestPaidVal,
@@ -1057,6 +1151,7 @@ export default function PortfolioPageClient() {
                 },
               }),
             ).unwrap();
+            toast.success("Loan updated successfully");
           } else {
             await dispatch(
               createAccount({
@@ -1071,6 +1166,7 @@ export default function PortfolioPageClient() {
                 excludeFromAnalytics: data.excludeFromAnalytics,
               }),
             ).unwrap();
+            toast.success("Loan added successfully");
           }
         }}
       />

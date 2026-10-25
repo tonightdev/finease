@@ -5,8 +5,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
   fetchSnapshots,
+  fetchAccounts,
   deleteSnapshotAction,
 } from "@/store/slices/accountsSlice";
+import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { openModal } from "@/store/slices/uiSlice";
 import {
   History,
@@ -26,11 +28,20 @@ import toast from "react-hot-toast";
 import { WealthSnapshot, AccountSnapshotItem } from "@repo/types";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EditSnapshotModal } from "./EditSnapshotModal";
+import { MonthlyGrowthChart } from "@/components/reports/MonthlyGrowthChart";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function TrajectoryHistoryView() {
+  const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const snapshots = useSelector(
     (state: RootState) => state.accounts.snapshots || [],
+  );
+  const accounts = useSelector(
+    (state: RootState) => state.accounts.items || [],
+  );
+  const transactions = useSelector(
+    (state: RootState) => state.transactions.items || [],
   );
 
   const [expandedSnapshotId, setExpandedSnapshotId] = useState<string | null>(
@@ -43,9 +54,14 @@ export function TrajectoryHistoryView() {
   const [snapshotToEdit, setSnapshotToEdit] = useState<WealthSnapshot | null>(
     null,
   );
+  const [showAllAccounts, setShowAllAccounts] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     dispatch(fetchSnapshots(50));
+    dispatch(fetchAccounts());
+    dispatch(fetchTransactions());
   }, [dispatch]);
 
   const sortedSnapshots = useMemo(() => {
@@ -56,7 +72,7 @@ export function TrajectoryHistoryView() {
     );
   }, [snapshots]);
 
-  const { totalPulses, netGainSinceFirst, latestNetWorth } = useMemo(() => {
+  const { totalPulses, latestNetWorth } = useMemo(() => {
     if (sortedSnapshots.length === 0) {
       return { totalPulses: 0, netGainSinceFirst: 0, latestNetWorth: 0 };
     }
@@ -85,9 +101,6 @@ export function TrajectoryHistoryView() {
         return <Landmark className="size-3.5 text-blue-500" />;
     }
   };
-
-  const isMasked = formatCurrency(latestNetWorth) === "*****";
-  const isGainPositive = netGainSinceFirst >= 0;
 
   return (
     <div className="space-y-4">
@@ -141,51 +154,17 @@ export function TrajectoryHistoryView() {
                 <Landmark className="size-4" />
               </div>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/5 flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                  Total Wealth Trajectory Gain
-                </span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1 ${
-                      isGainPositive
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                        : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                    }`}
-                  >
-                    {isMasked ? (
-                      "*****"
-                    ) : (
-                      <>
-                        {isGainPositive ? "+" : ""}
-                        {formatCurrency(netGainSinceFirst)}
-                      </>
-                    )}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium hidden xs:inline">
-                    Since first pulse
-                  </span>
-                </div>
-              </div>
-              <div
-                className={`size-8 rounded-xl flex items-center justify-center ${
-                  isGainPositive
-                    ? "bg-emerald-500/10 text-emerald-500"
-                    : "bg-rose-500/10 text-rose-500"
-                }`}
-              >
-                {isGainPositive ? (
-                  <TrendingUp className="size-4" />
-                ) : (
-                  <TrendingDown className="size-4" />
-                )}
-              </div>
-            </div>
           </div>
         )}
       </div>
+
+      {/* Monthly Growth Graph */}
+      <MonthlyGrowthChart
+        accounts={accounts}
+        transactions={transactions}
+        snapshots={snapshots}
+        monthStartDate={user?.monthStartDate || 1}
+      />
 
       {/* Snapshots Log List */}
       <div className="space-y-3">
@@ -219,13 +198,21 @@ export function TrajectoryHistoryView() {
             const isPositive = delta >= 0;
             const formattedDate = item.createdAt
               ? new Date(item.createdAt).toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : item.date;
+
+            const changedAccounts = (item.accountSnapshots || []).filter(
+              (acc: AccountSnapshotItem) => Math.abs(acc.delta ?? 0) > 0.01,
+            );
+            const isShowingAll = showAllAccounts[item.id] ?? false;
+            const displayedAccounts = isShowingAll
+              ? item.accountSnapshots || []
+              : changedAccounts;
 
             return (
               <div
@@ -239,11 +226,10 @@ export function TrajectoryHistoryView() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`size-10 sm:size-11 rounded-2xl flex items-center justify-center font-black shrink-0 ${
-                        isPositive
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                      }`}
+                      className={`size-10 sm:size-11 rounded-2xl flex items-center justify-center font-black shrink-0 ${isPositive
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                        }`}
                     >
                       {isPositive ? (
                         <TrendingUp className="size-5" />
@@ -258,11 +244,10 @@ export function TrajectoryHistoryView() {
                         </span>
                         {delta !== 0 && (
                           <span
-                            className={`text-[10px] font-black px-2 py-0.5 rounded-full border inline-flex items-center justify-center ${
-                              isPositive
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                                : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                            }`}
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-full border inline-flex items-center justify-center ${isPositive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+                              }`}
                           >
                             {formatCurrency(delta) === "*****"
                               ? "*****"
@@ -288,7 +273,9 @@ export function TrajectoryHistoryView() {
 
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <span className="hidden sm:inline text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl">
-                      {item.accountSnapshots?.length || 0} accounts
+                      {changedAccounts.length > 0
+                        ? `${changedAccounts.length} ${changedAccounts.length === 1 ? "account" : "accounts"} changed`
+                        : "No balance changes"}
                     </span>
                     <button
                       type="button"
@@ -347,7 +334,7 @@ export function TrajectoryHistoryView() {
                           </span>
                         </div>
                         <span className="text-[10px] font-mono text-slate-400">
-                          {item.accountSnapshots.length} Accounts
+                          {changedAccounts.length} Changed {item.accountSnapshots ? `(${item.accountSnapshots.length} Total)` : ""}
                         </span>
                       </div>
                       {item.note && (
@@ -358,61 +345,114 @@ export function TrajectoryHistoryView() {
                     </div>
 
                     <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 pt-1 flex items-center justify-between">
-                      <span>Account Balances & Delta in this Pulse</span>
-                      <span className="font-mono text-[9px] text-slate-500">
-                        {item.accountSnapshots.length} Nodes
+                      <span>
+                        {isShowingAll
+                          ? "All Account Balances"
+                          : "Changed Accounts in this Checkpoint"}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[9px] text-slate-500">
+                          {changedAccounts.length}{" "}
+                          {changedAccounts.length === 1
+                            ? "account changed"
+                            : "accounts changed"}
+                        </span>
+                        {item.accountSnapshots &&
+                          item.accountSnapshots.length > changedAccounts.length && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowAllAccounts((prev) => ({
+                                  ...prev,
+                                  [item.id]: !prev[item.id],
+                                }));
+                              }}
+                              className="text-[10px] font-bold text-primary hover:underline lowercase tracking-normal"
+                            >
+                              {isShowingAll
+                                ? "show changed only"
+                                : `view all (${item.accountSnapshots.length})`}
+                            </button>
+                          )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {item.accountSnapshots.map((acc: AccountSnapshotItem) => {
-                        const accDelta = acc.delta ?? 0;
-                        const accPositive = accDelta > 0;
-                        const accNegative = accDelta < 0;
 
-                        return (
-                          <div
-                            key={acc.accountId}
-                            className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/5 text-xs shadow-sm hover:border-primary/20 transition-all"
+                    {displayedAccounts.length === 0 ? (
+                      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/5 text-center space-y-1">
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          No account balances changed in this checkpoint
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          All account balances remained unchanged during this Wealth Pulse.
+                        </p>
+                        {item.accountSnapshots && item.accountSnapshots.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowAllAccounts((prev) => ({
+                                ...prev,
+                                [item.id]: true,
+                              }))
+                            }
+                            className="mt-1 text-xs font-bold text-primary hover:underline"
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="size-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                                {getAccountIcon(acc.type)}
-                              </div>
-                              <div className="min-w-0">
-                                <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">
-                                  {acc.accountName}
-                                </span>
-                                <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
-                                  {acc.type}
-                                </span>
-                              </div>
-                            </div>
+                            View all {item.accountSnapshots.length} accounts
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {displayedAccounts.map((acc: AccountSnapshotItem) => {
+                          const accDelta = acc.delta ?? 0;
+                          const accPositive = accDelta > 0;
+                          const accNegative = accDelta < 0;
 
-                            <div className="text-right shrink-0 ml-3">
-                              <div className="font-mono font-bold text-slate-900 dark:text-white">
-                                {formatCurrency(acc.balance)}
+                          return (
+                            <div
+                              key={acc.accountId}
+                              className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-white/5 text-xs shadow-sm hover:border-primary/20 transition-all"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="size-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                  {getAccountIcon(acc.type)}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">
+                                    {acc.accountName}
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
+                                    {acc.type}
+                                  </span>
+                                </div>
                               </div>
-                              {/* Delta Pill */}
-                              {accPositive ? (
-                                <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                                  {formatCurrency(accDelta) === "*****"
-                                    ? "*****"
-                                    : `+${formatCurrency(accDelta)}`}
-                                </span>
-                              ) : accNegative ? (
-                                <span className="text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400">
-                                  {formatCurrency(accDelta)}
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-mono text-slate-400">
-                                  No change
-                                </span>
-                              )}
+
+                              <div className="text-right shrink-0 ml-3">
+                                <div className="font-mono font-bold text-slate-900 dark:text-white">
+                                  {formatCurrency(acc.balance)}
+                                </div>
+                                {/* Delta Pill */}
+                                {accPositive ? (
+                                  <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                    {formatCurrency(accDelta) === "*****"
+                                      ? "*****"
+                                      : `+${formatCurrency(accDelta)}`}
+                                  </span>
+                                ) : accNegative ? (
+                                  <span className="text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400">
+                                    {formatCurrency(accDelta)}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    No change
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

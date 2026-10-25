@@ -30,7 +30,7 @@ import {
 const SETTINGS_TABS: SettingsTabItem[] = [
   {
     id: "profile",
-    label: "Identity Profile",
+    label: "Profile",
     icon: User,
     subtitle: "Manage your primary account credentials",
   },
@@ -38,31 +38,31 @@ const SETTINGS_TABS: SettingsTabItem[] = [
     id: "preferences",
     label: "Preferences",
     icon: SettingsIcon,
-    subtitle: "Configure the visual parameters of the system",
+    subtitle: "Configure appearance and system preferences",
   },
   {
     id: "accounts",
     label: "Accounts",
     icon: Wallet,
-    subtitle: "Management of your financial nodes and bank accounts",
+    subtitle: "Manage your bank, cash, and card accounts",
   },
   {
     id: "security",
-    label: "Security Lattice",
+    label: "Security",
     icon: Shield,
-    subtitle: "Monitoring active identity nodes and sessions",
+    subtitle: "Manage active sessions and security credentials",
   },
   {
     id: "identities",
-    label: "Identity Switcher",
+    label: "Switch Account",
     icon: UserPlus,
-    subtitle: "Hot-swap between linked identity nodes",
+    subtitle: "Switch between linked user accounts",
   },
   {
     id: "data",
-    label: "Data Archive",
+    label: "Data & Export",
     icon: Database,
-    subtitle: "Manage your identity's historical footprint",
+    subtitle: "Export and backup your financial data",
   },
 ];
 
@@ -121,8 +121,8 @@ function SettingsPageContent() {
   return (
     <PageContainer>
       <PageHeader
-        title="System Settings"
-        subtitle="Identity Configuration & Security Lattice Control"
+        title="Settings"
+        subtitle="Account Preferences, Security & Data Management"
       />
 
       <div className="flex flex-col lg:flex-row items-start gap-6 mt-0">

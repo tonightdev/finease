@@ -12,14 +12,18 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { TrendingUp, Sunrise, ArrowRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Sunrise, ArrowRight } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { motion } from "framer-motion";
 
 interface NetWorthChartProps {
   data: { month: string; value: number }[];
   currentNetWorth: number;
-  percentageChange: number;
+  percentageChange?: number;
+  trendPercentage?: string;
+  trendDelta?: string;
+  trendLabel?: string;
+  isPositive?: boolean;
 }
 
 interface TooltipProps {
@@ -60,22 +64,34 @@ export function NetWorthChart({
   data,
   currentNetWorth,
   percentageChange,
+  trendPercentage,
+  trendDelta,
+  trendLabel,
+  isPositive,
 }: NetWorthChartProps) {
-  const [period, setPeriod] = useState("1M");
+  const [period, setPeriod] = useState("6M");
   const [projectionMonths, setProjectionMonths] = useState(0);
 
+  const filteredData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    if (period === "1M") return data.slice(-2);
+    if (period === "6M") return data.slice(-6);
+    return data;
+  }, [data, period]);
+
   const chartData: ChartPoint[] = useMemo(() => {
-    if (projectionMonths === 0) return data;
+    const base = filteredData;
+    if (projectionMonths === 0) return base;
 
     // Calculate velocity (avg growth per month)
-    const lastPoint = data[data.length - 1];
-    const firstPoint = data[0];
-    if (!lastPoint || !firstPoint) return data;
+    const lastPoint = base[base.length - 1];
+    const firstPoint = base[0];
+    if (!lastPoint || !firstPoint) return base;
 
     const velocity =
-      (lastPoint.value - firstPoint.value) / Math.max(1, data.length - 1);
+      (lastPoint.value - firstPoint.value) / Math.max(1, base.length - 1);
     const result: ChartPoint[] = [
-      ...data.map((d) => ({ ...d, isProjected: false })),
+      ...base.map((d) => ({ ...d, isProjected: false })),
     ];
 
     const months = [
@@ -104,7 +120,7 @@ export function NetWorthChart({
     }
 
     return result;
-  }, [data, projectionMonths]);
+  }, [filteredData, projectionMonths]);
 
   return (
     <Card
@@ -132,11 +148,31 @@ export function NetWorthChart({
           </div>
           <div className="text-xl xs:text-2xl sm:text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 dark:text-white flex items-baseline gap-2 sm:gap-3 flex-wrap">
             <AnimatedNumber value={currentNetWorth} prefix="₹" />
-            <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-black text-emerald-500 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded flex items-center gap-1">
-                <TrendingUp className="w-2.5 h-2.5 sm:w-3 h-3" />
-                {percentageChange}%
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-lg flex items-center gap-1.5 border shadow-xs ${
+                  isPositive !== false
+                    ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                    : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                }`}
+              >
+                {isPositive !== false ? (
+                  <TrendingUp className="w-3 h-3 shrink-0" />
+                ) : (
+                  <TrendingDown className="w-3 h-3 shrink-0" />
+                )}
+                <span>
+                  {trendPercentage ||
+                    (percentageChange != null
+                      ? `${percentageChange >= 0 ? "+" : ""}${percentageChange.toFixed(1)}%`
+                      : trendLabel || "0%")}
+                </span>
               </span>
+              {trendDelta && (
+                <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">
+                  ({trendDelta})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -145,7 +181,7 @@ export function NetWorthChart({
       <div className="h-[220px] xs:h-[240px] sm:h-[280px] lg:h-[320px] w-full pb-6">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={data}
+            data={chartData}
             margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
           >
             <defs>

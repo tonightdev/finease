@@ -90,7 +90,7 @@ export function AddAccountModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={account ? "Asset Identity" : "New Node"}
+      title={account ? "Edit Account" : "Add Account"}
       maxWidth="max-w-sm"
       footer={
         <div className="flex gap-3 w-full">
@@ -108,7 +108,7 @@ export function AddAccountModal({
             className="flex-[2]"
             leftIcon={<CheckCircle2 className="w-4 h-4" />}
           >
-            Commit State
+            Save Account
           </Button>
         </div>
       }
@@ -116,20 +116,20 @@ export function AddAccountModal({
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Identification
+            Account Name
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g. HDFC Core"
+            placeholder="e.g. HDFC Salary, SBI Savings"
             className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Node Class
+            Account Type
           </label>
           <div className="flex flex-wrap gap-2">
             {[
@@ -162,7 +162,7 @@ export function AddAccountModal({
         <div className="space-y-1.5">
           <div className="flex justify-between px-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Liquid Value (₹)
+              Current Balance (₹)
             </label>
             {account && (
               <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest">
@@ -186,14 +186,14 @@ export function AddAccountModal({
         {formData.type === "bank" && (
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-              Threshold (₹)
+              Minimum Balance (₹)
             </label>
             <AmountInput
               value={formData.minimumBalance}
               onChange={(val) =>
                 setFormData({ ...formData, minimumBalance: val })
               }
-              placeholder="Minimum..."
+              placeholder="Minimum balance..."
             />
           </div>
         )}
@@ -201,7 +201,7 @@ export function AddAccountModal({
         {formData.type === "card" && (
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-primary uppercase tracking-widest pl-1">
-              Node Limit (₹)
+              Credit Limit (₹)
             </label>
             <AmountInput
               value={formData.maxLimit}
@@ -242,7 +242,7 @@ export function AddAccountModal({
               Exclude from Analytics
             </label>
             <span className="text-[8px] text-slate-400 font-medium">
-              Hides node from net worth & dashboard
+              Hides account from net worth & dashboard
             </span>
           </div>
         </div>

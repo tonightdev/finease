@@ -103,7 +103,7 @@ export function AddInvestmentModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={investment ? "Asset Strategy" : "Capital Growth"}
+      title={investment ? "Asset Strategy" : "New Investment"}
       maxWidth="max-w-sm"
       footer={
         <div className="flex gap-3 w-full">
@@ -121,7 +121,7 @@ export function AddInvestmentModal({
             className="flex-[2]"
             leftIcon={<TrendingUp className="w-4 h-4" />}
           >
-            Commit Force
+            Save Investment
           </Button>
         </div>
       }
@@ -129,7 +129,7 @@ export function AddInvestmentModal({
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Instrument / Ticker
+            Investment Name / Ticker
           </label>
           <input
             type="text"
@@ -137,14 +137,14 @@ export function AddInvestmentModal({
             onChange={(e) =>
               setFormData({ ...formData, assetName: e.target.value })
             }
-            placeholder="e.g. BTC-INR or NIFTY 50"
+            placeholder="e.g. Apple, Bitcoin, NIFTY 50"
             className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Asset Category
+            Category
           </label>
           <div className="relative">
             <select
@@ -155,7 +155,7 @@ export function AddInvestmentModal({
               className="w-full h-10 appearance-none bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
             >
               <option value="" disabled>
-                Select Sector
+                Select Category
               </option>
               {assetTypes.map((type) => (
                 <option key={type.id} value={type.id}>
@@ -170,7 +170,7 @@ export function AddInvestmentModal({
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-              Basis (Capital)
+              Invested Amount (Basis)
             </label>
             <AmountInput
               value={formData.investedAmount}
@@ -178,17 +178,12 @@ export function AddInvestmentModal({
                 setFormData({ ...formData, investedAmount: val })
               }
               placeholder="0.00"
-              disabled={!!investment || isSaving}
-              className={
-                investment
-                  ? "bg-slate-100 dark:bg-slate-800 text-slate-500 ring-slate-200 dark:ring-white/5 cursor-not-allowed"
-                  : ""
-              }
+              disabled={isSaving}
             />
           </div>
           <div className="flex-1 min-w-[120px] space-y-1.5">
             <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">
-              Valuation
+              Current Value
             </label>
             <AmountInput
               value={formData.currentAmount}
@@ -231,7 +226,7 @@ export function AddInvestmentModal({
               Exclude from Analytics
             </label>
             <span className="text-[8px] text-slate-400 font-medium">
-              Hides node from net worth & dashboard
+              Hides investment from net worth & dashboard
             </span>
           </div>
         </div>

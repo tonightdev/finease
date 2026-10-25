@@ -331,6 +331,10 @@ export interface MonthlyDebrief {
   netWorth: number;
   netWorthDelta: number;
   percentageDelta: number;
+  inflow?: number;
+  outflow?: number;
+  netCashFlow?: number;
+  savingsRate?: number;
   topGainer?: {
     accountId: string;
     accountName: string;
@@ -343,12 +347,12 @@ export interface MonthlyDebrief {
     delta: number;
     type: string;
   } | null;
-  allocation: {
+  allocation?: {
     liquid: number;
     invested: number;
     debt: number;
   };
-  alerts: LeakageAlert[];
+  alerts?: LeakageAlert[];
   insight: string;
   hasSufficientData: boolean;
 }

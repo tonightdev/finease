@@ -98,7 +98,7 @@ export function AddAssetTypeModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={assetType ? "Class Refinement" : "New Asset Class"}
+      title={assetType ? "Edit Category" : "New Category"}
       maxWidth="max-w-sm"
       footer={
         <div className="flex gap-3 w-full">
@@ -110,7 +110,7 @@ export function AddAssetTypeModal({
               disabled={isSaving}
               className="flex-1"
             >
-              Scrap
+              Delete
             </Button>
           )}
           <Button
@@ -120,7 +120,7 @@ export function AddAssetTypeModal({
             className="flex-[2]"
             leftIcon={<LayoutGrid className="w-4 h-4" />}
           >
-            {assetType ? "Commit" : "Create"}
+            {assetType ? "Save Changes" : "Create Category"}
           </Button>
         </div>
       }
@@ -128,21 +128,21 @@ export function AddAssetTypeModal({
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Class Label
+            Category Name
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isSaving || isDeleting}
-            placeholder="e.g. Equity, Gold..."
+            placeholder="e.g. Equity, Mutual Funds, Real Estate..."
             className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Visual Identity
+            Color Tag
           </label>
           <div className="flex flex-wrap gap-2.5 px-1 py-1">
             {colors.map((c) => (

@@ -78,8 +78,8 @@ export function CommandPalette() {
       },
       {
         id: "nav-plans",
-        name: "Lattice Mapping",
-        description: "Long-term goals & yearly commitment protocol",
+        name: "Plans & Budgets",
+        description: "Long-term goals & yearly budget planning",
         category: "Navigation",
         icon: <Layout className="w-4 h-4" />,
         action: () => router.push("/plans"),
@@ -87,8 +87,8 @@ export function CommandPalette() {
       },
       {
         id: "nav-goals",
-        name: "Financial Terminals",
-        description: "Direct access to mapped wealth objectives",
+        name: "Financial Goals",
+        description: "Direct access to savings & financial targets",
         category: "Navigation",
         icon: <Target className="w-4 h-4" />,
         action: () => router.push("/plans?tab=Goals"),
@@ -96,8 +96,8 @@ export function CommandPalette() {
       },
       {
         id: "nav-port",
-        name: "Account Matrix",
-        description: "Manage capital nodes & liquid assets",
+        name: "Portfolio & Assets",
+        description: "Manage investments, loans & bank accounts",
         category: "Navigation",
         icon: <Wallet className="w-4 h-4" />,
         action: () => router.push("/portfolio"),
@@ -105,8 +105,8 @@ export function CommandPalette() {
       },
       {
         id: "nav-strat",
-        name: "Strategy Lab",
-        description: "Simulate financial scenarios & burn rates",
+        name: "Financial Simulations",
+        description: "Simulate financial scenarios & future forecasts",
         category: "Navigation",
         icon: <Zap className="w-4 h-4" />,
         action: () => router.push("/strategies"),
@@ -114,8 +114,8 @@ export function CommandPalette() {
       },
       {
         id: "nav-sett",
-        name: "Protocol Settings",
-        description: "Global configuration & identity access",
+        name: "Settings",
+        description: "Account preferences & security settings",
         category: "Navigation",
         icon: <Settings className="w-4 h-4" />,
         action: () => router.push("/settings"),
@@ -125,8 +125,8 @@ export function CommandPalette() {
       // Financial Lab - Creation
       {
         id: "act-acc",
-        name: "Initialize Account",
-        description: "Register a new capital node in the lattice",
+        name: "Add Account",
+        description: "Create a new bank, cash, or card account",
         category: "Financial Lab",
         icon: <Plus className="w-4 h-4" />,
         action: () => dispatch(openModal("isAccountModalOpen")),
@@ -134,8 +134,8 @@ export function CommandPalette() {
       },
       {
         id: "act-goal",
-        name: "Map New Goal",
-        description: "Define a financial terminal objective",
+        name: "Add Goal",
+        description: "Define a savings or financial target",
         category: "Financial Lab",
         icon: <Target className="w-4 h-4" />,
         action: () => dispatch(openModal("isGoalModalOpen")),
@@ -143,8 +143,8 @@ export function CommandPalette() {
       },
       {
         id: "act-exp",
-        name: "Commit Expenditure",
-        description: "Set a recurring yearly burden node",
+        name: "Add Recurring Expense",
+        description: "Set a recurring yearly or monthly expense",
         category: "Financial Lab",
         icon: <Bell className="w-4 h-4" />,
         action: () => dispatch(openModal("isExpiryModalOpen")),
@@ -152,19 +152,19 @@ export function CommandPalette() {
       },
       {
         id: "act-sim",
-        name: "Launch Simulation",
-        description: "Start a new project lifecycle forecast",
+        name: "Start Simulation",
+        description: "Forecast future savings, expenses, and growth",
         category: "Financial Lab",
         icon: <TrendingUp className="w-4 h-4" />,
-        action: () => dispatch(openModal("isSimulationModalOpen")),
+        action: () => router.push("/simulation"),
         color: "bg-cyan-500",
       },
 
       // System Control
       {
         id: "sys-theme",
-        name: "Toggle Visual Protocol",
-        description: `Switch to ${theme === "dark" ? "Light" : "Dark"} mode radiation`,
+        name: "Toggle Theme",
+        description: `Switch to ${theme === "dark" ? "Light" : "Dark"} mode`,
         category: "System Control",
         icon:
           theme === "dark" ? (
@@ -177,8 +177,8 @@ export function CommandPalette() {
       },
       {
         id: "sys-sync",
-        name: "Synchronize Nodes",
-        description: "Force refresh all financial data streams",
+        name: "Refresh Data",
+        description: "Reload all accounts and transactions",
         category: "System Control",
         icon: <RefreshCw className="w-4 h-4" />,
         action: () => window.location.reload(),
@@ -186,8 +186,8 @@ export function CommandPalette() {
       },
       {
         id: "sys-export",
-        name: "Archive Identity",
-        description: "Export full financial dataset as JSON",
+        name: "Export Financial Data",
+        description: "Download full financial records as JSON",
         category: "System Control",
         icon: <Download className="w-4 h-4" />,
         action: () => router.push("/settings?tab=data"),

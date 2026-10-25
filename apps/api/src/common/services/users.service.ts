@@ -23,16 +23,24 @@ export class UsersService {
 
   async findOne(uid: string): Promise<User> {
     const doc = await this.collection.doc(uid).get();
-    const data = doc.data() as Partial<User> | undefined;
-    if (!doc.exists || data?.deletedAt) {
+    const rawData = doc.data();
+    if (!doc.exists || !rawData || rawData.deletedAt) {
       throw new NotFoundException(`User with UID ${uid} not found`);
     }
-    return { id: doc.id, ...data } as User;
+    const data = rawData as Partial<User> & { password?: string };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pw, ...userData } = data;
+    return { id: doc.id, ...userData } as User;
   }
 
   async findAll(): Promise<User[]> {
     const snapshot = await this.collection.where('deletedAt', '==', null).get();
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as User);
+    return snapshot.docs.map((doc) => {
+      const data = doc.data() as Partial<User> & { password?: string };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _pw, ...userData } = data;
+      return { id: doc.id, ...userData } as User;
+    });
   }
   async update(uid: string, data: Partial<User>): Promise<User> {
     const currentUser = await this.findOne(uid);

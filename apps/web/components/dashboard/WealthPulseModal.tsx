@@ -10,9 +10,7 @@ import {
 } from "@/store/slices/accountsSlice";
 import {
   Sparkles,
-  TrendingUp,
   Landmark,
-  CreditCard,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
@@ -33,20 +31,9 @@ export function WealthPulseModal() {
     [allAccounts],
   );
 
-  // Group accounts
+  // Group liquid accounts (bank & cash only)
   const liquidAccounts = useMemo(
     () => activeAccounts.filter((a) => a.type === "bank" || a.type === "cash"),
-    [activeAccounts],
-  );
-  const investmentAccounts = useMemo(
-    () =>
-      activeAccounts.filter(
-        (a) => a.type === "investment" || a.type === "asset",
-      ),
-    [activeAccounts],
-  );
-  const liabilityAccounts = useMemo(
-    () => activeAccounts.filter((a) => a.type === "debt" || a.type === "card"),
     [activeAccounts],
   );
 
@@ -58,13 +45,13 @@ export function WealthPulseModal() {
   useEffect(() => {
     if (isOpen) {
       const initial: Record<string, number> = {};
-      activeAccounts.forEach((acc) => {
+      liquidAccounts.forEach((acc) => {
         initial[acc.id] = acc.balance;
       });
       setBalances(initial);
       setNote("");
     }
-  }, [isOpen, activeAccounts]);
+  }, [isOpen, liquidAccounts]);
 
   // Live real-time calculations
   const { previewNetWorth, netDelta } = useMemo(() => {
@@ -75,9 +62,11 @@ export function WealthPulseModal() {
 
     activeAccounts.forEach((acc) => {
       const oldBal = Number(acc.balance) || 0;
-      const newBal = Number(
-        balances[acc.id] !== undefined ? balances[acc.id] : oldBal,
-      );
+      const isLiquid = acc.type === "bank" || acc.type === "cash";
+      const newBal =
+        isLiquid && balances[acc.id] !== undefined
+          ? Number(balances[acc.id])
+          : oldBal;
 
       if (acc.type === "debt" || acc.type === "card") {
         oldLiabilities += Math.abs(oldBal);
@@ -119,12 +108,13 @@ export function WealthPulseModal() {
   const handleSave = async () => {
     try {
       setIsSubmitting(true);
-      const itemsToSync = Object.entries(balances).map(
-        ([accountId, balance]) => ({
-          accountId,
-          balance,
-        }),
-      );
+      const itemsToSync = liquidAccounts.map((acc) => ({
+        accountId: acc.id,
+        balance:
+          balances[acc.id] !== undefined
+            ? Number(balances[acc.id])
+            : Number(acc.balance) || 0,
+      }));
 
       // 1. Optimistic instant update (<50ms feedback)
       dispatch(optimisticUpdateBalances(itemsToSync));
@@ -165,13 +155,7 @@ export function WealthPulseModal() {
           <div
             className={`size-9 rounded-xl flex items-center justify-center font-black ${iconColor}`}
           >
-            {acc.type === "investment" ? (
-              <TrendingUp className="size-4" />
-            ) : acc.type === "debt" || acc.type === "card" ? (
-              <CreditCard className="size-4" />
-            ) : (
-              <Landmark className="size-4" />
-            )}
+            <Landmark className="size-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -191,25 +175,23 @@ export function WealthPulseModal() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Quick delta chips for investments/bank */}
-          {acc.type !== "debt" && acc.type !== "card" && (
-            <div className="hidden sm:flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => adjustBalance(acc.id, 5000)}
-                className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
-              >
-                +5k
-              </button>
-              <button
-                type="button"
-                onClick={() => adjustBalance(acc.id, 10000)}
-                className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
-              >
-                +10k
-              </button>
-            </div>
-          )}
+          {/* Quick delta chips for bank & cash */}
+          <div className="hidden sm:flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => adjustBalance(acc.id, 5000)}
+              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+            >
+              +5k
+            </button>
+            <button
+              type="button"
+              onClick={() => adjustBalance(acc.id, 10000)}
+              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+            >
+              +10k
+            </button>
+          </div>
 
           <div className="relative flex-1 sm:w-44">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -244,7 +226,7 @@ export function WealthPulseModal() {
               Monthly Wealth Pulse
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Update balances in 60 seconds • instant growth recalculation
+              Update liquid cash & bank balances • instant recalculation
             </p>
           </div>
         </div>
@@ -266,7 +248,7 @@ export function WealthPulseModal() {
             </button>
             <button
               type="button"
-              disabled={isSubmitting || activeAccounts.length === 0}
+              disabled={isSubmitting || liquidAccounts.length === 0}
               onClick={handleSave}
               className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-primary/25 disabled:opacity-50 transition-all active:scale-95"
             >
@@ -274,7 +256,7 @@ export function WealthPulseModal() {
                 "Syncing..."
               ) : (
                 <>
-                  <span>Confirm & Recalculate</span>
+                  <span>Recalculate</span>
                   <ArrowRight className="size-3.5" />
                 </>
               )}
@@ -298,11 +280,10 @@ export function WealthPulseModal() {
             Net Delta
           </span>
           <div
-            className={`text-sm sm:text-base font-black flex items-center justify-end gap-1 ${
-              netDelta >= 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-rose-600 dark:text-rose-400"
-            }`}
+            className={`text-sm sm:text-base font-black flex items-center justify-end gap-1 ${netDelta >= 0
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-rose-600 dark:text-rose-400"
+              }`}
           >
             {netDelta >= 0 ? "+" : ""}
             {formatCurrency(netDelta)}
@@ -311,7 +292,7 @@ export function WealthPulseModal() {
       </div>
 
       {/* Account Lists (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
         {/* Liquid Accounts */}
         {liquidAccounts.length > 0 && (
           <div className="space-y-2.5">
@@ -330,44 +311,8 @@ export function WealthPulseModal() {
           </div>
         )}
 
-        {/* Investment Accounts */}
-        {investmentAccounts.length > 0 && (
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-              <TrendingUp className="size-3.5 text-emerald-500" />
-              <span>Growth, Investments & Assets</span>
-            </div>
-            <div className="space-y-2">
-              {investmentAccounts.map((acc) =>
-                renderAccountRow(
-                  acc,
-                  "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                ),
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Liabilities */}
-        {liabilityAccounts.length > 0 && (
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-              <CreditCard className="size-3.5 text-rose-500" />
-              <span>Liabilities, Cards & Loans</span>
-            </div>
-            <div className="space-y-2">
-              {liabilityAccounts.map((acc) =>
-                renderAccountRow(
-                  acc,
-                  "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-                ),
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Optional Note / Milestone */}
-        {activeAccounts.length > 0 && (
+        {liquidAccounts.length > 0 && (
           <div className="pt-2 border-t border-slate-100 dark:border-white/5">
             <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
               Check-in Note or Milestone (Optional)
@@ -376,16 +321,15 @@ export function WealthPulseModal() {
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. October month-end check-in, salary & bonus credited"
+              placeholder="e.g. Month-end check-in, salary credited"
               className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-[11px] placeholder:font-normal placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
           </div>
         )}
 
-        {activeAccounts.length === 0 && (
+        {liquidAccounts.length === 0 && (
           <div className="text-center py-8 text-slate-400 text-sm">
-            No active accounts found. Please add accounts first from the
-            Accounts view.
+            No active bank or cash accounts found. Please add bank or cash accounts first from Settings / Accounts.
           </div>
         )}
       </div>

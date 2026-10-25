@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
-import { fetchAccounts } from "@/store/slices/accountsSlice";
+import { fetchAccounts, fetchSnapshots } from "@/store/slices/accountsSlice";
 import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -108,11 +108,10 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${
-          isOpen || selectedCount > 0
-            ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
-            : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
-        }`}
+        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${isOpen || selectedCount > 0
+          ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
+          : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
+          }`}
       >
         <div className="flex items-center gap-2 min-w-0">
           {Icon && <Icon className="size-3.5 shrink-0" />}
@@ -124,9 +123,8 @@ function FilterDropdown({
           )}
         </div>
         <ChevronDown
-          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${
-            isOpen ? "rotate-180 text-primary" : ""
-          }`}
+          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${isOpen ? "rotate-180 text-primary" : ""
+            }`}
         />
       </button>
 
@@ -148,11 +146,10 @@ function FilterDropdown({
                     onSelect(option.id);
                     if (!multi) setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${
-                    isSelected(option.id)
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${isSelected(option.id)
+                    ? "bg-primary/10 text-primary"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
                 >
                   <span className="truncate">{option.name}</span>
                   {isSelected(option.id) && (
@@ -231,10 +228,13 @@ export default function ReportsPageClient() {
     (state: RootState) =>
       state.transactions?.loading || state.accounts?.loading,
   );
+  const snapshots =
+    useSelector((state: RootState) => state.accounts?.snapshots) ?? [];
 
   useEffect(() => {
     if (user) {
       dispatch(fetchAccounts());
+      dispatch(fetchSnapshots(50));
       dispatch(fetchTransactions());
       dispatch(fetchCategories());
       dispatch(fetchGoals());
@@ -379,39 +379,99 @@ export default function ReportsPageClient() {
       });
     }
 
-    let runningNW = netWorth;
-    const lastMonth = history[5];
-    if (lastMonth) {
-      lastMonth.value = runningNW;
-    }
+    // Populate each month from snapshots if available
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i]!;
+      const start = item.dateObj;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
 
-    for (let i = 4; i >= 0; i--) {
-      const nextMonthData = history[i + 1];
-      if (!nextMonthData) continue;
-      const nextMonth = nextMonthData.dateObj;
-
-      const txInNextMonth = transactions.filter((tx) => {
-        if (tx.status === "pending_confirmation") return false;
-        const txDate = new Date(tx.date);
-        return txDate.getTime() >= nextMonth.getTime();
+      const matchingSnapshots = snapshots.filter((s) => {
+        const sd = new Date(s.createdAt || s.date);
+        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
       });
 
-      const netFlowNextMonth = txInNextMonth.reduce((acc, tx) => {
-        return acc + (tx.type === "income" ? tx.amount : -tx.amount);
-      }, 0);
-
-      runningNW = runningNW - netFlowNextMonth;
-      const currentItem = history[i];
-      if (currentItem) {
-        currentItem.value = runningNW > 0 ? runningNW : 0;
+      if (matchingSnapshots.length > 0) {
+        const latest = matchingSnapshots.sort(
+          (a, b) =>
+            new Date(b.createdAt || b.date).getTime() -
+            new Date(a.createdAt || a.date).getTime(),
+        )[0]!;
+        item.value = latest.netWorth;
       }
     }
 
-    return history;
-  }, [transactions, netWorth, now, user?.monthStartDate]);
+    // Latest month defaults to real-time Net Worth
+    if (history[5]) {
+      history[5].value = netWorth;
+    }
+
+    // Backfill any empty months using transactions net flow
+    for (let i = 4; i >= 0; i--) {
+      const current = history[i]!;
+      const next = history[i + 1]!;
+
+      if (current.value === 0) {
+        const start = next.dateObj;
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
+        end.setMilliseconds(end.getMilliseconds() - 1);
+
+        const txInMonth = transactions.filter((tx) => {
+          if (tx.status === "pending_confirmation") return false;
+          const txDate = new Date(tx.date);
+          return (
+            txDate.getTime() >= start.getTime() &&
+            txDate.getTime() <= end.getTime()
+          );
+        });
+
+        const netFlow = txInMonth.reduce(
+          (acc, tx) => acc + (tx.type === "income" ? tx.amount : -tx.amount),
+          0,
+        );
+
+        current.value = Math.max(0, next.value - netFlow);
+      }
+    }
+
+    return history.map((h) => ({
+      month: h.month,
+      value: h.value > 0 ? h.value : 0,
+    }));
+  }, [transactions, snapshots, netWorth, now, user?.monthStartDate]);
 
   // Calculate Net Worth Change percentage
   const netWorthChange = useMemo(() => {
+    if (snapshots.length >= 2) {
+      const sorted = [...snapshots].sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date).getTime() -
+          new Date(a.createdAt || a.date).getTime(),
+      );
+      const current = sorted[0]?.netWorth || 0;
+      const prev = sorted[1]?.netWorth || 0;
+      if (prev > 0) {
+        return parseFloat((((current - prev) / prev) * 100).toFixed(1));
+      }
+      if (sorted[0]?.netWorthDelta != null && sorted[0].netWorthDelta !== 0) {
+        const previousVal = current - sorted[0].netWorthDelta;
+        if (previousVal > 0) {
+          return parseFloat(
+            (((sorted[0].netWorthDelta) / previousVal) * 100).toFixed(1),
+          );
+        }
+      }
+    } else if (snapshots.length === 1 && snapshots[0]?.netWorthDelta) {
+      const current = snapshots[0].netWorth;
+      const delta = snapshots[0].netWorthDelta;
+      const prev = current - delta;
+      if (prev > 0) {
+        return parseFloat(((delta / prev) * 100).toFixed(1));
+      }
+    }
+
     if (computedNetWorthHistory.length < 2) return 0;
     const last =
       computedNetWorthHistory[computedNetWorthHistory.length - 1]?.value || 0;
@@ -419,7 +479,7 @@ export default function ReportsPageClient() {
       computedNetWorthHistory[computedNetWorthHistory.length - 2]?.value || 0;
     if (prev === 0) return last > 0 ? 100 : 0;
     return parseFloat((((last - prev) / prev) * 100).toFixed(1));
-  }, [computedNetWorthHistory]);
+  }, [computedNetWorthHistory, snapshots]);
 
   const currentYear = cursorDate.getFullYear();
 
@@ -677,11 +737,10 @@ export default function ReportsPageClient() {
                       onClick={() => {
                         setViewType(type);
                       }}
-                      className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
-                        viewType === type
-                          ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                      }`}
+                      className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${viewType === type
+                        ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                        }`}
                     >
                       {type}
                     </button>
@@ -708,11 +767,10 @@ export default function ReportsPageClient() {
                   type="button"
                   onClick={handleNext}
                   disabled={cursorDate.getTime() > now.getTime()}
-                  className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
-                    cursorDate.getTime() > now.getTime()
-                      ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
-                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
-                  }`}
+                  className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
+                    ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
+                    }`}
                   aria-label="Next Period"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -728,11 +786,10 @@ export default function ReportsPageClient() {
         <button
           type="button"
           onClick={() => setActiveTab("trajectory")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === "trajectory"
-              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${activeTab === "trajectory"
+            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
         >
           <History className="size-3.5" />
           <span>Trajectory</span>
@@ -740,11 +797,10 @@ export default function ReportsPageClient() {
         <button
           type="button"
           onClick={() => setActiveTab("analytics")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === "analytics"
-              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${activeTab === "analytics"
+            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
         >
           <Activity className="size-3.5" />
           <span>Analytics</span>
@@ -761,7 +817,7 @@ export default function ReportsPageClient() {
                 {selectedAccountIds.length > 0
                   ? selectedAccountIds.length === 1
                     ? accounts.find((a) => a.id === selectedAccountIds[0])
-                        ?.name || "Account Balance"
+                      ?.name || "Account Balance"
                     : `${selectedAccountIds.length} Accounts Balance`
                   : "Net Worth"}
               </div>
@@ -822,7 +878,7 @@ export default function ReportsPageClient() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-2.5 mb-0">
             <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

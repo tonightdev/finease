@@ -104,6 +104,9 @@ export class GoalService {
 
   async remove(id: string, hard = false): Promise<void> {
     const docRef = this.collection.doc(id);
+    const goalDoc = await docRef.get();
+    const goalData = goalDoc.exists ? (goalDoc.data() as FinancialGoal) : null;
+
     if (hard) {
       await docRef.delete();
     } else {
@@ -112,18 +115,16 @@ export class GoalService {
       });
     }
 
-    // Fetch details for logging
-    const goalDoc = await this.collection.doc(id).get();
-    const goalData = goalDoc.data() as FinancialGoal;
-
     // Log activity
-    await this.activityLogService.logActivity({
-      userId: goalData.userId,
-      action: 'delete',
-      entityType: 'goal',
-      entityId: id,
-      description: `Deleted goal: ${goalData.name}`,
-    });
+    if (goalData?.userId) {
+      await this.activityLogService.logActivity({
+        userId: goalData.userId,
+        action: 'delete',
+        entityType: 'goal',
+        entityId: id,
+        description: `Deleted goal: ${goalData.name}`,
+      });
+    }
   }
 
   calculateMonthlyRequirement(goal: FinancialGoal): number {

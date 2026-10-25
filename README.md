@@ -31,9 +31,9 @@ finease/
 
 ### 📊 Wealth Intelligence & Command Center
 
-- **Executive Net Worth Trajectory**: Real-time tracking of net worth, asset allocation, and capital retention velocity.
-- **Minimalist Monthly Growth Debrief**: Automated debrief card spotlighting top capital gainers, savings efficiency, and leakage areas.
-- **Liquid Capital Widget**: Consolidated view of all cash reserves and bank accounts without dashboard clutter.
+- **Executive Net Worth Trajectory**: Real-time tracking of net worth with timeframe filters (`1M`, `6M`, `1Y`, `ALL`) and decoupled delta/percentage display.
+- **Monthly Overview (Cash Flow Debrief)**: Distinctive 3-card metrics (`Period Inflow`, `Period Outflow`, `Net Cash Flow`) with executive insight and rate indicators.
+- **Consolidated Liquid Capital**: Dedicated view of all cash reserves and bank accounts with individual reserve allocation indicators.
 - **Goal Velocity Navigator**: Financial North Stars (Retirement, Emergency Fund, Home) with automated monthly pacing requirements.
 
 ### ⚡ Wealth Pulse & Trajectory Protocol
@@ -46,13 +46,14 @@ finease/
 ### 🔒 Privacy & Security Protocols
 
 - **Ghost Mode**: One-click global toggle that masks all financial numbers with `*****` for screen sharing or public spaces.
-- **Non-Dismissible Modals**: Strict modal protection preventing accidental closing on backdrop clicks.
-- **Biometric & PIN Lock**: Client-side security gateway supporting biometric and passkey protection.
+- **Centralized Non-Dismissible Modals**: Strict modal protection preventing accidental closing on backdrop clicks, managed via `GlobalModals`.
+- **Identity Nodes & Active Sessions**: View, audit, and revoke active device sessions remotely.
 
 ### 📈 Analytics & Reports
 
+- **Monthly Growth & Trajectory Chart**: Baseline net worth curve tracking pulse snapshots with delta accumulation.
 - **Inline Account Filter**: Account selector integrated into the header bar without drawer clutter.
-- **Mobile-Optimized Growth Log**: Clean collapsed cards with expandable details displaying full timestamp and check-in notes.
+- **Responsive Historical Trajectory Log**: Clean collapsed cards with expandable details displaying full timestamp and check-in notes.
 
 ---
 

@@ -8,11 +8,13 @@ interface DashboardStatCardProps {
   subtitle?: string;
   value: string | number;
   valueColor?: string;
+  icon?: React.ReactNode;
   trend?: {
     label: string;
     color: string;
     showPulse?: boolean;
   };
+  onClick?: () => void;
   className?: string;
 }
 
@@ -21,20 +23,29 @@ export function DashboardStatCard({
   subtitle,
   value,
   valueColor = "text-slate-900 dark:text-white",
+  icon,
   trend,
+  onClick,
   className,
 }: DashboardStatCardProps) {
   return (
     <div
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
       className={cn(
-        "bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 rounded-2xl shadow-sm transition-all group overflow-hidden",
+        "bg-white dark:bg-slate-900 border-none ring-1 ring-slate-100 dark:ring-white/5 p-3.5 sm:p-4 rounded-2xl shadow-sm transition-all group overflow-hidden relative",
+        onClick && "cursor-pointer hover:ring-primary/40 active:scale-[0.99]",
         className,
       )}
     >
-      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between items-start gap-2">
-        <span>{label}</span>
+      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between items-start gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {icon && <span className="shrink-0">{icon}</span>}
+          <span className="truncate">{label}</span>
+        </div>
         {subtitle && (
-          <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400 text-right leading-tight max-w-[60%]">
+          <span className="text-[7px] sm:text-[8px] font-medium normal-case tracking-normal text-slate-400 text-right leading-tight max-w-[55%] truncate">
             {subtitle}
           </span>
         )}
@@ -45,10 +56,10 @@ export function DashboardStatCard({
         className={cn(
           "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0 cloaked-balance",
           typeof value === "string" && value.length > 15
-            ? "text-sm"
+            ? "text-xs sm:text-sm"
             : typeof value === "string" && value.length > 12
-              ? "text-base"
-              : "text-lg",
+              ? "text-sm sm:text-base"
+              : "text-base sm:text-lg",
           valueColor,
         )}
       >
@@ -60,12 +71,12 @@ export function DashboardStatCard({
       </div>
 
       {trend && (
-        <div className="mt-2 flex items-center gap-1.5">
-          <div className={cn(trend.color)} />
+        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+          {trend.color && <div className={cn("size-1.5 rounded-full shrink-0", trend.color)} />}
           <span
             className={cn(
-              "text-[8px] font-black uppercase tracking-widest",
-              trend.color.replace("bg-", "text-"),
+              "text-[8px] sm:text-[9px] font-black uppercase tracking-wider truncate",
+              trend.color ? trend.color.replace("bg-", "text-") : "text-slate-400",
             )}
           >
             {trend.label}

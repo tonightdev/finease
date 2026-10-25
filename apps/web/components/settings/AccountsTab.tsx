@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Wallet, Database, Plus, Trash2 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { RootState, AppDispatch } from "@/store";
 import {
   fetchAccounts,
+  createAccount,
   updateAccount,
   deleteAccount,
 } from "@/store/slices/accountsSlice";
@@ -27,6 +28,10 @@ export function AccountsTab() {
   const [editingBankAccount, setEditingBankAccount] = useState<Account | null>(
     null,
   );
+
+  useEffect(() => {
+    dispatch(fetchAccounts());
+  }, [dispatch]);
 
   const handleAccountAction = async (data: {
     name: string;
@@ -52,15 +57,27 @@ export function AccountsTab() {
             },
           }),
         ).unwrap();
-        toast.success("Account identity recalculated");
       } else {
-        await dispatch(fetchAccounts({ force: true }));
+        await dispatch(
+          createAccount({
+            name: data.name,
+            type: data.type as AccountType,
+            assetType: "",
+            balance: parseFloat(data.balance) || 0,
+            minimumBalance: data.minimumBalance
+              ? parseFloat(data.minimumBalance)
+              : undefined,
+            maxLimit: data.maxLimit ? parseFloat(data.maxLimit) : undefined,
+            currency: "INR",
+            excludeFromAnalytics: data.excludeFromAnalytics,
+            isClosed: false,
+          }),
+        ).unwrap();
+        setAccountSubTab("active");
       }
-    } catch {
+    } catch (error) {
       toast.error("Account synchronization failure");
-    } finally {
-      setIsAccountModalOpen(false);
-      setEditingBankAccount(null);
+      throw error;
     }
   };
 
@@ -74,26 +91,26 @@ export function AccountsTab() {
       ).unwrap();
       toast.success(
         account.isClosed
-          ? "Account node re-activated"
-          : "Account node decommissioned",
+          ? "Account reopened"
+          : "Account closed",
       );
     } catch {
-      toast.error("Status transition failure");
+      toast.error("Failed to update account status");
     }
   };
 
   const handleDeleteBankAccount = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to permanently purge this financial node? This action is irreversible.",
+        "Are you sure you want to permanently delete this account? This action cannot be undone.",
       )
     )
       return;
     try {
       await dispatch(deleteAccount(id)).unwrap();
-      toast.success("Financial node purged from lattice");
+      toast.success("Account deleted");
     } catch {
-      toast.error("Purge operation failed");
+      toast.error("Failed to delete account");
     }
   };
 
@@ -106,7 +123,7 @@ export function AccountsTab() {
   return (
     <>
       <div className="space-y-4 animate-in fade-in duration-200">
-        {/* Controls Row: Sub-Tabs & Provision Button */}
+        {/* Controls Row: Sub-Tabs & Add Account Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl w-full sm:w-auto">
             <button
@@ -118,7 +135,7 @@ export function AccountsTab() {
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              Active Nodes
+              Active Accounts
             </button>
             <button
               type="button"
@@ -129,7 +146,7 @@ export function AccountsTab() {
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              Decommissioned
+              Closed Accounts
             </button>
           </div>
 
@@ -140,7 +157,7 @@ export function AccountsTab() {
             }}
             className="h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 shadow-xs"
           >
-            <Plus size={14} /> Provision New Node
+            <Plus size={14} /> Add Account
           </Button>
         </div>
 
@@ -161,13 +178,13 @@ export function AccountsTab() {
               </div>
               <h5 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1.5">
                 {accountSubTab === "active"
-                  ? "No active nodes detected"
-                  : "Archives are currently empty"}
+                  ? "No active accounts found"
+                  : "No closed accounts"}
               </h5>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
                 {accountSubTab === "active"
-                  ? "Initialize a new financial node to begin synchronization."
-                  : "Decommissioned accounts will be stored in this vault for historical reference."}
+                  ? "Add a bank, card, or cash account to begin tracking."
+                  : "Closed accounts will be saved here for your records."}
               </p>
             </div>
           ) : (
@@ -186,7 +203,7 @@ export function AccountsTab() {
                         {acc.name}
                       </h4>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                        {acc.type} Node
+                        {acc.type.toUpperCase()} Account
                       </p>
                     </div>
                   </div>
@@ -196,7 +213,7 @@ export function AccountsTab() {
                     </div>
                     <div className="text-[8px] font-black uppercase text-emerald-500 tracking-widest flex items-center justify-end gap-1">
                       <span className="size-1 rounded-full bg-emerald-500" />{" "}
-                      Liquid
+                      Active
                     </div>
                   </div>
                 </div>
@@ -229,7 +246,7 @@ export function AccountsTab() {
                     type="button"
                     onClick={() => handleDeleteBankAccount(acc.id)}
                     className="size-8 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 flex items-center justify-center shrink-0 cursor-pointer"
-                    title="Purge Node"
+                    title="Delete Account"
                   >
                     <Trash2 size={14} />
                   </button>

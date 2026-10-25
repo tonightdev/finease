@@ -2,7 +2,6 @@ import { configureStore, combineReducers, Action } from "@reduxjs/toolkit";
 import accountsReducer from "./slices/accountsSlice";
 import transactionsReducer from "./slices/transactionsSlice";
 import goalsReducer from "./slices/goalsSlice";
-import statsReducer from "./slices/statsSlice";
 import userReducer from "./slices/userSlice";
 import categoriesReducer from "./slices/categoriesSlice";
 import assetClassesReducer from "./slices/assetClassesSlice";
@@ -16,7 +15,6 @@ const appReducer = combineReducers({
   accounts: accountsReducer,
   transactions: transactionsReducer,
   goals: goalsReducer,
-  stats: statsReducer,
   user: userReducer,
   categories: categoriesReducer,
   assetClasses: assetClassesReducer,

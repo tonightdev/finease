@@ -352,18 +352,30 @@ export class TransactionsService {
     // 3. STATE INITIALIZATION
     // Use initialAmount from creation; legacy accounts without it use 0 or current balance.
     let balance: number;
-    if (acc.initialAmount !== undefined && acc.initialAmount !== null) {
+    let repaidCapital = 0; // Principal repaid (for debt)
+    let burnedInterest = 0; // Total interest paid (for debt)
+
+    if (acc.type === 'debt') {
+      const totalLoan = Number(acc.initialAmount) || 0;
+      if (txs.length === 0) {
+        repaidCapital = Number(acc.repaidCapital) || 0;
+        burnedInterest = Number(acc.burnedInterest) || 0;
+        balance = -Math.max(0, totalLoan - repaidCapital);
+      } else {
+        balance = -totalLoan;
+      }
+    } else if (acc.initialAmount !== undefined && acc.initialAmount !== null) {
       balance = Number(acc.initialAmount);
     } else {
       balance = txs.length > 0 ? 0 : Number(acc.balance) || 0;
     }
 
-    // Debt balances are inherently negative or zero
-    if (acc.type === 'debt' && balance > 0) balance = -balance;
-
-    let invested = balance; // Total capital contributed (for investments)
-    let repaidCapital = 0; // Principal repaid (for debt)
-    let burnedInterest = 0; // Total interest paid (for debt)
+    let invested =
+      acc.investedAmount !== undefined && acc.investedAmount !== null
+        ? Number(acc.investedAmount)
+        : (acc.type === 'investment' && acc.initialAmount !== undefined
+            ? Number(acc.initialAmount)
+            : balance);
 
     const batch = this.db.batch();
 
@@ -434,8 +446,13 @@ export class TransactionsService {
 
     if (acc.type === 'investment') accUpdate.investedAmount = invested;
     if (acc.type === 'debt') {
-      accUpdate.repaidCapital = repaidCapital;
-      accUpdate.burnedInterest = burnedInterest;
+      if (txs.length > 0) {
+        accUpdate.repaidCapital = repaidCapital;
+        accUpdate.burnedInterest = burnedInterest;
+      } else {
+        accUpdate.repaidCapital = Number(acc.repaidCapital) || 0;
+        accUpdate.burnedInterest = Number(acc.burnedInterest) || 0;
+      }
     }
 
     // Apply manual valuation adjustments if present

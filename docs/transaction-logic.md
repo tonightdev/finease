@@ -99,3 +99,34 @@ The Wealth Pulse protocol provides scheduled periodic reconciliation (e.g. month
 2. **Automatic Rollback**: Reverts every modified account in Firestore back to its `previousBalance` from before that pulse was recorded.
 3. Deletes the snapshot document from `wealth_snapshots`.
 4. Redux removes the snapshot and updates the active account items with the reverted balances.
+
+---
+
+## 5. Monthly Overview & Trajectory Telemetry
+
+### A. Monthly Overview Cash Flow Engine (`GET /finance/debrief`)
+
+FinEase provides a unified 30-day cash flow perspective that operates seamlessly whether a user tracks individual daily transactions or relies strictly on periodic Wealth Pulses:
+
+1. **Transaction Primary Flow**:
+   - The engine scans completed transactions from the start of the current calendar/fiscal month.
+   - `inflow = sum(type == 'income')`
+   - `outflow = sum(type == 'expense')`
+2. **Pulse Delta Fallback**:
+   - If no transactions are recorded for the period, the engine extracts the liquid accounts delta (`bank` and `cash`) from the latest recorded `WealthSnapshot`.
+   - Positive liquid deltas populate `inflow`, negative deltas populate `outflow`.
+   - `topGainer` identifies the individual liquid account with the largest positive inflow.
+   - `topLeak` identifies the liquid account with the largest contraction.
+3. **Savings & Growth Rate**:
+   - When income exists: `savingsRate = (netCashFlow / inflow) * 100`.
+   - When relying on pulse: `percentageDelta = (liquidDelta / baseLiquid) * 100`.
+
+### B. Trajectory Chart Baseline & Accumulation
+
+1. **Executive Net Worth Trend (`NetWorthChart.tsx`)**:
+   - Takes historical monthly snapshots alongside the real-time live net worth.
+   - Computes trend delta (`currentNW - startNW`) and trend percentage (`(delta / startNW) * 100`).
+   - Cleanly separates numerical delta `(+₹1,500)` from percentage badge `[ ↗ +20.0% ]` to prevent text truncation across responsive mobile viewports.
+2. **Monthly Growth Pulse Log (`MonthlyGrowthChart.tsx`)**:
+   - Establishes a true historical starting baseline using the earliest snapshot's `previousNetWorth`.
+   - Accumulates subsequent pulse deltas to visualize accurate multi-month wealth expansion curves.

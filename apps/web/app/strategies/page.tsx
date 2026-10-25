@@ -1089,10 +1089,14 @@ export default function StrategiesPage() {
                     </span>
                     <div className="mt-auto">
                       <div
-                        className="text-base sm:text-lg font-black text-emerald-500 tracking-tighter truncate w-full sm:w-auto"
-                        title={`+${((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%`}
+                        className={`text-base sm:text-lg font-black tracking-tighter truncate w-full sm:w-auto ${
+                          strategyMetrics.surplus >= 0
+                            ? "text-emerald-500"
+                            : "text-rose-500"
+                        }`}
+                        title={`${strategyMetrics.surplus >= 0 ? "+" : ""}${((strategyMetrics.surplus / (strategyMetrics.income || 1)) * 100).toFixed(1)}%`}
                       >
-                        +
+                        {strategyMetrics.surplus >= 0 ? "+" : ""}
                         {(
                           (strategyMetrics.surplus /
                             (strategyMetrics.income || 1)) *

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
 import { GoalProgressCard } from "@/components/dashboard/GoalProgressCard";
@@ -9,7 +10,7 @@ import { WealthIndex } from "@/components/dashboard/WealthIndex";
 import { SmartAssistant } from "@/components/dashboard/SmartAssistant";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { fetchAccounts } from "@/store/slices/accountsSlice";
+import { fetchAccounts, fetchSnapshots } from "@/store/slices/accountsSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
@@ -25,6 +26,8 @@ import {
   ArrowRight,
   Landmark,
   Sparkles,
+  TrendingUp,
+  CreditCard,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
@@ -37,6 +40,7 @@ import { MonthlyGrowthDebrief } from "@/components/dashboard/MonthlyGrowthDebrie
 import { LiquidCapitalCard } from "@/components/dashboard/LiquidCapitalCard";
 
 export default function Home() {
+  const router = useRouter();
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { permission, requestPermission } = useNotifications();
@@ -52,7 +56,6 @@ export default function Home() {
   const assetClasses = useSelector(
     (state: RootState) => state.assetClasses.items,
   );
-  const stats = useSelector((state: RootState) => state.stats.data);
   const allTransactions = useSelector(
     (state: RootState) => state.transactions.items,
   );
@@ -70,6 +73,9 @@ export default function Home() {
   );
 
   const expiries = useSelector((state: RootState) => state.expiries.items);
+  const snapshots = useSelector(
+    (state: RootState) => state.accounts.snapshots || [],
+  );
 
   const expiringSoon = useMemo(() => {
     const now = new Date();
@@ -83,6 +89,7 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       dispatch(fetchAccounts());
+      dispatch(fetchSnapshots(12));
       dispatch(fetchAssetClasses());
       dispatch(fetchTransactions());
       dispatch(fetchGoals());
@@ -155,6 +162,34 @@ export default function Home() {
   }, [analyticsDebts, analyticsCards]);
 
   const realTimeNetWorth = assets - liabilities;
+
+  const totalInvestments = useMemo(() => {
+    return analyticsInvestmentAccounts.reduce(
+      (sum, a) => sum + Math.max(0, a.balance),
+      0,
+    );
+  }, [analyticsInvestmentAccounts]);
+
+  const totalInvestedCapital = useMemo(() => {
+    return analyticsInvestmentAccounts.reduce((sum, a) => {
+      const invested =
+        a.investedAmount && a.investedAmount > 0
+          ? a.investedAmount
+          : a.initialAmount && a.initialAmount > 0
+            ? a.initialAmount
+            : a.valuationAdjustment
+              ? a.balance - a.valuationAdjustment
+              : a.balance;
+      return sum + invested;
+    }, 0);
+  }, [analyticsInvestmentAccounts]);
+
+  const investmentGain = totalInvestments - totalInvestedCapital;
+  const investmentYieldPct =
+    totalInvestedCapital > 0 ? (investmentGain / totalInvestedCapital) * 100 : 0;
+
+  const activeDebtsCount =
+    analyticsDebts.length + analyticsCards.filter((c) => c.balance !== 0).length;
 
   const allocationMap = useMemo(() => {
     const assetsMap: Record<string, { value: number; type: "asset" }> = {};
@@ -260,9 +295,7 @@ export default function Home() {
       "Dec",
     ];
     const now = new Date();
-
     const monthStartDate = user?.monthStartDate || 1;
-
     for (let i = 0; i < 6; i++) {
       const d = getFiscalMonthStart(now, monthStartDate);
       d.setMonth(d.getMonth() - i);
@@ -273,33 +306,87 @@ export default function Home() {
       });
     }
 
-    let runningNW = realTimeNetWorth;
-    if (history[5]) history[5].value = runningNW;
+    // Populate each month from snapshots if available
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i]!;
+      const start = item.dateObj;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
 
-    for (let i = 4; i >= 0; i--) {
-      const nextMonthData = history[i + 1]!;
-      const nextMonth = nextMonthData.dateObj;
-
-      const txInNextMonth = transactions.filter((tx) => {
-        if (tx.status === "pending_confirmation") return false;
-        const txDate = new Date(tx.date);
-        return txDate.getTime() >= nextMonth.getTime();
+      const matchingSnapshots = snapshots.filter((s) => {
+        const sd = new Date(s.createdAt || s.date);
+        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
       });
 
-      const netFlowNextMonth = txInNextMonth.reduce((acc, tx) => {
-        return acc + (tx.type === "income" ? tx.amount : -tx.amount);
-      }, 0);
+      if (matchingSnapshots.length > 0) {
+        const latest = matchingSnapshots.sort(
+          (a, b) =>
+            new Date(b.createdAt || b.date).getTime() -
+            new Date(a.createdAt || a.date).getTime(),
+        )[0]!;
+        item.value = latest.netWorth;
+      }
+    }
 
-      runningNW = runningNW - netFlowNextMonth;
-      const historyItem = history[i];
-      if (historyItem) historyItem.value = runningNW;
+    // Latest month defaults to real-time Net Worth
+    if (history[5]) {
+      history[5].value = realTimeNetWorth;
+    }
+
+    const chronSnapshots = [...snapshots].sort(
+      (a, b) =>
+        new Date(a.createdAt || a.date).getTime() -
+        new Date(b.createdAt || b.date).getTime(),
+    );
+    const earliestSnap = chronSnapshots[0];
+    const earliestDate = earliestSnap
+      ? new Date(earliestSnap.createdAt || earliestSnap.date)
+      : null;
+    const baselineNW =
+      earliestSnap?.previousNetWorth ??
+      (earliestSnap
+        ? Math.max(0, earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0))
+        : 0);
+
+    // Backfill any empty months using transactions net flow or baseline
+    for (let i = 4; i >= 0; i--) {
+      const current = history[i]!;
+      const next = history[i + 1]!;
+
+      if (current.value === 0) {
+        if (earliestDate && current.dateObj.getTime() < earliestDate.getTime()) {
+          current.value = baselineNW;
+        } else {
+          const start = next.dateObj;
+          const end = new Date(start);
+          end.setMonth(end.getMonth() + 1);
+          end.setMilliseconds(end.getMilliseconds() - 1);
+
+          const txInMonth = transactions.filter((tx) => {
+            if (tx.status === "pending_confirmation") return false;
+            const txDate = new Date(tx.date);
+            return (
+              txDate.getTime() >= start.getTime() &&
+              txDate.getTime() <= end.getTime()
+            );
+          });
+
+          const netFlow = txInMonth.reduce(
+            (acc, tx) => acc + (tx.type === "income" ? tx.amount : -tx.amount),
+            0,
+          );
+
+          current.value = Math.max(0, next.value - netFlow);
+        }
+      }
     }
 
     return history.map((h) => ({
       month: h.month,
       value: h.value > 0 ? h.value : 0,
     }));
-  }, [transactions, realTimeNetWorth, user?.monthStartDate]);
+  }, [snapshots, transactions, realTimeNetWorth, user?.monthStartDate]);
 
   const dashboardStats = useMemo(() => {
     const monthStartDate = user?.monthStartDate || 1;
@@ -336,15 +423,91 @@ export default function Home() {
     };
   }, [transactions, analyticsRegularAccounts, user?.monthStartDate]);
 
-  const netWorthChange = useMemo(() => {
-    if (computedNetWorthHistory.length < 2) return 0;
-    const last =
-      computedNetWorthHistory[computedNetWorthHistory.length - 1]?.value || 0;
-    const prev =
-      computedNetWorthHistory[computedNetWorthHistory.length - 2]?.value || 0;
-    if (prev === 0) return last > 0 ? 100 : 0;
-    return parseFloat((((last - prev) / prev) * 100).toFixed(1));
-  }, [computedNetWorthHistory]);
+  const netWorthTrend = useMemo(() => {
+    // 1. Sort snapshots descending (newest first)
+    const sorted = [...snapshots].sort(
+      (a, b) =>
+        new Date(b.createdAt || b.date).getTime() -
+        new Date(a.createdAt || a.date).getTime(),
+    );
+
+    let delta = 0;
+    let prevNW = 0;
+    let referenceLabel = "vs last pulse";
+
+    // Compare real-time net worth to latest snapshot if real-time has moved
+    if (sorted.length > 0 && Math.abs(realTimeNetWorth - sorted[0]!.netWorth) >= 1) {
+      delta = realTimeNetWorth - sorted[0]!.netWorth;
+      prevNW = sorted[0]!.netWorth;
+      referenceLabel = "since last pulse";
+    } else if (sorted.length >= 2 && sorted[0] && sorted[1]) {
+      delta = sorted[0].netWorth - sorted[1].netWorth;
+      prevNW = sorted[1].netWorth;
+      referenceLabel = "vs previous pulse";
+    } else if (sorted.length === 1 && sorted[0]?.netWorthDelta != null && sorted[0].netWorthDelta !== 0) {
+      delta = sorted[0].netWorthDelta;
+      prevNW = sorted[0].previousNetWorth ?? (sorted[0].netWorth - delta);
+      referenceLabel = "vs previous pulse";
+    } else if (computedNetWorthHistory.length >= 2) {
+      const last =
+        computedNetWorthHistory[computedNetWorthHistory.length - 1]?.value || 0;
+      const prev =
+        computedNetWorthHistory[computedNetWorthHistory.length - 2]?.value || 0;
+      if (prev > 0) {
+        delta = last - prev;
+        prevNW = prev;
+        referenceLabel = "MoM";
+      }
+    }
+
+    // Fallback to month-to-date transaction net flow
+    if (delta === 0 && prevNW === 0) {
+      const netFlow = dashboardStats.monthlyIncome - dashboardStats.monthlyExpense;
+      const startingNW = realTimeNetWorth - netFlow;
+      if (startingNW > 0 && netFlow !== 0) {
+        delta = netFlow;
+        prevNW = startingNW;
+        referenceLabel = "this month";
+      }
+    }
+
+    const pct = prevNW > 0 ? (delta / prevNW) * 100 : 0;
+    const absDelta = Math.abs(delta);
+    const absPct = Math.abs(pct);
+
+    let pctFormatted = "0%";
+    if (absPct >= 1) {
+      pctFormatted = `${absPct.toFixed(1)}%`;
+    } else if (absPct >= 0.01) {
+      pctFormatted = `${absPct.toFixed(2)}%`;
+    } else if (absPct > 0) {
+      pctFormatted = `<0.01%`;
+    }
+
+    const sign = delta > 0 ? "+" : delta < 0 ? "-" : "";
+    const trendPercentage = delta !== 0 ? `${sign}${pctFormatted}` : "0%";
+    const trendDelta =
+      delta !== 0
+        ? `${sign}₹${Math.round(absDelta).toLocaleString()}`
+        : "₹0";
+    const label =
+      delta !== 0 ? `${trendDelta} (${trendPercentage})` : "₹0 (Stable)";
+
+    return {
+      delta,
+      pct,
+      trendPercentage,
+      trendDelta,
+      label,
+      color:
+        delta > 0
+          ? "bg-emerald-500"
+          : delta < 0
+            ? "bg-rose-500"
+            : "bg-slate-400",
+      referenceLabel,
+    };
+  }, [snapshots, realTimeNetWorth, computedNetWorthHistory, dashboardStats]);
 
   if (loading && allAccounts.length === 0) {
     return (
@@ -403,15 +566,6 @@ export default function Home() {
         }
       />
 
-      {/* Executive Minimalist Summary Bars */}
-      <div className="space-y-2">
-        <MonthlyGrowthDebrief />
-        <LiquidCapitalCard
-          accounts={displayRegularAccounts}
-          totalBalance={dashboardStats.liquidCapital}
-        />
-      </div>
-
       {expiringSoon.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -441,58 +595,77 @@ export default function Home() {
         </motion.div>
       )}
 
+      {/* 4 Distinctive Wealth Pillars */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <DashboardStatCard
           className="w-full"
           label="Net Worth"
-          subtitle="Total assets minus debt"
+          subtitle="Assets minus debt"
+          icon={<Sparkles className="size-3 text-emerald-500" />}
           value={realTimeNetWorth}
           trend={{
-            label: `${netWorthChange >= 0 ? "+" : ""}${netWorthChange}%`,
-            color: "bg-emerald-500",
-            showPulse: true,
+            label: netWorthTrend.label,
+            color: netWorthTrend.color,
+            showPulse: netWorthTrend.delta !== 0,
           }}
         />
 
         <DashboardStatCard
           className="w-full"
-          label="Period Inflow"
-          subtitle="Total 30-day income"
-          value={dashboardStats.monthlyIncome}
-          valueColor="text-emerald-500"
+          label="Liquid Reserves"
+          subtitle="Cash & Bank"
+          icon={<Landmark className="size-3 text-blue-500" />}
+          value={dashboardStats.liquidCapital}
+          valueColor="text-blue-600 dark:text-blue-400"
           trend={{
-            label: `${dashboardStats.savingsRate}% Savings Rate`,
-            color:
-              parseFloat(dashboardStats.savingsRate) >= 0
-                ? "bg-emerald-500"
-                : "bg-rose-500",
-            showPulse: true,
+            label: `${analyticsRegularAccounts.length} Active Account${analyticsRegularAccounts.length !== 1 ? "s" : ""}`,
+            color: "bg-blue-500",
           }}
         />
 
         <DashboardStatCard
           className="w-full"
-          label="Period Outflow"
-          subtitle="Total period spending"
-          value={dashboardStats.monthlyExpense}
+          label="Investments"
+          subtitle="Portfolio value"
+          icon={<TrendingUp className="size-3 text-indigo-500" />}
+          value={totalInvestments}
+          valueColor="text-indigo-600 dark:text-indigo-400"
+          onClick={() => router.push("/portfolio")}
+          trend={{
+            label:
+              totalInvestedCapital > 0
+                ? `${investmentGain >= 0 ? "+" : ""}${investmentYieldPct.toFixed(1)}% Return`
+                : "Active Holdings",
+            color: investmentGain >= 0 ? "bg-emerald-500" : "bg-rose-500",
+          }}
+        />
+
+        <DashboardStatCard
+          className="w-full"
+          label="Liabilities"
+          subtitle="Loans & Cards"
+          icon={<CreditCard className="size-3 text-rose-500" />}
+          value={liabilities}
           valueColor="text-rose-500"
+          onClick={() => router.push("/portfolio")}
           trend={{
-            label: "Efficiency 100%",
+            label: `${activeDebtsCount} Active ${activeDebtsCount === 1 ? "Debt" : "Debts"}`,
             color: "bg-rose-500",
           }}
         />
+      </div>
 
-        <DashboardStatCard
-          className="w-full"
-          label="Liquid Capital"
-          subtitle="Bank & Cash reserves"
-          value={dashboardStats.liquidCapital}
-          valueColor="text-primary"
-          trend={{
-            label: "Fluid Assets",
-            color: "bg-primary",
-            showPulse: true,
-          }}
+      {/* Monthly Overview & Liquid Accounts (Restored below Monthly Overview) */}
+      <div className="space-y-2.5">
+        <MonthlyGrowthDebrief
+          monthlyIncome={dashboardStats.monthlyIncome}
+          monthlyExpense={dashboardStats.monthlyExpense}
+          savingsRate={dashboardStats.savingsRate}
+        />
+
+        <LiquidCapitalCard
+          accounts={displayRegularAccounts}
+          totalBalance={dashboardStats.liquidCapital}
         />
       </div>
 
@@ -526,11 +699,7 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
         <div className="w-full">
           <AssetAllocationDonut
-            data={
-              realTimeAssetAllocation.length > 0
-                ? realTimeAssetAllocation
-                : stats?.assetAllocation || []
-            }
+            data={realTimeAssetAllocation}
           />
         </div>
 
@@ -553,7 +722,7 @@ export default function Home() {
 
           <div className="space-y-3">
             {goals.filter((g) => g.currentAmount < g.targetAmount).length ===
-            0 ? (
+              0 ? (
               <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                 <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
@@ -579,9 +748,9 @@ export default function Home() {
                   const expectedPercentage =
                     totalDuration > 0
                       ? Math.min(
-                          100,
-                          Math.max(0, (elapsed / totalDuration) * 100),
-                        )
+                        100,
+                        Math.max(0, (elapsed / totalDuration) * 100),
+                      )
                       : 100;
 
                   return (
@@ -597,7 +766,7 @@ export default function Home() {
                         const targetDate = new Date(goal.targetDate);
                         const monthsRemaining =
                           (targetDate.getFullYear() - today.getFullYear()) *
-                            12 +
+                          12 +
                           (targetDate.getMonth() - today.getMonth());
                         if (monthsRemaining <= 0) return 0;
                         const shortfall =
@@ -616,7 +785,11 @@ export default function Home() {
         <NetWorthChart
           data={computedNetWorthHistory}
           currentNetWorth={realTimeNetWorth}
-          percentageChange={netWorthChange}
+          percentageChange={netWorthTrend.pct}
+          trendPercentage={netWorthTrend.trendPercentage}
+          trendDelta={netWorthTrend.trendDelta}
+          trendLabel={netWorthTrend.label}
+          isPositive={netWorthTrend.delta >= 0}
         />
       </div>
 

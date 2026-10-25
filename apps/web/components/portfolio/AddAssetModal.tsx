@@ -63,7 +63,7 @@ export function AddAssetModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={asset ? "Asset Refinement" : "Physical Asset Node"}
+      title={asset ? "Edit Asset" : "Add Asset"}
       maxWidth="max-w-sm"
       footer={
         <div className="flex gap-3 w-full">
@@ -81,7 +81,7 @@ export function AddAssetModal({
             className="flex-[2]"
             leftIcon={<Gem className="w-4 h-4" />}
           >
-            {asset ? "Update Asset" : "Commit Asset"}
+            {asset ? "Update Asset" : "Save Asset"}
           </Button>
         </div>
       }
@@ -89,7 +89,7 @@ export function AddAssetModal({
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Asset Identifier
+            Asset Name
           </label>
           <input
             type="text"
@@ -97,13 +97,13 @@ export function AddAssetModal({
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
-            placeholder="e.g. Gold, Real Estate"
+            placeholder="e.g. Gold, Real Estate, Vehicle"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Current Valuation (₹)
+            Current Value (₹)
           </label>
           <AmountInput
             value={formData.balance}
@@ -143,7 +143,7 @@ export function AddAssetModal({
               Exclude from Analytics
             </label>
             <span className="text-[8px] text-slate-400 font-medium">
-              Hides node from net worth & dashboard
+              Hides asset from net worth & dashboard
             </span>
           </div>
         </div>
