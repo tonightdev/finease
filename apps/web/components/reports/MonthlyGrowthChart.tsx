@@ -292,10 +292,14 @@ export function MonthlyGrowthChart({
         new Date(b.createdAt || b.date).getTime(),
     );
     const earliestSnap = chronSnapshots[0];
-    const earliestDate = earliestSnap ? new Date(earliestSnap.createdAt || earliestSnap.date) : null;
+    const earliestDate = earliestSnap
+      ? new Date(earliestSnap.createdAt || earliestSnap.date)
+      : null;
     const baselineNW =
       earliestSnap?.previousNetWorth ??
-      (earliestSnap ? Math.max(0, earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0)) : 0);
+      (earliestSnap
+        ? Math.max(0, earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0))
+        : 0);
 
     // Latest month net worth uses current real-time Net Worth if available
     const lastPoint = points[points.length - 1];
@@ -309,7 +313,10 @@ export function MonthlyGrowthChart({
       const next = points[i + 1]!;
 
       if (current.netWorth === 0) {
-        if (earliestDate && current.dateObj.getTime() < earliestDate.getTime()) {
+        if (
+          earliestDate &&
+          current.dateObj.getTime() < earliestDate.getTime()
+        ) {
           // Pre-tracking historical months baseline
           current.netWorth = baselineNW;
         } else {
@@ -343,7 +350,8 @@ export function MonthlyGrowthChart({
         pt.growthPercentage = prevNW > 0 ? (pt.growth / prevNW) * 100 : 0;
       } else if (i === 0) {
         pt.growth = pt.netWorth > baselineNW ? pt.netWorth - baselineNW : 0;
-        pt.growthPercentage = baselineNW > 0 ? (pt.growth / baselineNW) * 100 : 0;
+        pt.growthPercentage =
+          baselineNW > 0 ? (pt.growth / baselineNW) * 100 : 0;
       } else {
         const prev = points[i - 1]!;
         pt.growth = pt.netWorth - prev.netWorth;
@@ -353,13 +361,7 @@ export function MonthlyGrowthChart({
     }
 
     return points;
-  }, [
-    snapshots,
-    transactions,
-    currentNetWorth,
-    monthStartDate,
-    timeframe,
-  ]);
+  }, [snapshots, transactions, currentNetWorth, monthStartDate, timeframe]);
 
   // Summary Metrics across the selected timeframe
   const metrics = useMemo(() => {

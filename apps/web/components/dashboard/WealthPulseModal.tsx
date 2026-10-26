@@ -8,12 +8,7 @@ import {
   batchSyncAccounts,
   optimisticUpdateBalances,
 } from "@/store/slices/accountsSlice";
-import {
-  Sparkles,
-  Landmark,
-  ArrowRight,
-  ShieldCheck,
-} from "lucide-react";
+import { Sparkles, Landmark, ArrowRight, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { Account } from "@repo/types";
@@ -280,10 +275,11 @@ export function WealthPulseModal() {
             Net Delta
           </span>
           <div
-            className={`text-sm sm:text-base font-black flex items-center justify-end gap-1 ${netDelta >= 0
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-rose-600 dark:text-rose-400"
-              }`}
+            className={`text-sm sm:text-base font-black flex items-center justify-end gap-1 ${
+              netDelta >= 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-rose-600 dark:text-rose-400"
+            }`}
           >
             {netDelta >= 0 ? "+" : ""}
             {formatCurrency(netDelta)}
@@ -329,7 +325,8 @@ export function WealthPulseModal() {
 
         {liquidAccounts.length === 0 && (
           <div className="text-center py-8 text-slate-400 text-sm">
-            No active bank or cash accounts found. Please add bank or cash accounts first from Settings / Accounts.
+            No active bank or cash accounts found. Please add bank or cash
+            accounts first from Settings / Accounts.
           </div>
         )}
       </div>

@@ -89,11 +89,7 @@ export function AccountsTab() {
           data: { isClosed: !account.isClosed },
         }),
       ).unwrap();
-      toast.success(
-        account.isClosed
-          ? "Account reopened"
-          : "Account closed",
-      );
+      toast.success(account.isClosed ? "Account reopened" : "Account closed");
     } catch {
       toast.error("Failed to update account status");
     }

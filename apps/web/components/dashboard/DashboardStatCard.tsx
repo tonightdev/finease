@@ -72,11 +72,17 @@ export function DashboardStatCard({
 
       {trend && (
         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-          {trend.color && <div className={cn("size-1.5 rounded-full shrink-0", trend.color)} />}
+          {trend.color && (
+            <div
+              className={cn("size-1.5 rounded-full shrink-0", trend.color)}
+            />
+          )}
           <span
             className={cn(
               "text-[8px] sm:text-[9px] font-black uppercase tracking-wider truncate",
-              trend.color ? trend.color.replace("bg-", "text-") : "text-slate-400",
+              trend.color
+                ? trend.color.replace("bg-", "text-")
+                : "text-slate-400",
             )}
           >
             {trend.label}

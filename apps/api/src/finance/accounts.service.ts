@@ -50,20 +50,18 @@ export class AccountsService {
         ? Number(account.initialAmount)
         : Number(account.balance) || 0;
     let balance = Number(account.balance) || 0;
-    let repaidCapital = Number(account.repaidCapital) || 0;
-    let burnedInterest = Number(account.burnedInterest) || 0;
+    const repaidCapital = Number(account.repaidCapital) || 0;
+    const burnedInterest = Number(account.burnedInterest) || 0;
 
     if (account.type === 'debt') {
       const totalLoan =
-        initialAmount > 0
-          ? initialAmount
-          : Math.abs(balance) + repaidCapital;
+        initialAmount > 0 ? initialAmount : Math.abs(balance) + repaidCapital;
       initialAmount = totalLoan;
       const remainingDebt = Math.max(0, totalLoan - repaidCapital);
       balance = -remainingDebt;
     }
 
-    let investedAmount =
+    const investedAmount =
       account.investedAmount !== undefined
         ? Number(account.investedAmount)
         : account.type === 'investment'
@@ -631,7 +629,11 @@ export class AccountsService {
     let pulseInflow = 0;
     let pulseOutflow = 0;
 
-    if (latest && latest.accountSnapshots && latest.accountSnapshots.length > 0) {
+    if (
+      latest &&
+      latest.accountSnapshots &&
+      latest.accountSnapshots.length > 0
+    ) {
       // Filter account snapshots to liquid only (bank + cash)
       const liquidSnapshots = latest.accountSnapshots.filter(
         (s) => s.type === 'bank' || s.type === 'cash',
@@ -698,8 +700,7 @@ export class AccountsService {
         : 0;
 
     const baseLiquid = liquidBalance - liquidDelta;
-    percentageDelta =
-      baseLiquid > 0 ? (liquidDelta / baseLiquid) * 100 : 0;
+    percentageDelta = baseLiquid > 0 ? (liquidDelta / baseLiquid) * 100 : 0;
 
     // 3. Executive Insight
     let insight = `Your liquid cash & bank reserves stand at ₹${liquidBalance.toLocaleString()} across ${liquidAccounts.length} liquid accounts.`;

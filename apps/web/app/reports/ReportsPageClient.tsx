@@ -108,10 +108,11 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${isOpen || selectedCount > 0
-          ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
-          : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
-          }`}
+        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${
+          isOpen || selectedCount > 0
+            ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
+            : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
+        }`}
       >
         <div className="flex items-center gap-2 min-w-0">
           {Icon && <Icon className="size-3.5 shrink-0" />}
@@ -123,8 +124,9 @@ function FilterDropdown({
           )}
         </div>
         <ChevronDown
-          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${isOpen ? "rotate-180 text-primary" : ""
-            }`}
+          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${
+            isOpen ? "rotate-180 text-primary" : ""
+          }`}
         />
       </button>
 
@@ -146,10 +148,11 @@ function FilterDropdown({
                     onSelect(option.id);
                     if (!multi) setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${isSelected(option.id)
-                    ? "bg-primary/10 text-primary"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${
+                    isSelected(option.id)
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
                 >
                   <span className="truncate">{option.name}</span>
                   {isSelected(option.id) && (
@@ -228,8 +231,10 @@ export default function ReportsPageClient() {
     (state: RootState) =>
       state.transactions?.loading || state.accounts?.loading,
   );
-  const snapshots =
-    useSelector((state: RootState) => state.accounts?.snapshots) ?? [];
+  const rawSnapshots = useSelector(
+    (state: RootState) => state.accounts?.snapshots,
+  );
+  const snapshots = useMemo(() => rawSnapshots ?? [], [rawSnapshots]);
 
   useEffect(() => {
     if (user) {
@@ -459,7 +464,7 @@ export default function ReportsPageClient() {
         const previousVal = current - sorted[0].netWorthDelta;
         if (previousVal > 0) {
           return parseFloat(
-            (((sorted[0].netWorthDelta) / previousVal) * 100).toFixed(1),
+            ((sorted[0].netWorthDelta / previousVal) * 100).toFixed(1),
           );
         }
       }
@@ -737,10 +742,11 @@ export default function ReportsPageClient() {
                       onClick={() => {
                         setViewType(type);
                       }}
-                      className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${viewType === type
-                        ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                        }`}
+                      className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                        viewType === type
+                          ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                      }`}
                     >
                       {type}
                     </button>
@@ -767,10 +773,11 @@ export default function ReportsPageClient() {
                   type="button"
                   onClick={handleNext}
                   disabled={cursorDate.getTime() > now.getTime()}
-                  className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${cursorDate.getTime() > now.getTime()
-                    ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
-                    }`}
+                  className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                    cursorDate.getTime() > now.getTime()
+                      ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
+                  }`}
                   aria-label="Next Period"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -786,10 +793,11 @@ export default function ReportsPageClient() {
         <button
           type="button"
           onClick={() => setActiveTab("trajectory")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${activeTab === "trajectory"
-            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "trajectory"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
         >
           <History className="size-3.5" />
           <span>Trajectory</span>
@@ -797,10 +805,11 @@ export default function ReportsPageClient() {
         <button
           type="button"
           onClick={() => setActiveTab("analytics")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${activeTab === "analytics"
-            ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "analytics"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
         >
           <Activity className="size-3.5" />
           <span>Analytics</span>
@@ -817,7 +826,7 @@ export default function ReportsPageClient() {
                 {selectedAccountIds.length > 0
                   ? selectedAccountIds.length === 1
                     ? accounts.find((a) => a.id === selectedAccountIds[0])
-                      ?.name || "Account Balance"
+                        ?.name || "Account Balance"
                     : `${selectedAccountIds.length} Accounts Balance`
                   : "Net Worth"}
               </div>

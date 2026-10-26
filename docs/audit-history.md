@@ -57,6 +57,7 @@ This document archives historical engine audits, edge case discoveries, and veri
 ### Resolved Items & Removals Log
 
 #### 1. Dead & Obsolete Frontend Components Removal
+
 - **Observed Behavior**: Early prototype charts and obsolete components remained in `apps/web/components/` without active imports.
 - **Resolution**: Safely removed 13 stale files and folders:
   - `StatWidget.tsx` (superseded by `DashboardStatCard.tsx`)
@@ -70,6 +71,7 @@ This document archives historical engine audits, edge case discoveries, and veri
 - **Status**: ✅ **Removed and Verified (20/20 routes compile cleanly)**
 
 #### 2. Sensitive Data & Unused Response Key Pruning
+
 - **Observed Behavior**:
   - `GET /finance/profile` returned raw user document fields including hashed `password`.
   - `GET /finance/debrief` calculated artificial `allocation` and `alerts` objects that were never consumed by the frontend.
@@ -80,16 +82,19 @@ This document archives historical engine audits, edge case discoveries, and veri
 - **Status**: ✅ **Resolved and Verified**
 
 #### 3. Session Entity Hydration
+
 - **Observed Behavior**: `GET /auth/sessions` returned documents without `id: doc.id`, creating inconsistencies with `UserSession` typing.
 - **Resolution**: Added `id: doc.id` mapping in `auth.service.ts`.
 - **Status**: ✅ **Resolved and Verified**
 
 #### 4. Goal Hard Delete Crash Prevention
+
 - **Observed Behavior**: In `goal.service.ts`, calling hard delete (`hard === true`) deleted the document before reading its data for activity logging, causing a null pointer exception on `goalData.userId`.
 - **Resolution**: Retrieved document data prior to invoking `docRef.delete()`.
 - **Status**: ✅ **Resolved and Verified**
 
 #### 5. Command Palette Simulation Shortcut
+
 - **Observed Behavior**: Selecting "Start Simulation" in the Command Palette dispatched `isSimulationModalOpen`, which had no corresponding modal.
 - **Resolution**: Updated the action in `CommandPalette.tsx` to route directly to `/simulation`.
 - **Status**: ✅ **Resolved and Verified**

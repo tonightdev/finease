@@ -186,10 +186,13 @@ export default function Home() {
 
   const investmentGain = totalInvestments - totalInvestedCapital;
   const investmentYieldPct =
-    totalInvestedCapital > 0 ? (investmentGain / totalInvestedCapital) * 100 : 0;
+    totalInvestedCapital > 0
+      ? (investmentGain / totalInvestedCapital) * 100
+      : 0;
 
   const activeDebtsCount =
-    analyticsDebts.length + analyticsCards.filter((c) => c.balance !== 0).length;
+    analyticsDebts.length +
+    analyticsCards.filter((c) => c.balance !== 0).length;
 
   const allocationMap = useMemo(() => {
     const assetsMap: Record<string, { value: number; type: "asset" }> = {};
@@ -355,7 +358,10 @@ export default function Home() {
       const next = history[i + 1]!;
 
       if (current.value === 0) {
-        if (earliestDate && current.dateObj.getTime() < earliestDate.getTime()) {
+        if (
+          earliestDate &&
+          current.dateObj.getTime() < earliestDate.getTime()
+        ) {
           current.value = baselineNW;
         } else {
           const start = next.dateObj;
@@ -436,7 +442,10 @@ export default function Home() {
     let referenceLabel = "vs last pulse";
 
     // Compare real-time net worth to latest snapshot if real-time has moved
-    if (sorted.length > 0 && Math.abs(realTimeNetWorth - sorted[0]!.netWorth) >= 1) {
+    if (
+      sorted.length > 0 &&
+      Math.abs(realTimeNetWorth - sorted[0]!.netWorth) >= 1
+    ) {
       delta = realTimeNetWorth - sorted[0]!.netWorth;
       prevNW = sorted[0]!.netWorth;
       referenceLabel = "since last pulse";
@@ -444,9 +453,13 @@ export default function Home() {
       delta = sorted[0].netWorth - sorted[1].netWorth;
       prevNW = sorted[1].netWorth;
       referenceLabel = "vs previous pulse";
-    } else if (sorted.length === 1 && sorted[0]?.netWorthDelta != null && sorted[0].netWorthDelta !== 0) {
+    } else if (
+      sorted.length === 1 &&
+      sorted[0]?.netWorthDelta != null &&
+      sorted[0].netWorthDelta !== 0
+    ) {
       delta = sorted[0].netWorthDelta;
-      prevNW = sorted[0].previousNetWorth ?? (sorted[0].netWorth - delta);
+      prevNW = sorted[0].previousNetWorth ?? sorted[0].netWorth - delta;
       referenceLabel = "vs previous pulse";
     } else if (computedNetWorthHistory.length >= 2) {
       const last =
@@ -462,7 +475,8 @@ export default function Home() {
 
     // Fallback to month-to-date transaction net flow
     if (delta === 0 && prevNW === 0) {
-      const netFlow = dashboardStats.monthlyIncome - dashboardStats.monthlyExpense;
+      const netFlow =
+        dashboardStats.monthlyIncome - dashboardStats.monthlyExpense;
       const startingNW = realTimeNetWorth - netFlow;
       if (startingNW > 0 && netFlow !== 0) {
         delta = netFlow;
@@ -487,9 +501,7 @@ export default function Home() {
     const sign = delta > 0 ? "+" : delta < 0 ? "-" : "";
     const trendPercentage = delta !== 0 ? `${sign}${pctFormatted}` : "0%";
     const trendDelta =
-      delta !== 0
-        ? `${sign}₹${Math.round(absDelta).toLocaleString()}`
-        : "₹0";
+      delta !== 0 ? `${sign}₹${Math.round(absDelta).toLocaleString()}` : "₹0";
     const label =
       delta !== 0 ? `${trendDelta} (${trendPercentage})` : "₹0 (Stable)";
 
@@ -698,9 +710,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
         <div className="w-full">
-          <AssetAllocationDonut
-            data={realTimeAssetAllocation}
-          />
+          <AssetAllocationDonut data={realTimeAssetAllocation} />
         </div>
 
         <div className="w-full space-y-3 flex flex-col">
@@ -722,7 +732,7 @@ export default function Home() {
 
           <div className="space-y-3">
             {goals.filter((g) => g.currentAmount < g.targetAmount).length ===
-              0 ? (
+            0 ? (
               <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                 <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
@@ -748,9 +758,9 @@ export default function Home() {
                   const expectedPercentage =
                     totalDuration > 0
                       ? Math.min(
-                        100,
-                        Math.max(0, (elapsed / totalDuration) * 100),
-                      )
+                          100,
+                          Math.max(0, (elapsed / totalDuration) * 100),
+                        )
                       : 100;
 
                   return (
@@ -766,7 +776,7 @@ export default function Home() {
                         const targetDate = new Date(goal.targetDate);
                         const monthsRemaining =
                           (targetDate.getFullYear() - today.getFullYear()) *
-                          12 +
+                            12 +
                           (targetDate.getMonth() - today.getMonth());
                         if (monthsRemaining <= 0) return 0;
                         const shortfall =
@@ -791,18 +801,6 @@ export default function Home() {
           trendLabel={netWorthTrend.label}
           isPositive={netWorthTrend.delta >= 0}
         />
-      </div>
-
-      {/* Floating Action for PWA Mobile */}
-      <div className="lg:hidden fixed bottom-18 right-4 z-40">
-        <button
-          type="button"
-          onClick={() => dispatch(openModal("isWealthPulseOpen"))}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/40 active:scale-95 transition-all"
-        >
-          <Sparkles className="size-4 text-amber-300" />
-          <span>Pulse</span>
-        </button>
       </div>
     </PageContainer>
   );

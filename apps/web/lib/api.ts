@@ -98,8 +98,23 @@ export async function refreshAuthToken(
         return newToken;
       }
       return null;
-    } catch (err) {
-      console.warn("Failed to refresh token:", err);
+    } catch (err: unknown) {
+      const status =
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        (err as { response?: { status?: number } }).response?.status;
+
+      // 401 means the session was revoked — force logout immediately
+      if (status === 401) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("finease_token");
+          localStorage.removeItem("finease_token_map");
+          window.dispatchEvent(new CustomEvent("finease-auth-failure"));
+        }
+      } else {
+        console.warn("Failed to refresh token:", err);
+      }
       return null;
     } finally {
       refreshPromise = null;

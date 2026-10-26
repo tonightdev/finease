@@ -85,10 +85,11 @@ export function MonthlyGrowthDebrief({
     <div className="relative w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/30 dark:from-[#0d121c] dark:via-[#090d14] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden transition-all duration-300">
       {/* Top Ambient Highlight Glow */}
       <div
-        className={`h-1 w-full bg-gradient-to-r ${isSurplusPositive
-          ? "from-emerald-500 via-primary to-indigo-500"
-          : "from-rose-500 via-amber-500 to-indigo-500"
-          } opacity-90`}
+        className={`h-1 w-full bg-gradient-to-r ${
+          isSurplusPositive
+            ? "from-emerald-500 via-primary to-indigo-500"
+            : "from-rose-500 via-amber-500 to-indigo-500"
+        } opacity-90`}
       />
 
       <div className="p-3 sm:p-5 space-y-3.5">
@@ -96,10 +97,11 @@ export function MonthlyGrowthDebrief({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <div
-              className={`size-8 sm:size-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${isSurplusPositive
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-                }`}
+              className={`size-8 sm:size-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                isSurplusPositive
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+              }`}
             >
               <ArrowLeftRight className="size-4" />
             </div>
@@ -117,7 +119,8 @@ export function MonthlyGrowthDebrief({
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 font-medium truncate">
-                {debrief.insight || "Track how income and spending shape your monthly surplus"}
+                {debrief.insight ||
+                  "Track how income and spending shape your monthly surplus"}
               </p>
             </div>
           </div>
@@ -178,10 +181,11 @@ export function MonthlyGrowthDebrief({
                 Net Cash Flow
               </span>
               <div
-                className={`size-5 sm:size-6 rounded-lg flex items-center justify-center shrink-0 ${isSurplusPositive
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                  }`}
+                className={`size-5 sm:size-6 rounded-lg flex items-center justify-center shrink-0 ${
+                  isSurplusPositive
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                }`}
               >
                 <ShieldCheck className="size-3 sm:size-3.5" />
               </div>
@@ -189,10 +193,11 @@ export function MonthlyGrowthDebrief({
 
             <div className="space-y-0.5">
               <div
-                className={`text-base sm:text-lg font-black tracking-tight ${isSurplusPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-                  }`}
+                className={`text-base sm:text-lg font-black tracking-tight ${
+                  isSurplusPositive
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
+                }`}
               >
                 {isMasked
                   ? "*****"
@@ -200,10 +205,11 @@ export function MonthlyGrowthDebrief({
               </div>
               <div className="flex items-center gap-1.5">
                 <span
-                  className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.2 rounded-md ${isSurplusPositive
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                    : "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"
-                    }`}
+                  className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.2 rounded-md ${
+                    isSurplusPositive
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                      : "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"
+                  }`}
                 >
                   {effectiveRate}
                 </span>

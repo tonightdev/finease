@@ -373,9 +373,9 @@ export class TransactionsService {
     let invested =
       acc.investedAmount !== undefined && acc.investedAmount !== null
         ? Number(acc.investedAmount)
-        : (acc.type === 'investment' && acc.initialAmount !== undefined
-            ? Number(acc.initialAmount)
-            : balance);
+        : acc.type === 'investment' && acc.initialAmount !== undefined
+          ? Number(acc.initialAmount)
+          : balance;
 
     const batch = this.db.batch();
 

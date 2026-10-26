@@ -188,7 +188,8 @@ export function AddLiabilityModal({
               Total Amount Paid
             </span>
             <span className="font-black text-emerald-600 dark:text-emerald-400">
-              ₹{(
+              ₹
+              {(
                 (parseFloat(formData.repaidCapital) || 0) +
                 (parseFloat(formData.burnedInterest) || 0)
               ).toLocaleString()}
@@ -199,7 +200,8 @@ export function AddLiabilityModal({
               Net Balance Remaining
             </span>
             <span className="font-black text-rose-500">
-              ₹{Math.max(
+              ₹
+              {Math.max(
                 0,
                 (parseFloat(formData.initialAmount) || 0) -
                   (parseFloat(formData.repaidCapital) || 0),

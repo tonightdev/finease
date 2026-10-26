@@ -299,14 +299,17 @@ export class AuthService {
       throw new UnauthorizedException('Identity has been terminated');
     }
 
-    // Check existing session doc if present
+    // Verify the session still exists (not revoked)
     const oldSessionDoc = await this.sessionCollection.doc(oldToken).get();
-    const oldSessionData = oldSessionDoc.exists ? oldSessionDoc.data() : null;
-
-    // Remove old session doc if exists to prevent token accumulation
-    if (oldSessionDoc.exists) {
-      await oldSessionDoc.ref.delete().catch(() => {});
+    if (!oldSessionDoc.exists) {
+      throw new UnauthorizedException(
+        'Session has been revoked. Please log in again.',
+      );
     }
+    const oldSessionData = oldSessionDoc.data();
+
+    // Remove old session doc to prevent token accumulation
+    await oldSessionDoc.ref.delete().catch(() => {});
 
     let role: string = userData.role || payload.role || 'user';
     if (userData.email === 'devdpadmin@gmail.com') {

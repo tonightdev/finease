@@ -248,53 +248,53 @@ export default function PortfolioPageClient() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={`skeleton-stat-${i}`}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
-            >
-              <Skeleton className="h-2 w-12" />
-              <Skeleton className="h-5 w-24" />
-            </div>
-          ))
-          : [
-            {
-              label: "Net Worth",
-              value: netWorth,
-              color: "text-slate-900 dark:text-white",
-            },
-            {
-              label: "Total Invested",
-              value: totalCapitalInvested,
-              color: "text-slate-900 dark:text-white",
-            },
-            {
-              label: "Current Value",
-              value: investments
-                .filter((a) => !a.excludeFromAnalytics)
-                .reduce((sum, item) => sum + item.balance, 0),
-              color: "text-emerald-500",
-            },
-            {
-              label: "Total Liabilities",
-              value: liabilities,
-              color: "text-rose-500",
-            },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
-            >
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                {stat.label}
-              </div>
               <div
-                data-balance="true"
-                className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
+                key={`skeleton-stat-${i}`}
+                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
               >
-                ₹{stat.value.toLocaleString()}
+                <Skeleton className="h-2 w-12" />
+                <Skeleton className="h-5 w-24" />
               </div>
-            </div>
-          ))}
+            ))
+          : [
+              {
+                label: "Net Worth",
+                value: netWorth,
+                color: "text-slate-900 dark:text-white",
+              },
+              {
+                label: "Total Invested",
+                value: totalCapitalInvested,
+                color: "text-slate-900 dark:text-white",
+              },
+              {
+                label: "Current Value",
+                value: investments
+                  .filter((a) => !a.excludeFromAnalytics)
+                  .reduce((sum, item) => sum + item.balance, 0),
+                color: "text-emerald-500",
+              },
+              {
+                label: "Total Liabilities",
+                value: liabilities,
+                color: "text-rose-500",
+              },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
+              >
+                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                  {stat.label}
+                </div>
+                <div
+                  data-balance="true"
+                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
+                >
+                  ₹{stat.value.toLocaleString()}
+                </div>
+              </div>
+            ))}
       </div>
 
       <div className="space-y-3">
@@ -757,7 +757,6 @@ export default function PortfolioPageClient() {
         </div>
       </div>
 
-
       <div className="space-y-3">
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
           Loans & Liabilities
@@ -1100,7 +1099,8 @@ export default function PortfolioPageClient() {
                   balance:
                     parseFloat(data.currentAmount) || editingInvestment.balance,
                   investedAmount: isNaN(parseFloat(data.investedAmount))
-                    ? (editingInvestment.investedAmount ?? editingInvestment.balance)
+                    ? (editingInvestment.investedAmount ??
+                      editingInvestment.balance)
                     : parseFloat(data.investedAmount),
                   excludeFromAnalytics: data.excludeFromAnalytics,
                 },

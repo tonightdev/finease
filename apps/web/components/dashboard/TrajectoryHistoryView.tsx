@@ -198,12 +198,12 @@ export function TrajectoryHistoryView() {
             const isPositive = delta >= 0;
             const formattedDate = item.createdAt
               ? new Date(item.createdAt).toLocaleDateString("en-US", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
               : item.date;
 
             const changedAccounts = (item.accountSnapshots || []).filter(
@@ -226,10 +226,11 @@ export function TrajectoryHistoryView() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`size-10 sm:size-11 rounded-2xl flex items-center justify-center font-black shrink-0 ${isPositive
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                        }`}
+                      className={`size-10 sm:size-11 rounded-2xl flex items-center justify-center font-black shrink-0 ${
+                        isPositive
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                      }`}
                     >
                       {isPositive ? (
                         <TrendingUp className="size-5" />
@@ -244,10 +245,11 @@ export function TrajectoryHistoryView() {
                         </span>
                         {delta !== 0 && (
                           <span
-                            className={`text-[10px] font-black px-2 py-0.5 rounded-full border inline-flex items-center justify-center ${isPositive
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                              }`}
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-full border inline-flex items-center justify-center ${
+                              isPositive
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                                : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+                            }`}
                           >
                             {formatCurrency(delta) === "*****"
                               ? "*****"
@@ -334,7 +336,10 @@ export function TrajectoryHistoryView() {
                           </span>
                         </div>
                         <span className="text-[10px] font-mono text-slate-400">
-                          {changedAccounts.length} Changed {item.accountSnapshots ? `(${item.accountSnapshots.length} Total)` : ""}
+                          {changedAccounts.length} Changed{" "}
+                          {item.accountSnapshots
+                            ? `(${item.accountSnapshots.length} Total)`
+                            : ""}
                         </span>
                       </div>
                       {item.note && (
@@ -358,7 +363,8 @@ export function TrajectoryHistoryView() {
                             : "accounts changed"}
                         </span>
                         {item.accountSnapshots &&
-                          item.accountSnapshots.length > changedAccounts.length && (
+                          item.accountSnapshots.length >
+                            changedAccounts.length && (
                             <button
                               type="button"
                               onClick={(e) => {
@@ -384,22 +390,24 @@ export function TrajectoryHistoryView() {
                           No account balances changed in this checkpoint
                         </p>
                         <p className="text-[11px] text-slate-400">
-                          All account balances remained unchanged during this Wealth Pulse.
+                          All account balances remained unchanged during this
+                          Wealth Pulse.
                         </p>
-                        {item.accountSnapshots && item.accountSnapshots.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setShowAllAccounts((prev) => ({
-                                ...prev,
-                                [item.id]: true,
-                              }))
-                            }
-                            className="mt-1 text-xs font-bold text-primary hover:underline"
-                          >
-                            View all {item.accountSnapshots.length} accounts
-                          </button>
-                        )}
+                        {item.accountSnapshots &&
+                          item.accountSnapshots.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowAllAccounts((prev) => ({
+                                  ...prev,
+                                  [item.id]: true,
+                                }))
+                              }
+                              className="mt-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              View all {item.accountSnapshots.length} accounts
+                            </button>
+                          )}
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
