@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# Get list of staged files (excluding deleted files)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+echo "⚡ Running pre-commit checks on staged changes..."
+
+# 1. Format ONLY staged files with Prettier
+FORMATTABLE=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json|md|css)$' || true)
+
+if [ -n "$FORMATTABLE" ]; then
+  echo "✨ Formatting staged files with Prettier..."
+  echo "$FORMATTABLE" | xargs yarn prettier --write --ignore-unknown
+  echo "$FORMATTABLE" | xargs git add
+fi
+
+# 2. Determine which apps/packages are updated
+FILTERS=""
+
+# If root configs changed, check all packages
+if echo "$STAGED_FILES" | grep -q -E '^(package\.json|turbo\.json|tsconfig\.json|yarn\.lock)'; then
+  FILTERS=""
+else
+  if echo "$STAGED_FILES" | grep -q '^apps/web/'; then
+    FILTERS="$FILTERS --filter=web"
+  fi
+
+  if echo "$STAGED_FILES" | grep -q '^apps/api/'; then
+    FILTERS="$FILTERS --filter=api"
+  fi
+
+  if echo "$STAGED_FILES" | grep -q '^packages/ui/'; then
+    FILTERS="$FILTERS --filter=@repo/ui... --filter=web"
+  fi
+
+  if echo "$STAGED_FILES" | grep -q '^packages/types/'; then
+    FILTERS="$FILTERS --filter=@repo/types... --filter=web --filter=api"
+  fi
+
+  if echo "$STAGED_FILES" | grep -q '^packages/eslint-config/'; then
+    FILTERS="$FILTERS --filter=@repo/eslint-config..."
+  fi
+
+  if echo "$STAGED_FILES" | grep -q '^packages/typescript-config/'; then
+    FILTERS="$FILTERS --filter=@repo/typescript-config..."
+  fi
+
+  # If no code in apps or packages was touched, skip lint & typecheck
+  if [ -z "$FILTERS" ]; then
+    echo "ℹ️ No apps or code packages modified. Skipping lint and typecheck."
+    echo "✅ Pre-commit checks complete!"
+    exit 0
+  fi
+fi
+
+# 3. Run Linter on affected app(s) only
+echo "🔍 Running linter on modified app(s)..."
+npx turbo run lint $FILTERS
+
+# 4. Run TypeScript checks on affected app(s) only
+echo "🛡️ Verifying TypeScript types on modified app(s)..."
+npx turbo run check-types $FILTERS
+
+echo "✅ Pre-commit checks passed successfully!"
