@@ -20,7 +20,8 @@ import { SettingsOptionCard } from "./SettingsOptionCard";
 
 export function SecurityTab() {
   const { isLockEnabled, lockType, toggleLock } = useSecurity();
-  const { permission, requestPermission } = useNotifications();
+  const { permission, requestPermission, sendTestNotification } =
+    useNotifications();
 
   // PIN Setup Modal state
   const [showPinSetup, setShowPinSetup] = useState(false);
@@ -254,6 +255,31 @@ export function SecurityTab() {
           </Button>
         }
       >
+        {permission === "granted" && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  PWA Notifications Active
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Your device is synchronized to receive reminders and alerts.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={sendTestNotification}
+              variant="outline"
+              className="h-8 px-3 rounded-xl text-[10px] font-bold uppercase tracking-wider border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 shrink-0"
+            >
+              Test Notification
+            </Button>
+          </div>
+        )}
         {permission === "denied" && (
           <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest bg-rose-500/10 px-3 py-2 rounded-xl border border-rose-500/20">
             Access Denied. Please enable notifications in your browser/device

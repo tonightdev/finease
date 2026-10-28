@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { NotificationsController } from './notifications.controller';
+import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { NotificationsController } from './notifications.controller';
     }),
   ],
   controllers: [AuthController, NotificationsController],
-  providers: [AuthService],
-  exports: [AuthService, JwtModule],
+  providers: [AuthService, NotificationsService],
+  exports: [AuthService, NotificationsService, JwtModule],
 })
 export class AuthModule {}

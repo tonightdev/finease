@@ -6,20 +6,27 @@ import {
   useContext,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 interface NotificationContextType {
   isSupported: boolean;
   permission: NotificationPermission;
+  isSubscribed: boolean;
   requestPermission: () => Promise<void>;
   subscribeUser: () => Promise<void>;
+  sendTestNotification: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
 );
+
+const FALLBACK_VAPID_PUBLIC_KEY =
+  "BAdklf2iWNH9ED7MzgQrQpgiEBuaaOp_FIgTf00aBguOV5eundDJIl9LKPbbWQ84v2joEg4Lpb_qfm6y5F4819k";
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -38,9 +45,12 @@ export function NotificationProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = useAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const isSubscribingRef = useRef(false);
 
   useEffect(() => {
     if (
@@ -53,41 +63,97 @@ export function NotificationProvider({
     }
   }, []);
 
-  const subscribeUser = useCallback(async () => {
-    if (!isSupported) return;
+  const getVapidPublicKey = useCallback(async (): Promise<string> => {
+    const envKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (envKey) return envKey;
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const res = await api.get<{ publicKey: string }>(
+        "/auth/notifications/vapid-public-key",
+      );
+      if (res.data?.publicKey) {
+        return res.data.publicKey;
+      }
+    } catch (e) {
+      console.warn("Could not fetch VAPID key from API:", e);
+    }
 
-      // Check if already subscribed
-      const existingSubscription =
-        await registration.pushManager.getSubscription();
-      if (existingSubscription) {
-        await api.post("/auth/notifications/subscribe", existingSubscription);
-        return;
+    return FALLBACK_VAPID_PUBLIC_KEY;
+  }, []);
+
+  const subscribeUser = useCallback(async () => {
+    if (
+      typeof window === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      !("Notification" in window)
+    ) {
+      return;
+    }
+
+    if (Notification.permission !== "granted") {
+      return;
+    }
+
+    if (isSubscribingRef.current) return;
+    isSubscribingRef.current = true;
+
+    try {
+      // Get service worker registration with timeout
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("SW ready timeout")), 3000),
+          ),
+        ]);
+      } catch {
+        registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
       }
 
-      // Load VAPID public key from env or use a placeholder
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        console.warn(
-          "VAPID public key not found. Push subscription might fail.",
-        );
-        return;
+      // Check if already subscribed in browser
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        const vapidPublicKey = await getVapidPublicKey();
+        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
       }
 
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey,
-      });
-
-      await api.post("/auth/notifications/subscribe", subscription);
-      console.log("Push subscription synchronized with sovereign node");
+      if (subscription) {
+        setIsSubscribed(true);
+        // Synchronize with backend if logged in
+        const token = localStorage.getItem("finease_token");
+        if (token) {
+          try {
+            await api.post("/auth/notifications/subscribe", subscription);
+            console.log("Push subscription synchronized with sovereign node");
+          } catch (syncErr) {
+            console.warn(
+              "Failed to synchronize push subscription with backend:",
+              syncErr,
+            );
+          }
+        }
+      }
     } catch (error) {
       console.error("Failed to subscribe to push notifications:", error);
+    } finally {
+      isSubscribingRef.current = false;
     }
-  }, [isSupported]);
+  }, [getVapidPublicKey]);
+
+  // Auto-subscribe/synchronize if permission is already allowed and user is logged in
+  useEffect(() => {
+    if (permission === "granted" && user) {
+      void subscribeUser();
+    }
+  }, [permission, user, subscribeUser]);
 
   const requestPermission = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -142,9 +208,60 @@ export function NotificationProvider({
     }
   }, [isSupported, subscribeUser]);
 
+  const sendTestNotification = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    if (Notification.permission !== "granted") {
+      toast.error("Please enable notifications first.");
+      return;
+    }
+
+    try {
+      // 1. Immediately show notification on device via active service worker
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("FinEase System Alert", {
+          body: "Notifications are operational and verified on this device.",
+          icon: "/icon-192x192.png",
+          badge: "/favicon.svg",
+          data: { url: "/dashboard" },
+        });
+      } else {
+        new Notification("FinEase System Alert", {
+          body: "Notifications are operational and verified on this device.",
+          icon: "/icon-192x192.png",
+        });
+      }
+
+      toast.success("Test notification displayed on your device!");
+
+      // 2. Also test backend push roundtrip if user is logged in
+      const token = localStorage.getItem("finease_token");
+      if (token) {
+        try {
+          await api.post("/auth/notifications/test");
+        } catch (apiErr) {
+          console.warn("Backend push notification test ping:", apiErr);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to display test notification:", error);
+      toast.error(
+        "Could not display notification. Check system alert permissions.",
+      );
+    }
+  }, []);
+
   return (
     <NotificationContext.Provider
-      value={{ isSupported, permission, requestPermission, subscribeUser }}
+      value={{
+        isSupported,
+        permission,
+        isSubscribed,
+        requestPermission,
+        subscribeUser,
+        sendTestNotification,
+      }}
     >
       {children}
     </NotificationContext.Provider>

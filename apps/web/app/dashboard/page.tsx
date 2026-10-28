@@ -100,10 +100,51 @@ export default function Home() {
       dispatch(fetchExpiries());
 
       if (permission === "default") {
-        requestPermission();
+        // Request on user action or initial visit if supported
+        void requestPermission();
       }
     }
   }, [dispatch, user, permission, requestPermission]);
+
+  // Trigger system notification for upcoming expiries if authorized
+  useEffect(() => {
+    if (
+      permission === "granted" &&
+      expiringSoon.length > 0 &&
+      typeof window !== "undefined"
+    ) {
+      const today = new Date().toISOString().slice(0, 10);
+      const lastNotified = localStorage.getItem(
+        "finease_last_expiry_notification_date",
+      );
+
+      if (lastNotified !== today) {
+        localStorage.setItem("finease_last_expiry_notification_date", today);
+        const count = expiringSoon.length;
+        const firstName = expiringSoon[0]?.name ?? "Item";
+        const title = "FinEase Expiry Reminder";
+        const body =
+          count === 1
+            ? `${firstName} is expiring soon. Check your vault.`
+            : `${firstName} and ${count - 1} other item${count > 2 ? "s are" : " is"} expiring soon.`;
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((reg) => {
+              void reg.showNotification(title, {
+                body,
+                icon: "/icon-192x192.png",
+                badge: "/favicon.svg",
+                data: { url: "/dashboard" },
+              });
+            })
+            .catch((err) =>
+              console.warn("Could not show expiry notification:", err),
+            );
+        }
+      }
+    }
+  }, [permission, expiringSoon]);
 
   // Regular accounts for display (includes excluded ones)
   const displayRegularAccounts = useMemo(() => {

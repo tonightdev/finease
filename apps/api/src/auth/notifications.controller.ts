@@ -1,39 +1,43 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import * as webpush from 'web-push';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { FirebaseAdminService } from '../common/services/firebase-admin.service';
+import { NotificationsService } from './notifications.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
 
 @Controller('auth/notifications')
-@UseGuards(AuthGuard)
 export class NotificationsController {
-  constructor(private readonly firebaseAdmin: FirebaseAdminService) {}
+  constructor(private readonly notificationsService: NotificationsService) {}
+
+  @Get('vapid-public-key')
+  getVapidPublicKey() {
+    return { publicKey: this.notificationsService.getPublicKey() };
+  }
 
   @Post('subscribe')
-  async subscribe(@Req() req: RequestWithUser, @Body() subscription: any) {
-    const db = this.firebaseAdmin.getFirestore();
-    const userId = req.user.uid;
-
-    // Store subscription in the user document or a sub-collection
-    await db.collection('users').doc(userId).update({
-      pushSubscription: subscription,
-      notificationsEnabled: true,
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { message: 'Push subscription synchronized' };
+  @UseGuards(AuthGuard)
+  async subscribe(
+    @Req() req: RequestWithUser,
+    @Body() subscription: webpush.PushSubscription,
+  ) {
+    return this.notificationsService.saveSubscription(
+      req.user.uid,
+      subscription,
+    );
   }
 
   @Post('unsubscribe')
+  @UseGuards(AuthGuard)
   async unsubscribe(@Req() req: RequestWithUser) {
-    const db = this.firebaseAdmin.getFirestore();
-    const userId = req.user.uid;
+    return this.notificationsService.removeSubscription(req.user.uid);
+  }
 
-    await db.collection('users').doc(userId).update({
-      pushSubscription: null,
-      notificationsEnabled: false,
-      updatedAt: new Date().toISOString(),
+  @Post('test')
+  @UseGuards(AuthGuard)
+  async sendTestNotification(@Req() req: RequestWithUser) {
+    return this.notificationsService.sendNotification(req.user.uid, {
+      title: 'FinEase System Alert',
+      body: 'Push notifications are operational on your device.',
+      url: '/dashboard',
     });
-
-    return { message: 'Push subscription revoked' };
   }
 }
