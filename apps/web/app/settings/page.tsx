@@ -7,6 +7,7 @@ import {
   User,
   Settings as SettingsIcon,
   Wallet,
+  Tag,
   Shield,
   UserPlus,
   Database,
@@ -22,6 +23,7 @@ import {
   ProfileTab,
   PreferencesTab,
   AccountsTab,
+  CategoriesTab,
   SecurityTab,
   IdentitiesTab,
   DataArchiveTab,
@@ -47,6 +49,12 @@ const SETTINGS_TABS: SettingsTabItem[] = [
     subtitle: "Manage your bank, cash, and card accounts",
   },
   {
+    id: "categories",
+    label: "Categories",
+    icon: Tag,
+    subtitle: "Manage spending and income categories",
+  },
+  {
     id: "security",
     label: "Security",
     icon: Shield,
@@ -70,6 +78,7 @@ const VALID_TABS: SettingsTabId[] = [
   "profile",
   "preferences",
   "accounts",
+  "categories",
   "security",
   "identities",
   "data",
@@ -125,7 +134,7 @@ function SettingsPageContent() {
         subtitle="Account Preferences, Security & Data Management"
       />
 
-      <div className="flex flex-col lg:flex-row items-start gap-6 mt-0">
+      <div className="flex flex-col lg:flex-row items-start gap-2 mt-0">
         {/* Reusable Sidebar Navigation (Desktop list + Mobile select) */}
         <SettingsSidebar
           tabs={SETTINGS_TABS}
@@ -147,6 +156,7 @@ function SettingsPageContent() {
               {activeTab === "profile" && <ProfileTab />}
               {activeTab === "preferences" && <PreferencesTab />}
               {activeTab === "accounts" && <AccountsTab />}
+              {activeTab === "categories" && <CategoriesTab />}
               {activeTab === "security" && <SecurityTab />}
               {activeTab === "identities" && <IdentitiesTab />}
               {activeTab === "data" && <DataArchiveTab />}

@@ -11,7 +11,6 @@ import {
 import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { openModal } from "@/store/slices/uiSlice";
 import {
-  History,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -72,7 +71,7 @@ export function TrajectoryHistoryView() {
     );
   }, [snapshots]);
 
-  const { totalPulses, latestNetWorth } = useMemo(() => {
+  const { latestNetWorth } = useMemo(() => {
     if (sortedSnapshots.length === 0) {
       return { totalPulses: 0, netGainSinceFirst: 0, latestNetWorth: 0 };
     }
@@ -104,42 +103,8 @@ export function TrajectoryHistoryView() {
 
   return (
     <div className="space-y-4">
-      {/* Executive Growth Log Header Card */}
-      <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-white via-slate-50 to-indigo-50/20 dark:from-[#0d1117] dark:via-[#090b0e] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-        {/* Top Header Row: Title, Pulses Badge & Take Pulse CTA */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="size-10 sm:size-11 rounded-2xl bg-gradient-to-tr from-primary to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-              <History className="size-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Growth Log & Trajectory
-                </h2>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
-                  {totalPulses} {totalPulses === 1 ? "Pulse" : "Pulses"}{" "}
-                  Recorded
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Periodic net worth checkpoints & historical progression audit
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => dispatch(openModal("isWealthPulseOpen"))}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-primary/25 transition-all active:scale-95 shrink-0"
-          >
-            <Sparkles className="size-3.5 text-amber-300" />
-            <span>Take 60s Pulse</span>
-          </button>
-        </div>
-
-        {/* 2 Clean Stat Metrics Cards */}
-        {sortedSnapshots.length > 0 && (
+      {sortedSnapshots.length > 0 && (
+        <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-white via-slate-50 to-indigo-50/20 dark:from-[#0d1117] dark:via-[#090b0e] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-200/60 dark:border-white/5">
             <div className="p-3.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/5 flex items-center justify-between">
               <div>
@@ -155,8 +120,8 @@ export function TrajectoryHistoryView() {
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Monthly Growth Graph */}
       <MonthlyGrowthChart
@@ -222,7 +187,7 @@ export function TrajectoryHistoryView() {
                 {/* Row Header */}
                 <div
                   onClick={() => toggleExpand(item.id)}
-                  className="p-3.5 sm:p-4 cursor-pointer flex items-center justify-between gap-3 select-none hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                  className="p-3.5 cursor-pointer flex items-center justify-between gap-3 select-none hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div

@@ -13,6 +13,7 @@ import { Account, AccountType } from "@repo/types";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
+import { formatCurrency } from "@/lib/utils";
 
 export function AccountsTab() {
   const dispatch = useDispatch<AppDispatch>();
@@ -205,7 +206,7 @@ export function AccountsTab() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-sm font-black text-slate-900 dark:text-white">
-                      ₹{acc.balance.toLocaleString()}
+                      {formatCurrency(acc.balance)}
                     </div>
                     <div className="text-[8px] font-black uppercase text-emerald-500 tracking-widest flex items-center justify-end gap-1">
                       <span className="size-1 rounded-full bg-emerald-500" />{" "}

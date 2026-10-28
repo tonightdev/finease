@@ -346,7 +346,7 @@ export default function TacticalSimulationPage({
                 Total Liquidity
               </p>
               <p className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">
-                ₹{totalBalance.toLocaleString()}
+                ₹{totalBalance.toLocaleString("en-IN")}
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 text-center">
@@ -356,7 +356,7 @@ export default function TacticalSimulationPage({
               <p
                 className={`text-sm font-black font-mono ${remainingLiquidity >= 0 ? "text-slate-700 dark:text-white" : "text-rose-500"}`}
               >
-                ₹{remainingLiquidity.toLocaleString()}
+                ₹{remainingLiquidity.toLocaleString("en-IN")}
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
@@ -364,7 +364,7 @@ export default function TacticalSimulationPage({
                 Burn Rate
               </p>
               <p className="text-sm font-black font-mono text-rose-700 dark:text-rose-300">
-                ₹{totalExpenses.toLocaleString()}
+                ₹{totalExpenses.toLocaleString("en-IN")}
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-center">
@@ -386,14 +386,14 @@ export default function TacticalSimulationPage({
                       {stat.name}
                     </p>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                      Spent: ₹{stat.spent.toLocaleString()}
+                      Spent: ₹{stat.spent.toLocaleString("en-IN")}
                     </p>
                   </div>
                   <p
                     className={`text-[11px] font-black font-mono ${stat.remaining >= 0 ? "text-emerald-500" : "text-rose-500"}`}
                   >
                     {stat.remaining >= 0 ? "Balance" : "Deficit"}: ₹
-                    {Math.abs(stat.remaining).toLocaleString()}
+                    {Math.abs(stat.remaining).toLocaleString("en-IN")}
                   </p>
                 </div>
 
@@ -488,7 +488,7 @@ export default function TacticalSimulationPage({
                               {acc.name}
                             </p>
                             <p className="text-[10px] font-bold text-slate-400 font-mono">
-                              ₹{acc.balance.toLocaleString()}
+                              ₹{acc.balance.toLocaleString("en-IN")}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -685,7 +685,7 @@ export default function TacticalSimulationPage({
                               </p>
                               <div className="flex gap-2 items-center mt-0.5">
                                 <span className="text-[10px] font-bold text-rose-500 font-mono">
-                                  ₹{exp.amount.toLocaleString()}
+                                  ₹{exp.amount.toLocaleString("en-IN")}
                                 </span>
                                 <span className="text-[8px] bg-slate-100 dark:bg-slate-800/80 px-1.5 rounded text-slate-500 font-black uppercase tracking-widest truncate max-w-[80px]">
                                   {linkedAcc?.name || "Unknown"}
@@ -776,7 +776,7 @@ export default function TacticalSimulationPage({
                         value={acc.id}
                         className="text-[10px]"
                       >
-                        {acc.name} (₹{acc.balance.toLocaleString()})
+                        {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                       </SelectItem>
                     ))}
                   </SelectContent>

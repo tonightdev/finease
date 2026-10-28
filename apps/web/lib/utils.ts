@@ -17,7 +17,48 @@ export function formatCurrency(amount: number, forceGhost?: boolean) {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
   }).format(amount);
+}
+
+/**
+ * Format a number using Indian number system (2,2,3 grouping).
+ * e.g. 14803176 → "1,48,03,176"
+ */
+export function formatIndianNumber(
+  amount: number,
+  options?: Intl.NumberFormatOptions,
+): string {
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+    ...options,
+  }).format(amount);
+}
+
+/**
+ * Compact currency with Indian suffix (K / L / Cr)
+ * e.g. 1480317 → "₹14.8L"
+ */
+export function formatCompact(amount: number, forceGhost?: boolean): string {
+  if (
+    forceGhost ||
+    (typeof document !== "undefined" &&
+      document.documentElement.classList.contains("ghost-mode"))
+  ) {
+    return "*****";
+  }
+  const abs = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+  if (abs >= 1_00_00_000) {
+    return `${sign}₹${(abs / 1_00_00_000).toFixed(abs >= 10_00_00_000 ? 1 : 2)}Cr`;
+  }
+  if (abs >= 1_00_000) {
+    return `${sign}₹${(abs / 1_00_000).toFixed(abs >= 10_00_000 ? 1 : 2)}L`;
+  }
+  if (abs >= 1_000) {
+    return `${sign}₹${(abs / 1_000).toFixed(1)}K`;
+  }
+  return `${sign}₹${abs.toFixed(0)}`;
 }
 
 export function formatDate(dateString: string | Date | number) {

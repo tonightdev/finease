@@ -93,7 +93,7 @@ export default function GoalsPageClient() {
             Need{" "}
             <span className="text-primary font-bold">
               ₹
-              {totalRequiredMonthly.toLocaleString(undefined, {
+              {totalRequiredMonthly.toLocaleString("en-IN", {
                 maximumFractionDigits: 0,
               })}
               /mo
@@ -226,10 +226,10 @@ export default function GoalsPageClient() {
                       <div className="mt-2 space-y-1.5">
                         <div className="flex justify-between items-baseline gap-1">
                           <span className="text-slate-900 dark:text-white font-black text-[11px] sm:text-sm tracking-tighter">
-                            ₹{goal.currentAmount.toLocaleString()}
+                            ₹{goal.currentAmount.toLocaleString("en-IN")}
                           </span>
                           <span className="text-[7px] font-bold text-slate-400 truncate">
-                            Target ₹{goal.targetAmount.toLocaleString()}
+                            Target ₹{goal.targetAmount.toLocaleString("en-IN")}
                           </span>
                         </div>
                         <div className="relative h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -249,11 +249,11 @@ export default function GoalsPageClient() {
                             Gap ₹
                             {Math.round(
                               goal.targetAmount - goal.currentAmount,
-                            ).toLocaleString()}
+                            ).toLocaleString("en-IN")}
                           </span>
                           <span className="text-orange-500 pl-2.5 shrink-0">
                             ₹
-                            {reqMonthly.toLocaleString(undefined, {
+                            {reqMonthly.toLocaleString("en-IN", {
                               maximumFractionDigits: 0,
                             })}
                             /mo
@@ -361,7 +361,7 @@ export default function GoalsPageClient() {
               }),
             ).unwrap();
             toast.success(
-              `Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`,
+              `Invested ₹${amount.toLocaleString("en-IN")} in ${topUpGoal.name}`,
             );
           }
         }}

@@ -254,9 +254,9 @@ export default function TransactionsPageClient() {
       t.description,
       categories.find((c) => c.id === t.category)?.name || t.category,
       accounts.find((a) => a.id === t.accountId)?.name || "N/A",
-      `${t.type === "expense" ? "-" : "+"} ${t.amount.toLocaleString()}`,
-      t.balanceBefore.toLocaleString(),
-      t.balanceAfter.toLocaleString(),
+      `${t.type === "expense" ? "-" : "+"} ${t.amount.toLocaleString("en-IN")}`,
+      t.balanceBefore.toLocaleString("en-IN"),
+      t.balanceAfter.toLocaleString("en-IN"),
     ]);
     autoTable(doc, {
       startY: 40,
@@ -662,12 +662,12 @@ export default function TransactionsPageClient() {
                       ? "-"
                       : "+"}{" "}
                     ₹
-                    {tx.amount.toLocaleString(undefined, {
+                    {tx.amount.toLocaleString("en-IN", {
                       minimumFractionDigits: 1,
                     })}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-[10px] text-slate-500 whitespace-nowrap">
-                    ₹{tx.balanceAfter?.toLocaleString() || "—"}
+                    ₹{tx.balanceAfter?.toLocaleString("en-IN") || "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5 transition-opacity">
@@ -775,7 +775,7 @@ export default function TransactionsPageClient() {
                   className={`text-sm font-black tracking-tight tabular-nums shrink-0 ${tx.type === "expense" || tx.type === "transfer" ? "text-rose-500" : "text-emerald-500"}`}
                 >
                   {tx.type === "expense" || tx.type === "transfer" ? "-" : "+"}₹
-                  {tx.amount.toLocaleString(undefined, {
+                  {tx.amount.toLocaleString("en-IN", {
                     minimumFractionDigits: 1,
                   })}
                 </div>
@@ -807,7 +807,7 @@ export default function TransactionsPageClient() {
                   )}
                   {tx.balanceAfter !== undefined && (
                     <span className="text-slate-400 ml-1 shrink-0 font-medium">
-                      (₹{tx.balanceAfter.toLocaleString()})
+                      (₹{tx.balanceAfter.toLocaleString("en-IN")})
                     </span>
                   )}
                 </div>

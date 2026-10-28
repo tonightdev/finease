@@ -192,7 +192,7 @@ export function AddLiabilityModal({
               {(
                 (parseFloat(formData.repaidCapital) || 0) +
                 (parseFloat(formData.burnedInterest) || 0)
-              ).toLocaleString()}
+              ).toLocaleString("en-IN")}
             </span>
           </div>
           <div className="flex justify-between items-center text-[10px]">
@@ -205,7 +205,7 @@ export function AddLiabilityModal({
                 0,
                 (parseFloat(formData.initialAmount) || 0) -
                   (parseFloat(formData.repaidCapital) || 0),
-              ).toLocaleString()}
+              ).toLocaleString("en-IN")}
             </span>
           </div>
         </div>

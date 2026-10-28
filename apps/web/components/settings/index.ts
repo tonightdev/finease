@@ -6,6 +6,7 @@ export * from "./SettingsSidebar";
 export * from "./ProfileTab";
 export * from "./PreferencesTab";
 export * from "./AccountsTab";
+export * from "./CategoriesTab";
 export * from "./SecurityTab";
 export * from "./IdentitiesTab";
 export * from "./DataArchiveTab";

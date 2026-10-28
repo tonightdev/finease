@@ -145,7 +145,7 @@ export function AddYearlyExpenseModal({
             >
               {accounts.map((acc) => (
                 <option key={acc.id} value={acc.id}>
-                  {acc.name} (₹{acc.balance.toLocaleString()})
+                  {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                 </option>
               ))}
             </select>
@@ -170,7 +170,7 @@ export function AddYearlyExpenseModal({
           <div className="pt-2 px-1">
             <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">
               Estimated Monthly Burden: ₹
-              {(formData.yearlyAmount / 12).toLocaleString(undefined, {
+              {(formData.yearlyAmount / 12).toLocaleString("en-IN", {
                 maximumFractionDigits: 0,
               })}
             </p>

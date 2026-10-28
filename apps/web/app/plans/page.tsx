@@ -89,7 +89,7 @@ function PlansDirectoryPageContent() {
   const { user } = useAuth();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<TabType>("Simulations");
+  const [activeTab, setActiveTab] = useState<TabType>("Goals");
 
   const {
     items: plans,
@@ -145,7 +145,7 @@ function PlansDirectoryPageContent() {
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (
-      ["Simulations", "Goals", "Expiries", "Yearly"].includes(tabParam || "")
+      ["Goals", "Yearly", "Expiries", "Simulations"].includes(tabParam || "")
     ) {
       setActiveTab(tabParam as TabType);
     }
@@ -293,7 +293,7 @@ function PlansDirectoryPageContent() {
               Need{" "}
               <span className="text-primary font-bold">
                 ₹
-                {totalRequiredMonthly.toLocaleString(undefined, {
+                {totalRequiredMonthly.toLocaleString("en-IN", {
                   maximumFractionDigits: 0,
                 })}
                 /mo
@@ -303,7 +303,7 @@ function PlansDirectoryPageContent() {
           ) : activeTab === "Expiries" ? (
             "Active triggers and financial expiries"
           ) : activeTab === "Yearly" ? (
-            `Monthly capital reserves: ₹${totalYearlyBurden.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo`
+            `Monthly capital reserves: ₹${totalYearlyBurden.toLocaleString("en-IN", { maximumFractionDigits: 0 })}/mo`
           ) : (
             "Tactical simulations for capital management and events"
           )
@@ -312,7 +312,7 @@ function PlansDirectoryPageContent() {
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl h-11 w-full sm:w-auto">
-            {(["Simulations", "Goals", "Expiries", "Yearly"] as TabType[]).map(
+            {(["Goals", "Yearly", "Expiries", "Simulations"] as TabType[]).map(
               (tab) => (
                 <button
                   key={tab}
@@ -571,7 +571,7 @@ function PlansDirectoryPageContent() {
                                             acc + a.balance,
                                           0,
                                         )
-                                        .toLocaleString()}
+                                        .toLocaleString("en-IN")}
                                     </span>
                                   </div>
 
@@ -588,7 +588,7 @@ function PlansDirectoryPageContent() {
                                             acc + e.amount,
                                           0,
                                         )
-                                        .toLocaleString()}
+                                        .toLocaleString("en-IN")}
                                     </span>
                                   </div>
                                 </div>
@@ -720,10 +720,10 @@ function PlansDirectoryPageContent() {
                                       : "text-slate-900 dark:text-white"
                                   }
                                 >
-                                  ₹{goal.currentAmount.toLocaleString()}
+                                  ₹{goal.currentAmount.toLocaleString("en-IN")}
                                 </span>
                                 <span className="text-slate-400">
-                                  ₹{goal.targetAmount.toLocaleString()}
+                                  ₹{goal.targetAmount.toLocaleString("en-IN")}
                                 </span>
                               </div>
                               <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -736,12 +736,12 @@ function PlansDirectoryPageContent() {
                                 <span>
                                   {isCompleted
                                     ? "Target Achieved"
-                                    : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString()}`}
+                                    : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString("en-IN")}`}
                                 </span>
                                 {!isCompleted && (
                                   <span className="text-orange-500">
                                     ₹
-                                    {reqMonthly.toLocaleString(undefined, {
+                                    {reqMonthly.toLocaleString("en-IN", {
                                       maximumFractionDigits: 0,
                                     })}
                                     /mo
@@ -999,7 +999,7 @@ function PlansDirectoryPageContent() {
                 }),
               ).unwrap();
               toast.success(
-                `Invested ₹${amount.toLocaleString()} in ${topUpGoal.name}`,
+                `Invested ₹${amount.toLocaleString("en-IN")} in ${topUpGoal.name}`,
               );
               setIsTopUpModalOpen(false);
             } catch {

@@ -37,7 +37,7 @@ export function AnimatedNumber({
     const rounded = latest.toFixed(precision);
     if (!format) return rounded;
 
-    return Number(rounded).toLocaleString(undefined, {
+    return Number(rounded).toLocaleString("en-IN", {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision,
     });

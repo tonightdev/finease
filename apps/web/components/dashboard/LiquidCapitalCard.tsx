@@ -25,8 +25,6 @@ export function LiquidCapitalCard({
 
   if (accounts.length === 0) return null;
 
-  const primaryAccount = accounts[0];
-
   const getAccountIcon = (type: string) => {
     switch (type) {
       case "card":
@@ -72,12 +70,6 @@ export function LiquidCapitalCard({
 
         {/* Right: Primary Node Highlight & Details Toggle */}
         <div className="flex items-center gap-2 shrink-0">
-          {primaryAccount && (
-            <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-white/5 truncate max-w-[180px]">
-              <span className="truncate">Primary: {primaryAccount.name}</span>
-            </span>
-          )}
-
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}

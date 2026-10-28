@@ -35,7 +35,11 @@ import { useNotifications } from "@/components/providers/NotificationProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { motion } from "framer-motion";
-import { getHexFromTailwind, getFiscalMonthStart } from "@/lib/utils";
+import {
+  getHexFromTailwind,
+  getFiscalMonthStart,
+  formatIndianNumber,
+} from "@/lib/utils";
 import { MonthlyGrowthDebrief } from "@/components/dashboard/MonthlyGrowthDebrief";
 import { LiquidCapitalCard } from "@/components/dashboard/LiquidCapitalCard";
 
@@ -337,34 +341,44 @@ export default function Home() {
       history[5].value = realTimeNetWorth;
     }
 
-    const chronSnapshots = [...snapshots].sort(
-      (a, b) =>
-        new Date(a.createdAt || a.date).getTime() -
-        new Date(b.createdAt || b.date).getTime(),
-    );
-    const earliestSnap = chronSnapshots[0];
-    const earliestDate = earliestSnap
-      ? new Date(earliestSnap.createdAt || earliestSnap.date)
-      : null;
-    const baselineNW =
-      earliestSnap?.previousNetWorth ??
-      (earliestSnap
-        ? Math.max(0, earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0))
-        : 0);
+    // Determine first month with actual user activity
+    let firstActiveIdx = -1;
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i]!;
+      const start = item.dateObj;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
 
-    // Backfill any empty months using transactions net flow or baseline
-    for (let i = 4; i >= 0; i--) {
-      const current = history[i]!;
-      const next = history[i + 1]!;
+      const hasSnap = snapshots.some((s) => {
+        const sd = new Date(s.createdAt || s.date);
+        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
+      });
 
-      if (current.value === 0) {
-        if (
-          earliestDate &&
-          current.dateObj.getTime() < earliestDate.getTime()
-        ) {
-          current.value = baselineNW;
-        } else {
-          const start = next.dateObj;
+      const hasTx = transactions.some((tx) => {
+        if (tx.status === "pending_confirmation") return false;
+        const d = new Date(tx.date);
+        return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+      });
+
+      const isCurWithNW = i === 5 && realTimeNetWorth > 0;
+      if (hasSnap || hasTx || isCurWithNW) {
+        firstActiveIdx = i;
+        break;
+      }
+    }
+
+    if (firstActiveIdx !== -1) {
+      // Pre-tracking months remain 0
+      for (let i = 0; i < firstActiveIdx; i++) {
+        history[i]!.value = 0;
+      }
+      // Fill gap months between firstActiveIdx and current
+      for (let i = firstActiveIdx + 1; i <= 4; i++) {
+        const current = history[i]!;
+        if (current.value === 0) {
+          const prev = history[i - 1]!;
+          const start = current.dateObj;
           const end = new Date(start);
           end.setMonth(end.getMonth() + 1);
           end.setMilliseconds(end.getMilliseconds() - 1);
@@ -383,7 +397,7 @@ export default function Home() {
             0,
           );
 
-          current.value = Math.max(0, next.value - netFlow);
+          current.value = Math.max(0, prev.value + netFlow);
         }
       }
     }
@@ -501,7 +515,9 @@ export default function Home() {
     const sign = delta > 0 ? "+" : delta < 0 ? "-" : "";
     const trendPercentage = delta !== 0 ? `${sign}${pctFormatted}` : "0%";
     const trendDelta =
-      delta !== 0 ? `${sign}₹${Math.round(absDelta).toLocaleString()}` : "₹0";
+      delta !== 0
+        ? `${sign}₹${formatIndianNumber(Math.round(absDelta))}`
+        : "₹0";
     const label =
       delta !== 0 ? `${trendDelta} (${trendPercentage})` : "₹0 (Stable)";
 
@@ -797,9 +813,17 @@ export default function Home() {
           currentNetWorth={realTimeNetWorth}
           percentageChange={netWorthTrend.pct}
           trendPercentage={netWorthTrend.trendPercentage}
-          trendDelta={netWorthTrend.trendDelta}
+          trendDelta={
+            netWorthTrend.delta !== 0 ? netWorthTrend.trendDelta : undefined
+          }
           trendLabel={netWorthTrend.label}
-          isPositive={netWorthTrend.delta >= 0}
+          isPositive={
+            netWorthTrend.delta > 0
+              ? true
+              : netWorthTrend.delta < 0
+                ? false
+                : undefined
+          }
         />
       </div>
     </PageContainer>

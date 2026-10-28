@@ -412,32 +412,64 @@ export default function ReportsPageClient() {
       history[5].value = netWorth;
     }
 
-    // Backfill any empty months using transactions net flow
-    for (let i = 4; i >= 0; i--) {
-      const current = history[i]!;
-      const next = history[i + 1]!;
+    // Determine first month with active data
+    let firstActiveIdx = -1;
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i]!;
+      const start = item.dateObj;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
 
-      if (current.value === 0) {
-        const start = next.dateObj;
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-        end.setMilliseconds(end.getMilliseconds() - 1);
+      const hasSnap = snapshots.some((s) => {
+        const sd = new Date(s.createdAt || s.date);
+        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
+      });
 
-        const txInMonth = transactions.filter((tx) => {
-          if (tx.status === "pending_confirmation") return false;
-          const txDate = new Date(tx.date);
-          return (
-            txDate.getTime() >= start.getTime() &&
-            txDate.getTime() <= end.getTime()
+      const hasTx = transactions.some((tx) => {
+        if (tx.status === "pending_confirmation") return false;
+        const d = new Date(tx.date);
+        return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+      });
+
+      const isCurWithNW = i === 5 && netWorth > 0;
+      if (hasSnap || hasTx || isCurWithNW) {
+        firstActiveIdx = i;
+        break;
+      }
+    }
+
+    if (firstActiveIdx !== -1) {
+      // Pre-tracking months remain 0
+      for (let i = 0; i < firstActiveIdx; i++) {
+        history[i]!.value = 0;
+      }
+      // Fill gap months between firstActiveIdx and current
+      for (let i = firstActiveIdx + 1; i <= 4; i++) {
+        const current = history[i]!;
+        if (current.value === 0) {
+          const prev = history[i - 1]!;
+          const start = current.dateObj;
+          const end = new Date(start);
+          end.setMonth(end.getMonth() + 1);
+          end.setMilliseconds(end.getMilliseconds() - 1);
+
+          const txInMonth = transactions.filter((tx) => {
+            if (tx.status === "pending_confirmation") return false;
+            const txDate = new Date(tx.date);
+            return (
+              txDate.getTime() >= start.getTime() &&
+              txDate.getTime() <= end.getTime()
+            );
+          });
+
+          const netFlow = txInMonth.reduce(
+            (acc, tx) => acc + (tx.type === "income" ? tx.amount : -tx.amount),
+            0,
           );
-        });
 
-        const netFlow = txInMonth.reduce(
-          (acc, tx) => acc + (tx.type === "income" ? tx.amount : -tx.amount),
-          0,
-        );
-
-        current.value = Math.max(0, next.value - netFlow);
+          current.value = Math.max(0, prev.value + netFlow);
+        }
       }
     }
 

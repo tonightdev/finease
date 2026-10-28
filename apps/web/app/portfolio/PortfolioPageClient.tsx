@@ -291,7 +291,10 @@ export default function PortfolioPageClient() {
                   data-balance="true"
                   className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
                 >
-                  ₹{stat.value.toLocaleString()}
+                  ₹
+                  {stat.value.toLocaleString("en-IN", {
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             ))}
@@ -302,25 +305,25 @@ export default function PortfolioPageClient() {
           Investments
         </h3>
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Investment Name
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Category
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Invested Amount
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Current Value
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Returns
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Actions
                 </th>
               </tr>
@@ -332,23 +335,23 @@ export default function PortfolioPageClient() {
                     key={`skeleton-inv-row-${i}`}
                     className="border-b border-slate-50 dark:border-white/5"
                   >
-                    <td className="px-4 py-4">
-                      <Skeleton className="h-3 w-40" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-40 mx-auto" />
                     </td>
-                    <td className="px-5 py-4">
-                      <Skeleton className="h-3 w-24" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-24 mx-auto" />
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-12 ml-auto" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-12 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="size-7 rounded-lg mx-auto" />
                     </td>
                   </tr>
                 ))
@@ -372,13 +375,13 @@ export default function PortfolioPageClient() {
                       setIsAddInvestmentOpen(true);
                     }}
                   >
-                    <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                    <td className="px-4 py-1.5 text-center">
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px] mx-auto text-center">
                         {inv.name}
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-1.5">
+                    <td className="px-5 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5 mx-auto">
                         <div
                           className={`w-1.5 h-1.5 rounded-full ${assetTypes.find((a) => a.id === inv.assetType)?.color || "bg-slate-400"}`}
                         />
@@ -403,13 +406,19 @@ export default function PortfolioPageClient() {
                       const pct = invested > 0 ? (gain / invested) * 100 : 0;
                       return (
                         <>
-                          <td className="px-5 py-3 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
-                            ₹{invested.toLocaleString()}
+                          <td className="px-5 py-3 text-center font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                            ₹
+                            {invested.toLocaleString("en-IN", {
+                              maximumFractionDigits: 2,
+                            })}
                           </td>
-                          <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
-                            ₹{inv.balance.toLocaleString()}
+                          <td className="px-5 py-3 text-center font-black text-xs text-emerald-500">
+                            ₹
+                            {inv.balance.toLocaleString("en-IN", {
+                              maximumFractionDigits: 2,
+                            })}
                           </td>
-                          <td className="px-5 py-3 text-right font-black text-[11px]">
+                          <td className="px-5 py-3 text-center font-black text-[11px]">
                             <span
                               className={
                                 gain >= 0 ? "text-emerald-500" : "text-rose-500"
@@ -422,14 +431,15 @@ export default function PortfolioPageClient() {
                         </>
                       );
                     })()}
-                    <td className="px-4 py-1.5 text-right">
+                    <td className="px-4 py-1.5 text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setItemToDelete({ id: inv.id, type: "account" });
                           setIsDeleteModalOpen(true);
                         }}
-                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
+                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 transition-colors mx-auto flex items-center justify-center"
+                        title="Delete Investment"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -590,19 +600,19 @@ export default function PortfolioPageClient() {
           Other Assets
         </h3>
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Asset Name
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Type
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Estimated Value
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Actions
                 </th>
               </tr>
@@ -614,17 +624,17 @@ export default function PortfolioPageClient() {
                     key={`skeleton-aux-row-${i}`}
                     className="border-b border-slate-50 dark:border-white/5"
                   >
-                    <td className="px-4 py-4">
-                      <Skeleton className="h-3 w-40" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-40 mx-auto" />
                     </td>
-                    <td className="px-5 py-4">
-                      <Skeleton className="h-3 w-32" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-32 mx-auto" />
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    <td className="px-5 py-4 text-center">
+                      <Skeleton className="size-7 rounded-lg mx-auto" />
                     </td>
                   </tr>
                 ))
@@ -648,27 +658,31 @@ export default function PortfolioPageClient() {
                       setIsAddAssetOpen(true);
                     }}
                   >
-                    <td className="px-4 py-1.5">
-                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                    <td className="px-4 py-1.5 text-center">
+                      <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px] mx-auto text-center">
                         {asset.name}
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500">
+                    <td className="px-5 py-3 text-center">
+                      <span className="font-bold text-[10px] uppercase tracking-widest text-slate-500 inline-block text-center">
                         Fixed Asset
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-black text-xs text-emerald-500">
-                      ₹{asset.balance.toLocaleString()}
+                    <td className="px-5 py-3 text-center font-black text-xs text-emerald-500">
+                      ₹
+                      {asset.balance.toLocaleString("en-IN", {
+                        maximumFractionDigits: 2,
+                      })}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-5 py-3 text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setItemToDelete({ id: asset.id, type: "account" });
                           setIsDeleteModalOpen(true);
                         }}
-                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 transition-opacity"
+                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 transition-colors mx-auto flex items-center justify-center"
+                        title="Delete Asset"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -762,31 +776,31 @@ export default function PortfolioPageClient() {
           Loans & Liabilities
         </h3>
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Loan / Liability
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Type
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Total Amount
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Paid Actual Amount
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Paid Interest
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Total Amount Paid
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Net Balance
                 </th>
-                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
                   Actions
                 </th>
               </tr>
@@ -798,29 +812,29 @@ export default function PortfolioPageClient() {
                     key={`skeleton-debt-row-${i}`}
                     className="border-b border-slate-50 dark:border-white/5"
                   >
-                    <td className="px-4 py-4">
-                      <Skeleton className="h-3 w-40" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-40 mx-auto" />
                     </td>
-                    <td className="px-4 py-4">
-                      <Skeleton className="h-3 w-16" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-16 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="h-3 w-20 ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="h-3 w-20 mx-auto" />
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <Skeleton className="size-7 rounded-lg ml-auto" />
+                    <td className="px-4 py-4 text-center">
+                      <Skeleton className="size-7 rounded-lg mx-auto" />
                     </td>
                   </tr>
                 ))
@@ -854,39 +868,54 @@ export default function PortfolioPageClient() {
                         setIsAddLiabilityOpen(true);
                       }}
                     >
-                      <td className="px-4 py-2.5">
-                        <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px]">
+                      <td className="px-4 py-2.5 text-center">
+                        <div className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[200px] mx-auto text-center">
                           {debt.name}
                         </div>
                       </td>
-                      <td className="px-4 py-2.5">
-                        <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500">
+                      <td className="px-4 py-2.5 text-center">
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-rose-500 inline-block text-center">
                           {debt.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-slate-600 dark:text-slate-300">
-                        ₹{totalAmount.toLocaleString()}
+                      <td className="px-4 py-2.5 text-center font-bold text-[11px] text-slate-600 dark:text-slate-300">
+                        ₹
+                        {totalAmount.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-emerald-500">
-                        ₹{paidActual.toLocaleString()}
+                      <td className="px-4 py-2.5 text-center font-bold text-[11px] text-emerald-500">
+                        ₹
+                        {paidActual.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-orange-500">
-                        ₹{paidInterest.toLocaleString()}
+                      <td className="px-4 py-2.5 text-center font-bold text-[11px] text-orange-500">
+                        ₹
+                        {paidInterest.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
-                        ₹{totalPaid.toLocaleString()}
+                      <td className="px-4 py-2.5 text-center font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
+                        ₹
+                        {totalPaid.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-black text-xs text-rose-500">
-                        ₹{netBalance.toLocaleString()}
+                      <td className="px-4 py-2.5 text-center font-black text-xs text-rose-500">
+                        ₹
+                        {netBalance.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-4 py-2.5 text-right">
+                      <td className="px-4 py-2.5 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setItemToDelete({ id: debt.id, type: "account" });
                             setIsDeleteModalOpen(true);
                           }}
-                          className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 transition-colors"
+                          className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 transition-colors mx-auto flex items-center justify-center"
                           title="Delete Loan"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

@@ -37,7 +37,7 @@ export function YearlyBurdenCard({
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[8px] font-black text-primary uppercase tracking-widest">
                 ₹
-                {monthlyAmount.toLocaleString(undefined, {
+                {monthlyAmount.toLocaleString("en-IN", {
                   maximumFractionDigits: 0,
                 })}
                 /mo

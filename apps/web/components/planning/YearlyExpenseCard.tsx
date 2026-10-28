@@ -55,12 +55,12 @@ export function YearlyExpenseCard({
               Monthly Burden
             </span>
             <span className="text-[8px] font-bold text-slate-400">
-              ₹{expense.yearlyAmount.toLocaleString()}/yr
+              ₹{expense.yearlyAmount.toLocaleString("en-IN")}/yr
             </span>
           </div>
           <p className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
             ₹
-            {monthlyAllocation.toLocaleString(undefined, {
+            {monthlyAllocation.toLocaleString("en-IN", {
               maximumFractionDigits: 0,
             })}
             <span className="text-[9px] font-bold text-primary ml-1 uppercase tracking-widest">

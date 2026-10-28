@@ -13,7 +13,11 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
+import {
+  formatCurrency,
+  getFiscalMonthStart,
+  formatCompact,
+} from "@/lib/utils";
 import { Account, Transaction, WealthSnapshot } from "@repo/types";
 import {
   TrendingUp,
@@ -23,6 +27,7 @@ import {
   Layers,
   BarChart3,
   LineChart as LineChartIcon,
+  Landmark,
 } from "lucide-react";
 
 interface MonthlyGrowthChartProps {
@@ -33,6 +38,7 @@ interface MonthlyGrowthChartProps {
   className?: string;
 }
 
+export type DataScope = "all" | "accounts_cash";
 type TimeframeOption = "6M" | "12M" | "YTD";
 type ChartViewMode = "combined" | "growth" | "networth";
 
@@ -57,9 +63,14 @@ interface CustomTooltipProps {
     payload: MonthlyDataPoint;
   }>;
   label?: string;
+  dataScope?: DataScope;
 }
 
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
+function CustomTooltip({
+  active,
+  payload,
+  dataScope = "all",
+}: CustomTooltipProps) {
   if (active && payload && payload.length) {
     const data: MonthlyDataPoint = payload[0]!.payload;
     const isPositive = data.growth >= 0;
@@ -81,63 +92,79 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           )}
         </div>
 
-        {/* Growth Delta */}
-        <div>
-          <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
-            Monthly Wealth Change
-          </span>
-          <div className="flex items-center gap-1 mt-0.5">
-            {isPositive ? (
-              <TrendingUp className="size-3 text-emerald-400 shrink-0" />
-            ) : (
-              <TrendingDown className="size-3 text-rose-400 shrink-0" />
-            )}
-            <span
-              className={`text-xs sm:text-sm font-black ${
-                isPositive ? "text-emerald-400" : "text-rose-400"
-              }`}
-            >
-              {isMasked ? (
-                "*****"
-              ) : (
-                <>
-                  {isPositive ? "+" : ""}
-                  {formatCurrency(data.growth)}
-                  <span className="text-[9px] sm:text-[10px] font-bold opacity-80 ml-1">
-                    ({data.growthPercentage > 0 ? "+" : ""}
-                    {data.growthPercentage.toFixed(1)}%)
+        {/* Growth Delta & Stats */}
+        {data.netWorth === 0 && data.growth === 0 && !data.isCurrentMonth ? (
+          <div className="py-1">
+            <span className="text-[10px] text-slate-400 font-medium italic">
+              Tracking not started yet
+            </span>
+          </div>
+        ) : (
+          <>
+            <div>
+              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                {dataScope === "accounts_cash"
+                  ? "Monthly Cash Change"
+                  : "Monthly Wealth Change"}
+              </span>
+              <div className="flex items-center gap-1 mt-0.5">
+                {isPositive ? (
+                  <TrendingUp className="size-3 text-emerald-400 shrink-0" />
+                ) : (
+                  <TrendingDown className="size-3 text-rose-400 shrink-0" />
+                )}
+                <span
+                  className={`text-xs sm:text-sm font-black ${
+                    isPositive ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {isMasked ? (
+                    "*****"
+                  ) : (
+                    <>
+                      {isPositive ? "+" : ""}
+                      {formatCurrency(data.growth)}
+                      <span className="text-[9px] sm:text-[10px] font-bold opacity-80 ml-1">
+                        ({data.growthPercentage > 0 ? "+" : ""}
+                        {data.growthPercentage.toFixed(1)}%)
+                      </span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {/* Net Worth or Liquid Capital */}
+            <div className="pt-1 border-t border-white/5 flex items-center justify-between">
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+                {dataScope === "accounts_cash"
+                  ? "Cash & Accounts:"
+                  : "Net Worth:"}
+              </span>
+              <span className="text-[11px] sm:text-xs font-black text-white">
+                {formatCurrency(data.netWorth)}
+              </span>
+            </div>
+
+            {/* Cash Flow */}
+            {(data.inflow > 0 || data.outflow > 0) && (
+              <div className="pt-1 border-t border-white/5 space-y-0.5 text-[9px] sm:text-[10px]">
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-400">Inflow:</span>
+                  <span className="text-emerald-400 font-mono">
+                    {formatCurrency(data.inflow)}
                   </span>
-                </>
-              )}
-            </span>
-          </div>
-        </div>
-
-        {/* Net Worth */}
-        <div className="pt-1 border-t border-white/5 flex items-center justify-between">
-          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
-            Net Worth:
-          </span>
-          <span className="text-[11px] sm:text-xs font-black text-white">
-            {formatCurrency(data.netWorth)}
-          </span>
-        </div>
-
-        {/* Cash Flow */}
-        <div className="pt-1 border-t border-white/5 space-y-0.5 text-[9px] sm:text-[10px]">
-          <div className="flex justify-between font-bold">
-            <span className="text-slate-400">Inflow:</span>
-            <span className="text-emerald-400 font-mono">
-              {formatCurrency(data.inflow)}
-            </span>
-          </div>
-          <div className="flex justify-between font-bold">
-            <span className="text-slate-400">Outflow:</span>
-            <span className="text-rose-400 font-mono">
-              {formatCurrency(data.outflow)}
-            </span>
-          </div>
-        </div>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-400">Outflow:</span>
+                  <span className="text-rose-400 font-mono">
+                    {formatCurrency(data.outflow)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     );
   }
@@ -151,6 +178,7 @@ export function MonthlyGrowthChart({
   monthStartDate = 1,
   className = "",
 }: MonthlyGrowthChartProps) {
+  const [dataScope, setDataScope] = useState<DataScope>("all");
   const [timeframe, setTimeframe] = useState<TimeframeOption>("6M");
   const [viewMode, setViewMode] = useState<ChartViewMode>("combined");
   const [isMobile, setIsMobile] = useState(false);
@@ -164,8 +192,21 @@ export function MonthlyGrowthChart({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Current Net Worth from active accounts
+  const isLiquid = (type: string) => type === "bank" || type === "cash";
+
+  const liquidAccountIds = useMemo(() => {
+    return new Set(
+      accounts.filter((a) => !a.isClosed && isLiquid(a.type)).map((a) => a.id),
+    );
+  }, [accounts]);
+
+  // Current Net Worth from active accounts (based on scope)
   const currentNetWorth = useMemo(() => {
+    if (dataScope === "accounts_cash") {
+      return accounts
+        .filter((a) => !a.isClosed && isLiquid(a.type))
+        .reduce((sum, a) => sum + Math.max(0, a.balance), 0);
+    }
     const assets = accounts
       .filter((a) => !a.isClosed && a.type !== "debt")
       .reduce((sum, a) => sum + Math.max(0, a.balance), 0);
@@ -173,7 +214,7 @@ export function MonthlyGrowthChart({
       .filter((a) => !a.isClosed && (a.type === "debt" || a.type === "card"))
       .reduce((sum, a) => sum + Math.abs(a.balance), 0);
     return assets - debts;
-  }, [accounts]);
+  }, [accounts, dataScope]);
 
   // Compute monthly growth data points
   const monthlyData: MonthlyDataPoint[] = useMemo(() => {
@@ -236,16 +277,42 @@ export function MonthlyGrowthChart({
       const txs = transactions.filter((tx) => {
         if (tx.status === "pending_confirmation") return false;
         const d = new Date(tx.date);
-        return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+        const inWindow =
+          d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+        if (!inWindow) return false;
+        if (dataScope === "accounts_cash") {
+          return liquidAccountIds.has(tx.accountId);
+        }
+        return true;
       });
 
-      // Inflow & outflow in that fiscal month from transactions or snapshots
-      pt.inflow = txs
-        .filter((t) => t.type === "income")
-        .reduce((sum, t) => sum + t.amount, 0);
-      pt.outflow = txs
-        .filter((t) => t.type === "expense" || t.type === "transfer")
-        .reduce((sum, t) => sum + t.amount, 0);
+      if (dataScope === "accounts_cash") {
+        pt.inflow = txs
+          .filter(
+            (t) =>
+              t.type === "income" ||
+              (t.type === "transfer" &&
+                t.toAccountId &&
+                liquidAccountIds.has(t.toAccountId) &&
+                !liquidAccountIds.has(t.accountId)),
+          )
+          .reduce((sum, t) => sum + t.amount, 0);
+        pt.outflow = txs
+          .filter(
+            (t) =>
+              t.type === "expense" ||
+              (t.type === "transfer" &&
+                (!t.toAccountId || !liquidAccountIds.has(t.toAccountId))),
+          )
+          .reduce((sum, t) => sum + t.amount, 0);
+      } else {
+        pt.inflow = txs
+          .filter((t) => t.type === "income")
+          .reduce((sum, t) => sum + t.amount, 0);
+        pt.outflow = txs
+          .filter((t) => t.type === "expense" || t.type === "transfer")
+          .reduce((sum, t) => sum + t.amount, 0);
+      }
 
       // Check if a Wealth Snapshot exists in this month
       const monthSnapshots = snapshots.filter((s) => {
@@ -260,7 +327,20 @@ export function MonthlyGrowthChart({
             new Date(b.createdAt || b.date).getTime() -
             new Date(a.createdAt || a.date).getTime(),
         )[0]!;
-        pt.netWorth = latest.netWorth;
+
+        if (dataScope === "accounts_cash") {
+          if (latest.accountSnapshots && latest.accountSnapshots.length > 0) {
+            pt.netWorth = latest.accountSnapshots
+              .filter((acc) => isLiquid(acc.type))
+              .reduce((sum, acc) => sum + acc.balance, 0);
+          } else if (latest.liquidCapital !== undefined) {
+            pt.netWorth = latest.liquidCapital;
+          } else {
+            pt.netWorth = latest.netWorth;
+          }
+        } else {
+          pt.netWorth = latest.netWorth;
+        }
 
         // If no manual transactions logged, extract cash flows from snapshot account deltas
         if (pt.inflow === 0 && pt.outflow === 0) {
@@ -268,11 +348,15 @@ export function MonthlyGrowthChart({
           let snapOutflow = 0;
           for (const s of monthSnapshots) {
             if (s.accountSnapshots && s.accountSnapshots.length > 0) {
-              for (const acc of s.accountSnapshots) {
+              const eligibleAccs =
+                dataScope === "accounts_cash"
+                  ? s.accountSnapshots.filter((acc) => isLiquid(acc.type))
+                  : s.accountSnapshots;
+              for (const acc of eligibleAccs) {
                 if (acc.delta > 0) snapInflow += acc.delta;
                 if (acc.delta < 0) snapOutflow += Math.abs(acc.delta);
               }
-            } else if (s.netWorthDelta) {
+            } else if (dataScope === "all" && s.netWorthDelta) {
               if (s.netWorthDelta > 0) snapInflow += s.netWorthDelta;
               if (s.netWorthDelta < 0) snapOutflow += Math.abs(s.netWorthDelta);
             }
@@ -292,14 +376,31 @@ export function MonthlyGrowthChart({
         new Date(b.createdAt || b.date).getTime(),
     );
     const earliestSnap = chronSnapshots[0];
-    const earliestDate = earliestSnap
-      ? new Date(earliestSnap.createdAt || earliestSnap.date)
-      : null;
-    const baselineNW =
-      earliestSnap?.previousNetWorth ??
-      (earliestSnap
-        ? Math.max(0, earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0))
-        : 0);
+    let baselineNW = 0;
+    if (earliestSnap) {
+      if (dataScope === "accounts_cash") {
+        if (
+          earliestSnap.accountSnapshots &&
+          earliestSnap.accountSnapshots.length > 0
+        ) {
+          baselineNW = earliestSnap.accountSnapshots
+            .filter((acc) => isLiquid(acc.type))
+            .reduce(
+              (sum, acc) => sum + (acc.previousBalance ?? acc.balance),
+              0,
+            );
+        } else if (earliestSnap.liquidCapital !== undefined) {
+          baselineNW = earliestSnap.liquidCapital;
+        }
+      } else {
+        baselineNW =
+          earliestSnap.previousNetWorth ??
+          Math.max(
+            0,
+            earliestSnap.netWorth - (earliestSnap.netWorthDelta || 0),
+          );
+      }
+    }
 
     // Latest month net worth uses current real-time Net Worth if available
     const lastPoint = points[points.length - 1];
@@ -307,27 +408,57 @@ export function MonthlyGrowthChart({
       lastPoint.netWorth = currentNetWorth;
     }
 
-    // Backfill Net Worth for months without snapshots using net transaction flows or baseline
-    for (let i = points.length - 2; i >= 0; i--) {
-      const current = points[i]!;
-      const next = points[i + 1]!;
+    // Determine the first month that has actual user activity
+    // (a snapshot, non-zero cash flow, or current month with active accounts)
+    let firstActiveIdx = -1;
+    for (let i = 0; i < points.length; i++) {
+      const pt = points[i]!;
+      const start = pt.dateObj;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
 
-      if (current.netWorth === 0) {
-        if (
-          earliestDate &&
-          current.dateObj.getTime() < earliestDate.getTime()
-        ) {
-          // Pre-tracking historical months baseline
-          current.netWorth = baselineNW;
-        } else {
-          const nextNetFlow = next.inflow - next.outflow;
-          current.netWorth = Math.max(0, next.netWorth - nextNetFlow);
+      const hasSnap = snapshots.some((s) => {
+        const sd = new Date(s.createdAt || s.date);
+        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
+      });
+
+      const hasTx = pt.inflow > 0 || pt.outflow > 0;
+      const isCurWithBalance = pt.isCurrentMonth && currentNetWorth > 0;
+
+      if (hasSnap || hasTx || isCurWithBalance) {
+        firstActiveIdx = i;
+        break;
+      }
+    }
+
+    if (firstActiveIdx === -1) {
+      return points;
+    }
+
+    // Pre-tracking historical months have 0 net worth and 0 growth
+    for (let i = 0; i < firstActiveIdx; i++) {
+      points[i]!.netWorth = 0;
+      points[i]!.growth = 0;
+      points[i]!.growthPercentage = 0;
+    }
+
+    // Fill any gap months between firstActiveIdx and lastPoint using net transactions or interpolation
+    for (let i = firstActiveIdx; i < points.length; i++) {
+      const pt = points[i]!;
+      if (pt.netWorth === 0) {
+        if (i === points.length - 1 && currentNetWorth > 0) {
+          pt.netWorth = currentNetWorth;
+        } else if (i > firstActiveIdx) {
+          const prev = points[i - 1]!;
+          const netFlow = pt.inflow - pt.outflow;
+          pt.netWorth = Math.max(0, (prev.netWorth || 0) + netFlow);
         }
       }
     }
 
-    // Calculate month-over-month Growth & Percentage
-    for (let i = 0; i < points.length; i++) {
+    // Calculate month-over-month Growth & Percentage from firstActiveIdx onwards
+    for (let i = firstActiveIdx; i < points.length; i++) {
       const pt = points[i]!;
       const start = pt.dateObj;
       const end = new Date(start);
@@ -339,19 +470,33 @@ export function MonthlyGrowthChart({
         return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
       });
 
-      const monthDelta = monthSnapshots.reduce(
-        (sum, s) => sum + (Number(s.netWorthDelta) || 0),
-        0,
-      );
+      let monthDelta = 0;
+      if (monthSnapshots.length > 0) {
+        if (dataScope === "accounts_cash") {
+          for (const s of monthSnapshots) {
+            if (s.accountSnapshots && s.accountSnapshots.length > 0) {
+              monthDelta += s.accountSnapshots
+                .filter((acc) => isLiquid(acc.type))
+                .reduce((sum, acc) => sum + (acc.delta || 0), 0);
+            }
+          }
+        } else {
+          monthDelta = monthSnapshots.reduce(
+            (sum, s) => sum + (Number(s.netWorthDelta) || 0),
+            0,
+          );
+        }
+      }
 
       if (monthSnapshots.length > 0 && monthDelta !== 0) {
         pt.growth = monthDelta;
         const prevNW = Math.max(0, pt.netWorth - monthDelta);
         pt.growthPercentage = prevNW > 0 ? (pt.growth / prevNW) * 100 : 0;
-      } else if (i === 0) {
-        pt.growth = pt.netWorth > baselineNW ? pt.netWorth - baselineNW : 0;
+      } else if (i === firstActiveIdx) {
+        // Initial month where tracking began: established capital vs baseline
+        pt.growth = pt.netWorth - baselineNW;
         pt.growthPercentage =
-          baselineNW > 0 ? (pt.growth / baselineNW) * 100 : 0;
+          baselineNW > 0 ? (pt.growth / baselineNW) * 100 : 100;
       } else {
         const prev = points[i - 1]!;
         pt.growth = pt.netWorth - prev.netWorth;
@@ -361,9 +506,18 @@ export function MonthlyGrowthChart({
     }
 
     return points;
-  }, [snapshots, transactions, currentNetWorth, monthStartDate, timeframe]);
+  }, [
+    snapshots,
+    transactions,
+    currentNetWorth,
+    monthStartDate,
+    timeframe,
+    dataScope,
+    liquidAccountIds,
+  ]);
 
   // Summary Metrics across the selected timeframe
+  // Only count months that actually have real data (snapshot or non-zero transactions)
   const metrics = useMemo(() => {
     if (monthlyData.length === 0) {
       return {
@@ -376,8 +530,14 @@ export function MonthlyGrowthChart({
       };
     }
 
+    // "Live" months = months with an actual snapshot or real cash flow transactions
+    const livePoints = monthlyData.filter(
+      (p) =>
+        p.growth !== 0 || p.inflow > 0 || p.outflow > 0 || p.isCurrentMonth,
+    );
+
     const nonZeroPoints = monthlyData.filter((p) => p.netWorth > 0);
-    const activeTransitions = monthlyData.filter((p) => p.growth !== 0);
+    const activeTransitions = livePoints.filter((p) => p.growth !== 0);
 
     const totalGrowth =
       activeTransitions.length > 0
@@ -391,18 +551,22 @@ export function MonthlyGrowthChart({
       activeTransitions.length > 0
         ? activeTransitions.reduce((a, b) => a + b.growth, 0) /
           activeTransitions.length
-        : totalGrowth;
+        : livePoints.length > 0
+          ? totalGrowth / livePoints.length
+          : totalGrowth;
 
-    // Best performing month
-    const sorted = [...monthlyData].sort((a, b) => b.growth - a.growth);
-    const bestMonth = sorted.find((p) => p.growth > 0) || sorted[0] || null;
+    // Best performing month — only among live months
+    const sorted = [...livePoints].sort((a, b) => b.growth - a.growth);
+    const bestMonth = sorted.find((p) => p.growth > 0) || null;
 
-    // Positive months count
-    const positiveCount = monthlyData.filter((p) => p.growth > 0).length;
+    // Positive months count — only among months with actual activity
+    const positiveCount = livePoints.filter((p) => p.growth > 0).length;
     const positiveRatio =
       activeTransitions.length > 0
         ? (positiveCount / activeTransitions.length) * 100
-        : 100;
+        : livePoints.length > 0
+          ? (positiveCount / livePoints.length) * 100
+          : 100;
 
     return {
       totalGrowth,
@@ -410,7 +574,7 @@ export function MonthlyGrowthChart({
       bestMonth,
       positiveRatio,
       positiveCount,
-      totalCount: monthlyData.length,
+      totalCount: livePoints.length || monthlyData.length,
     };
   }, [monthlyData]);
 
@@ -418,37 +582,102 @@ export function MonthlyGrowthChart({
 
   return (
     <div
-      className={`rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 p-3 sm:p-5 shadow-sm space-y-3 sm:space-y-4 ${className}`}
+      className={`rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 p-3.5 shadow-sm space-y-3 ${className}`}
     >
       {/* Top Header Row with Title, Controls & Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="size-9 sm:size-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-primary/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-            <TrendingUp className="size-4.5 sm:size-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Monthly Growth & Trajectory
-              </h3>
-              <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hidden sm:inline">
-                MoM Expansion
-              </span>
+      <div className="flex flex-col gap-3">
+        {/* Row 1: Title and Desktop Scope Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="size-9 sm:size-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-primary/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <TrendingUp className="size-4.5 sm:size-5" />
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Net worth delta progression & monthly capital velocity
-            </p>
+            <div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Monthly Growth & Trajectory
+                </h3>
+                <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hidden sm:inline">
+                  {dataScope === "accounts_cash"
+                    ? "Accounts & Cash"
+                    : "All Wealth"}
+                </span>
+              </div>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {dataScope === "accounts_cash"
+                  ? "Liquid cash velocity & delta across bank & cash accounts"
+                  : "Net worth delta progression & monthly capital velocity"}
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop/Tablet Scope Toggle */}
+          <div className="hidden sm:flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5">
+            <button
+              type="button"
+              onClick={() => setDataScope("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                dataScope === "all"
+                  ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Include all assets, investments, accounts & debts"
+            >
+              <Layers className="size-3.5" />
+              <span>All Data</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDataScope("accounts_cash")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                dataScope === "accounts_cash"
+                  ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Only bank accounts and liquid cash"
+            >
+              <Landmark className="size-3.5" />
+              <span>Accounts & Cash</span>
+            </button>
           </div>
         </div>
 
-        {/* View Mode & Timeframe Controls - Full Width on Mobile */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
+        {/* Row 2 (Mobile only): Full-width Segmented Scope Toggle */}
+        <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 sm:hidden">
+          <button
+            type="button"
+            onClick={() => setDataScope("all")}
+            className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              dataScope === "all"
+                ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Layers className="size-3.5 shrink-0" />
+            <span>All Data</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDataScope("accounts_cash")}
+            className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              dataScope === "accounts_cash"
+                ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Landmark className="size-3.5 shrink-0" />
+            <span>Accounts & Cash</span>
+          </button>
+        </div>
+
+        {/* Row 3 (Mobile) / Secondary Bar: View Mode & Timeframe Controls */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
           {/* Chart View Mode Toggle */}
           <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5">
             <button
               type="button"
               onClick={() => setViewMode("combined")}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "combined"
                   ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -461,7 +690,7 @@ export function MonthlyGrowthChart({
             <button
               type="button"
               onClick={() => setViewMode("growth")}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "growth"
                   ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -474,7 +703,7 @@ export function MonthlyGrowthChart({
             <button
               type="button"
               onClick={() => setViewMode("networth")}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "networth"
                   ? "bg-white dark:bg-slate-800 text-indigo-500 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -493,7 +722,7 @@ export function MonthlyGrowthChart({
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   timeframe === tf
                     ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -507,11 +736,13 @@ export function MonthlyGrowthChart({
       </div>
 
       {/* 4 Summary Stat Metric Pills - Mobile 2-Col / Desktop 4-Col */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 pt-0.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-0.5">
         {/* Metric 1: Total Period Growth */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 sm:space-y-1">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
-            Period Growth
+            {dataScope === "accounts_cash"
+              ? "Period Liquid Growth"
+              : "Period Growth"}
           </span>
           <div className="flex items-baseline gap-1 flex-wrap">
             <span
@@ -532,9 +763,11 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Metric 2: Average Monthly Growth */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 sm:space-y-1">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
-            Avg MoM Growth
+            {dataScope === "accounts_cash"
+              ? "Avg Liquid MoM"
+              : "Avg MoM Growth"}
           </span>
           <div className="flex items-baseline gap-1 flex-wrap">
             <span
@@ -560,7 +793,7 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Metric 3: Best Month */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 sm:space-y-1">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             Best Month
           </span>
@@ -581,7 +814,7 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Metric 4: Positive Consistency Rate */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 sm:space-y-1">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             Consistency
           </span>
@@ -643,15 +876,9 @@ export function MonthlyGrowthChart({
                 yAxisId="deltaAxis"
                 axisLine={false}
                 tickLine={false}
-                width={isMobile ? 32 : 45}
+                width={isMobile ? 36 : 50}
                 tick={{ fill: "#94a3b8", fontSize: isMobile ? 8 : 10 }}
-                tickFormatter={(val: number) => {
-                  if (Math.abs(val) >= 1000000)
-                    return `${(val / 1000000).toFixed(1)}M`;
-                  if (Math.abs(val) >= 1000)
-                    return `${(val / 1000).toFixed(0)}k`;
-                  return `${val}`;
-                }}
+                tickFormatter={(val: number) => formatCompact(val)}
               />
             )}
 
@@ -663,13 +890,9 @@ export function MonthlyGrowthChart({
                 hide={isMobile && viewMode === "combined"}
                 axisLine={false}
                 tickLine={false}
-                width={isMobile ? 32 : 45}
+                width={isMobile ? 36 : 50}
                 tick={{ fill: "#6366f1", fontSize: isMobile ? 8 : 10 }}
-                tickFormatter={(val: number) => {
-                  if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
-                  if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
-                  return `${val}`;
-                }}
+                tickFormatter={(val: number) => formatCompact(val)}
               />
             )}
 
@@ -685,14 +908,18 @@ export function MonthlyGrowthChart({
               />
             )}
 
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip dataScope={dataScope} />} />
 
             {/* Bars for Monthly Growth */}
             {(viewMode === "combined" || viewMode === "growth") && (
               <Bar
                 yAxisId="deltaAxis"
                 dataKey="growth"
-                name="Monthly Growth"
+                name={
+                  dataScope === "accounts_cash"
+                    ? "Cash & Accounts Growth"
+                    : "Monthly Growth"
+                }
                 maxBarSize={isMobile ? 24 : 38}
                 radius={[4, 4, 0, 0]}
               >
@@ -715,7 +942,11 @@ export function MonthlyGrowthChart({
                 yAxisId="netWorthAxis"
                 type="monotone"
                 dataKey="netWorth"
-                name="Net Worth Trend"
+                name={
+                  dataScope === "accounts_cash"
+                    ? "Cash & Accounts"
+                    : "Net Worth Trend"
+                }
                 stroke="#6366f1"
                 strokeWidth={isMobile ? 2 : 2.5}
                 dot={{
@@ -750,7 +981,9 @@ export function MonthlyGrowthChart({
             <div className="flex items-center gap-1">
               <div className="w-2.5 h-0.5 bg-indigo-500 rounded-full shrink-0" />
               <span className="text-indigo-600 dark:text-indigo-400">
-                Net Worth Line
+                {dataScope === "accounts_cash"
+                  ? "Cash & Accounts Line"
+                  : "Net Worth Line"}
               </span>
             </div>
           )}

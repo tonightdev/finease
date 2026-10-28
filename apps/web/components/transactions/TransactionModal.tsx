@@ -122,7 +122,7 @@ export function TransactionModal({
 
     if (interest > amount) {
       toast.error(
-        `Interest portion (₹${interest.toLocaleString()}) cannot be greater than total amount (₹${amount.toLocaleString()})`,
+        `Interest portion (₹${interest.toLocaleString("en-IN")}) cannot be greater than total amount (₹${amount.toLocaleString("en-IN")})`,
       );
       return;
     }
@@ -272,7 +272,7 @@ export function TransactionModal({
                         .filter((a) => !a.isClosed && a.type === "bank")
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -284,7 +284,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -331,7 +331,7 @@ export function TransactionModal({
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
                             {acc.name} (₹
-                            {Math.abs(acc.balance).toLocaleString()})
+                            {Math.abs(acc.balance).toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -345,7 +345,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -359,7 +359,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -373,7 +373,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -381,7 +381,8 @@ export function TransactionModal({
                       <optgroup label="Financial Goals">
                         {goals.map((g: FinancialGoal) => (
                           <option key={g.id} value={g.id}>
-                            {g.name} (₹{g.currentAmount.toLocaleString()})
+                            {g.name} (₹{g.currentAmount.toLocaleString("en-IN")}
+                            )
                           </option>
                         ))}
                       </optgroup>
@@ -433,7 +434,7 @@ export function TransactionModal({
                         .filter((a) => !a.isClosed && a.type === "bank")
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -445,7 +446,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -479,7 +480,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -493,7 +494,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -507,7 +508,7 @@ export function TransactionModal({
                         )
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString()})
+                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                           </option>
                         ))}
                     </optgroup>
@@ -538,7 +539,7 @@ export function TransactionModal({
                       .filter((a) => !a.isClosed && a.type === "bank")
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
-                          {acc.name} (₹{acc.balance.toLocaleString()})
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                         </option>
                       ))}
                   </optgroup>
@@ -549,7 +550,7 @@ export function TransactionModal({
                       )
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
-                          {acc.name} (₹{acc.balance.toLocaleString()})
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                         </option>
                       ))}
                   </optgroup>
@@ -558,7 +559,7 @@ export function TransactionModal({
                       .filter((a) => !a.isClosed && a.type === "investment")
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
-                          {acc.name} (₹{acc.balance.toLocaleString()})
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                         </option>
                       ))}
                   </optgroup>

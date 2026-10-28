@@ -6,6 +6,7 @@ export type SettingsTabId =
   | "profile"
   | "preferences"
   | "accounts"
+  | "categories"
   | "security"
   | "identities"
   | "data";
