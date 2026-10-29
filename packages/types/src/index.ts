@@ -358,3 +358,61 @@ export interface MonthlyDebrief {
   insight: string;
   hasSufficientData: boolean;
 }
+
+export type VaultCategory =
+  | "bank"
+  | "email"
+  | "social"
+  | "app"
+  | "work"
+  | "utility"
+  | "other";
+
+export interface VaultSettings {
+  userId: string;
+  vaultSalt: string;
+  passwordVerifier: string;
+  verifierIv: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VaultItem {
+  id: string;
+  userId: string;
+  title: string;
+  category: VaultCategory;
+  websiteUrl?: string;
+  encryptedUsername: string;
+  encryptedPassword: string;
+  iv: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SetupVaultDto {
+  vaultSalt: string;
+  passwordVerifier: string;
+  verifierIv: string;
+}
+
+export interface CreateVaultItemDto {
+  title: string;
+  category: VaultCategory;
+  websiteUrl?: string;
+  encryptedUsername: string;
+  encryptedPassword: string;
+  iv: string;
+  notes?: string;
+}
+
+export interface UpdateVaultItemDto {
+  title?: string;
+  category?: VaultCategory;
+  websiteUrl?: string;
+  encryptedUsername?: string;
+  encryptedPassword?: string;
+  iv?: string;
+  notes?: string;
+}
