@@ -4,10 +4,10 @@ import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
-import { GoalProgressCard } from "@/components/dashboard/GoalProgressCard";
 import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
 import { WealthIndex } from "@/components/dashboard/WealthIndex";
-import { SmartAssistant } from "@/components/dashboard/SmartAssistant";
+import { FinancialIntelligencePulse } from "@/components/dashboard/FinancialIntelligencePulse";
+import { CapitalResilienceCard } from "@/components/dashboard/CapitalResilienceCard";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchAccounts, fetchSnapshots } from "@/store/slices/accountsSlice";
@@ -21,7 +21,6 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
-  Target as TargetIcon,
   AlertTriangle,
   ArrowRight,
   Landmark,
@@ -93,7 +92,7 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       dispatch(fetchAccounts());
-      dispatch(fetchSnapshots(12));
+      dispatch(fetchSnapshots(24));
       dispatch(fetchAssetClasses());
       dispatch(fetchTransactions());
       dispatch(fetchGoals());
@@ -135,7 +134,7 @@ export default function Home() {
                 body,
                 icon: "/icon-192x192.png",
                 badge: "/favicon.svg",
-                data: { url: "/dashboard" },
+                data: { url: "/plans?tab=Expiries" },
               });
             })
             .catch((err) =>
@@ -207,6 +206,205 @@ export default function Home() {
   }, [analyticsDebts, analyticsCards]);
 
   const realTimeNetWorth = assets - liabilities;
+
+  // Smart Financial Notifications — fires once per day max per type
+  useEffect(() => {
+    if (
+      permission !== "granted" ||
+      typeof window === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      allAccounts.length === 0
+    )
+      return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const dayOfWeek = new Date().getDay(); // 0 = Sunday
+
+    const showNotif = (
+      key: string,
+      title: string,
+      body: string,
+      url: string,
+    ) => {
+      const storageKey = `finease_notif_${key}`;
+      if (localStorage.getItem(storageKey) === today) return;
+      localStorage.setItem(storageKey, today);
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          void reg.showNotification(title, {
+            body,
+            icon: "/icon-192x192.png",
+            badge: "/favicon.svg",
+            data: { url },
+          });
+        })
+        .catch(() => {});
+    };
+
+    // 1. Weekly Spending Digest — every Sunday
+    if (dayOfWeek === 0 && transactions.length > 0) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const weekTx = transactions.filter(
+        (tx) =>
+          tx.status !== "pending_confirmation" &&
+          new Date(tx.date) >= sevenDaysAgo,
+      );
+      const weekExpense = weekTx
+        .filter((t) => t.type === "expense")
+        .reduce((s, t) => s + t.amount, 0);
+      const weekIncome = weekTx
+        .filter((t) => t.type === "income")
+        .reduce((s, t) => s + t.amount, 0);
+      if (weekExpense > 0 || weekIncome > 0) {
+        const saved = weekIncome - weekExpense;
+        showNotif(
+          "weekly_digest",
+          "FinEase Weekly Digest",
+          `This week: ${weekIncome > 0 ? `Rs.${Math.round(weekIncome).toLocaleString("en-IN")} in, ` : ""}Rs.${Math.round(weekExpense).toLocaleString("en-IN")} spent. ${saved >= 0 ? `Saved Rs.${Math.round(saved).toLocaleString("en-IN")}.` : `Overspent by Rs.${Math.round(-saved).toLocaleString("en-IN")}.`}`,
+          "/reports",
+        );
+      }
+    }
+
+    // 2. Low Emergency Fund Alert — when runway < 3 months
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const monthlyExpenseAvg = transactions
+      .filter(
+        (tx) =>
+          tx.type === "expense" &&
+          tx.status !== "pending_confirmation" &&
+          new Date(tx.date) >= thirtyDaysAgo,
+      )
+      .reduce((s, tx) => s + tx.amount, 0);
+
+    const liquidBalance = analyticsAccounts
+      .filter((a) => a.type === "bank" || a.type === "cash")
+      .reduce((s, a) => s + Math.max(0, a.balance), 0);
+
+    if (monthlyExpenseAvg > 0 && liquidBalance > 0) {
+      const runway = liquidBalance / monthlyExpenseAvg;
+      if (runway < 3) {
+        showNotif(
+          "low_emergency_fund",
+          "Emergency Fund Alert",
+          `Liquid reserves cover only ${runway.toFixed(1)} months of expenses. Safe minimum is 3 months. Consider building your buffer.`,
+          "/reports",
+        );
+      }
+    }
+
+    // 3. Net Worth Milestone Celebration
+    if (realTimeNetWorth > 0) {
+      const milestones = [
+        100_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000,
+        25_000_000, 50_000_000, 100_000_000,
+      ];
+      for (const milestone of milestones) {
+        const prevKey = `finease_milestone_${milestone}`;
+        if (realTimeNetWorth >= milestone && !localStorage.getItem(prevKey)) {
+          localStorage.setItem(prevKey, "1");
+          const formatted =
+            milestone >= 10_000_000
+              ? `Rs.${(milestone / 10_000_000).toFixed(0)}Cr`
+              : milestone >= 100_000
+                ? `Rs.${(milestone / 100_000).toFixed(0)}L`
+                : `Rs.${(milestone / 1_000).toFixed(0)}K`;
+          showNotif(
+            `milestone_${milestone}`,
+            "Milestone Unlocked!",
+            `Your net worth just crossed ${formatted}! Keep the momentum going.`,
+            "/dashboard",
+          );
+          break;
+        }
+      }
+    }
+
+    // 4. Fiscal Cycle Reset Reminder — 1 or 2 days after Fiscal Cycle Reset Day
+    const monthStartDate = user?.monthStartDate || 1;
+    const now = new Date();
+    const currentFiscalStart = getFiscalMonthStart(now, monthStartDate);
+    const diffMs = now.getTime() - currentFiscalStart.getTime();
+    const daysSinceReset = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysSinceReset === 1 || daysSinceReset === 2) {
+      const cycleKey = `cycle_reset_${currentFiscalStart.toISOString().slice(0, 10)}`;
+      showNotif(
+        cycleKey,
+        "Fiscal Cycle Reset 📊",
+        "Your new financial cycle started recently. Time to track your latest expenses, review your balances, and keep your budget in check!",
+        "/transactions",
+      );
+    }
+  }, [
+    permission,
+    transactions,
+    analyticsAccounts,
+    allAccounts.length,
+    realTimeNetWorth,
+    user?.monthStartDate,
+  ]);
+
+  // Goal Pacing Notification (separate to use goals from Redux)
+  useEffect(() => {
+    if (
+      permission !== "granted" ||
+      typeof window === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      goals.length === 0
+    )
+      return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const showNotif = (
+      key: string,
+      title: string,
+      body: string,
+      url: string,
+    ) => {
+      const storageKey = `finease_notif_${key}`;
+      if (localStorage.getItem(storageKey) === today) return;
+      localStorage.setItem(storageKey, today);
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          void reg.showNotification(title, {
+            body,
+            icon: "/icon-192x192.png",
+            badge: "/favicon.svg",
+            data: { url },
+          });
+        })
+        .catch(() => {});
+    };
+
+    const behindGoal = goals.find((g: FinancialGoal) => {
+      if (!g.startDate || !g.targetDate) return false;
+      const start = new Date(g.startDate);
+      const target = new Date(g.targetDate);
+      const now = new Date();
+      if (now >= target) return false;
+      const elapsed = Math.max(0, now.getTime() - start.getTime());
+      const total = Math.max(1, target.getTime() - start.getTime());
+      const timeProgress = elapsed / total;
+      const amountProgress = g.currentAmount / Math.max(1, g.targetAmount);
+      return amountProgress < timeProgress * 0.85;
+    });
+
+    if (behindGoal) {
+      const pct = (
+        (behindGoal.currentAmount / behindGoal.targetAmount) *
+        100
+      ).toFixed(0);
+      showNotif(
+        "goal_pacing",
+        "Goal Falling Behind",
+        `${behindGoal.name} is at ${pct}% — behind schedule. A top-up now keeps you on track.`,
+        "/plans?tab=Goals",
+      );
+    }
+  }, [permission, goals]);
 
   const totalInvestments = useMemo(() => {
     return analyticsInvestmentAccounts.reduce(
@@ -344,7 +542,8 @@ export default function Home() {
     ];
     const now = new Date();
     const monthStartDate = user?.monthStartDate || 1;
-    for (let i = 0; i < 6; i++) {
+    const totalSlots = 24;
+    for (let i = 0; i < totalSlots; i++) {
       const d = getFiscalMonthStart(now, monthStartDate);
       d.setMonth(d.getMonth() - i);
       history.unshift({
@@ -378,8 +577,9 @@ export default function Home() {
     }
 
     // Latest month defaults to real-time Net Worth
-    if (history[5]) {
-      history[5].value = realTimeNetWorth;
+    const lastIdx = history.length - 1;
+    if (history[lastIdx]) {
+      history[lastIdx].value = realTimeNetWorth;
     }
 
     // Determine first month with actual user activity
@@ -402,7 +602,7 @@ export default function Home() {
         return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
       });
 
-      const isCurWithNW = i === 5 && realTimeNetWorth > 0;
+      const isCurWithNW = i === lastIdx && realTimeNetWorth > 0;
       if (hasSnap || hasTx || isCurWithNW) {
         firstActiveIdx = i;
         break;
@@ -415,7 +615,7 @@ export default function Home() {
         history[i]!.value = 0;
       }
       // Fill gap months between firstActiveIdx and current
-      for (let i = firstActiveIdx + 1; i <= 4; i++) {
+      for (let i = firstActiveIdx + 1; i <= lastIdx - 1; i++) {
         const current = history[i]!;
         if (current.value === 0) {
           const prev = history[i - 1]!;
@@ -755,96 +955,23 @@ export default function Home() {
         </div>
       )}
 
-      {/* Premium Insights Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-1">
+      {/* Premium Insights & Capital Pulse Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="lg:col-span-1 h-full">
           <WealthIndex />
         </div>
-        <div className="lg:col-span-2">
-          <SmartAssistant />
+        <div className="lg:col-span-2 h-full">
+          <FinancialIntelligencePulse />
         </div>
       </div>
 
+      {/* Asset Allocation & Capital Structure */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
-        <div className="w-full">
+        <div className="w-full h-full">
           <AssetAllocationDonut data={realTimeAssetAllocation} />
         </div>
-
-        <div className="w-full space-y-3 flex flex-col">
-          <div className="flex items-center justify-between px-1 group">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              Goal Progress
-              <span className="text-[7px] font-medium normal-case tracking-normal text-slate-400">
-                Pacing towards goals
-              </span>
-            </h3>
-            <Link
-              href="/plans?tab=Goals"
-              className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline transition-colors active:scale-95 flex items-center gap-1.5"
-            >
-              View Maps
-              <ArrowRight className="size-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {goals.filter((g) => g.currentAmount < g.targetAmount).length ===
-            0 ? (
-              <div className="h-full p-6 sm:p-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
-                <TargetIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 opacity-50" />
-                <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
-                  No active goals defined
-                </p>
-              </div>
-            ) : (
-              goals
-                .filter((g) => g.currentAmount < g.targetAmount)
-                .slice(0, 3)
-                .map((goal: FinancialGoal) => {
-                  const percentageSaved = Math.min(
-                    100,
-                    (goal.currentAmount / goal.targetAmount) * 100,
-                  );
-
-                  // Calculate expected pace based on time elapsed
-                  const now = new Date();
-                  const start = new Date(goal.startDate || now);
-                  const target = new Date(goal.targetDate);
-                  const totalDuration = target.getTime() - start.getTime();
-                  const elapsed = now.getTime() - start.getTime();
-                  const expectedPercentage =
-                    totalDuration > 0
-                      ? Math.min(
-                          100,
-                          Math.max(0, (elapsed / totalDuration) * 100),
-                        )
-                      : 100;
-
-                  return (
-                    <GoalProgressCard
-                      key={goal.id}
-                      name={goal.name}
-                      targetAmount={goal.targetAmount}
-                      currentAmount={goal.currentAmount}
-                      percentageSaved={percentageSaved}
-                      expectedPercentage={expectedPercentage}
-                      requirementPerMonth={(() => {
-                        const today = new Date();
-                        const targetDate = new Date(goal.targetDate);
-                        const monthsRemaining =
-                          (targetDate.getFullYear() - today.getFullYear()) *
-                            12 +
-                          (targetDate.getMonth() - today.getMonth());
-                        if (monthsRemaining <= 0) return 0;
-                        const shortfall =
-                          goal.targetAmount - goal.currentAmount;
-                        return shortfall / monthsRemaining;
-                      })()}
-                    />
-                  );
-                })
-            )}
-          </div>
+        <div className="w-full h-full">
+          <CapitalResilienceCard />
         </div>
       </div>
 

@@ -271,17 +271,35 @@ function PlansDirectoryPageContent() {
   };
 
   const filteredPlans = useMemo(() => {
-    return plans.filter(
-      (p: Simulation) => (p.status || "ongoing") === simFilter,
-    );
+    return plans
+      .filter((p: Simulation) => (p.status || "ongoing") === simFilter)
+      .sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "", undefined, {
+          sensitivity: "base",
+        }),
+      );
   }, [plans, simFilter]);
 
   const filteredGoals = useMemo(() => {
-    return goals.filter((g: FinancialGoal) => {
-      const isCompleted = g.currentAmount >= g.targetAmount;
-      return goalFilter === "completed" ? isCompleted : !isCompleted;
-    });
+    return goals
+      .filter((g: FinancialGoal) => {
+        const isCompleted = g.currentAmount >= g.targetAmount;
+        return goalFilter === "completed" ? isCompleted : !isCompleted;
+      })
+      .sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "", undefined, {
+          sensitivity: "base",
+        }),
+      );
   }, [goals, goalFilter]);
+
+  const sortedYearlyExpenses = useMemo(() => {
+    return [...(yearlyExpenses || [])].sort((a, b) =>
+      (a.title || "").localeCompare(b.title || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [yearlyExpenses]);
 
   return (
     <PageContainer>
@@ -895,17 +913,19 @@ function PlansDirectoryPageContent() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <AnimatePresence mode="popLayout" initial={false}>
-                      {(yearlyExpenses || []).map((exp: YearlyExpense) => (
-                        <YearlyExpenseCard
-                          key={exp.id}
-                          expense={exp}
-                          onEdit={(data) => {
-                            setEditingYearly(data);
-                            setIsYearlyModalOpen(true);
-                          }}
-                          onDelete={(id) => setYearlyToDelete(id)}
-                        />
-                      ))}
+                      {(sortedYearlyExpenses || []).map(
+                        (exp: YearlyExpense) => (
+                          <YearlyExpenseCard
+                            key={exp.id}
+                            expense={exp}
+                            onEdit={(data) => {
+                              setEditingYearly(data);
+                              setIsYearlyModalOpen(true);
+                            }}
+                            onDelete={(id) => setYearlyToDelete(id)}
+                          />
+                        ),
+                      )}
                     </AnimatePresence>
                   </div>
                 )}

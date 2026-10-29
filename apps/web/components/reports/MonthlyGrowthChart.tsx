@@ -671,58 +671,58 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Row 3 (Mobile) / Secondary Bar: View Mode & Timeframe Controls */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full">
           {/* Chart View Mode Toggle */}
-          <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5">
+          <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode("combined")}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "combined"
                   ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
               title="Combined Growth Bars & Net Worth Line"
             >
-              <Layers className="size-3" />
+              <Layers className="size-2.5 sm:size-3" />
               <span>All</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("growth")}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "growth"
                   ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
               title="Growth Delta Only"
             >
-              <BarChart3 className="size-3" />
+              <BarChart3 className="size-2.5 sm:size-3" />
               <span>Growth</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("networth")}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "networth"
                   ? "bg-white dark:bg-slate-800 text-indigo-500 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
               title="Net Worth Line"
             >
-              <LineChartIcon className="size-3" />
+              <LineChartIcon className="size-2.5 sm:size-3" />
               <span>Trend</span>
             </button>
           </div>
 
           {/* Timeframe Buttons */}
-          <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5">
+          <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0">
             {(["6M", "12M", "YTD"] as TimeframeOption[]).map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`px-2.5 sm:px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-2 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   timeframe === tf
                     ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -738,15 +738,15 @@ export function MonthlyGrowthChart({
       {/* 4 Summary Stat Metric Pills - Mobile 2-Col / Desktop 4-Col */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-0.5">
         {/* Metric 1: Total Period Growth */}
-        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 min-w-0">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             {dataScope === "accounts_cash"
               ? "Period Liquid Growth"
               : "Period Growth"}
           </span>
-          <div className="flex items-baseline gap-1 flex-wrap">
+          <div className="flex items-baseline gap-1 flex-wrap min-w-0">
             <span
-              className={`text-xs sm:text-base font-black truncate ${
+              className={`text-[11px] xs:text-xs sm:text-base font-black truncate max-w-full ${
                 metrics.totalGrowth >= 0 ? "text-emerald-600" : "text-rose-600"
               }`}
             >
@@ -763,15 +763,15 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Metric 2: Average Monthly Growth */}
-        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 min-w-0">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             {dataScope === "accounts_cash"
               ? "Avg Liquid MoM"
               : "Avg MoM Growth"}
           </span>
-          <div className="flex items-baseline gap-1 flex-wrap">
+          <div className="flex items-baseline gap-1 flex-wrap min-w-0">
             <span
-              className={`text-xs sm:text-base font-black truncate ${
+              className={`text-[11px] xs:text-xs sm:text-base font-black truncate max-w-full ${
                 metrics.avgMonthlyGrowth >= 0
                   ? "text-emerald-600"
                   : "text-rose-600"
@@ -786,23 +786,23 @@ export function MonthlyGrowthChart({
                 </>
               )}
             </span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 shrink-0">
               /mo
             </span>
           </div>
         </div>
 
         {/* Metric 3: Best Month */}
-        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 min-w-0">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             Best Month
           </span>
           {metrics.bestMonth ? (
-            <div className="flex items-baseline justify-between gap-1 flex-wrap">
+            <div className="flex items-baseline justify-between gap-1 flex-wrap min-w-0">
               <span className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white truncate">
                 {metrics.bestMonth.monthShort}
               </span>
-              <span className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 truncate">
+              <span className="text-[11px] xs:text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 truncate max-w-full">
                 {isMasked
                   ? "*****"
                   : `+${formatCurrency(metrics.bestMonth.growth)}`}
@@ -814,15 +814,15 @@ export function MonthlyGrowthChart({
         </div>
 
         {/* Metric 4: Positive Consistency Rate */}
-        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5">
+        <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-0.5 min-w-0">
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400 block truncate">
             Consistency
           </span>
-          <div className="flex items-baseline justify-between gap-1 flex-wrap">
-            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+          <div className="flex items-baseline justify-between gap-1 flex-wrap min-w-0">
+            <span className="text-[11px] xs:text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
               {metrics.positiveRatio.toFixed(0)}% Positive
             </span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 shrink-0">
               {metrics.positiveCount}/{metrics.totalCount} mo
             </span>
           </div>
@@ -837,7 +837,7 @@ export function MonthlyGrowthChart({
             margin={{
               top: 10,
               right: isMobile ? 5 : 15,
-              left: isMobile ? -25 : -10,
+              left: 0,
               bottom: 0,
             }}
           >
@@ -876,7 +876,7 @@ export function MonthlyGrowthChart({
                 yAxisId="deltaAxis"
                 axisLine={false}
                 tickLine={false}
-                width={isMobile ? 36 : 50}
+                width={isMobile ? 44 : 50}
                 tick={{ fill: "#94a3b8", fontSize: isMobile ? 8 : 10 }}
                 tickFormatter={(val: number) => formatCompact(val)}
               />
@@ -890,7 +890,7 @@ export function MonthlyGrowthChart({
                 hide={isMobile && viewMode === "combined"}
                 axisLine={false}
                 tickLine={false}
-                width={isMobile ? 36 : 50}
+                width={isMobile ? 44 : 50}
                 tick={{ fill: "#6366f1", fontSize: isMobile ? 8 : 10 }}
                 tickFormatter={(val: number) => formatCompact(val)}
               />

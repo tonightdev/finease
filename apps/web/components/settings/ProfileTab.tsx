@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { User, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/store";
+import { fetchStrategy, saveStrategy } from "@/store/slices/strategiesSlice";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Input } from "@/components/ui/Input";
 import { DateInput } from "@/components/ui/DateInput";
@@ -19,6 +22,10 @@ import { SettingsField } from "./SettingsField";
 
 export function ProfileTab() {
   const { user, updateProfile } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const strategyCurrent = useSelector(
+    (state: RootState) => state.strategies.current,
+  );
 
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -29,15 +36,19 @@ export function ProfileTab() {
     user?.monthStartDate || 1,
   );
   const [needsTarget, setNeedsTarget] = useState(
-    user?.budgetTargets?.needs || 50,
-  );
-  const [wantsTarget, setWantsTarget] = useState(
-    user?.budgetTargets?.wants || 30,
+    strategyCurrent?.protocol?.needs || user?.budgetTargets?.needs || 50,
   );
   const [savingsTarget, setSavingsTarget] = useState(
-    user?.budgetTargets?.savings || 20,
+    strategyCurrent?.protocol?.savings || user?.budgetTargets?.savings || 20,
+  );
+  const [wantsTarget, setWantsTarget] = useState(
+    strategyCurrent?.protocol?.wants || user?.budgetTargets?.wants || 30,
   );
   const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchStrategy());
+  }, [dispatch]);
 
   useEffect(() => {
     if (user) {
@@ -47,21 +58,34 @@ export function ProfileTab() {
       setPhone(user.phone || "");
       setDob(user.dob || "");
       setMonthStartDate(user.monthStartDate || 1);
-      setNeedsTarget(user.budgetTargets?.needs || 50);
-      setWantsTarget(user.budgetTargets?.wants || 30);
-      setSavingsTarget(user.budgetTargets?.savings || 20);
     }
   }, [user]);
 
+  useEffect(() => {
+    const effectiveProtocol = strategyCurrent?.protocol || user?.budgetTargets;
+    if (effectiveProtocol) {
+      setNeedsTarget(effectiveProtocol.needs ?? 50);
+      setSavingsTarget(effectiveProtocol.savings ?? 20);
+      setWantsTarget(effectiveProtocol.wants ?? 30);
+    }
+  }, [strategyCurrent?.protocol, user?.budgetTargets]);
+
   const handleUpdateProfile = async () => {
     if (!user) return;
-    const total = needsTarget + wantsTarget + savingsTarget;
-    if (total > 100) {
-      toast.error("Budget Protocol total cannot exceed 100%");
+    const total = needsTarget + savingsTarget + wantsTarget;
+    if (total !== 100) {
+      toast.error("Financial Adherence Rules must total exactly 100%");
       return;
     }
     setIsUpdating(true);
     try {
+      const budgetTargets = {
+        needs: needsTarget,
+        savings: savingsTarget,
+        wants: wantsTarget,
+      };
+
+      // 1. Sync User Profile
       await updateProfile({
         displayName,
         email,
@@ -69,13 +93,17 @@ export function ProfileTab() {
         phone,
         dob,
         monthStartDate,
-        budgetTargets: {
-          needs: needsTarget,
-          wants: wantsTarget,
-          savings: savingsTarget,
-        },
+        budgetTargets,
       });
-      toast.success("Identity profile synchronized");
+
+      // 2. Sync Strategy Protocol cloud data simultaneously
+      await dispatch(
+        saveStrategy({
+          protocol: budgetTargets,
+        }),
+      );
+
+      toast.success("Identity profile and strategy protocol synchronized");
     } catch (err) {
       console.error("Failed to update profile:", err);
       toast.error("Profile synchronization failure");
@@ -84,6 +112,8 @@ export function ProfileTab() {
     }
   };
 
+  const currentProtocol = strategyCurrent?.protocol || user?.budgetTargets;
+
   const hasChanges =
     displayName !== (user?.displayName || "") ||
     email !== (user?.email || "") ||
@@ -91,11 +121,11 @@ export function ProfileTab() {
     phone !== (user?.phone || "") ||
     dob !== (user?.dob || "") ||
     monthStartDate !== (user?.monthStartDate || 1) ||
-    needsTarget !== (user?.budgetTargets?.needs || 50) ||
-    wantsTarget !== (user?.budgetTargets?.wants || 30) ||
-    savingsTarget !== (user?.budgetTargets?.savings || 20);
+    needsTarget !== (currentProtocol?.needs ?? 50) ||
+    savingsTarget !== (currentProtocol?.savings ?? 20) ||
+    wantsTarget !== (currentProtocol?.wants ?? 30);
 
-  const totalAllocated = needsTarget + wantsTarget + savingsTarget;
+  const totalAllocated = needsTarget + savingsTarget + wantsTarget;
 
   return (
     <SettingsCard
@@ -138,7 +168,7 @@ export function ProfileTab() {
 
         <SettingsField label="Mobile Number">
           <Input
-            placeholder="+91 XXXXX XXXXX"
+            placeholder="Mobile contact number"
             value={phone}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setPhone(e.target.value)
@@ -147,31 +177,31 @@ export function ProfileTab() {
           />
         </SettingsField>
 
+        <SettingsField label="Gender">
+          <Select value={gender} onValueChange={(val) => setGender(val)}>
+            <SelectTrigger className="h-10 rounded-xl">
+              <SelectValue placeholder="Select gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="not_specified">Prefer not to say</SelectItem>
+            </SelectContent>
+          </Select>
+        </SettingsField>
+
         <SettingsField label="Date of Birth">
           <DateInput
             value={dob}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setDob(e.target.value)
             }
-            className="h-10 py-2 rounded-xl"
+            className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs font-semibold text-slate-900 dark:text-white"
           />
         </SettingsField>
 
-        <SettingsField label="Gender Identity">
-          <Select value={gender} onValueChange={setGender}>
-            <SelectTrigger className="h-10 font-bold text-xs rounded-xl">
-              <SelectValue placeholder="Select gender" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-200 dark:border-white/10 shadow-2xl">
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-              <SelectItem value="not_specified">Not Specified</SelectItem>
-            </SelectContent>
-          </Select>
-        </SettingsField>
-
-        <SettingsField label="Fiscal Cycle Reset Day">
+        <SettingsField label="Fiscal Reset Day (1 - 28)">
           <div className="relative group">
             <input
               type="number"
@@ -194,7 +224,7 @@ export function ProfileTab() {
       <SettingsSection
         tag="Protocol"
         title="Financial Adherence Rules"
-        description="Configure target budget distribution across essential, discretionary, and investment nodes."
+        description="Configure target budget distribution across essential, savings investment, and discretionary nodes."
         rightElement={
           <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/10">
             <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -210,37 +240,32 @@ export function ProfileTab() {
           </div>
         }
       >
-        {/* Minimal Multi-Segment Progress Bar */}
-        <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex">
+        {/* Multi-Segment Progress Bar (Needs, Savings, Wants) */}
+        <div className="h-2.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex gap-0.5 p-0.5">
           <motion.div
             animate={{ width: `${needsTarget}%` }}
-            className="h-full bg-emerald-500 transition-all duration-300"
-          />
-          <motion.div
-            animate={{ width: `${wantsTarget}%` }}
-            className="h-full bg-amber-500 transition-all duration-300"
+            className="h-full rounded-sm bg-amber-500 transition-all duration-300"
+            title={`Needs: ${needsTarget}%`}
           />
           <motion.div
             animate={{ width: `${savingsTarget}%` }}
-            className="h-full bg-indigo-500 transition-all duration-300"
+            className="h-full rounded-sm bg-indigo-500 transition-all duration-300"
+            title={`Savings: ${savingsTarget}%`}
+          />
+          <motion.div
+            animate={{ width: `${wantsTarget}%` }}
+            className="h-full rounded-sm bg-rose-500 transition-all duration-300"
+            title={`Wants: ${wantsTarget}%`}
           />
         </div>
 
-        {/* 3 Metric Allocations */}
+        {/* 3 Metric Allocations Ordered: Needs -> Savings -> Wants */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             {
               label: "Needs",
               val: needsTarget,
               set: setNeedsTarget,
-              color: "text-emerald-500",
-              bg: "bg-emerald-500/5",
-              border: "border-emerald-500/20",
-            },
-            {
-              label: "Wants",
-              val: wantsTarget,
-              set: setWantsTarget,
               color: "text-amber-500",
               bg: "bg-amber-500/5",
               border: "border-amber-500/20",
@@ -252,6 +277,14 @@ export function ProfileTab() {
               color: "text-indigo-500",
               bg: "bg-indigo-500/5",
               border: "border-indigo-500/20",
+            },
+            {
+              label: "Wants",
+              val: wantsTarget,
+              set: setWantsTarget,
+              color: "text-rose-500",
+              bg: "bg-rose-500/5",
+              border: "border-rose-500/20",
             },
           ].map((field) => (
             <div

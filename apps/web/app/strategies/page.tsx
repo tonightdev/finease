@@ -21,13 +21,15 @@ import {
   TrendingUp,
   Trash2,
   Edit2,
-  PieChart,
   Activity,
   AlertCircle,
   Save,
   Calendar,
   Clock,
   Zap,
+  GitCompare,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,10 +48,10 @@ import {
 } from "@/components/ui/Select";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { StrategyEntry, Account } from "@repo/types";
+import { StrategyEntry, Account, Category } from "@repo/types";
 
 export default function StrategiesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, updateProfile } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector((state: RootState) => state.categories.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
@@ -76,11 +78,11 @@ export default function StrategiesPage() {
   const [isSwitching, setIsSwitching] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [mobileTab, setMobileTab] = useState<"matrix" | "controls">("matrix");
-  const [sortBy, setSortBy] = useState<"type" | "amount" | "none">("none");
   const [projectionMonths, setProjectionMonths] = useState(12);
 
   // Helper for protocol colors
-  const getProtocolColor = (parentType: string) => {
+  const getProtocolColor = (parentType?: string, type?: string) => {
+    if (type === "transfer") return "text-sky-500";
     switch (parentType?.toLowerCase()) {
       case "needs":
         return "text-amber-500";
@@ -96,23 +98,37 @@ export default function StrategiesPage() {
   };
 
   const sortedEntries = useMemo(() => {
-    const list = [...entries];
-    if (sortBy === "type") {
-      return list.sort((a, b) => a.parentType.localeCompare(b.parentType));
-    }
-    if (sortBy === "amount") {
-      return list.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
-    }
-    return list;
-  }, [entries, sortBy]);
+    const getRank = (entry: StrategyEntry) => {
+      if (entry.type === "income") return 0;
+      if (entry.type === "transfer") return 4;
+      const pt = entry.parentType?.toLowerCase() || "needs";
+      if (pt === "needs") return 1;
+      if (pt === "savings" || pt === "saving") return 2;
+      if (pt === "wants") return 3;
+      return 5;
+    };
+
+    // Default: Sort by income, needs, savings, wants, then transfer at last, then alphabetically
+    return [...entries].sort((a, b) => {
+      const rankA = getRank(a);
+      const rankB = getRank(b);
+      if (rankA !== rankB) return rankA - rankB;
+      return (a.description || a.categoryName || "").localeCompare(
+        b.description || b.categoryName || "",
+        undefined,
+        { sensitivity: "base" },
+      );
+    });
+  }, [entries]);
 
   // New entry form state
   const [newEntry, setNewEntry] = useState<{
     amount: string;
     description: string;
     categoryId: string;
-    type: "income" | "outflow";
+    type: "income" | "outflow" | "transfer";
     accountId: string;
+    toAccountId: string;
     isMonthly: boolean;
   }>({
     amount: "",
@@ -120,6 +136,7 @@ export default function StrategiesPage() {
     categoryId: "",
     type: "outflow",
     accountId: "",
+    toAccountId: "",
     isMonthly: true,
   });
 
@@ -137,7 +154,9 @@ export default function StrategiesPage() {
 
     if (hasCloudData && (isSandboxEmpty || !isInitialized)) {
       setEntries(current.entries || []);
-      setProtocol(current.protocol || { needs: 50, wants: 30, savings: 20 });
+      const initialProtocol = current.protocol ||
+        user?.budgetTargets || { needs: 50, savings: 20, wants: 30 };
+      setProtocol(initialProtocol);
       setIsInitialized(true);
     } else if (current?.userId === "" && !isInitialized) {
       // Handle case where strategy is truly empty/new (after first fetch)
@@ -155,19 +174,36 @@ export default function StrategiesPage() {
     entries.length,
   ]);
 
+  useEffect(() => {
+    if (user?.budgetTargets) {
+      const { needs = 50, savings = 20, wants = 30 } = user.budgetTargets;
+      setProtocol((prev) => {
+        if (
+          prev.needs !== needs ||
+          prev.savings !== savings ||
+          prev.wants !== wants
+        ) {
+          return { needs, savings, wants };
+        }
+        return prev;
+      });
+    }
+  }, [user?.budgetTargets]);
+
   const isProtocolValid = useMemo(() => {
-    const { needs, wants, savings } = protocol;
-    return needs + wants + savings === 100;
+    const { needs, savings, wants } = protocol;
+    return needs + savings + wants === 100;
   }, [protocol]);
 
   const isProtocolDirty = useMemo(() => {
-    if (!current?.protocol) return true; // Show enable if no current protocol
+    const base = current?.protocol || user?.budgetTargets;
+    if (!base) return true;
     return (
-      protocol.needs !== current.protocol.needs ||
-      protocol.wants !== current.protocol.wants ||
-      protocol.savings !== current.protocol.savings
+      protocol.needs !== base.needs ||
+      protocol.savings !== base.savings ||
+      protocol.wants !== base.wants
     );
-  }, [protocol, current?.protocol]);
+  }, [protocol, current?.protocol, user?.budgetTargets]);
 
   // Auto-save logic removed in favor of granular entry persistence
 
@@ -189,31 +225,52 @@ export default function StrategiesPage() {
       return;
     }
     try {
+      // 1. Sync Strategy Cloud Store
       await dispatch(
         saveStrategy({
           protocol,
           entries,
         }),
       ).unwrap();
-      toast.success("Strategy protocol synced to cloud.");
+
+      // 2. Simultaneously sync User Profile Financial Adherence Rules
+      if (updateProfile) {
+        await updateProfile({
+          budgetTargets: {
+            needs: protocol.needs,
+            savings: protocol.savings,
+            wants: protocol.wants,
+          },
+        });
+      }
+
+      toast.success("Strategy protocol and financial adherence synced.");
     } catch {
       toast.error("Failed to sync strategy.");
     }
   };
 
   const filteredCategories = useMemo(() => {
-    return categories.filter((c) =>
-      newEntry.type === "income"
-        ? c.type === "income" || c.parentType === "income"
-        : c.type !== "income" && c.parentType !== "income",
-    );
+    return categories
+      .filter((c) =>
+        newEntry.type === "income"
+          ? c.type === "income" || c.parentType === "income"
+          : c.type !== "income" && c.parentType !== "income",
+      )
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
   }, [categories, newEntry.type]);
 
   const filteredAccounts = useMemo(() => {
-    return accounts.filter((a: Account) => {
-      const type = a.type?.toLowerCase() || "";
-      return !["asset", "debt", "investment", "card"].includes(type);
-    });
+    return accounts
+      .filter((a: Account) => {
+        const type = a.type?.toLowerCase() || "";
+        return !["asset", "debt", "investment", "card"].includes(type);
+      })
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
   }, [accounts]);
 
   // Derived calculations (Real-time)
@@ -238,29 +295,60 @@ export default function StrategiesPage() {
         amt /= 12;
       }
 
-      if (!accountFlows[entry.accountId]) {
-        accountFlows[entry.accountId] = {
-          name: entry.accountName,
-          netFlow: 0,
-          income: 0,
-          outflow: 0,
-        };
+      if (entry.accountId) {
+        if (!accountFlows[entry.accountId]) {
+          accountFlows[entry.accountId] = {
+            name: entry.accountName,
+            netFlow: 0,
+            income: 0,
+            outflow: 0,
+          };
+        }
       }
 
-      const flow = accountFlows[entry.accountId];
-      if (flow) {
-        if (entry.type === "income") {
-          income += amt;
-          flow.netFlow += amt;
-          flow.income += amt;
-        } else {
+      // If internal transfer, also ensure destination account is tracked in accountFlows
+      if (entry.type === "transfer" && entry.toAccountId) {
+        if (!accountFlows[entry.toAccountId]) {
+          accountFlows[entry.toAccountId] = {
+            name: entry.toAccountName || "Destination Account",
+            netFlow: 0,
+            income: 0,
+            outflow: 0,
+          };
+        }
+      }
+
+      const flow = entry.accountId ? accountFlows[entry.accountId] : null;
+
+      if (entry.type === "transfer") {
+        // Internal account transfer: source loses funds, destination receives funds
+        if (flow) {
           flow.netFlow -= amt;
           flow.outflow += amt;
-          if (entry.parentType === "needs") needsTotal += amt;
-          else if (entry.parentType === "wants") wantsTotal += amt;
-          else if (entry.parentType === "savings") savingsTotal += amt;
-          else needsTotal += amt;
         }
+        if (entry.toAccountId && accountFlows[entry.toAccountId]) {
+          const destFlow = accountFlows[entry.toAccountId];
+          if (destFlow) {
+            destFlow.netFlow += amt;
+            destFlow.income += amt;
+          }
+        }
+        // Transfers do not count as protocol income or external expense
+      } else if (entry.type === "income") {
+        income += amt;
+        if (flow) {
+          flow.netFlow += amt;
+          flow.income += amt;
+        }
+      } else {
+        if (flow) {
+          flow.netFlow -= amt;
+          flow.outflow += amt;
+        }
+        if (entry.parentType === "needs") needsTotal += amt;
+        else if (entry.parentType === "wants") wantsTotal += amt;
+        else if (entry.parentType === "savings") savingsTotal += amt;
+        else needsTotal += amt;
       }
     });
 
@@ -357,19 +445,24 @@ export default function StrategiesPage() {
 
     const activeAccounts = Object.entries(accountFlows)
       .map(([id, data]) => {
-        const liveAccount = accounts.find((a) => a.id === id);
+        // Normalize monthly net flow before multiplying by projectionMonths
+        const monthlyNetFlow =
+          current?.basis === "yearly" ? data.netFlow / 12 : data.netFlow;
+        const projectedBalance = monthlyNetFlow * projectionMonths;
+
         return {
           id,
           name: data.name,
           netFlow: data.netFlow,
+          monthlyNetFlow,
+          projectedBalance,
           income: data.income,
           outflow: data.outflow,
-          currentBalance: liveAccount?.balance || 0,
-          projectedBalance:
-            (liveAccount?.balance || 0) + data.netFlow * projectionMonths,
         };
       })
-      .sort((a, b) => b.netFlow - a.netFlow);
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
 
     return {
       income,
@@ -387,6 +480,89 @@ export default function StrategiesPage() {
     };
   }, [entries, protocol, current?.basis, projectionMonths, accounts]);
 
+  const hasData = entries.length > 0 && strategyMetrics.income > 0;
+
+  const sentinelInsight = useMemo(() => {
+    if (!hasData) {
+      return {
+        type: "neutral" as const,
+        icon: Target,
+        message: `Strategy protocol initialized to ${protocol.needs}% Needs, ${protocol.savings}% Savings, and ${protocol.wants}% Wants. Add income and expense entries to stream real-time drift telemetry.`,
+        badge: "BASELINE PROTOCOL",
+        badgeStyle: "bg-primary/10 text-primary border-primary/20",
+        bannerStyle:
+          "bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-300",
+      };
+    }
+
+    const savingsDeficit = protocol.savings - strategyMetrics.savingsPct;
+    const needsOverrun = strategyMetrics.needsPct - protocol.needs;
+    const wantsOverrun = strategyMetrics.wantsPct - protocol.wants;
+    const maxDeficit = Math.max(savingsDeficit, needsOverrun, wantsOverrun);
+
+    if (maxDeficit <= 0) {
+      return {
+        type: "optimal" as const,
+        icon: CheckCircle2,
+        message: `Equilibrium Achieved: All execution vectors are operating in harmony with your ${protocol.needs}/${protocol.savings}/${protocol.wants} strategy protocol.`,
+        badge: "PROTOCOL ALIGNED",
+        badgeStyle: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+        bannerStyle:
+          "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300",
+      };
+    }
+
+    if (savingsDeficit === maxDeficit && savingsDeficit > 0) {
+      const gapAmount = strategyMetrics.income * (savingsDeficit / 100);
+      return {
+        type: "savings" as const,
+        icon: TrendingUp,
+        message: `Savings Deficit Alert: Savings is trailing by ${savingsDeficit.toFixed(1)}% (${formatCurrency(gapAmount)} gap). Increase savings allocations to hit your ${protocol.savings}% protocol target.`,
+        badge: "SAVINGS FOCUS",
+        badgeStyle: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+        bannerStyle:
+          "bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-300",
+      };
+    }
+
+    if (needsOverrun === maxDeficit && needsOverrun > 0) {
+      const excessAmount = strategyMetrics.income * (needsOverrun / 100);
+      return {
+        type: "needs" as const,
+        icon: AlertTriangle,
+        message: `Needs Drift Alert: Fixed costs consume ${strategyMetrics.needsPct.toFixed(1)}% of flow (+${needsOverrun.toFixed(1)}% over target, ${formatCurrency(excessAmount)} excess). Review recurring overhead to restore buffer.`,
+        badge: "NEEDS FOCUS",
+        badgeStyle: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+        bannerStyle:
+          "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300",
+      };
+    }
+
+    if (wantsOverrun === maxDeficit && wantsOverrun > 0) {
+      const luxuryExcess = strategyMetrics.income * (wantsOverrun / 100);
+      return {
+        type: "wants" as const,
+        icon: AlertCircle,
+        message: `Lifestyle Drift Alert: Discretionary Wants consume ${strategyMetrics.wantsPct.toFixed(1)}% of flow (+${wantsOverrun.toFixed(1)}% over protocol, ${formatCurrency(luxuryExcess)} excess). Constrain lifestyle inflation.`,
+        badge: "WANTS FOCUS",
+        badgeStyle: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+        bannerStyle:
+          "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300",
+      };
+    }
+
+    return {
+      type: "optimal" as const,
+      icon: CheckCircle2,
+      message:
+        "Execution vectors are in healthy alignment with target protocol benchmarks.",
+      badge: "OPTIMAL FLOW",
+      badgeStyle: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      bannerStyle:
+        "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300",
+    };
+  }, [hasData, protocol, strategyMetrics]);
+
   const handleAddEntry = () => {
     if (!newEntry.amount || parseFloat(newEntry.amount) <= 0) {
       toast.error("Valid positive amount is required.");
@@ -400,27 +576,58 @@ export default function StrategiesPage() {
       toast.error("Account routing is required.");
       return;
     }
+
     const selectedAcc = accounts.find((a) => a.id === newEntry.accountId);
-    const selectedCat = categories.find((c) => c.id === newEntry.categoryId);
-    if (!selectedAcc || !selectedCat) {
-      toast.error("Invalid account or classification.");
+    if (!selectedAcc) {
+      toast.error("Invalid account routing.");
       return;
     }
 
+    let toAcc: Account | undefined;
+    let selectedCat: Category | undefined;
+
+    if (newEntry.type === "transfer") {
+      if (!newEntry.toAccountId) {
+        toast.error("Destination account is required for transfers.");
+        return;
+      }
+      if (newEntry.accountId === newEntry.toAccountId) {
+        toast.error("Source and destination accounts must be different.");
+        return;
+      }
+      toAcc = accounts.find((a) => a.id === newEntry.toAccountId);
+      if (!toAcc) {
+        toast.error("Invalid destination account.");
+        return;
+      }
+    } else {
+      selectedCat = categories.find((c) => c.id === newEntry.categoryId);
+      if (!selectedCat) {
+        toast.error("Classification category is required.");
+        return;
+      }
+    }
+
+    const entryData: StrategyEntry = {
+      id: editingId || Math.random().toString(36).substring(7),
+      amount: newEntry.amount,
+      isMonthly: newEntry.isMonthly,
+      description: newEntry.description.trim(),
+      categoryId: selectedCat?.id || "transfer",
+      categoryName: selectedCat?.name || "Internal Transfer",
+      accountId: selectedAcc.id,
+      accountName: selectedAcc.name,
+      toAccountId: toAcc?.id,
+      toAccountName: toAcc?.name,
+      parentType:
+        newEntry.type === "transfer"
+          ? undefined
+          : selectedCat?.parentType ||
+            (newEntry.type === "income" ? "income" : "needs"),
+      type: newEntry.type,
+    };
+
     if (editingId) {
-      const entryData = {
-        amount: newEntry.amount,
-        isMonthly: newEntry.isMonthly,
-        description: newEntry.description.trim(),
-        categoryId: selectedCat.id,
-        categoryName: selectedCat.name,
-        accountId: selectedAcc.id,
-        accountName: selectedAcc.name,
-        parentType:
-          selectedCat.parentType ||
-          (newEntry.type === "income" ? "income" : "needs"),
-        type: newEntry.type,
-      };
       setEntries((prev) =>
         prev.map((e) => (e.id === editingId ? { ...e, ...entryData } : e)),
       );
@@ -428,22 +635,8 @@ export default function StrategiesPage() {
       setEditingId(null);
       toast.success("Vector updated.");
     } else {
-      const newStrategyEntry: StrategyEntry = {
-        id: Math.random().toString(36).substring(7),
-        amount: newEntry.amount,
-        isMonthly: newEntry.isMonthly,
-        description: newEntry.description.trim(),
-        categoryId: selectedCat.id,
-        categoryName: selectedCat.name,
-        accountId: selectedAcc.id,
-        accountName: selectedAcc.name,
-        parentType:
-          selectedCat.parentType ||
-          (newEntry.type === "income" ? "income" : "needs"),
-        type: newEntry.type,
-      };
-      setEntries((prev) => [...prev, newStrategyEntry]);
-      dispatch(addStrategyEntry(newStrategyEntry));
+      setEntries((prev) => [...prev, entryData]);
+      dispatch(addStrategyEntry(entryData));
       toast.success("Vector recorded.");
     }
     setNewEntry({
@@ -451,6 +644,7 @@ export default function StrategiesPage() {
       description: "",
       categoryId: "",
       accountId: "",
+      toAccountId: "",
       type: "outflow",
       isMonthly: true,
     });
@@ -461,8 +655,9 @@ export default function StrategiesPage() {
     setNewEntry({
       amount: entry.amount,
       description: entry.description,
-      categoryId: entry.categoryId,
+      categoryId: entry.categoryId || "",
       accountId: entry.accountId || "",
+      toAccountId: entry.toAccountId || "",
       type: entry.type,
       isMonthly: entry.isMonthly ?? true,
     });
@@ -485,8 +680,8 @@ export default function StrategiesPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
         </div>
-        <div className="flex flex-col xl:flex-row gap-3 items-start">
-          <div className="xl:w-[380px] w-full shrink-0 space-y-6 sm:space-y-3">
+        <div className="flex flex-col xl:flex-row gap-6 xl:gap-4 items-start">
+          <div className="xl:w-[380px] w-full shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5">
             <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
               <Skeleton className="h-10 w-32 rounded-xl" />
               <Skeleton className="h-12 w-full rounded-xl" />
@@ -613,17 +808,17 @@ export default function StrategiesPage() {
         }
       />
 
-      <div className="flex flex-col xl:flex-row gap-6 xl:gap-3 items-start">
+      <div className="flex flex-col xl:flex-row gap-6 xl:gap-4 items-start">
         <div
-          className={`xl:w-[380px] shrink-0 space-y-6 sm:space-y-3 w-full min-w-0 ${mobileTab === "controls" ? "block" : "hidden xl:block"}`}
+          className={`xl:w-[380px] shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5 w-full min-w-0 block`}
         >
-          <Card className="mb-0 pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+          <Card className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm w-full space-y-3.5">
             <div className="flex p-1 mb-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/5">
               <button
                 onClick={() =>
                   setNewEntry({ ...newEntry, type: "income", categoryId: "" })
                 }
-                className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] transition-all ${
                   newEntry.type === "income"
                     ? "bg-white dark:bg-emerald-500 text-emerald-600 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -635,13 +830,25 @@ export default function StrategiesPage() {
                 onClick={() =>
                   setNewEntry({ ...newEntry, type: "outflow", categoryId: "" })
                 }
-                className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] transition-all ${
                   newEntry.type === "outflow"
                     ? "bg-white dark:bg-rose-500 text-rose-600 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
               >
                 Outflow
+              </button>
+              <button
+                onClick={() =>
+                  setNewEntry({ ...newEntry, type: "transfer", categoryId: "" })
+                }
+                className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] transition-all ${
+                  newEntry.type === "transfer"
+                    ? "bg-white dark:bg-sky-500 text-sky-600 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
+              >
+                Transfer
               </button>
             </div>
 
@@ -658,7 +865,7 @@ export default function StrategiesPage() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setNewEntry({ ...newEntry, amount: e.target.value })
                     }
-                    className={`font-mono h-9 text-xs font-bold pr-16 ${newEntry.type === "income" ? "text-emerald-500" : "text-rose-500"}`}
+                    className={`font-mono h-9 text-xs font-bold pr-16 ${newEntry.type === "income" ? "text-emerald-500" : newEntry.type === "transfer" ? "text-sky-500" : "text-rose-500"}`}
                   />
                   <div className="absolute right-1 top-1 bottom-1 flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-white/5">
                     <button
@@ -686,7 +893,11 @@ export default function StrategiesPage() {
                   Description
                 </label>
                 <Input
-                  placeholder="E.g., Salary, Rent..."
+                  placeholder={
+                    newEntry.type === "transfer"
+                      ? "E.g., Transfer to SBI, Emergency fund split..."
+                      : "E.g., Salary, Rent..."
+                  }
                   value={newEntry.description}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewEntry({ ...newEntry, description: e.target.value })
@@ -695,58 +906,125 @@ export default function StrategiesPage() {
                 />
               </div>
 
-              <div className="flex flex-row gap-2">
-                <div className="flex-1 space-y-1 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
-                    Routing
-                  </label>
-                  <Select
-                    value={newEntry.accountId}
-                    onValueChange={(val: string) =>
-                      setNewEntry({ ...newEntry, accountId: val })
-                    }
-                  >
-                    <SelectTrigger className="h-9 text-xs font-bold truncate">
-                      <SelectValue placeholder="Account..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {filteredAccounts.map((acc: Account) => (
-                        <SelectItem key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {newEntry.type === "transfer" ? (
+                <div className="flex flex-row gap-2">
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
+                      From Account
+                    </label>
+                    <Select
+                      value={newEntry.accountId}
+                      onValueChange={(val: string) =>
+                        setNewEntry({ ...newEntry, accountId: val })
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold truncate">
+                        <SelectValue placeholder="Source..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredAccounts.map((acc: Account) => (
+                          <SelectItem
+                            key={acc.id}
+                            value={acc.id}
+                            disabled={acc.id === newEntry.toAccountId}
+                          >
+                            {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
+                      To Account
+                    </label>
+                    <Select
+                      value={newEntry.toAccountId}
+                      onValueChange={(val: string) =>
+                        setNewEntry({ ...newEntry, toAccountId: val })
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold truncate">
+                        <SelectValue placeholder="Destination..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredAccounts.map((acc: Account) => (
+                          <SelectItem
+                            key={acc.id}
+                            value={acc.id}
+                            disabled={acc.id === newEntry.accountId}
+                          >
+                            {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="flex-1 space-y-1 min-w-0">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
-                    Classification
-                  </label>
-                  <Select
-                    value={newEntry.categoryId}
-                    onValueChange={(val: string) =>
-                      setNewEntry({ ...newEntry, categoryId: val })
-                    }
-                  >
-                    <SelectTrigger className="h-9 text-xs font-bold truncate">
-                      <SelectValue placeholder="Category..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {filteredCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              ) : (
+                <div className="flex flex-row gap-2">
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
+                      Routing
+                    </label>
+                    <Select
+                      value={newEntry.accountId}
+                      onValueChange={(val: string) =>
+                        setNewEntry({ ...newEntry, accountId: val })
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold truncate">
+                        <SelectValue placeholder="Account..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredAccounts.map((acc: Account) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-0.5">
+                      Classification
+                    </label>
+                    <Select
+                      value={newEntry.categoryId}
+                      onValueChange={(val: string) =>
+                        setNewEntry({ ...newEntry, categoryId: val })
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold truncate">
+                        <SelectValue placeholder="Category..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              )}
               <Button
                 onClick={handleAddEntry}
-                className={`w-full h-9 rounded-xl font-black uppercase tracking-widest text-[10px] mt-0.5 gap-2 shadow-lg transition-all ${newEntry.type === "income" ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20 text-white" : "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20 text-white"}`}
+                className={`w-full h-9 rounded-xl font-black uppercase tracking-widest text-[10px] mt-0.5 gap-2 shadow-lg transition-all ${
+                  newEntry.type === "income"
+                    ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20 text-white"
+                    : newEntry.type === "transfer"
+                      ? "bg-sky-500 hover:bg-sky-600 shadow-sky-500/20 text-white"
+                      : "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20 text-white"
+                }`}
               >
                 {editingId ? "Update" : "Inject"}{" "}
-                {newEntry.type === "income" ? "Income" : "Outflow"}{" "}
+                {newEntry.type === "income"
+                  ? "Income"
+                  : newEntry.type === "transfer"
+                    ? "Transfer"
+                    : "Outflow"}{" "}
                 <ArrowRight className="size-3.5" />
               </Button>
               {editingId && (
@@ -759,6 +1037,7 @@ export default function StrategiesPage() {
                       description: "",
                       categoryId: "",
                       accountId: "",
+                      toAccountId: "",
                       type: "outflow",
                       isMonthly: true,
                     });
@@ -776,16 +1055,6 @@ export default function StrategiesPage() {
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                     Traction Matrix
                   </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setSortBy(sortBy === "type" ? "none" : "type")
-                      }
-                      className={`text-[8px] font-black uppercase px-2 py-1 rounded-xl transition-all ${sortBy === "type" ? "bg-primary/10 text-primary" : "text-slate-400 hover:text-slate-600"}`}
-                    >
-                      Type
-                    </button>
-                  </div>
                 </div>
                 <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2 pb-2 no-scrollbar">
                   <AnimatePresence mode="popLayout">
@@ -803,19 +1072,39 @@ export default function StrategiesPage() {
                             {entry.description}
                           </span>
                           <span
-                            className={`text-[9px] font-black uppercase tracking-widest truncate ${getProtocolColor(entry.parentType)}`}
+                            className={`text-[9px] font-black uppercase tracking-widest truncate ${entry.type === "transfer" ? "text-sky-500" : getProtocolColor(entry.parentType)}`}
                           >
-                            {entry.categoryName}{" "}
-                            <span className="opacity-30">/</span>{" "}
-                            {entry.accountName}
+                            {entry.type === "transfer" ? (
+                              <span className="flex items-center gap-1">
+                                <span>{entry.accountName}</span>
+                                <span className="opacity-40">➔</span>
+                                <span>{entry.toAccountName || "Account"}</span>
+                              </span>
+                            ) : (
+                              <>
+                                {entry.categoryName}{" "}
+                                <span className="opacity-30">/</span>{" "}
+                                {entry.accountName}
+                              </>
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <div className="text-right mr-3">
                             <div
-                              className={`text-[11px] font-mono font-black ${entry.type === "income" ? "text-emerald-500" : getProtocolColor(entry.parentType)}`}
+                              className={`text-[11px] font-mono font-black ${
+                                entry.type === "income"
+                                  ? "text-emerald-500"
+                                  : entry.type === "transfer"
+                                    ? "text-sky-500"
+                                    : getProtocolColor(entry.parentType)
+                              }`}
                             >
-                              {entry.type === "income" ? "+" : "-"}
+                              {entry.type === "income"
+                                ? "+"
+                                : entry.type === "transfer"
+                                  ? "⇄ "
+                                  : "-"}
                               {formatCurrency(parseFloat(entry.amount) || 0)}
                             </div>
                             <div className="text-[8px] font-black uppercase tracking-tighter text-slate-400 opacity-70">
@@ -846,7 +1135,7 @@ export default function StrategiesPage() {
             )}
           </Card>
 
-          <Card className="pt-2 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
+          <Card className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm w-full space-y-3.5">
             <div className="flex items-center justify-between py-1 mb-2 border-b border-slate-100 dark:border-white/5 sm:border-none">
               <div className="flex items-center gap-2.5">
                 <div className="size-8 rounded-xl bg-slate-50 dark:bg-white/10 flex items-center justify-center">
@@ -865,13 +1154,13 @@ export default function StrategiesPage() {
                 <div
                   className={`text-xs font-black ${isProtocolValid ? "text-emerald-500" : "text-rose-500"}`}
                 >
-                  {protocol.needs + protocol.wants + protocol.savings}%
+                  {protocol.needs + protocol.savings + protocol.wants}%
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
-              {(["needs", "wants", "savings"] as const).map((key) => {
+              {(["needs", "savings", "wants"] as const).map((key) => {
                 const item = {
                   needs: {
                     label: "Needs",
@@ -879,17 +1168,17 @@ export default function StrategiesPage() {
                     bg: "bg-amber-500/10",
                     border: "border-amber-500/20",
                   },
-                  wants: {
-                    label: "Wants",
-                    theme: "text-rose-500",
-                    bg: "bg-rose-500/10",
-                    border: "border-rose-500/20",
-                  },
                   savings: {
                     label: "Savings",
                     theme: "text-indigo-500",
                     bg: "bg-indigo-500/10",
                     border: "border-indigo-500/20",
+                  },
+                  wants: {
+                    label: "Wants",
+                    theme: "text-rose-500",
+                    bg: "bg-rose-500/10",
+                    border: "border-rose-500/20",
                   },
                 }[key];
                 const target = protocol[key];
@@ -944,7 +1233,7 @@ export default function StrategiesPage() {
                   </div>
                   <span>
                     Protocol distribution must total 100% current:{" "}
-                    {protocol.needs + protocol.wants + protocol.savings}%
+                    {protocol.needs + protocol.savings + protocol.wants}%
                   </span>
                 </div>
               )}
@@ -1119,221 +1408,278 @@ export default function StrategiesPage() {
 
                 {/* 2. Horizon Composition Matrix */}
                 <div className="space-y-4 sm:space-y-3 mb-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
-                      <Activity className="size-4 text-primary" /> Horizon
-                      Composition Matrix
-                    </h4>
-                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
+                    <Activity className="size-4 text-primary" /> Horizon
+                    Composition Matrix
+                  </h4>
 
                   <div className="space-y-3 pb-2">
-                    <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-800/10 border border-slate-100 dark:border-white/5 space-y-3">
-                      <div className="space-y-2 mb-2">
-                        <div className="flex justify-between items-end">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            Live Allocation Flow
-                          </span>
-                          <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
-                            Needs Focus
+                    <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-white/10 space-y-3.5 shadow-sm">
+                      {/* Dual Stream Header & Dynamic Attention Sentinel Badge */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-white/5 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded-md bg-primary/10 text-primary">
+                            <GitCompare className="size-3.5" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 block">
+                              Allocation Dual Stream
+                            </span>
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">
+                              Target Protocol vs Live Reality
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[9px] font-black px-2.5 py-1 rounded-full border uppercase tracking-wider shadow-sm transition-all ${sentinelInsight.badgeStyle}`}
+                        >
+                          {sentinelInsight.badge}
+                        </span>
+                      </div>
+
+                      {/* Stream 1: Target Protocol Baseline */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <div className="flex items-center gap-1.5">
+                            <Target className="size-3 text-primary" />
+                            <span>Target Protocol Baseline</span>
+                          </div>
+                          <span className="font-mono text-slate-500 dark:text-slate-300">
+                            {protocol.needs}% Needs · {protocol.savings}%
+                            Savings · {protocol.wants}% Wants
                           </span>
                         </div>
-                        <div className="flex h-8 sm:h-9 w-full rounded-xl overflow-hidden shadow-inner bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 relative">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${strategyMetrics.needsPct}%` }}
-                            className="h-full bg-gradient-to-r from-amber-400 to-amber-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
-                          >
-                            <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
-                              <AlertCircle className="size-3 text-amber-900" />
-                            </div>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-amber-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                              NEEDS
-                            </span>
-                          </motion.div>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${strategyMetrics.wantsPct}%` }}
-                            className="h-full bg-gradient-to-r from-rose-400 to-rose-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
-                          >
-                            <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
-                              <Activity className="size-3 text-rose-900" />
-                            </div>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-rose-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                              WANTS
-                            </span>
-                          </motion.div>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${Math.max(0, 100 - strategyMetrics.needsPct - strategyMetrics.wantsPct)}%`,
+                        <div className="flex h-5 w-full rounded-lg overflow-hidden bg-slate-200/50 dark:bg-white/5 border border-slate-300/60 dark:border-white/10 p-0.5 gap-0.5">
+                          <div
+                            style={{
+                              width: `${(protocol.needs / (protocol.needs + protocol.savings + protocol.wants || 100)) * 100}%`,
                             }}
-                            className="h-full bg-gradient-to-r from-indigo-400 to-indigo-500 relative group shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                            className="h-full rounded-sm bg-amber-400/80 dark:bg-amber-500/80 flex items-center justify-center group relative cursor-help transition-all hover:brightness-110"
+                            title={`Target Needs: ${protocol.needs}%`}
                           >
-                            <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center pointer-events-none opacity-40 group-hover:hidden transition-opacity">
-                              <TrendingUp className="size-3 text-indigo-900" />
-                            </div>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-indigo-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                              SAVINGS
+                            <span className="text-[8px] font-black text-amber-950 truncate px-1 tracking-wider">
+                              {protocol.needs}% N
                             </span>
-                          </motion.div>
+                          </div>
+                          <div
+                            style={{
+                              width: `${(protocol.savings / (protocol.needs + protocol.savings + protocol.wants || 100)) * 100}%`,
+                            }}
+                            className="h-full rounded-sm bg-indigo-400/80 dark:bg-indigo-500/80 flex items-center justify-center group relative cursor-help transition-all hover:brightness-110"
+                            title={`Target Savings: ${protocol.savings}%`}
+                          >
+                            <span className="text-[8px] font-black text-indigo-950 truncate px-1 tracking-wider">
+                              {protocol.savings}% S
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              width: `${(protocol.wants / (protocol.needs + protocol.savings + protocol.wants || 100)) * 100}%`,
+                            }}
+                            className="h-full rounded-sm bg-rose-400/80 dark:bg-rose-500/80 flex items-center justify-center group relative cursor-help transition-all hover:brightness-110"
+                            title={`Target Wants: ${protocol.wants}%`}
+                          >
+                            <span className="text-[8px] font-black text-rose-950 truncate px-1 tracking-wider">
+                              {protocol.wants}% W
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex justify-between px-0.5">
-                          <div className="flex flex-col">
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                              Needs
-                            </span>
-                            <span className="text-[10px] font-mono font-black text-amber-500">
-                              {strategyMetrics.needsPct.toFixed(1)}%
-                            </span>
-                            <span
-                              className={`text-[7px] font-black uppercase ${strategyMetrics.needsPct > protocol.needs ? "text-rose-500" : "text-emerald-500"}`}
-                            >
-                              {strategyMetrics.needsPct > protocol.needs
-                                ? `+${(strategyMetrics.needsPct - protocol.needs).toFixed(1)}%`
-                                : "OK"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col text-center">
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                              Wants
-                            </span>
-                            <span className="text-[10px] font-mono font-black text-rose-500">
-                              {strategyMetrics.wantsPct.toFixed(1)}%
-                            </span>
-                            <span
-                              className={`text-[7px] font-black uppercase ${strategyMetrics.wantsPct > protocol.wants ? "text-rose-500" : "text-emerald-500"}`}
-                            >
-                              {strategyMetrics.wantsPct > protocol.wants
-                                ? `+${(strategyMetrics.wantsPct - protocol.wants).toFixed(1)}%`
-                                : "OK"}
+                      </div>
+
+                      {/* Connected Drift Ribbons / Vector Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-0.5">
+                        {/* Needs Vector Card */}
+                        <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/70 dark:border-white/5 bg-white/60 dark:bg-slate-800/20 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <div className="size-2 rounded-full bg-amber-400" />
+                              <span className="text-[9px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                                Needs Vector
+                              </span>
+                            </div>
+                            <span className="text-[8px] font-mono font-bold text-slate-400">
+                              Target {protocol.needs}%
                             </span>
                           </div>
-                          <div className="flex flex-col text-right">
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                              Savings
-                            </span>
-                            <span className="text-[10px] font-mono font-black text-indigo-500">
-                              {strategyMetrics.savingsPct.toFixed(1)}%
+                          <div className="flex items-baseline justify-between mt-1">
+                            <span className="text-sm font-mono font-black text-amber-500">
+                              {hasData
+                                ? `${strategyMetrics.needsPct.toFixed(1)}%`
+                                : `${protocol.needs.toFixed(1)}%`}
                             </span>
                             <span
-                              className={`text-[7px] font-black uppercase ${strategyMetrics.savingsPct >= protocol.savings ? "text-emerald-500" : "text-rose-500"}`}
+                              className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                !hasData
+                                  ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                                  : strategyMetrics.needsPct > protocol.needs
+                                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                    : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                              }`}
                             >
-                              {strategyMetrics.savingsPct >= protocol.savings
-                                ? "Met"
-                                : `-${(protocol.savings - strategyMetrics.savingsPct).toFixed(1)}%`}
+                              {!hasData
+                                ? "ON TARGET"
+                                : strategyMetrics.needsPct > protocol.needs
+                                  ? `+${(strategyMetrics.needsPct - protocol.needs).toFixed(1)}% OVER`
+                                  : "ALIGNED"}
                             </span>
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row gap-2">
-                          <div className="flex-1 space-y-1">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                              <Zap className="size-3 text-amber-500" /> Stress
-                              Test
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-500 leading-tight">
-                              If income drops by 20%, your Needs would consume{" "}
-                              <span className="text-rose-500">
-                                {(
-                                  (strategyMetrics.needsTotal /
-                                    (strategyMetrics.income * 0.8 || 1)) *
-                                  100
-                                ).toFixed(1)}
-                                %
-                              </span>{" "}
-                              of total flow.
-                            </p>
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                              <TrendingUp className="size-3 text-indigo-500" />{" "}
-                              Savings Velocity
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-500 leading-tight">
-                              At current rates, you reaching your next{" "}
-                              <span className="text-indigo-500">₹100k</span>{" "}
-                              goal in{" "}
-                              <span className="text-white">
-                                {(
-                                  100000 / (strategyMetrics.savingsTotal || 1)
-                                ).toFixed(1)}{" "}
-                                {current?.basis === "yearly"
-                                  ? "years"
-                                  : "months"}
+                        {/* Savings Vector Card (High Priority Attention) */}
+                        <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/70 dark:border-white/5 bg-white/60 dark:bg-slate-800/20 flex flex-col justify-between shadow-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <div className="size-2 rounded-full bg-indigo-400" />
+                              <span className="text-[9px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                                Savings Vector
                               </span>
-                              .
-                            </p>
+                            </div>
+                            <span className="text-[8px] font-mono font-bold text-slate-400">
+                              Target {protocol.savings}%
+                            </span>
                           </div>
+                          <div className="flex items-baseline justify-between mt-1">
+                            <span className="text-sm font-mono font-black text-indigo-400">
+                              {hasData
+                                ? `${strategyMetrics.savingsPct.toFixed(1)}%`
+                                : `${protocol.savings.toFixed(1)}%`}
+                            </span>
+                            <span
+                              className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                !hasData
+                                  ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                                  : strategyMetrics.savingsPct >=
+                                      protocol.savings
+                                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                                    : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                              }`}
+                            >
+                              {!hasData
+                                ? "ON TARGET"
+                                : strategyMetrics.savingsPct >= protocol.savings
+                                  ? "MET"
+                                  : `-${(protocol.savings - strategyMetrics.savingsPct).toFixed(1)}% DEFICIT`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Wants Vector Card */}
+                        <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/70 dark:border-white/5 bg-white/60 dark:bg-slate-800/20 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <div className="size-2 rounded-full bg-rose-400" />
+                              <span className="text-[9px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                                Wants Vector
+                              </span>
+                            </div>
+                            <span className="text-[8px] font-mono font-bold text-slate-400">
+                              Target {protocol.wants}%
+                            </span>
+                          </div>
+                          <div className="flex items-baseline justify-between mt-1">
+                            <span className="text-sm font-mono font-black text-rose-500">
+                              {hasData
+                                ? `${strategyMetrics.wantsPct.toFixed(1)}%`
+                                : `${protocol.wants.toFixed(1)}%`}
+                            </span>
+                            <span
+                              className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                !hasData
+                                  ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                                  : strategyMetrics.wantsPct > protocol.wants
+                                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                    : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                              }`}
+                            >
+                              {!hasData
+                                ? "ON TARGET"
+                                : strategyMetrics.wantsPct > protocol.wants
+                                  ? `+${(strategyMetrics.wantsPct - protocol.wants).toFixed(1)}% OVER`
+                                  : "CONTROLLED"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Attention Sentinel Alert Banner */}
+                      <div
+                        className={`p-2.5 sm:p-3 rounded-xl border flex items-start gap-2.5 transition-all ${sentinelInsight.bannerStyle}`}
+                      >
+                        <sentinelInsight.icon className="size-4 shrink-0 mt-0.5" />
+                        <div className="flex-1 text-[10px] sm:text-[11px] leading-relaxed font-medium">
+                          <span className="font-black uppercase tracking-wider mr-1.5">
+                            {sentinelInsight.badge}:
+                          </span>
+                          {sentinelInsight.message}
+                        </div>
+                      </div>
+
+                      {/* Stress Test & Savings Velocity Diagnostics */}
+                      <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1 p-2 rounded-lg bg-slate-100/50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5">
+                          <div className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                            <Zap className="size-3 text-amber-500" /> Stress
+                            Test Telemetry
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 leading-tight">
+                            {hasData ? (
+                              <>
+                                If income drops by 20%, your Needs would consume{" "}
+                                <span className="text-rose-500">
+                                  {(
+                                    (strategyMetrics.needsTotal /
+                                      (strategyMetrics.income * 0.8 || 1)) *
+                                    100
+                                  ).toFixed(1)}
+                                  %
+                                </span>{" "}
+                                of total flow.
+                              </>
+                            ) : (
+                              <>
+                                At protocol baseline, a 20% income drop would
+                                elevate Needs to{" "}
+                                <span className="text-amber-500">
+                                  {(protocol.needs / 0.8).toFixed(1)}%
+                                </span>{" "}
+                                of total flow.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <div className="space-y-1 p-2 rounded-lg bg-slate-100/50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5">
+                          <div className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                            <TrendingUp className="size-3 text-indigo-500" />{" "}
+                            Savings Velocity
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 leading-tight">
+                            {hasData && strategyMetrics.savingsTotal > 0 ? (
+                              <>
+                                At current rates, you reaching your next{" "}
+                                <span className="text-indigo-400">₹100k</span>{" "}
+                                goal in{" "}
+                                <span className="text-slate-900 dark:text-white">
+                                  {(
+                                    100000 / strategyMetrics.savingsTotal
+                                  ).toFixed(1)}{" "}
+                                  {current?.basis === "yearly"
+                                    ? "years"
+                                    : "months"}
+                                </span>
+                                .
+                              </>
+                            ) : (
+                              <>
+                                Goal timeline to next{" "}
+                                <span className="text-indigo-400">₹100k</span>{" "}
+                                will calculate dynamically as savings entries
+                                are added.
+                              </>
+                            )}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4 sm:space-y-3 mb-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2.5 py-1 mb-1 border-b border-slate-100 dark:border-white/5 sm:border-none w-full sm:w-auto">
-                    <PieChart className="size-4 text-primary" /> Target Variance
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                    {[
-                      {
-                        id: "needs",
-                        label: "Needs",
-                        actual: strategyMetrics.needsPct,
-                        target: protocol.needs,
-                        color: "bg-amber-400",
-                      },
-                      {
-                        id: "wants",
-                        label: "Wants",
-                        actual: strategyMetrics.wantsPct,
-                        target: protocol.wants,
-                        color: "bg-rose-400",
-                      },
-                      {
-                        id: "savings",
-                        label: "Savings",
-                        actual: strategyMetrics.savingsPct,
-                        target: protocol.savings,
-                        color: "bg-indigo-400",
-                      },
-                    ].map((stat) => (
-                      <div
-                        key={stat.id}
-                        className="p-2 sm:p-2.5 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/10 flex flex-col justify-between min-h-[75px]"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${stat.color}`}
-                            />
-                            <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest truncate">
-                              {stat.label}
-                            </span>
-                          </div>
-                          <div className="text-[8px] font-black text-slate-400 tracking-widest shrink-0">
-                            {stat.actual.toFixed(0)}%{" "}
-                            <span className="opacity-50">/ {stat.target}%</span>
-                          </div>
-                        </div>
-                        <div className="h-1 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden relative mt-auto">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${Math.min(100, stat.actual)}%`,
-                            }}
-                            className={`absolute h-full ${stat.color} shadow-[0_0_12px_rgba(var(--primary),0.3)]`}
-                          />
-                          <div
-                            className="absolute h-full w-1 bg-primary/40 z-10 border-x border-white/20 shadow-[0_0_8px_rgba(var(--primary),0.5)]"
-                            style={{
-                              left: `${stat.target}%`,
-                              transform: "translateX(-50%)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
 
@@ -1392,20 +1738,17 @@ export default function StrategiesPage() {
                         )}
                       </div>
                     </div>
-                    <div className="text-[8px] font-black text-slate-400 tracking-widest uppercase bg-slate-100 dark:bg-white/5 px-2 py-1 rounded border border-slate-200 dark:border-white/5 w-fit">
-                      Expected Balance Growth / Drain
-                    </div>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                       {strategyMetrics.activeAccounts.map((acc) => (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           key={acc.id}
-                          className="p-2 sm:p-2.5 border border-slate-100 dark:border-white/5 rounded-xl bg-white dark:bg-slate-800/40 shadow-sm flex flex-col justify-between min-h-[90px]"
+                          className="p-2.5 sm:p-3 border border-slate-100 dark:border-white/5 rounded-xl bg-white dark:bg-slate-800/40 shadow-sm flex flex-col justify-between"
                         >
-                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2.5 truncate flex items-center gap-1.5">
-                            <div className="w-1 h-1 rounded-full bg-primary shrink-0" />{" "}
-                            {acc.name}
+                          <div className="text-[9px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest mb-2.5 truncate flex items-center gap-1.5 min-w-0">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />{" "}
+                            <span className="truncate">{acc.name}</span>
                           </div>
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between p-1.5 rounded-md bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 min-w-0">
@@ -1426,7 +1769,8 @@ export default function StrategiesPage() {
                             </div>
                             <div className="pt-1 border-t border-slate-100 dark:border-white/5 flex items-center justify-between px-0.5 mt-1 min-w-0">
                               <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest truncate mr-1">
-                                Net
+                                Net /{" "}
+                                {current?.basis === "yearly" ? "yr" : "mo"}
                               </span>
                               <span
                                 className={`text-[9px] font-mono font-black shrink-0 ${acc.netFlow >= 0 ? "text-emerald-500" : "text-rose-500"}`}
@@ -1438,11 +1782,12 @@ export default function StrategiesPage() {
                             <div className="pt-1.5 mt-1 border-t border-dashed border-slate-100 dark:border-white/5">
                               <div className="flex justify-between items-center px-0.5">
                                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
-                                  Projected
+                                  Projected ({projectionMonths}M)
                                 </span>
                                 <span
-                                  className={`text-[10px] font-mono font-black ${acc.projectedBalance >= acc.currentBalance ? "text-emerald-500" : "text-rose-500"}`}
+                                  className={`text-[10px] font-mono font-black ${acc.projectedBalance >= 0 ? "text-emerald-500" : "text-rose-500"}`}
                                 >
+                                  {acc.projectedBalance > 0 ? "+" : ""}
                                   {formatCurrency(acc.projectedBalance)}
                                 </span>
                               </div>

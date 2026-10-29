@@ -32,6 +32,7 @@ import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TrajectoryHistoryView } from "@/components/dashboard/TrajectoryHistoryView";
+import { FinancialIndependenceRunwayCard } from "@/components/reports/FinancialIndependenceRunwayCard";
 
 type ViewType = "Day" | "Week" | "Month" | "Year";
 
@@ -917,6 +918,11 @@ export default function ReportsPageClient() {
                 Final Balance
               </div>
             </Card>
+          </div>
+
+          {/* Financial Independence Runway placed at top before Equilibrium Scan */}
+          <div className="mt-2.5 mb-2.5">
+            <FinancialIndependenceRunwayCard />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-2.5 mb-0">

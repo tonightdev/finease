@@ -45,7 +45,7 @@ export function DashboardStatCard({
           <span className="truncate">{label}</span>
         </div>
         {subtitle && (
-          <span className="text-[7px] sm:text-[8px] font-medium normal-case tracking-normal text-slate-400 text-right leading-tight max-w-[55%] truncate">
+          <span className="hidden sm:inline-block text-[8px] font-medium normal-case tracking-normal text-slate-400 text-right leading-tight max-w-[55%] truncate">
             {subtitle}
           </span>
         )}
@@ -54,12 +54,26 @@ export function DashboardStatCard({
       <div
         data-balance="true"
         className={cn(
-          "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0 cloaked-balance",
-          typeof value === "string" && value.length > 15
-            ? "text-xs sm:text-sm"
-            : typeof value === "string" && value.length > 12
-              ? "text-sm sm:text-base"
-              : "text-base sm:text-lg",
+          "font-black tracking-tighter min-w-0 pr-1 leading-none shrink-0 cloaked-balance truncate",
+          (
+            typeof value === "number"
+              ? Math.abs(value) >= 10000000
+              : String(value).length > 14
+          )
+            ? "text-xs xs:text-sm sm:text-base"
+            : (
+                  typeof value === "number"
+                    ? Math.abs(value) >= 1000000
+                    : String(value).length > 11
+                )
+              ? "text-xs xs:text-sm sm:text-base"
+              : (
+                    typeof value === "number"
+                      ? Math.abs(value) >= 100000
+                      : String(value).length > 8
+                  )
+                ? "text-sm sm:text-base"
+                : "text-base sm:text-lg",
           valueColor,
         )}
       >
@@ -71,7 +85,7 @@ export function DashboardStatCard({
       </div>
 
       {trend && (
-        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+        <div className="mt-2 flex items-center gap-1.5 flex-wrap min-w-0">
           {trend.color && (
             <div
               className={cn("size-1.5 rounded-full shrink-0", trend.color)}
@@ -79,7 +93,7 @@ export function DashboardStatCard({
           )}
           <span
             className={cn(
-              "text-[8px] sm:text-[9px] font-black uppercase tracking-wider truncate",
+              "text-[8px] sm:text-[9px] font-black uppercase tracking-wider truncate min-w-0 max-w-full",
               trend.color
                 ? trend.color.replace("bg-", "text-")
                 : "text-slate-400",

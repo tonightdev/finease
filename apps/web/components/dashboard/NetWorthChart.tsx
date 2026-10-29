@@ -76,6 +76,14 @@ export function NetWorthChart({
     if (!data || data.length === 0) return [];
     if (period === "1M") return data.slice(-2);
     if (period === "6M") return data.slice(-6);
+    if (period === "1Y") return data.slice(-12);
+    if (period === "ALL") {
+      const firstNonZero = data.findIndex((d) => d.value > 0);
+      if (firstNonZero !== -1) {
+        return data.slice(Math.max(0, firstNonZero));
+      }
+      return data;
+    }
     return data;
   }, [data, period]);
 

@@ -76,6 +76,14 @@ export default function GoalsPageClient() {
     );
   }, [goals]);
 
+  const sortedGoals = useMemo(() => {
+    return [...goals].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [goals]);
+
   if (loading && goals.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] w-full">
@@ -151,7 +159,7 @@ export default function GoalsPageClient() {
                 </p>
               </div>
             ) : (
-              goals.map((goal: FinancialGoal) => {
+              sortedGoals.map((goal: FinancialGoal) => {
                 const reqMonthly = calculateGap(goal);
                 const percentNum =
                   (goal.currentAmount / goal.targetAmount) * 100;

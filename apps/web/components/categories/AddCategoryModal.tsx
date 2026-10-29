@@ -162,7 +162,7 @@ export function AddCategoryModal({
             Category Type
           </label>
           <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl ring-1 ring-slate-100 dark:ring-white/5">
-            {["needs", "wants", "savings", "income"].map((type) => (
+            {["income", "needs", "savings", "wants"].map((type) => (
               <button
                 key={type}
                 disabled={isSaving || isDeleting}

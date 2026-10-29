@@ -234,12 +234,14 @@ export interface StrategyEntry {
   amount: string;
   isMonthly?: boolean;
   description: string;
-  categoryId: string;
-  categoryName: string;
-  parentType: CategoryParentType;
-  type: "income" | "outflow";
+  categoryId?: string;
+  categoryName?: string;
+  parentType?: CategoryParentType;
+  type: "income" | "outflow" | "transfer";
   accountId: string;
   accountName: string;
+  toAccountId?: string;
+  toAccountName?: string;
 }
 
 export interface BudgetStrategy {

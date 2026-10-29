@@ -33,13 +33,45 @@ export function MonthlyGrowthDebrief({
     dispatch(fetchMonthlyDebrief());
   }, [dispatch]);
 
-  if (loading && !debrief) {
+  if (loading || !debrief) {
     return (
-      <div className="w-full h-24 sm:h-28 rounded-2xl sm:rounded-3xl bg-slate-100 dark:bg-white/[0.03] animate-pulse border border-slate-200/50 dark:border-white/5" />
+      <div className="relative w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/30 dark:from-[#0d121c] dark:via-[#090d14] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden">
+        {/* Top bar skeleton */}
+        <div className="h-1 w-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-white/10 dark:via-white/5 dark:to-white/10 animate-pulse" />
+        <div className="p-3 sm:p-5 space-y-3.5">
+          {/* Header row skeleton */}
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 sm:size-9 rounded-xl bg-slate-100 dark:bg-white/5 animate-pulse shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-28 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
+                <div className="h-4 w-16 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+              </div>
+              <div className="h-2.5 w-48 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+            </div>
+          </div>
+          {/* 3 metric cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-white/5 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-2.5 w-20 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+                  <div className="size-5 sm:size-6 rounded-lg bg-slate-100 dark:bg-white/5 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <div className="h-5 w-28 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
+                  <div className="h-2.5 w-32 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
-
-  if (!debrief) return null;
 
   // 1. Inflow: Use monthlyIncome if transactions logged; otherwise use pulse delta from debrief
   const pulseInflow =
@@ -139,8 +171,8 @@ export function MonthlyGrowthDebrief({
               </div>
             </div>
 
-            <div className="space-y-0.5">
-              <div className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <div className="space-y-0.5 min-w-0">
+              <div className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight truncate">
                 {isMasked ? "*****" : formatCurrency(effectiveInflow)}
               </div>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
@@ -162,8 +194,8 @@ export function MonthlyGrowthDebrief({
               </div>
             </div>
 
-            <div className="space-y-0.5">
-              <div className="text-base sm:text-lg font-black text-rose-600 dark:text-rose-400 tracking-tight">
+            <div className="space-y-0.5 min-w-0">
+              <div className="text-base sm:text-lg font-black text-rose-600 dark:text-rose-400 tracking-tight truncate">
                 {isMasked ? "*****" : formatCurrency(effectiveOutflow)}
               </div>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
@@ -191,9 +223,9 @@ export function MonthlyGrowthDebrief({
               </div>
             </div>
 
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 min-w-0">
               <div
-                className={`text-base sm:text-lg font-black tracking-tight ${
+                className={`text-base sm:text-lg font-black tracking-tight truncate ${
                   isSurplusPositive
                     ? "text-emerald-600 dark:text-emerald-400"
                     : "text-rose-600 dark:text-rose-400"
