@@ -152,9 +152,8 @@ export default function Home() {
         !acc.isClosed &&
         (acc.type === "bank" || acc.type === "cash" || acc.type === "card"),
     );
-    const order: Record<string, number> = { bank: 0, cash: 1, card: 2 };
-    return [...filtered].sort(
-      (a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9),
+    return [...filtered].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
     );
   }, [allAccounts]);
 

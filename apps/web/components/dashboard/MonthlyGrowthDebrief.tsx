@@ -10,6 +10,7 @@ import {
   TrendingDown,
   ShieldCheck,
   ArrowLeftRight,
+  Percent,
 } from "lucide-react";
 
 interface MonthlyOverviewProps {
@@ -50,20 +51,20 @@ export function MonthlyGrowthDebrief({
               <div className="h-2.5 w-48 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
             </div>
           </div>
-          {/* 3 metric cards skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-            {[1, 2, 3].map((i) => (
+          {/* 4 metric cards skeleton */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-white/5 space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <div className="h-2.5 w-20 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+                  <div className="h-2.5 w-16 sm:w-20 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
                   <div className="size-5 sm:size-6 rounded-lg bg-slate-100 dark:bg-white/5 animate-pulse" />
                 </div>
                 <div className="space-y-1">
-                  <div className="h-5 w-28 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
-                  <div className="h-2.5 w-32 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
+                  <div className="h-5 w-20 sm:w-28 rounded-full bg-slate-200 dark:bg-white/10 animate-pulse" />
+                  <div className="h-2.5 w-24 sm:w-32 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
                 </div>
               </div>
             ))}
@@ -103,13 +104,7 @@ export function MonthlyGrowthDebrief({
 
   const isSurplusPositive = netSurplus >= 0;
 
-  // 4. Rate Badge: Savings rate if transactions exist, or liquid growth rate from debrief.percentageDelta
-  const effectiveRate =
-    monthlyIncome > 0
-      ? `${savingsRate}% Savings Rate`
-      : debrief.percentageDelta !== 0
-        ? `${debrief.percentageDelta >= 0 ? "+" : ""}${debrief.percentageDelta.toFixed(1)}% Liquid Growth`
-        : "Stable Reserves";
+  const numericSavingsRate = parseFloat(savingsRate) || 0;
 
   const isMasked = formatCurrency(effectiveInflow) === "*****";
 
@@ -158,8 +153,8 @@ export function MonthlyGrowthDebrief({
           </div>
         </div>
 
-        {/* 3 Distinctive Cash Flow Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+        {/* 4 Distinctive Cash Flow Metric Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {/* Card 1: Monthly Inflow */}
           <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-white/5 shadow-xs flex flex-col justify-between gap-1.5 group hover:border-emerald-500/30 transition-all">
             <div className="flex items-center justify-between">
@@ -237,13 +232,54 @@ export function MonthlyGrowthDebrief({
               </div>
               <div className="flex items-center gap-1.5">
                 <span
-                  className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.2 rounded-md ${
+                  className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                     isSurplusPositive
                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
                       : "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"
                   }`}
                 >
-                  {effectiveRate}
+                  {isSurplusPositive ? "Positive Reserve" : "Capital Deficit"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Capital Retention / Savings Rate */}
+          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-white/5 shadow-xs flex flex-col justify-between gap-1.5 group hover:border-indigo-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Capital Retention
+              </span>
+              <div className="size-5 sm:size-6 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <Percent className="size-3 sm:size-3.5" />
+              </div>
+            </div>
+
+            <div className="space-y-0.5 min-w-0">
+              <div className="text-base sm:text-lg font-black text-indigo-600 dark:text-indigo-400 tracking-tight truncate">
+                {isMasked
+                  ? "*****"
+                  : `${numericSavingsRate > 0 ? numericSavingsRate.toFixed(1) : savingsRate}%`}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                    numericSavingsRate >= 20
+                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400"
+                      : numericSavingsRate > 0
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                        : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400"
+                  }`}
+                >
+                  {numericSavingsRate >= 50
+                    ? "High Retention"
+                    : numericSavingsRate >= 20
+                      ? "Healthy Buffer"
+                      : numericSavingsRate > 0
+                        ? "Modest Surplus"
+                        : isSurplusPositive
+                          ? "Balanced Flow"
+                          : "Contraction"}
                 </span>
               </div>
             </div>

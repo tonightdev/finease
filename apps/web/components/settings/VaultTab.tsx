@@ -817,53 +817,52 @@ export function VaultTab() {
 
       {/* Items Grid / List */}
       {itemsLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 space-y-4 shadow-xs"
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 sm:p-4 space-y-3 shadow-xs"
             >
               {/* Header: Avatar + Title/Category + Action buttons */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="size-10 rounded-xl shrink-0" />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                  <Skeleton className="size-8 sm:size-9 rounded-xl shrink-0" />
                   <div className="space-y-1.5 min-w-0">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-20 rounded-md" />
+                    <Skeleton className="h-3.5 w-24 sm:w-28" />
+                    <Skeleton className="h-3 w-16 rounded-md" />
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Skeleton className="size-7 rounded-lg" />
+                <div className="flex items-center gap-1 shrink-0">
                   <Skeleton className="size-7 rounded-lg" />
                   <Skeleton className="size-7 rounded-lg" />
                 </div>
               </div>
 
               {/* Username row */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1.5 border border-slate-100 dark:border-white/5">
-                <Skeleton className="h-2.5 w-16" />
+              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1 border border-slate-100 dark:border-white/5">
+                <Skeleton className="h-2 w-12" />
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="size-6 rounded-md" />
+                  <Skeleton className="h-3.5 w-28 sm:w-32" />
+                  <Skeleton className="size-5 rounded-md" />
                 </div>
               </div>
 
               {/* Password row */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1.5 border border-slate-100 dark:border-white/5">
-                <Skeleton className="h-2.5 w-16" />
+              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1 border border-slate-100 dark:border-white/5">
+                <Skeleton className="h-2 w-12" />
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-36" />
-                  <div className="flex items-center gap-1.5">
-                    <Skeleton className="size-6 rounded-md" />
-                    <Skeleton className="size-6 rounded-md" />
+                  <Skeleton className="h-3.5 w-24 sm:w-28" />
+                  <div className="flex items-center gap-1">
+                    <Skeleton className="size-5 rounded-md" />
+                    <Skeleton className="size-5 rounded-md" />
                   </div>
                 </div>
               </div>
 
               {/* Footer: timestamp / website */}
               <div className="pt-1 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-2.5 w-20" />
+                <Skeleton className="h-2.5 w-12" />
               </div>
             </div>
           ))}
@@ -898,7 +897,7 @@ export function VaultTab() {
           </div>
         </SettingsCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredItems.map((item) => {
             const isRevealed = Boolean(revealedPasswords[item.id]);
             const cached = decryptedValues[item.id];
@@ -910,17 +909,17 @@ export function VaultTab() {
             return (
               <div
                 key={item.id}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 space-y-4 hover:border-primary/40 transition-all shadow-xs"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 sm:p-4 space-y-3 hover:border-primary/40 transition-all shadow-xs flex flex-col justify-between"
               >
                 {/* Header: Title + Category + Actions */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                    <div className="size-8 sm:size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm">
                       {item.title.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                           {item.title}
                         </h4>
                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 capitalize shrink-0 font-semibold border border-slate-200 dark:border-white/10">

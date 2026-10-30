@@ -159,9 +159,9 @@ export function AccountsTab() {
         </div>
 
         {/* Account Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {bankAccountsLoading ? (
-            [1, 2, 3].map((i) => (
+            [1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-36 rounded-2xl" />
             ))
           ) : filteredAccounts.length === 0 ? (
@@ -188,24 +188,24 @@ export function AccountsTab() {
             filteredAccounts.map((acc) => (
               <div
                 key={acc.id}
-                className="p-4 sm:p-5 rounded-2xl space-y-4 group hover:border-primary/50 transition-all bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 shadow-xs relative overflow-hidden flex flex-col justify-between"
+                className="p-2.5 sm:p-4 rounded-2xl space-y-2.5 sm:space-y-3 group hover:border-primary/50 transition-all bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 shadow-xs relative overflow-hidden flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between relative z-10 gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="size-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
-                      <Wallet size={20} />
+                <div className="flex items-start justify-between relative z-10 gap-1.5 sm:gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                    <div className="size-7 sm:size-9 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
+                      <Wallet className="size-3.5 sm:size-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                      <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
                         {acc.name}
                       </h4>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                        {acc.type.toUpperCase()} Account
+                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                        {acc.type.toUpperCase()}
                       </p>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-sm font-black text-slate-900 dark:text-white">
+                    <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                       {formatCurrency(acc.balance)}
                     </div>
                     <div className="text-[8px] font-black uppercase text-emerald-500 tracking-widest flex items-center justify-end gap-1">
@@ -215,7 +215,7 @@ export function AccountsTab() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/5 relative z-10">
+                <div className="flex items-center gap-1 sm:gap-2 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-white/5 relative z-10">
                   <Button
                     variant="outline"
                     size="sm"
@@ -223,7 +223,7 @@ export function AccountsTab() {
                       setEditingBankAccount(acc);
                       setIsAccountModalOpen(true);
                     }}
-                    className="flex-1 h-8 rounded-lg font-black text-[8px] uppercase tracking-widest border-slate-200 dark:border-white/10"
+                    className="flex-1 h-7 sm:h-8 px-1 sm:px-2.5 rounded-lg font-black text-[8px] sm:text-[9px] uppercase tracking-wider border-slate-200 dark:border-white/10 min-w-0 truncate"
                   >
                     Edit
                   </Button>
@@ -231,21 +231,21 @@ export function AccountsTab() {
                     variant="outline"
                     size="sm"
                     onClick={() => toggleAccountStatus(acc)}
-                    className={`flex-1 h-8 rounded-lg font-black text-[8px] uppercase tracking-widest border-slate-200 dark:border-white/10 ${
+                    className={`flex-1 h-7 sm:h-8 px-1 sm:px-2.5 rounded-lg font-black text-[8px] sm:text-[9px] uppercase tracking-wider border-slate-200 dark:border-white/10 min-w-0 truncate ${
                       acc.isClosed
                         ? "text-emerald-500 hover:bg-emerald-500/10"
                         : "text-rose-500 hover:bg-rose-500/10"
                     }`}
                   >
-                    {acc.isClosed ? "Re-open" : "Close"}
+                    {acc.isClosed ? "Open" : "Close"}
                   </Button>
                   <button
                     type="button"
                     onClick={() => handleDeleteBankAccount(acc.id)}
-                    className="size-8 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 flex items-center justify-center shrink-0 cursor-pointer"
+                    className="size-7 sm:size-8 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 flex items-center justify-center shrink-0 cursor-pointer"
                     title="Delete Account"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 className="size-3 sm:size-3.5" />
                   </button>
                 </div>
               </div>

@@ -501,8 +501,8 @@ export function CategoriesTab() {
 
       {/* Category Groups */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
@@ -539,7 +539,7 @@ export function CategoriesTab() {
               </div>
 
               {/* Grid of categories in this group */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                 {group.items.map((cat) => {
                   const parentBadge = getParentBadge(cat.parentType);
                   const isEditing = editingCategory?.id === cat.id;
@@ -555,7 +555,7 @@ export function CategoriesTab() {
                         style={{ backgroundColor: cat.color }}
                       />
 
-                      <div className="p-4 sm:p-5 space-y-3 flex-1 flex flex-col">
+                      <div className="p-3 sm:p-4 space-y-2.5 flex-1 flex flex-col">
                         {isEditing ? (
                           <CategoryForm
                             initial={{
@@ -571,19 +571,19 @@ export function CategoriesTab() {
                           />
                         ) : (
                           <>
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                                 <div
-                                  className="size-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
+                                  className="size-8 sm:size-9 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
                                   style={{
                                     backgroundColor: `${cat.color}20`,
                                     color: cat.color,
                                   }}
                                 >
-                                  <Tag size={18} />
+                                  <Tag className="size-4 sm:size-4.5" />
                                 </div>
                                 <div className="min-w-0">
-                                  <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                                  <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
                                     {cat.name}
                                   </h4>
                                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">

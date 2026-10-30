@@ -711,11 +711,11 @@ export class AccountsService {
     percentageDelta = baseLiquid > 0 ? (liquidDelta / baseLiquid) * 100 : 0;
 
     // 3. Executive Insight
-    let insight = `Your liquid cash & bank reserves stand at ₹${liquidBalance.toLocaleString()} across ${liquidAccounts.length} liquid accounts.`;
+    let insight = `₹${liquidBalance.toLocaleString()} liquid reserves across ${liquidAccounts.length} accounts.`;
     if (liquidDelta > 0) {
-      insight = `Liquid balance expanded by +₹${Math.abs(liquidDelta).toLocaleString()} (+${percentageDelta.toFixed(1)}%). ${topGainer ? `${topGainer.accountName} led inflows.` : 'Disciplined cash preservation!'}`;
+      insight = `+₹${Math.abs(liquidDelta).toLocaleString()} (+${percentageDelta.toFixed(1)}%) expansion. ${topGainer ? `${topGainer.accountName} led inflows.` : 'Disciplined preservation.'}`;
     } else if (liquidDelta < 0) {
-      insight = `Liquid balance contracted by -₹${Math.abs(liquidDelta).toLocaleString()} (-${Math.abs(percentageDelta).toFixed(1)}%) this check-in. ${topLeak ? `${topLeak.accountName} saw largest outflow.` : ''}`;
+      insight = `-₹${Math.abs(liquidDelta).toLocaleString()} (-${Math.abs(percentageDelta).toFixed(1)}%) outflow. ${topLeak ? `${topLeak.accountName} saw largest drop.` : ''}`;
     }
 
     return {
