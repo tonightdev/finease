@@ -10,7 +10,6 @@ import {
   Loader2,
   Zap,
   Pencil,
-  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Expiry } from "@repo/types";
@@ -25,6 +24,7 @@ import { AppDispatch, RootState } from "@/store";
 import toast from "react-hot-toast";
 import { DateInput } from "@/components/ui/DateInput";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Modal } from "@/components/ui/Modal";
 
 interface ExpiryCountdownProps {
   expiries: Expiry[];
@@ -185,96 +185,78 @@ export function ExpiryCountdown({ expiries, onEdit }: ExpiryCountdownProps) {
         confirmText={viewArchive ? "Purge Record" : "Confirm Removal"}
       />
 
-      <AnimatePresence>
-        {isRenewModalOpen && completedExpiry && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      <Modal
+        isOpen={isRenewModalOpen && Boolean(completedExpiry)}
+        onClose={() => {
+          setIsRenewModalOpen(false);
+          setCompletedExpiry(null);
+        }}
+        title="Expiry Completed"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-6 text-center">
+          <div className="size-16 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+            <CheckCircle2 size={32} />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Expiry Completed
+            </h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+              Authorize a renewal for the next operational cycle?
+            </p>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-xl border border-slate-100 dark:border-white/5 space-y-4">
+            <DateInput
+              label="Next Expiry Node"
+              value={renewalDate}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setRenewalDate(e.target.value)
+              }
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 p-6 sm:p-8 overflow-hidden"
-            >
+
+            <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsRenewModalOpen(false);
-                  setCompletedExpiry(null);
-                }}
-                aria-label="Close modal"
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                onClick={confirmRenewal}
+                disabled={isProcessing}
+                className="w-full h-11 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                <X size={18} />
+                {isProcessing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  "Authorize Renewal"
+                )}
               </button>
-
-              <div className="relative space-y-6 text-center">
-                <div className="size-16 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
-                  <CheckCircle2 size={32} />
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Expiry Completed
-                  </h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                    Authorize a renewal for the next operational cycle?
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-xl border border-slate-100 dark:border-white/5 space-y-4">
-                  <DateInput
-                    label="Next Expiry Node"
-                    value={renewalDate}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setRenewalDate(e.target.value)
-                    }
-                  />
-
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={confirmRenewal}
-                      disabled={isProcessing}
-                      className="w-full h-11 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      {isProcessing ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        "Authorize Renewal"
-                      )}
-                    </button>
-                    <button
-                      onClick={confirmCompletion}
-                      disabled={isProcessing}
-                      className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
-                    >
-                      {isProcessing ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        "Archive Only"
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setIsRenewModalOpen(false);
-                    setCompletedExpiry(null);
-                  }}
-                  className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
-                >
-                  Cancel Operation
-                </button>
-              </div>
-            </motion.div>
+              <button
+                type="button"
+                onClick={confirmCompletion}
+                disabled={isProcessing}
+                className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  "Archive Only"
+                )}
+              </button>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsRenewModalOpen(false);
+              setCompletedExpiry(null);
+            }}
+            className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors cursor-pointer"
+          >
+            Cancel Operation
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -339,7 +321,7 @@ function CountdownCard({
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -2 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      className={`group relative p-3 rounded-2xl border transition-all duration-300 h-full flex flex-row gap-3 shadow-sm hover:shadow-lg ${
+      className={`group relative p-3 rounded-2xl border transition-all duration-300 h-full flex flex-col justify-between shadow-sm hover:shadow-lg ${
         !isArchived ? "cursor-pointer" : "opacity-75 grayscale-[0.3]"
       } ${
         isCritical
@@ -347,117 +329,106 @@ function CountdownCard({
           : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"
       }`}
     >
-      {/* Left Column: Details */}
-      <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
-        <div className="space-y-3">
-          <div className="flex justify-between items-start gap-2">
-            <div className="min-w-0 flex-1">
-              <h4
-                className={`text-xs font-black truncate tracking-tight uppercase leading-none ${isCritical ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"}`}
-              >
-                {expiry.name}
-              </h4>
-              <div className="flex items-center gap-1 mt-1.5">
-                <Icon
-                  className={`size-3 shrink-0 ${isCritical ? "text-rose-500" : "text-primary"}`}
-                />
-                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                  {isArchived
-                    ? "Archived"
-                    : `By ${new Date(expiry.expiryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}`}
-                </p>
-              </div>
+      {/* Top Details */}
+      <div className="space-y-1 pb-2">
+        <div className="flex items-start justify-between gap-1.5">
+          <div className="min-w-0 flex-1">
+            <h4
+              className={`text-xs font-black truncate tracking-tight uppercase leading-snug ${
+                isCritical
+                  ? "text-rose-600 dark:text-rose-400"
+                  : "text-slate-900 dark:text-white"
+              }`}
+              title={expiry.name}
+            >
+              {expiry.name}
+            </h4>
+            <div className="flex items-center gap-1 mt-1">
+              <Icon
+                className={`size-3 shrink-0 ${isCritical ? "text-rose-500" : "text-primary"}`}
+              />
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                {isArchived
+                  ? "Archived"
+                  : `By ${new Date(expiry.expiryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}`}
+              </p>
             </div>
           </div>
 
           {!isArchived && (
-            <p
-              className={`text-[10px] font-black font-mono tracking-tighter ${isCritical ? "text-rose-500" : "text-slate-600 dark:text-slate-400"}`}
-            >
-              {isExpired
-                ? "TIME EXPIRED"
-                : `${timeLeft.days}D ${timeLeft.hours}H LEFT`}
-            </p>
-          )}
-        </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <span
+                className={`text-[8px] font-black font-mono tracking-tighter px-1.5 py-0.5 rounded-md border ${
+                  isCritical
+                    ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/5"
+                }`}
+              >
+                {isExpired ? "EXPIRED" : `${timeLeft.days}D ${timeLeft.hours}H`}
+              </span>
 
-        <div className="mt-auto pt-2 border-t border-slate-50 dark:border-white/5 flex flex-col gap-0.5">
-          <span className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.1em] opacity-70">
-            Allocation
-          </span>
-          <span
-            className={`text-[11px] font-black tracking-tight ${isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"}`}
-          >
-            ₹{expiry.renewalAmount.toLocaleString()}
-          </span>
-        </div>
-      </div>
-
-      {/* Right Column: Tactical Actions */}
-      <div className="flex flex-col items-center gap-1.5 shrink-0 pl-3 border-l border-slate-100 dark:border-white/5">
-        <div
-          className={`mb-auto px-1.5 py-0.5 text-[6px] font-black rounded border shadow-sm text-center ${
-            isArchived
-              ? "text-slate-500 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
-              : isExpired
-                ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                : isCritical
-                  ? "bg-orange-500/10 text-orange-600 border-orange-500/20"
-                  : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-          }`}
-        >
-          {isArchived
-            ? "LOG"
-            : isExpired
-              ? "RENEW"
-              : isCritical
-                ? "!!! "
-                : "Active"}
-        </div>
-
-        <div className="flex flex-col gap-1.5 mt-auto">
-          {!isArchived && (
-            <>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onComplete();
                 }}
-                className="size-7 flex items-center justify-center bg-emerald-500/5 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/10 rounded-lg transition-all active:scale-90"
+                className="size-7 flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 rounded-lg transition-all active:scale-90 cursor-pointer"
                 title="Complete"
               >
                 <CheckCircle2 className="size-3.5" />
               </button>
-              {onEdit && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(expiry);
-                  }}
-                  className="size-7 flex items-center justify-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-500 rounded-lg border border-slate-100 dark:border-white/5 transition-all active:scale-90"
-                  title="Edit"
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-              )}
-            </>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Row: Allocation & Actions */}
+      <div className="mt-auto pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-1.5">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.1em] opacity-70">
+            Allocation
+          </span>
+          <span
+            className={`text-xs font-black tracking-tight truncate ${
+              isCritical ? "text-rose-500" : "text-slate-900 dark:text-white"
+            }`}
+          >
+            ₹{expiry.renewalAmount.toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {!isArchived && onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(expiry);
+              }}
+              className="size-7 flex items-center justify-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg border border-slate-100 dark:border-white/5 transition-all active:scale-90 cursor-pointer"
+              title="Edit"
+            >
+              <Pencil className="size-3" />
+            </button>
           )}
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className={`size-7 flex items-center justify-center border transition-all active:scale-90 rounded-lg ${
+            className={`size-7 flex items-center justify-center border transition-all active:scale-90 rounded-lg cursor-pointer ${
               isArchived
                 ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500 hover:text-white"
-                : "bg-rose-50 dark:bg-rose-500/5 text-rose-500 border-rose-500/5 hover:bg-rose-500 hover:text-white"
+                : "bg-rose-50 dark:bg-rose-500/10 text-rose-500 border-rose-500/10 hover:bg-rose-500 hover:text-white"
             }`}
             title={isArchived ? "Purge" : "Archive"}
           >
             {isArchived ? (
-              <Zap className="size-3.5" />
+              <Zap className="size-3" />
             ) : (
-              <Trash2 className="size-3.5" />
+              <Trash2 className="size-3" />
             )}
           </button>
         </div>

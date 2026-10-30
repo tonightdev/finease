@@ -694,28 +694,26 @@ export default function PortfolioPageClient() {
           </table>
         </div>
 
-        <div className="lg:hidden grid grid-cols-2 gap-3">
+        <div className="lg:hidden grid grid-cols-2 gap-2.5 sm:gap-3">
           {loading ? (
             Array.from({ length: 2 }).map((_, i) => (
               <div
                 key={`skeleton-aux-card-${i}`}
-                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-3"
+                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-2"
               >
                 <div className="flex justify-between items-start">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-2 w-16" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="size-6 rounded-md" />
                 </div>
-                <div className="pt-2 border-t border-slate-50 dark:border-white/5 flex justify-between">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="size-7 rounded-lg" />
+                <Skeleton className="h-3.5 w-20 my-2" />
+                <div className="pt-2 border-t border-slate-50 dark:border-white/5 space-y-1">
+                  <Skeleton className="h-2 w-12" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
               </div>
             ))
           ) : otherAssets.length === 0 ? (
-            <div className="col-span-full p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+            <div className="col-span-full p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 No auxiliary wealth clusters
               </p>
@@ -724,46 +722,49 @@ export default function PortfolioPageClient() {
             otherAssets.map((asset, index) => (
               <div
                 key={asset.id || `asset-card-${index}`}
-                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3"
+                onClick={() => {
+                  setEditingAsset(asset);
+                  setIsAddAssetOpen(true);
+                }}
+                className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all flex flex-col justify-between h-full cursor-pointer group hover:border-primary/30"
               >
-                <div
-                  className="flex justify-between items-start"
-                  onClick={() => {
-                    setEditingAsset(asset);
-                    setIsAddAssetOpen(true);
-                  }}
-                >
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
-                      Fixed Asset Identity
-                    </span>
-                    <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {/* Top: Tag & Delete Action */}
+                <div className="flex items-center justify-between gap-1">
+                  {/* Middle: Asset Name */}
+                  <div className="min-w-0 my-2">
+                    <h4
+                      className="text-xs font-black text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary transition-colors uppercase leading-tight"
+                      title={asset.name}
+                    >
                       {asset.name}
                     </h4>
                   </div>
-                  <div className="flex flex-col items-end shrink-0">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                      Valuation
-                    </span>
-                    <span className="text-sm font-black text-emerald-500 tracking-tighter">
-                      ₹{asset.balance.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-white/5">
-                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                    Auxiliary Node
-                  </span>
+
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setItemToDelete({ id: asset.id, type: "account" });
                       setIsDeleteModalOpen(true);
                     }}
-                    className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-500 border border-rose-100 dark:border-rose-500/20"
+                    className="size-6 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-100 dark:border-rose-500/20 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    title="Delete Asset"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="size-3" />
                   </button>
+                </div>
+
+                {/* Bottom: Valuation */}
+                <div className="mt-auto pt-2 border-t border-slate-50 dark:border-white/5 flex flex-col gap-0.5">
+                  <span className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.1em] opacity-70">
+                    Valuation
+                  </span>
+                  <span className="text-xs font-black text-emerald-500 font-mono tracking-tight truncate">
+                    ₹
+                    {asset.balance.toLocaleString("en-IN", {
+                      maximumFractionDigits: 0,
+                    })}
+                  </span>
                 </div>
               </div>
             ))
@@ -980,24 +981,22 @@ export default function PortfolioPageClient() {
                     setEditingLiability(debt);
                     setIsAddLiabilityOpen(true);
                   }}
-                  className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-sm hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer flex flex-col gap-3 group"
+                  className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-sm hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer flex flex-col gap-2.5 group"
                 >
                   {/* Card Header: Type, Name & Delete button */}
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                          {debt.type || "Loan"}
-                        </span>
-                        {debt.excludeFromAnalytics && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-400">
-                            Excluded
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary transition-colors">
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                        {debt.type || "Loan"}
+                      </span>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary transition-colors">
                         {debt.name}
                       </h4>
+                      {debt.excludeFromAnalytics && (
+                        <span className="text-[7px] font-bold px-1 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-400 shrink-0">
+                          Excluded
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -1007,33 +1006,33 @@ export default function PortfolioPageClient() {
                         setItemToDelete({ id: debt.id, type: "account" });
                         setIsDeleteModalOpen(true);
                       }}
-                      className="size-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0"
+                      className="size-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0"
                       title="Delete Loan"
                     >
-                      <Trash2 className="size-3.5" />
+                      <Trash2 className="size-3" />
                     </button>
                   </div>
 
                   {/* Net Balance & Progress Row */}
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-2">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1.5">
                     <div className="flex justify-between items-baseline">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
                         Net Balance Remaining
                       </span>
-                      <span className="text-base font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight">
+                      <span className="text-sm font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight">
                         ₹{netBalance.toLocaleString()}
                       </span>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-400">
+                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400">
                         <span>Repayment Progress</span>
                         <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">
                           {progressPct}% paid
                         </span>
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-slate-200/70 dark:bg-white/10 overflow-hidden">
+                      <div className="w-full h-1 rounded-full bg-slate-200/70 dark:bg-white/10 overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
                           style={{ width: `${progressPct}%` }}
@@ -1042,37 +1041,37 @@ export default function PortfolioPageClient() {
                     </div>
                   </div>
 
-                  {/* 4 Financial Figures Grid */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-0.5">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Total Amount
+                  {/* 4 Financial Figures Compact Grid */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="px-2.5 py-1.5 rounded-lg bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                        Total
                       </span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono block">
+                      <span className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
                         ₹{totalAmount.toLocaleString()}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 space-y-0.5">
-                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                        Paid Actual
+                    <div className="px-2.5 py-1.5 rounded-lg bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        Principal
                       </span>
-                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono block">
+                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono">
                         ₹{paidActual.toLocaleString()}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-orange-50/50 dark:bg-orange-500/5 border border-orange-100 dark:border-orange-500/10 space-y-0.5">
-                      <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider block">
-                        Paid Interest
+                    <div className="px-2.5 py-1.5 rounded-lg bg-orange-50/50 dark:bg-orange-500/5 border border-orange-100 dark:border-orange-500/10 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-orange-500 uppercase tracking-wider">
+                        Interest
                       </span>
-                      <span className="text-xs font-black text-orange-500 font-mono block">
+                      <span className="text-[11px] font-black text-orange-500 font-mono">
                         ₹{paidInterest.toLocaleString()}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-0.5">
-                      <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
+                    <div className="px-2.5 py-1.5 rounded-lg bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Total Paid
                       </span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono block">
+                      <span className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
                         ₹{totalPaid.toLocaleString()}
                       </span>
                     </div>

@@ -1125,21 +1125,27 @@ export function VaultTab() {
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="z-[9999] bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-xl">
-                  {CATEGORIES.filter((c) => c.id !== "all").map((cat) => {
-                    const CatIcon = cat.icon;
-                    return (
-                      <SelectItem
-                        key={cat.id}
-                        value={cat.id}
-                        className="text-xs font-bold py-2 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <CatIcon className="size-4 text-slate-500 dark:text-slate-400" />
-                          <span>{cat.label}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                  {CATEGORIES.filter((c) => c.id !== "all")
+                    .sort((a, b) =>
+                      a.label.localeCompare(b.label, undefined, {
+                        sensitivity: "base",
+                      }),
+                    )
+                    .map((cat) => {
+                      const CatIcon = cat.icon;
+                      return (
+                        <SelectItem
+                          key={cat.id}
+                          value={cat.id}
+                          className="text-xs font-bold py-2 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <CatIcon className="size-4 text-slate-500 dark:text-slate-400" />
+                            <span>{cat.label}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>

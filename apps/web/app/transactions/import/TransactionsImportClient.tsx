@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Transaction,
   TransactionImportMapping,
@@ -58,6 +58,22 @@ export default function TransactionsImportClient() {
   const dispatch = useDispatch<AppDispatch>();
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const categories = useSelector((state: RootState) => state.categories.items);
+
+  const sortedAccounts = useMemo(() => {
+    return [...(accounts || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [accounts]);
+
+  const sortedCategories = useMemo(() => {
+    return [...(categories || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [categories]);
 
   const [stage, setStage] = useState<TransactionImportStage>("upload");
   const [file, setFile] = useState<File | null>(null);
@@ -660,7 +676,7 @@ export default function TransactionsImportClient() {
                 className="w-full h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-4 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
               >
                 <option value="">Select Target Account</option>
-                {accounts.map((a) => (
+                {sortedAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.balance.toLocaleString()})
                   </option>
@@ -816,7 +832,7 @@ export default function TransactionsImportClient() {
                       className="w-full bg-slate-50 dark:bg-slate-950 border-none rounded-xl h-10 px-3 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary"
                     >
                       <option value="Uncategorized">Select Category</option>
-                      {categories.map((c) => (
+                      {sortedCategories.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
@@ -879,7 +895,7 @@ export default function TransactionsImportClient() {
                           className="bg-transparent border-none p-0 text-[10px] font-black focus:ring-0 outline-none text-slate-500 dark:text-slate-400"
                         >
                           <option value="Uncategorized">Select Category</option>
-                          {categories.map((c) => (
+                          {sortedCategories.map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.name}
                             </option>

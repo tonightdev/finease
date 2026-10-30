@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
@@ -50,6 +50,14 @@ export default function TacticalSimulationPage({
   );
   const plan = items.find((p) => p.id === planId);
 
+  const sortedPlanAccounts = useMemo(() => {
+    return [...(plan?.accounts || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [plan?.accounts]);
+
   const [planName, setPlanName] = useState(plan?.name || "");
   const [newAccName, setNewAccName] = useState("");
   const [newAccBalance, setNewAccBalance] = useState("");
@@ -75,7 +83,7 @@ export default function TacticalSimulationPage({
 
   useEffect(() => {
     if (!plan && typeof window !== "undefined" && !loading) {
-      router.push("/plans");
+      router.push("/plans?tab=Simulations");
     }
   }, [plan, router, loading]);
 
@@ -261,8 +269,8 @@ export default function TacticalSimulationPage({
   return (
     <PageContainer>
       <PageHeader
-        backHref="/plans"
-        backLabel="Back to Directory"
+        backHref="/plans?tab=Simulations"
+        backLabel="Back to Simulations"
         title={
           <input
             type="text"
@@ -647,7 +655,7 @@ export default function TacticalSimulationPage({
                                   <SelectValue placeholder="Node..." />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10">
-                                  {plan.accounts.map((acc) => (
+                                  {sortedPlanAccounts.map((acc) => (
                                     <SelectItem
                                       key={acc.id}
                                       value={acc.id}
@@ -770,7 +778,7 @@ export default function TacticalSimulationPage({
                     <SelectValue placeholder="Select Node Config..." />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 rounded-2xl">
-                    {plan.accounts.map((acc) => (
+                    {sortedPlanAccounts.map((acc) => (
                       <SelectItem
                         key={acc.id}
                         value={acc.id}

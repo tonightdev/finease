@@ -200,11 +200,19 @@ export default function AdminPurgePage() {
     return searchStr.includes(searchTerm.toLowerCase());
   });
 
-  const filteredUsers = users.filter((u) => {
-    const isCurrentUser = u.id === currentUser?.uid;
-    const searchStr = (u.displayName || u.email || "").toLowerCase();
-    return searchStr.includes(searchTerm.toLowerCase()) && !isCurrentUser;
-  });
+  const filteredUsers = users
+    .filter((u) => {
+      const isCurrentUser = u.id === currentUser?.uid;
+      const searchStr = (u.displayName || u.email || "").toLowerCase();
+      return searchStr.includes(searchTerm.toLowerCase()) && !isCurrentUser;
+    })
+    .sort((a, b) =>
+      (a.displayName || a.email || "").localeCompare(
+        b.displayName || b.email || "",
+        undefined,
+        { sensitivity: "base" },
+      ),
+    );
 
   if (loading) {
     return (

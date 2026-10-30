@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DateInput } from "@/components/ui/DateInput";
 import { ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -33,6 +33,31 @@ export function TransactionModal({
   const accounts = useSelector((state: RootState) => state.accounts.items);
   const categories = useSelector((state: RootState) => state.categories.items);
   const goals = useSelector((state: RootState) => state.goals.items);
+
+  const sortedAccounts = useMemo(() => {
+    return [...(accounts || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [accounts]);
+
+  const sortedCategories = useMemo(() => {
+    return [...(categories || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [categories]);
+
+  const sortedGoals = useMemo(() => {
+    return [...(goals || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [goals]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<{
     description: string;
@@ -268,7 +293,7 @@ export function TransactionModal({
                       Select Source
                     </option>
                     <optgroup label="Bank Accounts">
-                      {accounts
+                      {sortedAccounts
                         .filter((a) => !a.isClosed && a.type === "bank")
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
@@ -277,7 +302,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (a) =>
                             !a.isClosed && ["cash", "card"].includes(a.type),
@@ -321,7 +346,7 @@ export function TransactionModal({
                   >
                     <option value="">(None)</option>
                     <optgroup label="Debts & Loans">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (acc) =>
                             !acc.isClosed &&
@@ -336,7 +361,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Bank Accounts">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (acc) =>
                             !acc.isClosed &&
@@ -350,7 +375,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (acc) =>
                             !acc.isClosed &&
@@ -364,7 +389,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Investments">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (acc) =>
                             !acc.isClosed &&
@@ -377,9 +402,9 @@ export function TransactionModal({
                           </option>
                         ))}
                     </optgroup>
-                    {goals && goals.length > 0 && (
+                    {sortedGoals && sortedGoals.length > 0 && (
                       <optgroup label="Financial Goals">
-                        {goals.map((g: FinancialGoal) => (
+                        {sortedGoals.map((g: FinancialGoal) => (
                           <option key={g.id} value={g.id}>
                             {g.name} (₹{g.currentAmount.toLocaleString("en-IN")}
                             )
@@ -430,7 +455,7 @@ export function TransactionModal({
                       Select Source
                     </option>
                     <optgroup label="Bank Accounts">
-                      {accounts
+                      {sortedAccounts
                         .filter((a) => !a.isClosed && a.type === "bank")
                         .map((acc) => (
                           <option key={acc.id} value={acc.id}>
@@ -439,7 +464,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (a) =>
                             !a.isClosed && ["cash", "card"].includes(a.type),
@@ -471,7 +496,7 @@ export function TransactionModal({
                       Select Destination
                     </option>
                     <optgroup label="Bank Accounts">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (a) =>
                             !a.isClosed &&
@@ -485,7 +510,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Cash & Others">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (a) =>
                             !a.isClosed &&
@@ -499,7 +524,7 @@ export function TransactionModal({
                         ))}
                     </optgroup>
                     <optgroup label="Investments">
-                      {accounts
+                      {sortedAccounts
                         .filter(
                           (a) =>
                             !a.isClosed &&
@@ -535,7 +560,7 @@ export function TransactionModal({
                     Select Destination
                   </option>
                   <optgroup label="Bank Accounts">
-                    {accounts
+                    {sortedAccounts
                       .filter((a) => !a.isClosed && a.type === "bank")
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
@@ -544,7 +569,7 @@ export function TransactionModal({
                       ))}
                   </optgroup>
                   <optgroup label="Cash & Others">
-                    {accounts
+                    {sortedAccounts
                       .filter(
                         (a) => !a.isClosed && ["cash", "card"].includes(a.type),
                       )
@@ -555,7 +580,7 @@ export function TransactionModal({
                       ))}
                   </optgroup>
                   <optgroup label="Investments">
-                    {accounts
+                    {sortedAccounts
                       .filter((a) => !a.isClosed && a.type === "investment")
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
@@ -594,7 +619,7 @@ export function TransactionModal({
                 disabled={isSaving}
                 className="w-full h-12 p-3 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm text-slate-900 dark:text-white font-medium disabled:opacity-50"
               >
-                {categories.map((cat: Category) => (
+                {sortedCategories.map((cat: Category) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>

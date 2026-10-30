@@ -33,9 +33,13 @@ export function AddYearlyExpenseModal({
   // Only allow liquid nodes (Bank, Cash, Card) as per user request
   const accounts = useMemo(
     () =>
-      allAccounts.filter(
-        (acc) => ["bank", "cash"].includes(acc.type) && !acc.isClosed,
-      ),
+      allAccounts
+        .filter((acc) => ["bank", "cash"].includes(acc.type) && !acc.isClosed)
+        .sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "", undefined, {
+            sensitivity: "base",
+          }),
+        ),
     [allAccounts],
   );
 

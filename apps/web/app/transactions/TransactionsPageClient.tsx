@@ -30,7 +30,6 @@ import { fetchAccounts, createAccount } from "@/store/slices/accountsSlice";
 import {
   addCategoryAction,
   updateCategoryAction,
-  removeCategoryAction,
   fetchCategories,
 } from "@/store/slices/categoriesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
@@ -58,6 +57,15 @@ export default function TransactionsPageClient() {
   const { items: accounts, loading: accountsLoading } = useSelector(
     (state: RootState) => state.accounts,
   );
+
+  const sortedAccounts = useMemo(() => {
+    return [...(accounts || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [accounts]);
+
   const { items: categories, loading: categoriesLoading } = useSelector(
     (state: RootState) => state.categories,
   );
@@ -462,7 +470,7 @@ export default function TransactionsPageClient() {
                 className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
               >
                 <option value="all">All Accounts</option>
-                {accounts.map((a, index) => (
+                {sortedAccounts.map((a, index) => (
                   <option key={a.id || `account-${index}`} value={a.id}>
                     {a.name}
                   </option>
@@ -924,10 +932,6 @@ export default function TransactionsPageClient() {
           } else {
             await dispatch(addCategoryAction(categoryData)).unwrap();
           }
-          dispatch(fetchCategories());
-        }}
-        onDelete={async (id) => {
-          await dispatch(removeCategoryAction(id)).unwrap();
           dispatch(fetchCategories());
         }}
       />

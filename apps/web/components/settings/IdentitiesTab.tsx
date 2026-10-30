@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Plus, Trash2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export function IdentitiesTab() {
   const {
@@ -10,6 +11,11 @@ export function IdentitiesTab() {
     switchAccount,
     removeAccount,
   } = useAuth();
+
+  const [identityToRemove, setIdentityToRemove] = useState<{
+    uid: string;
+    label: string;
+  } | null>(null);
 
   const handleAddIdentity = () => {
     window.location.href = "/login?mode=add";
@@ -86,13 +92,11 @@ export function IdentitiesTab() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      if (
-                        confirm(
-                          `Remove linked identity node (${acc.email || acc.displayName}) from this device?`,
-                        )
-                      ) {
-                        removeAccount(acc.uid);
-                      }
+                      setIdentityToRemove({
+                        uid: acc.uid,
+                        label:
+                          acc.email || acc.displayName || "Unknown Identity",
+                      });
                     }}
                     className="size-8 rounded-lg border-rose-500/30 bg-rose-500/10 p-0 hover:bg-rose-500 hover:text-white text-rose-500 transition-all shadow-none flex items-center justify-center shrink-0 cursor-pointer"
                     title="Remove Identity"
@@ -105,6 +109,21 @@ export function IdentitiesTab() {
           );
         })}
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(identityToRemove)}
+        onCancel={() => setIdentityToRemove(null)}
+        onConfirm={() => {
+          if (identityToRemove) {
+            removeAccount(identityToRemove.uid);
+            setIdentityToRemove(null);
+          }
+        }}
+        title="Remove Linked Account?"
+        message={`Are you sure you want to remove linked identity (${identityToRemove?.label}) from this device?`}
+        confirmText="Remove Account"
+        isDestructive
+      />
     </div>
   );
 }

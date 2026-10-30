@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronDown, TrendingUp } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -29,9 +29,16 @@ export function AddInvestmentModal({
   onSave,
   investment,
 }: AddInvestmentModalProps) {
-  const assetTypes = useSelector(
+  const rawAssetTypes = useSelector(
     (state: RootState) => state.assetClasses.items,
   );
+  const assetTypes = useMemo(() => {
+    return [...(rawAssetTypes || [])].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [rawAssetTypes]);
   const [formData, setFormData] = useState({
     assetName: "",
     assetType: "",

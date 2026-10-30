@@ -13,6 +13,7 @@ import { Account, AccountType } from "@repo/types";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AddAccountModal } from "@/components/accounts/AddAccountModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { formatCurrency } from "@/lib/utils";
 
 export function AccountsTab() {
@@ -29,6 +30,7 @@ export function AccountsTab() {
   const [editingBankAccount, setEditingBankAccount] = useState<Account | null>(
     null,
   );
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   useEffect(() => {
     dispatch(fetchAccounts());
@@ -96,26 +98,26 @@ export function AccountsTab() {
     }
   };
 
-  const handleDeleteBankAccount = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to permanently delete this account? This action cannot be undone.",
-      )
-    )
-      return;
+  const handleDeleteBankAccount = async () => {
+    if (!accountToDelete) return;
     try {
-      await dispatch(deleteAccount(id)).unwrap();
+      await dispatch(deleteAccount(accountToDelete.id)).unwrap();
       toast.success("Account deleted");
+      setAccountToDelete(null);
     } catch {
       toast.error("Failed to delete account");
     }
   };
 
-  const filteredAccounts = bankAccounts.filter(
-    (acc) =>
-      ["bank", "cash", "card"].includes(acc.type) &&
-      (accountSubTab === "active" ? !acc.isClosed : acc.isClosed),
-  );
+  const filteredAccounts = bankAccounts
+    .filter(
+      (acc) =>
+        ["bank", "cash", "card"].includes(acc.type) &&
+        (accountSubTab === "active" ? !acc.isClosed : acc.isClosed),
+    )
+    .sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
 
   return (
     <>
@@ -241,7 +243,7 @@ export function AccountsTab() {
                   </Button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteBankAccount(acc.id)}
+                    onClick={() => setAccountToDelete(acc)}
                     className="size-7 sm:size-8 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 flex items-center justify-center shrink-0 cursor-pointer"
                     title="Delete Account"
                   >
@@ -262,6 +264,16 @@ export function AccountsTab() {
         }}
         onSave={handleAccountAction}
         account={editingBankAccount}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(accountToDelete)}
+        onCancel={() => setAccountToDelete(null)}
+        onConfirm={handleDeleteBankAccount}
+        title="Delete Account?"
+        message={`Are you sure you want to permanently delete "${accountToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete Account"
+        isDestructive
       />
     </>
   );

@@ -193,8 +193,8 @@ export function ProfileTab() {
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="male">Male</SelectItem>
               <SelectItem value="other">Other</SelectItem>
               <SelectItem value="not_specified">Prefer not to say</SelectItem>
             </SelectContent>

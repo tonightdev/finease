@@ -120,9 +120,9 @@ export function AddExpiryModal({
               }
               className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-4 text-sm font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none"
             >
-              <option value="policy">Policy</option>
               <option value="document">Document</option>
               <option value="other">Other</option>
+              <option value="policy">Policy</option>
             </select>
           </div>
           <div className="flex-1 min-w-[140px] space-y-1.5">

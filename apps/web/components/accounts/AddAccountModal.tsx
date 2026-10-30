@@ -93,7 +93,7 @@ export function AddAccountModal({
       title={account ? "Edit Account" : "Add Account"}
       maxWidth="max-w-sm"
       footer={
-        <div className="flex gap-3 w-full">
+        <div className="flex gap-2 w-full">
           <Button
             variant="secondary"
             onClick={onClose}
