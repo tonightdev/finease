@@ -83,6 +83,7 @@ export function VaultTab() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
   const [items, setItems] = useState<VaultItem[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
 
   // Unlock state
   const [unlockPassword, setUnlockPassword] = useState("");
@@ -151,6 +152,7 @@ export function VaultTab() {
     setIsUnlocked(false);
     setVaultKey(null);
     setItems([]);
+    setItemsLoading(false);
     setDecryptedValues({});
     setRevealedPasswords({});
     setUnlockPassword("");
@@ -164,11 +166,14 @@ export function VaultTab() {
   // Load items when unlocked
   const fetchItems = useCallback(async () => {
     try {
+      setItemsLoading(true);
       const res = await api.get<VaultItem[]>("/vault/items");
       setItems(res.data || []);
     } catch (error) {
       console.error("Failed to load vault items:", error);
       toast.error("Failed to load items");
+    } finally {
+      setItemsLoading(false);
     }
   }, []);
 
@@ -180,6 +185,7 @@ export function VaultTab() {
     setRevealedPasswords({});
     setUnlockPassword("");
     setUnlockError("");
+    setItemsLoading(false);
     toast.success("Vault locked securely");
   }, []);
 
@@ -209,11 +215,12 @@ export function VaultTab() {
       setSettings(res.data);
       setVaultKey(key);
       setIsUnlocked(true);
+      setItemsLoading(true);
       setShowSetupModal(false);
       setNewMasterPassword("");
       setConfirmMasterPassword("");
       toast.success("Vault initialized! Remember your Master Password.");
-      fetchItems();
+      void fetchItems();
     } catch (error) {
       console.error("Failed to set up vault:", error);
       toast.error("Failed to initialize vault");
@@ -245,9 +252,10 @@ export function VaultTab() {
 
       setVaultKey(key);
       setIsUnlocked(true);
+      setItemsLoading(true);
       setUnlockPassword("");
       toast.success("Vault unlocked");
-      fetchItems();
+      void fetchItems();
     } catch (error) {
       console.error("Unlock error:", error);
       setUnlockError("Failed to unlock vault. Check your credentials.");
@@ -775,7 +783,11 @@ export function VaultTab() {
 
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 shrink-0">
               <Shield className="size-3.5 text-emerald-500" />
-              <span>{items.length} items secured</span>
+              <span>
+                {itemsLoading
+                  ? "Decrypting credentials..."
+                  : `${items.length} items secured`}
+              </span>
             </div>
           </div>
 
@@ -804,7 +816,59 @@ export function VaultTab() {
       </SettingsCard>
 
       {/* Items Grid / List */}
-      {filteredItems.length === 0 ? (
+      {itemsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 space-y-4 shadow-xs"
+            >
+              {/* Header: Avatar + Title/Category + Action buttons */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-10 rounded-xl shrink-0" />
+                  <div className="space-y-1.5 min-w-0">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Skeleton className="size-7 rounded-lg" />
+                  <Skeleton className="size-7 rounded-lg" />
+                  <Skeleton className="size-7 rounded-lg" />
+                </div>
+              </div>
+
+              {/* Username row */}
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1.5 border border-slate-100 dark:border-white/5">
+                <Skeleton className="h-2.5 w-16" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="size-6 rounded-md" />
+                </div>
+              </div>
+
+              {/* Password row */}
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1.5 border border-slate-100 dark:border-white/5">
+                <Skeleton className="h-2.5 w-16" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-36" />
+                  <div className="flex items-center gap-1.5">
+                    <Skeleton className="size-6 rounded-md" />
+                    <Skeleton className="size-6 rounded-md" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer: timestamp / website */}
+              <div className="pt-1 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredItems.length === 0 ? (
         <SettingsCard>
           <div className="text-center py-10 space-y-3">
             <div className="size-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto">
