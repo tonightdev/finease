@@ -25,9 +25,6 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
 );
 
-const FALLBACK_VAPID_PUBLIC_KEY =
-  "BAdklf2iWNH9ED7MzgQrQpgiEBuaaOp_FIgTf00aBguOV5eundDJIl9LKPbbWQ84v2joEg4Lpb_qfm6y5F4819k";
-
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -68,7 +65,7 @@ export function NotificationProvider({
     if (envKey) return envKey;
 
     try {
-      const res = await api.get<{ publicKey: string }>(
+      const res = await api.get<{ publicKey: string | null }>(
         "/auth/notifications/vapid-public-key",
       );
       if (res.data?.publicKey) {
@@ -78,7 +75,7 @@ export function NotificationProvider({
       console.warn("Could not fetch VAPID key from API:", e);
     }
 
-    return FALLBACK_VAPID_PUBLIC_KEY;
+    return "";
   }, []);
 
   const subscribeUser = useCallback(async () => {
@@ -118,6 +115,12 @@ export function NotificationProvider({
 
       if (!subscription) {
         const vapidPublicKey = await getVapidPublicKey();
+        if (!vapidPublicKey) {
+          console.warn(
+            "No VAPID public key available. Push subscription skipped.",
+          );
+          return;
+        }
         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -217,33 +220,45 @@ export function NotificationProvider({
     }
 
     try {
-      // 1. Immediately show notification on device via active service worker
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("FinEase System Alert", {
-          body: "Notifications are operational and verified on this device.",
-          icon: "/icon-192x192.png",
-          badge: "/favicon.svg",
-          data: { url: "/dashboard" },
-        });
-      } else {
-        new Notification("FinEase System Alert", {
-          body: "Notifications are operational and verified on this device.",
-          icon: "/icon-192x192.png",
-        });
+      const token = localStorage.getItem("finease_token");
+      let backendDispatched = false;
+
+      // 1. If authenticated, dispatch via backend push roundtrip
+      if (token) {
+        try {
+          const res = await api.post<{ success: boolean }>(
+            "/auth/notifications/test",
+          );
+          if (res.data?.success) {
+            backendDispatched = true;
+          }
+        } catch (apiErr) {
+          console.warn(
+            "Backend push notification test ping failed, falling back to local:",
+            apiErr,
+          );
+        }
+      }
+
+      // 2. Only show local notification if backend didn't already send it (avoids duplicate notification)
+      if (!backendDispatched) {
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification("FinEase System Alert", {
+            body: "Notifications are operational and verified on this device.",
+            icon: "/icon-192x192.png",
+            badge: "/favicon.svg",
+            data: { url: "/dashboard" },
+          });
+        } else {
+          new Notification("FinEase System Alert", {
+            body: "Notifications are operational and verified on this device.",
+            icon: "/icon-192x192.png",
+          });
+        }
       }
 
       toast.success("Test notification displayed on your device!");
-
-      // 2. Also test backend push roundtrip if user is logged in
-      const token = localStorage.getItem("finease_token");
-      if (token) {
-        try {
-          await api.post("/auth/notifications/test");
-        } catch (apiErr) {
-          console.warn("Backend push notification test ping:", apiErr);
-        }
-      }
     } catch (error) {
       console.error("Failed to display test notification:", error);
       toast.error(

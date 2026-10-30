@@ -40,4 +40,15 @@ export class NotificationsController {
       url: '/dashboard',
     });
   }
+
+  @Post('dispatch-daily')
+  @UseGuards(AuthGuard)
+  async dispatchDaily() {
+    return this.notificationsService.dispatchDailyNotifications();
+  }
+
+  @Get('cron/daily')
+  async cronDaily() {
+    return this.notificationsService.dispatchDailyNotifications();
+  }
 }

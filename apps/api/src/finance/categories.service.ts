@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Category } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -31,10 +36,14 @@ export class CategoriesService {
       .filter((category) => !category.deletedAt);
   }
 
-  async findOne(id: string): Promise<Category | null> {
+  async findOne(id: string, userId?: string): Promise<Category | null> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...(doc.data() as Omit<Category, 'id'>) };
+    const data = { id: doc.id, ...(doc.data() as Omit<Category, 'id'>) };
+    if (userId && data.userId !== userId) {
+      throw new ForbiddenException('Access denied to this category');
+    }
+    return data;
   }
 
   async create(category: Partial<Category>): Promise<Category> {
@@ -57,17 +66,20 @@ export class CategoriesService {
     return result;
   }
 
-  async update(id: string, category: Partial<Category>): Promise<Category> {
-    const currentCategory = await this.findOne(id);
+  async update(
+    id: string,
+    category: Partial<Category>,
+    userId?: string,
+  ): Promise<Category> {
+    const currentCategory = await this.findOne(id, userId);
     if (!currentCategory) {
-      throw new BadRequestException(`Category with ID ${id} not found.`);
+      throw new NotFoundException(`Category with ID ${id} not found.`);
     }
 
     await this.collection.doc(id).update(category);
-    const updatedCategory = await this.findOne(id);
+    const updatedCategory = await this.findOne(id, userId);
     if (!updatedCategory) {
-      // This case should ideally not happen if the update was successful
-      throw new BadRequestException(
+      throw new NotFoundException(
         `Category with ID ${id} not found after update.`,
       );
     }
@@ -86,7 +98,12 @@ export class CategoriesService {
     return updatedCategory;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId?: string): Promise<void> {
+    const category = await this.findOne(id, userId);
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${id} not found.`);
+    }
+
     // Check if any active transaction is using this category
     const transactionsSnapshot = await this.db
       .collection(this.transactionsCollection)

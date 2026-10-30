@@ -26,12 +26,12 @@ export function SettingsCard({
   return (
     <div
       className={cn(
-        "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xs space-y-5 animate-in fade-in duration-200",
+        "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xs space-y-3 sm:space-y-4 animate-in fade-in duration-200",
         className,
       )}
     >
       {hasHeader && (
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/5">
+        <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-white/5">
           <div className="flex items-center gap-3 min-w-0">
             {Icon && (
               <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">

@@ -7,6 +7,7 @@ import { FinanceModule } from './finance/finance.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CommonModule } from './common/common.module';
+import { VaultModule } from './vault/vault.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CommonModule } from './common/common.module';
     FinanceModule,
     AuthModule,
     AdminModule,
+    VaultModule,
   ],
   controllers: [AppController],
   providers: [AppService],

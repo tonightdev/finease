@@ -9,6 +9,7 @@ import {
   Wallet,
   Tag,
   Shield,
+  KeyRound,
   UserPlus,
   Database,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import {
   AccountsTab,
   CategoriesTab,
   SecurityTab,
+  VaultTab,
   IdentitiesTab,
   DataArchiveTab,
 } from "@/components/settings";
@@ -61,6 +63,12 @@ const SETTINGS_TABS: SettingsTabItem[] = [
     subtitle: "Manage active sessions and security credentials",
   },
   {
+    id: "vault",
+    label: "Password Protector",
+    icon: KeyRound,
+    subtitle: "Store encrypted IDs, passwords, and logins",
+  },
+  {
     id: "identities",
     label: "Switch Account",
     icon: UserPlus,
@@ -74,28 +82,36 @@ const SETTINGS_TABS: SettingsTabItem[] = [
   },
 ];
 
-const VALID_TABS: SettingsTabId[] = [
-  "profile",
-  "preferences",
+const ADMIN_RESTRICTED_TABS: SettingsTabId[] = [
   "accounts",
   "categories",
-  "security",
-  "identities",
+  "vault",
   "data",
 ];
 
 function SettingsPageContent() {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("profile");
   const searchParams = useSearchParams();
-  const { loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
-  // Synchronize active tab with URL ?tab= parameter
+  const isAdmin = user?.role === "admin";
+
+  // Filter tabs for admin users
+  const availableTabs = isAdmin
+    ? SETTINGS_TABS.filter((tab) => !ADMIN_RESTRICTED_TABS.includes(tab.id))
+    : SETTINGS_TABS;
+
+  // Synchronize active tab with URL ?tab= parameter and enforce role restrictions
   useEffect(() => {
     const tabParam = searchParams.get("tab") as SettingsTabId | null;
-    if (tabParam && VALID_TABS.includes(tabParam)) {
+    const allowedTabIds = availableTabs.map((t) => t.id);
+
+    if (tabParam && allowedTabIds.includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (isAdmin && ADMIN_RESTRICTED_TABS.includes(activeTab)) {
+      setActiveTab("profile");
     }
-  }, [searchParams]);
+  }, [searchParams, availableTabs, isAdmin, activeTab]);
 
   if (authLoading) {
     return (
@@ -137,7 +153,7 @@ function SettingsPageContent() {
       <div className="flex flex-col lg:flex-row items-start gap-2 mt-0">
         {/* Reusable Sidebar Navigation (Desktop list + Mobile select) */}
         <SettingsSidebar
-          tabs={SETTINGS_TABS}
+          tabs={availableTabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
@@ -146,7 +162,7 @@ function SettingsPageContent() {
         <div className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={`${activeTab}-${user?.uid || "anon"}`}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -155,11 +171,14 @@ function SettingsPageContent() {
             >
               {activeTab === "profile" && <ProfileTab />}
               {activeTab === "preferences" && <PreferencesTab />}
-              {activeTab === "accounts" && <AccountsTab />}
-              {activeTab === "categories" && <CategoriesTab />}
+              {!isAdmin && activeTab === "accounts" && <AccountsTab />}
+              {!isAdmin && activeTab === "categories" && <CategoriesTab />}
               {activeTab === "security" && <SecurityTab />}
+              {!isAdmin && activeTab === "vault" && (
+                <VaultTab key={user?.uid} />
+              )}
               {activeTab === "identities" && <IdentitiesTab />}
-              {activeTab === "data" && <DataArchiveTab />}
+              {!isAdmin && activeTab === "data" && <DataArchiveTab />}
             </motion.div>
           </AnimatePresence>
         </div>

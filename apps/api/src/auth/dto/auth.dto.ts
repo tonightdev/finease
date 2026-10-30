@@ -35,6 +35,9 @@ export class ResetPasswordDto {
   @ApiProperty({ example: 'rahul@example.com' })
   email!: string;
 
+  @ApiProperty({ example: 'currentpassword123', required: false })
+  currentPassword?: string;
+
   @ApiProperty({ example: 'newpassword123' })
   newPassword!: string;
 }

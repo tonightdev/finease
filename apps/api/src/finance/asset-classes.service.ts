@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AssetClass, ActivityType } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -43,13 +48,22 @@ export class AssetClassesService {
   async update(
     id: string,
     assetClass: Partial<AssetClass>,
+    userId?: string,
   ): Promise<AssetClass> {
     const docRef = this.collection.doc(id);
     const prevDoc = await docRef.get();
+    if (!prevDoc.exists) {
+      throw new NotFoundException(`Asset class with ID ${id} not found`);
+    }
+
     const currentAssetClass = {
       id: prevDoc.id,
       ...prevDoc.data(),
     } as AssetClass;
+
+    if (userId && currentAssetClass.userId !== userId) {
+      throw new ForbiddenException('Access denied to this asset class');
+    }
 
     await docRef.update(assetClass);
     const doc = await docRef.get();
@@ -72,7 +86,18 @@ export class AssetClassesService {
     return updatedAssetClass;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId?: string): Promise<void> {
+    const docRef = this.collection.doc(id);
+    const prevDoc = await docRef.get();
+    if (!prevDoc.exists) {
+      throw new NotFoundException(`Asset class with ID ${id} not found`);
+    }
+
+    const currentAssetClass = prevDoc.data() as AssetClass;
+    if (userId && currentAssetClass.userId !== userId) {
+      throw new ForbiddenException('Access denied to this asset class');
+    }
+
     // Check if any active account is using this asset class
     const accountsSnapshot = await this.db
       .collection(this.accountsCollection)

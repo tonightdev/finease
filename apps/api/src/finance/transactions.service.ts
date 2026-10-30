@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { Transaction, Account, FinancialGoal } from '@repo/types';
@@ -71,12 +72,16 @@ export class TransactionsService {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
-  async findOne(id: string): Promise<Transaction> {
+  async findOne(id: string, userId?: string): Promise<Transaction> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists || doc.data()?.deletedAt) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
-    return { id: doc.id, ...doc.data() } as Transaction;
+    const data = { id: doc.id, ...doc.data() } as Transaction;
+    if (userId && data.userId !== userId) {
+      throw new ForbiddenException('Access denied to this transaction');
+    }
+    return data;
   }
 
   async create(transaction: Partial<Transaction>): Promise<Transaction> {
@@ -134,8 +139,9 @@ export class TransactionsService {
   async update(
     id: string,
     updateData: Partial<Transaction>,
+    userId?: string,
   ): Promise<Transaction> {
-    const oldTx = await this.findOne(id);
+    const oldTx = await this.findOne(id, userId);
     const txRef = this.collection.doc(id);
 
     // Re-evaluate whether this is a transfer based on merged state.
@@ -176,7 +182,7 @@ export class TransactionsService {
       await this.recalculateGoalProgress(goalId);
     }
 
-    const updatedTx = await this.findOne(id);
+    const updatedTx = await this.findOne(id, userId);
 
     // Log the activity
     await this.activityLogService.logActivity({
@@ -193,13 +199,9 @@ export class TransactionsService {
     return updatedTx;
   }
 
-  async remove(id: string): Promise<void> {
-    const txDoc = await this.collection.doc(id).get();
-    if (!txDoc.exists) {
-      throw new NotFoundException(`Transaction with ID ${id} not found`);
-    }
+  async remove(id: string, userId?: string): Promise<void> {
+    const txData = await this.findOne(id, userId);
 
-    const txData = txDoc.data() as Transaction;
     await this.collection
       .doc(id)
       .update({ deletedAt: new Date().toISOString() });
@@ -235,13 +237,8 @@ export class TransactionsService {
     await batch.commit();
   }
 
-  async confirm(id: string): Promise<Transaction> {
-    const txDoc = await this.collection.doc(id).get();
-    if (!txDoc.exists) {
-      throw new NotFoundException(`Transaction with ID ${id} not found`);
-    }
-
-    const txData = txDoc.data() as Transaction;
+  async confirm(id: string, userId?: string): Promise<Transaction> {
+    const txData = await this.findOne(id, userId);
     const batch = this.db.batch();
 
     batch.update(this.collection.doc(id), { status: 'completed' });

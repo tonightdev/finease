@@ -36,12 +36,16 @@ export class AccountsService {
       .filter((account) => !account.deletedAt);
   }
 
-  async findOne(id: string): Promise<Account> {
+  async findOne(id: string, userId?: string): Promise<Account> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists || doc.data()?.deletedAt) {
       throw new NotFoundException(`Account with ID ${id} not found`);
     }
-    return { id: doc.id, ...doc.data() } as Account;
+    const data = { id: doc.id, ...doc.data() } as Account;
+    if (userId && data.userId !== userId) {
+      throw new ForbiddenException('Access denied to this account');
+    }
+    return data;
   }
 
   async create(account: Partial<Account>): Promise<Account> {
@@ -94,8 +98,12 @@ export class AccountsService {
     return result;
   }
 
-  async update(id: string, account: Partial<Account>): Promise<Account> {
-    const currentAccount = await this.findOne(id);
+  async update(
+    id: string,
+    account: Partial<Account>,
+    userId?: string,
+  ): Promise<Account> {
+    const currentAccount = await this.findOne(id, userId);
 
     // Dedicated handler for loans/liabilities: always compute remaining balance directly
     if (currentAccount.type === 'debt') {
@@ -238,8 +246,8 @@ export class AccountsService {
     return updatedAccount;
   }
 
-  async remove(id: string): Promise<void> {
-    const account = await this.findOne(id);
+  async remove(id: string, userId?: string): Promise<void> {
+    const account = await this.findOne(id, userId);
     // Cascade soft-delete transactions related to this account
     await this.transactionsService.removeByAccountId(id);
     // Soft-delete the account itself

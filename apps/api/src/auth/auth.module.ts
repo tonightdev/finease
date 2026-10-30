@@ -10,10 +10,16 @@ import { NotificationsService } from './notifications.service';
   imports: [
     ConfigModule,
     JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
-        signOptions: { expiresIn: '3650d' },
-      }),
+      useFactory: () => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '30d' },
+        };
+      },
     }),
   ],
   controllers: [AuthController, NotificationsController],

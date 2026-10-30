@@ -8,6 +8,7 @@ export type SettingsTabId =
   | "accounts"
   | "categories"
   | "security"
+  | "vault"
   | "identities"
   | "data";
 

@@ -82,10 +82,10 @@ export default function Home() {
 
   const expiringSoon = useMemo(() => {
     const now = new Date();
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     return expiries.filter((r) => {
       const expiry = new Date(r.expiryDate);
-      return expiry > now && expiry <= sevenDaysFromNow;
+      return expiry > now && expiry <= threeDaysFromNow;
     });
   }, [expiries]);
 
@@ -295,29 +295,67 @@ export default function Home() {
       }
     }
 
-    // 3. Net Worth Milestone Celebration
+    // 3. Net Worth Milestone Celebration (25L, 50L, 1Cr, 2Cr, 5Cr, 10Cr)
     if (realTimeNetWorth > 0) {
       const milestones = [
-        100_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000,
-        25_000_000, 50_000_000, 100_000_000,
+        { amount: 100_000_000, label: "Rs.10Cr" },
+        { amount: 50_000_000, label: "Rs.5Cr" },
+        { amount: 20_000_000, label: "Rs.2Cr" },
+        { amount: 10_000_000, label: "Rs.1Cr" },
+        { amount: 5_000_000, label: "Rs.50L" },
+        { amount: 2_500_000, label: "Rs.25L" },
       ];
-      for (const milestone of milestones) {
-        const prevKey = `finease_milestone_${milestone}`;
-        if (realTimeNetWorth >= milestone && !localStorage.getItem(prevKey)) {
-          localStorage.setItem(prevKey, "1");
-          const formatted =
-            milestone >= 10_000_000
-              ? `Rs.${(milestone / 10_000_000).toFixed(0)}Cr`
-              : milestone >= 100_000
-                ? `Rs.${(milestone / 100_000).toFixed(0)}L`
-                : `Rs.${(milestone / 1_000).toFixed(0)}K`;
+
+      // Find highest milestone reached
+      const highestMilestone = milestones.find(
+        (m) => realTimeNetWorth >= m.amount,
+      );
+
+      if (highestMilestone) {
+        const lastMilestoneNotifDate = localStorage.getItem(
+          "finease_last_milestone_notif_date",
+        );
+        const lastNotifiedMilestoneAmount = Number(
+          localStorage.getItem("finease_last_milestone_amount") || "0",
+        );
+        const lastNotifiedNetWorth = Number(
+          localStorage.getItem("finease_last_milestone_networth") || "0",
+        );
+
+        // Conditions:
+        // 1. Not already notified today
+        // 2. Highest milestone is strictly higher than previous highest milestone
+        // 3. Net worth has changed since last milestone notification
+        const alreadyNotifiedToday = lastMilestoneNotifDate === today;
+        const isHigherMilestone =
+          highestMilestone.amount > lastNotifiedMilestoneAmount;
+        const netWorthChanged =
+          Math.round(realTimeNetWorth) !== Math.round(lastNotifiedNetWorth);
+
+        if (!alreadyNotifiedToday && isHigherMilestone && netWorthChanged) {
+          localStorage.setItem("finease_last_milestone_notif_date", today);
+          localStorage.setItem(
+            "finease_last_milestone_amount",
+            String(highestMilestone.amount),
+          );
+          localStorage.setItem(
+            "finease_last_milestone_networth",
+            String(Math.round(realTimeNetWorth)),
+          );
+
+          // Mark all lower/equal milestones as satisfied so they never trigger
+          milestones
+            .filter((m) => m.amount <= highestMilestone.amount)
+            .forEach((m) =>
+              localStorage.setItem(`finease_milestone_${m.amount}`, "1"),
+            );
+
           showNotif(
-            `milestone_${milestone}`,
-            "Milestone Unlocked!",
-            `Your net worth just crossed ${formatted}! Keep the momentum going.`,
+            `milestone_${highestMilestone.amount}`,
+            "Milestone Unlocked! 🎉",
+            `Your net worth just crossed ${highestMilestone.label}! Keep the momentum going.`,
             "/dashboard",
           );
-          break;
         }
       }
     }
@@ -336,6 +374,22 @@ export default function Home() {
         "Fiscal Cycle Reset 📊",
         "Your new financial cycle started recently. Time to track your latest expenses, review your balances, and keep your budget in check!",
         "/transactions",
+      );
+    }
+
+    // 5. Month End / Cycle Ending Reminder — 2 or 3 days before next Fiscal Cycle Reset Day
+    const nextFiscalStart = new Date(currentFiscalStart);
+    nextFiscalStart.setMonth(nextFiscalStart.getMonth() + 1);
+    const msUntilNextCycle = nextFiscalStart.getTime() - now.getTime();
+    const daysUntilReset = Math.ceil(msUntilNextCycle / (1000 * 60 * 60 * 24));
+
+    if (daysUntilReset === 2 || daysUntilReset === 3) {
+      const cycleEndKey = `cycle_ending_${nextFiscalStart.toISOString().slice(0, 10)}`;
+      showNotif(
+        cycleEndKey,
+        "Fiscal Cycle Ending Soon ⏳",
+        `Your financial cycle wraps up in ${daysUntilReset} days. Time to review your expenses, settle pending entries, and keep your budget on target!`,
+        "/reports",
       );
     }
   }, [

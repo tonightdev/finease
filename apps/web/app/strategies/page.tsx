@@ -810,7 +810,7 @@ export default function StrategiesPage() {
 
       <div className="flex flex-col xl:flex-row gap-6 xl:gap-4 items-start">
         <div
-          className={`xl:w-[380px] shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5 w-full min-w-0 block`}
+          className={`xl:w-[380px] shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5 w-full min-w-0 ${mobileTab === "controls" ? "flex" : "hidden xl:flex"}`}
         >
           <Card className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm w-full space-y-3.5">
             <div className="flex p-1 mb-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/5">

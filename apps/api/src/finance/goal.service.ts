@@ -1,4 +1,10 @@
-import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  forwardRef,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { FinancialGoal } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -58,10 +64,17 @@ export class GoalService {
   async update(
     id: string,
     goal: Partial<FinancialGoal>,
+    userId?: string,
   ): Promise<FinancialGoal> {
-    const currentGoal = (
-      await this.collection.doc(id).get()
-    ).data() as FinancialGoal;
+    const doc = await this.collection.doc(id).get();
+    if (!doc.exists) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    const currentGoal = doc.data() as FinancialGoal;
+    if (userId && currentGoal.userId !== userId) {
+      throw new ForbiddenException('Access denied to this goal');
+    }
 
     if (
       goal.currentAmount !== undefined &&
@@ -102,10 +115,17 @@ export class GoalService {
     return result;
   }
 
-  async remove(id: string, hard = false): Promise<void> {
+  async remove(id: string, hard = false, userId?: string): Promise<void> {
     const docRef = this.collection.doc(id);
     const goalDoc = await docRef.get();
-    const goalData = goalDoc.exists ? (goalDoc.data() as FinancialGoal) : null;
+    if (!goalDoc.exists) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    const goalData = goalDoc.data() as FinancialGoal;
+    if (userId && goalData.userId !== userId) {
+      throw new ForbiddenException('Access denied to this goal');
+    }
 
     if (hard) {
       await docRef.delete();

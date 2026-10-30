@@ -178,25 +178,52 @@ export class AuthService {
   }
 
   async resetPassword(data: ResetPasswordDto) {
-    const { email, newPassword } = data;
+    const { email, currentPassword, newPassword } = data;
+
+    if (!currentPassword) {
+      throw new UnauthorizedException(
+        'Current password is required to change password.',
+      );
+    }
 
     const snapshot = await this.collection.where('email', '==', email).get();
 
     if (snapshot.empty) {
-      // Return success even if not found to prevent email enumeration
-      return { message: 'Password reset successfully' };
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const userDoc = snapshot.docs[0];
     if (!userDoc) {
-      return { message: 'Password reset successfully' };
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const userData = userDoc.data() as StoredUser;
+    const isCurrentValid = await bcrypt.compare(
+      currentPassword,
+      userData.password,
+    );
+    if (!isCurrentValid) {
+      throw new UnauthorizedException('Current password does not match');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await userDoc.ref.update({
       password: hashedPassword,
+      updatedAt: new Date().toISOString(),
     });
+
+    // Revoke previous sessions on password change for security
+    try {
+      const sessions = await this.sessionCollection
+        .where('userId', '==', userDoc.id)
+        .get();
+      const batch = this.firebaseAdmin.getFirestore().batch();
+      sessions.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+    } catch {
+      // Non-fatal if session purge fails
+    }
 
     // Log activity
     await this.activityLogService.logActivity({
@@ -204,10 +231,10 @@ export class AuthService {
       action: 'update' as ActivityType,
       entityType: 'user',
       entityId: userDoc.id,
-      description: `User reset their password`,
+      description: `User changed their password`,
     });
 
-    return { message: 'Password reset successfully' };
+    return { message: 'Password updated successfully. Please log in again.' };
   }
 
   async generateTokenForUser(
@@ -272,10 +299,15 @@ export class AuthService {
       isPWA?: boolean;
     },
   ) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new UnauthorizedException('JWT_SECRET configuration missing');
+    }
+
     let payload: JwtPayload;
     try {
       payload = await this.jwtService.verifyAsync<JwtPayload>(oldToken, {
-        secret: process.env.JWT_SECRET ?? 'finease-secret-fallback',
+        secret,
         ignoreExpiration: true,
       });
     } catch {

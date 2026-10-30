@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { Simulation } from '@repo/types';
 import { ActivityLogService } from '../common/services/activity-log.service';
@@ -23,12 +27,16 @@ export class SimulationsService {
       .filter((plan) => !plan.deletedAt);
   }
 
-  async findOne(id: string): Promise<Simulation> {
+  async findOne(id: string, userId?: string): Promise<Simulation> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists || doc.data()?.deletedAt) {
       throw new NotFoundException(`Simulation with ID ${id} not found`);
     }
-    return { id: doc.id, ...doc.data() } as Simulation;
+    const data = { id: doc.id, ...doc.data() } as Simulation;
+    if (userId && data.userId !== userId) {
+      throw new ForbiddenException('Access denied to this simulation');
+    }
+    return data;
   }
 
   async create(plan: Partial<Simulation>): Promise<Simulation> {
@@ -54,14 +62,18 @@ export class SimulationsService {
     return result;
   }
 
-  async update(id: string, plan: Partial<Simulation>): Promise<Simulation> {
-    await this.findOne(id);
+  async update(
+    id: string,
+    plan: Partial<Simulation>,
+    userId?: string,
+  ): Promise<Simulation> {
+    await this.findOne(id, userId);
 
     await this.collection.doc(id).update({
       ...plan,
     });
 
-    const updatedPlan = await this.findOne(id);
+    const updatedPlan = await this.findOne(id, userId);
 
     // Log activity
     if (updatedPlan.userId) {
@@ -77,8 +89,8 @@ export class SimulationsService {
     return updatedPlan;
   }
 
-  async remove(id: string, hard = false): Promise<void> {
-    const plan = await this.findOne(id);
+  async remove(id: string, hard = false, userId?: string): Promise<void> {
+    const plan = await this.findOne(id, userId);
     const docRef = this.collection.doc(id);
 
     if (hard) {
