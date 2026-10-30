@@ -40,7 +40,7 @@ interface MonthlyGrowthChartProps {
 
 export type DataScope = "all" | "accounts_cash";
 type TimeframeOption = "6M" | "12M" | "YTD";
-type ChartViewMode = "combined" | "growth" | "networth";
+type ChartViewMode = "line" | "bar";
 
 interface MonthlyDataPoint {
   month: string;
@@ -69,7 +69,7 @@ interface CustomTooltipProps {
 function CustomTooltip({
   active,
   payload,
-  dataScope = "all",
+  dataScope = "accounts_cash",
 }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     const data: MonthlyDataPoint = payload[0]!.payload;
@@ -178,9 +178,9 @@ export function MonthlyGrowthChart({
   monthStartDate = 1,
   className = "",
 }: MonthlyGrowthChartProps) {
-  const [dataScope, setDataScope] = useState<DataScope>("all");
+  const [dataScope, setDataScope] = useState<DataScope>("accounts_cash");
   const [timeframe, setTimeframe] = useState<TimeframeOption>("6M");
-  const [viewMode, setViewMode] = useState<ChartViewMode>("combined");
+  const [viewMode, setViewMode] = useState<ChartViewMode>("line");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -615,19 +615,6 @@ export function MonthlyGrowthChart({
           <div className="hidden sm:flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5">
             <button
               type="button"
-              onClick={() => setDataScope("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                dataScope === "all"
-                  ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
-              title="Include all assets, investments, accounts & debts"
-            >
-              <Layers className="size-3.5" />
-              <span>All Data</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setDataScope("accounts_cash")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 dataScope === "accounts_cash"
@@ -639,23 +626,24 @@ export function MonthlyGrowthChart({
               <Landmark className="size-3.5" />
               <span>Accounts & Cash</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setDataScope("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                dataScope === "all"
+                  ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Include all assets, investments, accounts & debts"
+            >
+              <Layers className="size-3.5" />
+              <span>All Data</span>
+            </button>
           </div>
         </div>
 
         {/* Row 2 (Mobile only): Full-width Segmented Scope Toggle */}
         <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 sm:hidden">
-          <button
-            type="button"
-            onClick={() => setDataScope("all")}
-            className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
-              dataScope === "all"
-                ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Layers className="size-3.5 shrink-0" />
-            <span>All Data</span>
-          </button>
           <button
             type="button"
             onClick={() => setDataScope("accounts_cash")}
@@ -668,6 +656,18 @@ export function MonthlyGrowthChart({
             <Landmark className="size-3.5 shrink-0" />
             <span>Accounts & Cash</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setDataScope("all")}
+            className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              dataScope === "all"
+                ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Layers className="size-3.5 shrink-0" />
+            <span>All Data</span>
+          </button>
         </div>
 
         {/* Row 3 (Mobile) / Secondary Bar: View Mode & Timeframe Controls */}
@@ -676,42 +676,29 @@ export function MonthlyGrowthChart({
           <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0">
             <button
               type="button"
-              onClick={() => setViewMode("combined")}
+              onClick={() => setViewMode("line")}
               className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
-                viewMode === "combined"
-                  ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
-              title="Combined Growth Bars & Net Worth Line"
-            >
-              <Layers className="size-2.5 sm:size-3" />
-              <span>All</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("growth")}
-              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
-                viewMode === "growth"
-                  ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
-              title="Growth Delta Only"
-            >
-              <BarChart3 className="size-2.5 sm:size-3" />
-              <span>Growth</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("networth")}
-              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
-                viewMode === "networth"
+                viewMode === "line"
                   ? "bg-white dark:bg-slate-800 text-indigo-500 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
-              title="Net Worth Line"
+              title="Line Chart"
             >
               <LineChartIcon className="size-2.5 sm:size-3" />
-              <span>Trend</span>
+              <span>Line</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("bar")}
+              className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
+                viewMode === "bar"
+                  ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Bar Chart"
+            >
+              <BarChart3 className="size-2.5 sm:size-3" />
+              <span>Bar</span>
             </button>
           </div>
 
@@ -870,8 +857,8 @@ export function MonthlyGrowthChart({
               }}
             />
 
-            {/* Left Axis: Growth Delta */}
-            {(viewMode === "combined" || viewMode === "growth") && (
+            {/* Left Axis: Growth Delta for Bar mode */}
+            {viewMode === "bar" && (
               <YAxis
                 yAxisId="deltaAxis"
                 axisLine={false}
@@ -882,12 +869,11 @@ export function MonthlyGrowthChart({
               />
             )}
 
-            {/* Right Axis: Total Net Worth for Line (hide on small mobile in combined mode to avoid cramming) */}
-            {(viewMode === "combined" || viewMode === "networth") && (
+            {/* Left Axis: Net Worth for Line mode */}
+            {viewMode === "line" && (
               <YAxis
                 yAxisId="netWorthAxis"
-                orientation={viewMode === "networth" ? "left" : "right"}
-                hide={isMobile && viewMode === "combined"}
+                orientation="left"
                 axisLine={false}
                 tickLine={false}
                 width={isMobile ? 44 : 50}
@@ -896,8 +882,8 @@ export function MonthlyGrowthChart({
               />
             )}
 
-            {/* Reference Line at 0 for clear gain / loss horizon */}
-            {(viewMode === "combined" || viewMode === "growth") && (
+            {/* Reference Line at 0 for clear gain / loss horizon in Bar mode */}
+            {viewMode === "bar" && (
               <ReferenceLine
                 y={0}
                 yAxisId="deltaAxis"
@@ -911,7 +897,7 @@ export function MonthlyGrowthChart({
             <Tooltip content={<CustomTooltip dataScope={dataScope} />} />
 
             {/* Bars for Monthly Growth */}
-            {(viewMode === "combined" || viewMode === "growth") && (
+            {viewMode === "bar" && (
               <Bar
                 yAxisId="deltaAxis"
                 dataKey="growth"
@@ -937,7 +923,7 @@ export function MonthlyGrowthChart({
             )}
 
             {/* Line for Net Worth Trend */}
-            {(viewMode === "combined" || viewMode === "networth") && (
+            {viewMode === "line" && (
               <Line
                 yAxisId="netWorthAxis"
                 type="monotone"
@@ -965,7 +951,7 @@ export function MonthlyGrowthChart({
       {/* Legend & Insight Note */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-2 border-t border-slate-100 dark:border-white/5 text-[9px] sm:text-[10px] font-bold text-slate-400">
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-          {(viewMode === "combined" || viewMode === "growth") && (
+          {viewMode === "bar" && (
             <>
               <div className="flex items-center gap-1">
                 <div className="size-2 rounded-xs bg-emerald-500 shrink-0" />
@@ -977,7 +963,7 @@ export function MonthlyGrowthChart({
               </div>
             </>
           )}
-          {(viewMode === "combined" || viewMode === "networth") && (
+          {viewMode === "line" && (
             <div className="flex items-center gap-1">
               <div className="w-2.5 h-0.5 bg-indigo-500 rounded-full shrink-0" />
               <span className="text-indigo-600 dark:text-indigo-400">
@@ -991,7 +977,11 @@ export function MonthlyGrowthChart({
 
         <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-slate-400">
           <Sparkles className="size-3 text-amber-500 shrink-0" />
-          <span>Tap bars for full audit details</span>
+          <span>
+            {viewMode === "bar"
+              ? "Tap bars for full audit details"
+              : "Tap data points for full audit details"}
+          </span>
         </div>
       </div>
     </div>

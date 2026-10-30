@@ -1,12 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as webpush from 'web-push';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
-
-const DEFAULT_VAPID_PUBLIC_KEY =
-  'BAdklf2iWNH9ED7MzgQrQpgiEBuaaOp_FIgTf00aBguOV5eundDJIl9LKPbbWQ84v2joEg4Lpb_qfm6y5F4819k';
-const DEFAULT_VAPID_PRIVATE_KEY = '2ZvmbeadoYolaA-rCIrdWlCcL-rOw4VFtPUFdFIRN_o';
-const DEFAULT_VAPID_SUBJECT = 'mailto:support@finease.app';
-
 interface WebPushError extends Error {
   statusCode?: number;
 }
@@ -15,16 +9,23 @@ interface WebPushError extends Error {
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private vapidConfigured = false;
-  private publicKey: string;
+  private publicKey: string | null = null;
 
   constructor(private readonly firebaseAdmin: FirebaseAdminService) {
-    this.publicKey = process.env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
-    const privateKey =
-      process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
-    const subject = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT;
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const privateKey = process.env.VAPID_PRIVATE_KEY;
+    const subject = process.env.VAPID_SUBJECT || 'mailto:support@finease.app';
+
+    if (!publicKey || !privateKey) {
+      this.logger.warn(
+        'Web-Push VAPID keys are not configured in environment variables. Push notifications are disabled.',
+      );
+      return;
+    }
 
     try {
-      webpush.setVapidDetails(subject, this.publicKey, privateKey);
+      webpush.setVapidDetails(subject, publicKey, privateKey);
+      this.publicKey = publicKey;
       this.vapidConfigured = true;
       this.logger.log('Web-Push VAPID details configured successfully');
     } catch (err) {
@@ -32,7 +33,7 @@ export class NotificationsService {
     }
   }
 
-  getPublicKey(): string {
+  getPublicKey(): string | null {
     return this.publicKey;
   }
 

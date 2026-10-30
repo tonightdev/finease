@@ -48,7 +48,7 @@ export function PageHeader({
           </div>
         </div>
         {actions && (
-          <div className="flex items-center w-full md:w-auto min-w-0 md:shrink-0">
+          <div className="flex items-center w-full md:w-auto min-w-0 md:shrink-0 empty:hidden">
             {actions}
           </div>
         )}

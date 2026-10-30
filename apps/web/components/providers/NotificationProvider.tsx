@@ -25,9 +25,6 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
 );
 
-const FALLBACK_VAPID_PUBLIC_KEY =
-  "BAdklf2iWNH9ED7MzgQrQpgiEBuaaOp_FIgTf00aBguOV5eundDJIl9LKPbbWQ84v2joEg4Lpb_qfm6y5F4819k";
-
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -68,7 +65,7 @@ export function NotificationProvider({
     if (envKey) return envKey;
 
     try {
-      const res = await api.get<{ publicKey: string }>(
+      const res = await api.get<{ publicKey: string | null }>(
         "/auth/notifications/vapid-public-key",
       );
       if (res.data?.publicKey) {
@@ -78,7 +75,7 @@ export function NotificationProvider({
       console.warn("Could not fetch VAPID key from API:", e);
     }
 
-    return FALLBACK_VAPID_PUBLIC_KEY;
+    return "";
   }, []);
 
   const subscribeUser = useCallback(async () => {
@@ -118,6 +115,12 @@ export function NotificationProvider({
 
       if (!subscription) {
         const vapidPublicKey = await getVapidPublicKey();
+        if (!vapidPublicKey) {
+          console.warn(
+            "No VAPID public key available. Push subscription skipped.",
+          );
+          return;
+        }
         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,

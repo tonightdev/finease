@@ -70,12 +70,16 @@ export function ProfileTab() {
     }
   }, [strategyCurrent?.protocol, user?.budgetTargets]);
 
+  const isAdmin = user?.role === "admin";
+
   const handleUpdateProfile = async () => {
     if (!user) return;
-    const total = needsTarget + savingsTarget + wantsTarget;
-    if (total !== 100) {
-      toast.error("Financial Adherence Rules must total exactly 100%");
-      return;
+    if (!isAdmin) {
+      const total = needsTarget + savingsTarget + wantsTarget;
+      if (total !== 100) {
+        toast.error("Financial Adherence Rules must total exactly 100%");
+        return;
+      }
     }
     setIsUpdating(true);
     try {
@@ -93,17 +97,23 @@ export function ProfileTab() {
         phone,
         dob,
         monthStartDate,
-        budgetTargets,
+        ...(!isAdmin ? { budgetTargets } : {}),
       });
 
-      // 2. Sync Strategy Protocol cloud data simultaneously
-      await dispatch(
-        saveStrategy({
-          protocol: budgetTargets,
-        }),
-      );
+      // 2. Sync Strategy Protocol cloud data simultaneously (only for non-admin)
+      if (!isAdmin) {
+        await dispatch(
+          saveStrategy({
+            protocol: budgetTargets,
+          }),
+        );
+      }
 
-      toast.success("Identity profile and strategy protocol synchronized");
+      toast.success(
+        isAdmin
+          ? "Identity profile updated successfully"
+          : "Identity profile and strategy protocol synchronized",
+      );
     } catch (err) {
       console.error("Failed to update profile:", err);
       toast.error("Profile synchronization failure");
@@ -220,99 +230,101 @@ export function ProfileTab() {
         </SettingsField>
       </div>
 
-      {/* Financial Adherence Rules Section */}
-      <SettingsSection
-        tag="Protocol"
-        title="Financial Adherence Rules"
-        description="Configure target budget distribution across essential, savings investment, and discretionary nodes."
-        rightElement={
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/10">
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Total Allocated:
-            </div>
-            <div
-              className={`text-sm font-black ${
-                totalAllocated === 100 ? "text-emerald-500" : "text-rose-500"
-              }`}
-            >
-              {totalAllocated}%
-            </div>
-          </div>
-        }
-      >
-        {/* Multi-Segment Progress Bar (Needs, Savings, Wants) */}
-        <div className="h-2.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex gap-0.5 p-0.5">
-          <motion.div
-            animate={{ width: `${needsTarget}%` }}
-            className="h-full rounded-sm bg-amber-500 transition-all duration-300"
-            title={`Needs: ${needsTarget}%`}
-          />
-          <motion.div
-            animate={{ width: `${savingsTarget}%` }}
-            className="h-full rounded-sm bg-indigo-500 transition-all duration-300"
-            title={`Savings: ${savingsTarget}%`}
-          />
-          <motion.div
-            animate={{ width: `${wantsTarget}%` }}
-            className="h-full rounded-sm bg-rose-500 transition-all duration-300"
-            title={`Wants: ${wantsTarget}%`}
-          />
-        </div>
-
-        {/* 3 Metric Allocations Ordered: Needs -> Savings -> Wants */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            {
-              label: "Needs",
-              val: needsTarget,
-              set: setNeedsTarget,
-              color: "text-amber-500",
-              bg: "bg-amber-500/5",
-              border: "border-amber-500/20",
-            },
-            {
-              label: "Savings",
-              val: savingsTarget,
-              set: setSavingsTarget,
-              color: "text-indigo-500",
-              bg: "bg-indigo-500/5",
-              border: "border-indigo-500/20",
-            },
-            {
-              label: "Wants",
-              val: wantsTarget,
-              set: setWantsTarget,
-              color: "text-rose-500",
-              bg: "bg-rose-500/5",
-              border: "border-rose-500/20",
-            },
-          ].map((field) => (
-            <div
-              key={field.label}
-              className={`p-3.5 rounded-xl ${field.bg} border ${field.border} space-y-2`}
-            >
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                  {field.label}
-                </label>
-                <span className={`text-xs font-black ${field.color}`}>
-                  {field.val}%
-                </span>
+      {/* Financial Adherence Rules Section - User Only */}
+      {!isAdmin && (
+        <SettingsSection
+          tag="Protocol"
+          title="Financial Adherence Rules"
+          description="Configure target budget distribution across essential, savings investment, and discretionary nodes."
+          rightElement={
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-white/10">
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Total Allocated:
               </div>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={field.val}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  field.set(parseInt(e.target.value) || 0)
-                }
-                className="w-full h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold text-xs rounded-lg"
-              />
+              <div
+                className={`text-sm font-black ${
+                  totalAllocated === 100 ? "text-emerald-500" : "text-rose-500"
+                }`}
+              >
+                {totalAllocated}%
+              </div>
             </div>
-          ))}
-        </div>
-      </SettingsSection>
+          }
+        >
+          {/* Multi-Segment Progress Bar (Needs, Savings, Wants) */}
+          <div className="h-2.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+            <motion.div
+              animate={{ width: `${needsTarget}%` }}
+              className="h-full rounded-sm bg-amber-500 transition-all duration-300"
+              title={`Needs: ${needsTarget}%`}
+            />
+            <motion.div
+              animate={{ width: `${savingsTarget}%` }}
+              className="h-full rounded-sm bg-indigo-500 transition-all duration-300"
+              title={`Savings: ${savingsTarget}%`}
+            />
+            <motion.div
+              animate={{ width: `${wantsTarget}%` }}
+              className="h-full rounded-sm bg-rose-500 transition-all duration-300"
+              title={`Wants: ${wantsTarget}%`}
+            />
+          </div>
+
+          {/* 3 Metric Allocations Ordered: Needs -> Savings -> Wants */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                label: "Needs",
+                val: needsTarget,
+                set: setNeedsTarget,
+                color: "text-amber-500",
+                bg: "bg-amber-500/5",
+                border: "border-amber-500/20",
+              },
+              {
+                label: "Savings",
+                val: savingsTarget,
+                set: setSavingsTarget,
+                color: "text-indigo-500",
+                bg: "bg-indigo-500/5",
+                border: "border-indigo-500/20",
+              },
+              {
+                label: "Wants",
+                val: wantsTarget,
+                set: setWantsTarget,
+                color: "text-rose-500",
+                bg: "bg-rose-500/5",
+                border: "border-rose-500/20",
+              },
+            ].map((field) => (
+              <div
+                key={field.label}
+                className={`p-3.5 rounded-xl ${field.bg} border ${field.border} space-y-2`}
+              >
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                    {field.label}
+                  </label>
+                  <span className={`text-xs font-black ${field.color}`}>
+                    {field.val}%
+                  </span>
+                </div>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={field.val}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.set(parseInt(e.target.value) || 0)
+                  }
+                  className="w-full h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold text-xs rounded-lg"
+                />
+              </div>
+            ))}
+          </div>
+        </SettingsSection>
+      )}
     </SettingsCard>
   );
 }

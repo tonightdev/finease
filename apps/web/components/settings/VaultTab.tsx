@@ -50,6 +50,14 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useAuth } from "@/components/auth/AuthProvider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 
 const CATEGORIES: {
   id: VaultCategory | "all";
@@ -67,6 +75,8 @@ const CATEGORIES: {
 ];
 
 export function VaultTab() {
+  const { user } = useAuth();
+
   // Vault state
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<VaultSettings | null>(null);
@@ -122,7 +132,7 @@ export function VaultTab() {
   const [deletingItem, setDeletingItem] = useState<VaultItem | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Load vault settings on mount
+  // Load vault settings for current authenticated user
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -136,9 +146,20 @@ export function VaultTab() {
     }
   }, []);
 
+  // Isolate and lock vault whenever active user identity changes
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    setIsUnlocked(false);
+    setVaultKey(null);
+    setItems([]);
+    setDecryptedValues({});
+    setRevealedPasswords({});
+    setUnlockPassword("");
+    setUnlockError("");
+    setSettings(null);
+    if (user?.uid) {
+      void fetchSettings();
+    }
+  }, [user?.uid, fetchSettings]);
 
   // Load items when unlocked
   const fetchItems = useCallback(async () => {
@@ -1033,36 +1054,32 @@ export function VaultTab() {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Category
               </label>
-              <select
+              <Select
                 value={formCategory}
-                onChange={(e) =>
-                  setFormCategory(e.target.value as VaultCategory)
-                }
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all h-[42px]"
+                onValueChange={(val) => setFormCategory(val as VaultCategory)}
               >
-                <option value="bank">Banking & Finance</option>
-                <option value="email">Email</option>
-                <option value="social">Social</option>
-                <option value="app">Apps & Software</option>
-                <option value="work">Work & Business</option>
-                <option value="utility">Utility</option>
-                <option value="other">Other</option>
-              </select>
+                <SelectTrigger className="w-full h-[42px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent className="z-[9999] bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-xl">
+                  {CATEGORIES.filter((c) => c.id !== "all").map((cat) => {
+                    const CatIcon = cat.icon;
+                    return (
+                      <SelectItem
+                        key={cat.id}
+                        value={cat.id}
+                        className="text-xs font-bold py-2 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <CatIcon className="size-4 text-slate-500 dark:text-slate-400" />
+                          <span>{cat.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-
-          {/* Website URL */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Website URL (Optional)
-            </label>
-            <input
-              type="text"
-              value={formWebsiteUrl}
-              onChange={(e) => setFormWebsiteUrl(e.target.value)}
-              placeholder="e.g. https://apple.com or netbanking.hdfcbank.com"
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
-            />
           </div>
 
           {/* ID / Username */}

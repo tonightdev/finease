@@ -25,7 +25,6 @@ import type {
   FinancialGoal,
   Transaction,
   Account,
-  User,
   Category,
   AssetClass,
   Expiry,
@@ -68,8 +67,23 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Update user profile details' })
   @Put('profile')
-  updateProfile(@Req() req: RequestWithUser, @Body() data: Partial<User>) {
-    return this.usersService.update(req.user.uid, data);
+  updateProfile(
+    @Req() req: RequestWithUser,
+    @Body() data: Record<string, any>,
+  ) {
+    // Prevent mass assignment and privilege escalation
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    const {
+      role,
+      id,
+      email,
+      password,
+      deletedAt,
+      createdAt,
+      ...allowedUpdates
+    } = data;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+    return this.usersService.update(req.user.uid, allowedUpdates);
   }
 
   // --- Simulations ---
@@ -91,14 +105,22 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Update a simulation' })
   @Put('simulations/:id')
-  updateSimulation(@Param('id') id: string, @Body() plan: Partial<Simulation>) {
-    return this.simulationsService.update(id, plan);
+  updateSimulation(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() plan: Partial<Simulation>,
+  ) {
+    return this.simulationsService.update(id, plan, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete a simulation' })
   @Delete('simulations/:id')
-  removeSimulation(@Param('id') id: string, @Query('hard') hard: string) {
-    return this.simulationsService.remove(id, hard === 'true');
+  removeSimulation(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Query('hard') hard: string,
+  ) {
+    return this.simulationsService.remove(id, hard === 'true', req.user.uid);
   }
 
   // --- Accounts ---
@@ -120,14 +142,18 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Update an existing account' })
   @Put('accounts/:id')
-  updateAccount(@Param('id') id: string, @Body() account: Partial<Account>) {
-    return this.accountsService.update(id, account);
+  updateAccount(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() account: Partial<Account>,
+  ) {
+    return this.accountsService.update(id, account, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete a financial account' })
   @Delete('accounts/:id')
-  removeAccount(@Param('id') id: string) {
-    return this.accountsService.remove(id);
+  removeAccount(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.accountsService.remove(id, req.user.uid);
   }
 
   @ApiOperation({
@@ -216,22 +242,23 @@ export class FinanceController {
   @ApiOperation({ summary: 'Update an existing transaction' })
   @Put('transactions/:id')
   updateTransaction(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() transaction: Partial<Transaction>,
   ) {
-    return this.transactionsService.update(id, transaction);
+    return this.transactionsService.update(id, transaction, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete a transaction' })
   @Delete('transactions/:id')
-  removeTransaction(@Param('id') id: string) {
-    return this.transactionsService.remove(id);
+  removeTransaction(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.transactionsService.remove(id, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Confirm a pending automated transaction' })
   @Post('transactions/:id/confirm')
-  confirmTransaction(@Param('id') id: string) {
-    return this.transactionsService.confirm(id);
+  confirmTransaction(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.transactionsService.confirm(id, req.user.uid);
   }
 
   @ApiOperation({
@@ -261,14 +288,22 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Update an existing goal' })
   @Put('goals/:id')
-  updateGoal(@Param('id') id: string, @Body() goal: Partial<FinancialGoal>) {
-    return this.goalService.update(id, goal);
+  updateGoal(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() goal: Partial<FinancialGoal>,
+  ) {
+    return this.goalService.update(id, goal, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete a financial goal' })
   @Delete('goals/:id')
-  removeGoal(@Param('id') id: string, @Query('hard') hard: string) {
-    return this.goalService.remove(id, hard === 'true');
+  removeGoal(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Query('hard') hard: string,
+  ) {
+    return this.goalService.remove(id, hard === 'true', req.user.uid);
   }
 
   @ApiOperation({ summary: 'Calculate monthly savings requirement for a goal' })
@@ -299,14 +334,18 @@ export class FinanceController {
 
   @ApiOperation({ summary: 'Update an existing category' })
   @Put('categories/:id')
-  updateCategory(@Param('id') id: string, @Body() category: Partial<Category>) {
-    return this.categoriesService.update(id, category);
+  updateCategory(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() category: Partial<Category>,
+  ) {
+    return this.categoriesService.update(id, category, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete a category' })
   @Delete('categories/:id')
-  removeCategory(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  removeCategory(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.categoriesService.remove(id, req.user.uid);
   }
 
   // --- Asset Classes ---
@@ -332,16 +371,17 @@ export class FinanceController {
   @ApiOperation({ summary: 'Update an asset class' })
   @Put('asset-classes/:id')
   updateAssetClass(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() assetClass: Partial<AssetClass>,
   ) {
-    return this.assetClassesService.update(id, assetClass);
+    return this.assetClassesService.update(id, assetClass, req.user.uid);
   }
 
   @ApiOperation({ summary: 'Delete an asset class' })
   @Delete('asset-classes/:id')
-  removeAssetClass(@Param('id') id: string) {
-    return this.assetClassesService.remove(id);
+  removeAssetClass(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.assetClassesService.remove(id, req.user.uid);
   }
 
   // --- Reconciliation ---

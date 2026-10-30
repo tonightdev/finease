@@ -69,6 +69,18 @@ function getValidRpId(): string | undefined {
   return hostname;
 }
 
+async function hashPin(pin: string): Promise<string> {
+  if (typeof window === "undefined" || !window.crypto?.subtle) return pin;
+  const enc = new TextEncoder();
+  const digest = await window.crypto.subtle.digest(
+    "SHA-256",
+    enc.encode(`finease_pin_salt_${pin}`),
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export function SecurityProvider({ children }: { children: React.ReactNode }) {
   const [isLockEnabled, setIsLockEnabled] = useState(() => {
     if (typeof window !== "undefined") {
@@ -238,7 +250,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       if (isAuthReady && isDataReady) {
         timer = setTimeout(() => {
           setIsChecking(false);
-        }, 600);
+        }, 80);
       }
       return () => {
         window.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -383,7 +395,8 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
         setLockType("pin");
         localStorage.setItem("finease_app_lock", "true");
         localStorage.setItem("finease_lock_type", "pin");
-        localStorage.setItem("finease_pin", pin);
+        const hashed = await hashPin(pin);
+        localStorage.setItem("finease_pin", hashed);
         toast.success("Security PIN Activated");
         return true;
       }
@@ -411,25 +424,31 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
       if (next.length === 4) {
         const storedPin = localStorage.getItem("finease_pin");
-        if (next === storedPin) {
-          setIsLocked(false);
-          sessionStorage.setItem("finease_session_authenticated", "true");
-          toast.success("Vault Unlocked");
-          return "";
-        } else {
-          setIsShake(true);
-          setIsError(true);
-          if (typeof window !== "undefined" && window.navigator?.vibrate) {
-            window.navigator.vibrate([80, 50, 80]);
-          }
-          toast.error("Incorrect PIN. Try again.");
-          setTimeout(() => setIsShake(false), 450);
-          setTimeout(() => {
-            setIsError(false);
+        void (async () => {
+          const hashedInput = await hashPin(next);
+          if (next === storedPin || hashedInput === storedPin) {
+            if (next === storedPin) {
+              localStorage.setItem("finease_pin", hashedInput);
+            }
+            setIsLocked(false);
+            sessionStorage.setItem("finease_session_authenticated", "true");
+            toast.success("Vault Unlocked");
             setEnteredPin("");
-          }, 600);
-          return next;
-        }
+          } else {
+            setIsShake(true);
+            setIsError(true);
+            if (typeof window !== "undefined" && window.navigator?.vibrate) {
+              window.navigator.vibrate([80, 50, 80]);
+            }
+            toast.error("Incorrect PIN. Try again.");
+            setTimeout(() => setIsShake(false), 450);
+            setTimeout(() => {
+              setIsError(false);
+              setEnteredPin("");
+            }, 600);
+          }
+        })();
+        return next;
       }
       return next;
     });

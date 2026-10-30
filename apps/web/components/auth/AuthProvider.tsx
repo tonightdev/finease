@@ -75,7 +75,11 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<AuthUser>) => void;
-  resetPassword: (email: string, newPassword: string) => Promise<void>;
+  resetPassword: (
+    email: string,
+    newPassword: string,
+    currentPassword?: string,
+  ) => Promise<void>;
   accounts: AuthUser[];
   switchAccount: (uid: string) => Promise<void>;
   authorizeSubNode: (uid: string) => Promise<void>;
@@ -158,6 +162,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             );
             return updated;
           });
+
+          // Sync token-mapping for multi-account switching
+          const tokenMap = JSON.parse(
+            localStorage.getItem("finease_token_map") || "{}",
+          );
+          if (!tokenMap[activeUser.uid]) {
+            tokenMap[activeUser.uid] = token;
+            localStorage.setItem("finease_token_map", JSON.stringify(tokenMap));
+          }
 
           // Fetch data in background without blocking initial render
           void dispatch(fetchCategories());
@@ -362,8 +375,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetPassword = async (email: string, newPassword: string) => {
-    await api.post("/auth/reset-password", { email, newPassword });
+  const resetPassword = async (
+    email: string,
+    newPassword: string,
+    currentPassword?: string,
+  ) => {
+    await api.post("/auth/reset-password", {
+      email,
+      newPassword,
+      currentPassword,
+    });
   };
 
   return (

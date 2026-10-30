@@ -23,6 +23,7 @@ function LoginContent() {
   // Forgot password state
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isResetting, setIsResetting] = useState(false);
 
@@ -63,19 +64,24 @@ function LoginContent() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetEmail || !newPassword) {
-      toast.error("Please provide both email and new password");
+    if (!resetEmail || !currentPassword || !newPassword) {
+      toast.error("Please provide email, current password, and new password");
       return;
     }
     setIsResetting(true);
     try {
-      await resetPassword(resetEmail, newPassword);
+      await resetPassword(resetEmail, newPassword, currentPassword);
       toast.success("Password reset successfully! You can now log in.");
       setIsForgotModalOpen(false);
       setResetEmail("");
+      setCurrentPassword("");
       setNewPassword("");
-    } catch {
-      toast.error("Failed to reset password. Please try again.");
+    } catch (err: unknown) {
+      const axiosErr = err as AxiosError<{ message: string }>;
+      toast.error(
+        axiosErr.response?.data?.message ||
+          "Failed to reset password. Please verify your credentials.",
+      );
     } finally {
       setIsResetting(false);
     }
@@ -189,6 +195,16 @@ function LoginContent() {
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-500 tracking-tight ml-1">
+                  Current Password
+                </label>
+                <PasswordInput
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
