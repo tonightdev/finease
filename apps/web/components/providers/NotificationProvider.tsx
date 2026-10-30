@@ -220,33 +220,45 @@ export function NotificationProvider({
     }
 
     try {
-      // 1. Immediately show notification on device via active service worker
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("FinEase System Alert", {
-          body: "Notifications are operational and verified on this device.",
-          icon: "/icon-192x192.png",
-          badge: "/favicon.svg",
-          data: { url: "/dashboard" },
-        });
-      } else {
-        new Notification("FinEase System Alert", {
-          body: "Notifications are operational and verified on this device.",
-          icon: "/icon-192x192.png",
-        });
+      const token = localStorage.getItem("finease_token");
+      let backendDispatched = false;
+
+      // 1. If authenticated, dispatch via backend push roundtrip
+      if (token) {
+        try {
+          const res = await api.post<{ success: boolean }>(
+            "/auth/notifications/test",
+          );
+          if (res.data?.success) {
+            backendDispatched = true;
+          }
+        } catch (apiErr) {
+          console.warn(
+            "Backend push notification test ping failed, falling back to local:",
+            apiErr,
+          );
+        }
+      }
+
+      // 2. Only show local notification if backend didn't already send it (avoids duplicate notification)
+      if (!backendDispatched) {
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification("FinEase System Alert", {
+            body: "Notifications are operational and verified on this device.",
+            icon: "/icon-192x192.png",
+            badge: "/favicon.svg",
+            data: { url: "/dashboard" },
+          });
+        } else {
+          new Notification("FinEase System Alert", {
+            body: "Notifications are operational and verified on this device.",
+            icon: "/icon-192x192.png",
+          });
+        }
       }
 
       toast.success("Test notification displayed on your device!");
-
-      // 2. Also test backend push roundtrip if user is logged in
-      const token = localStorage.getItem("finease_token");
-      if (token) {
-        try {
-          await api.post("/auth/notifications/test");
-        } catch (apiErr) {
-          console.warn("Backend push notification test ping:", apiErr);
-        }
-      }
     } catch (error) {
       console.error("Failed to display test notification:", error);
       toast.error(
