@@ -1193,6 +1193,9 @@ export default function StrategiesPage() {
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
+                          name="percent"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={target}
                           onChange={(
                             e: React.ChangeEvent<HTMLInputElement>,

@@ -1,4 +1,4 @@
-const CACHE_NAME = "finease-cache-v2";
+const CACHE_NAME = "finease-cache-v3";
 const STATIC_ASSETS = [
   "/",
   "/favicon.svg",
@@ -152,4 +152,15 @@ self.addEventListener("notificationclick", (event) => {
         }
       }),
   );
+});
+
+// 5. Periodic Background Sync (PWA Background Updates)
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "finease-daily-sync") {
+    event.waitUntil(
+      fetch("/auth/notifications/cron/daily", {
+        headers: { "x-cron-secret": "pwa-sync" },
+      }).catch(() => {}),
+    );
+  }
 });

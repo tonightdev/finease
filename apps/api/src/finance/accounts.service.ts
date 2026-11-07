@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import {
@@ -17,6 +18,7 @@ import { ActivityLogService } from '../common/services/activity-log.service';
 
 @Injectable()
 export class AccountsService {
+  private readonly logger = new Logger(AccountsService.name);
   private readonly collectionName = 'accounts';
 
   constructor(
@@ -105,24 +107,30 @@ export class AccountsService {
   ): Promise<Account> {
     const currentAccount = await this.findOne(id, userId);
 
+    // Mass assignment prevention: Strip immutable and sensitive fields
+    const sanitizedAccount = { ...account };
+    delete sanitizedAccount.id;
+    delete sanitizedAccount.userId;
+    delete (sanitizedAccount as Record<string, unknown>).createdAt;
+
     // Dedicated handler for loans/liabilities: always compute remaining balance directly
     if (currentAccount.type === 'debt') {
       const totalLoan =
-        account.initialAmount !== undefined
-          ? Number(account.initialAmount)
+        sanitizedAccount.initialAmount !== undefined
+          ? Number(sanitizedAccount.initialAmount)
           : Number(currentAccount.initialAmount) || 0;
       const repaid =
-        account.repaidCapital !== undefined
-          ? Number(account.repaidCapital)
+        sanitizedAccount.repaidCapital !== undefined
+          ? Number(sanitizedAccount.repaidCapital)
           : Number(currentAccount.repaidCapital) || 0;
       const interest =
-        account.burnedInterest !== undefined
-          ? Number(account.burnedInterest)
+        sanitizedAccount.burnedInterest !== undefined
+          ? Number(sanitizedAccount.burnedInterest)
           : Number(currentAccount.burnedInterest) || 0;
       const remainingDebt = Math.max(0, totalLoan - repaid);
 
       await this.collection.doc(id).update({
-        ...account,
+        ...sanitizedAccount,
         initialAmount: totalLoan,
         repaidCapital: repaid,
         burnedInterest: interest,
@@ -139,7 +147,7 @@ export class AccountsService {
         entityType: 'account',
         entityId: id,
         description: `Updated loan/liability: ${updatedAccount.name}`,
-        metadata: { updateData: account },
+        metadata: { updateData: sanitizedAccount },
         previousState: currentAccount,
         newState: updatedAccount,
       });
@@ -148,7 +156,9 @@ export class AccountsService {
     }
 
     const newBalance =
-      account.balance !== undefined ? Number(account.balance) : undefined;
+      sanitizedAccount.balance !== undefined
+        ? Number(sanitizedAccount.balance)
+        : undefined;
 
     // If balance is being manually updated
     if (
@@ -164,7 +174,7 @@ export class AccountsService {
         // Instead, we adjust the valuationAdjustment (for investments) or initialAmount (for others)
         // so that recalculateBalances results in the target balance.
 
-        const updateData = { ...account };
+        const updateData = { ...sanitizedAccount };
         delete updateData.balance;
 
         if (currentAccount.type === 'investment') {
@@ -215,7 +225,7 @@ export class AccountsService {
           },
         });
 
-        const updateData = { ...account };
+        const updateData = { ...sanitizedAccount };
         delete updateData.balance;
         await this.collection.doc(id).update({
           ...updateData,
@@ -223,8 +233,10 @@ export class AccountsService {
         });
       }
     } else {
+      const updateData = { ...sanitizedAccount };
+      delete updateData.balance;
       await this.collection.doc(id).update({
-        ...account,
+        ...updateData,
         lastSyncedAt: new Date().toISOString(),
       });
     }
@@ -382,7 +394,7 @@ export class AccountsService {
       liquidCapital,
       investedCapital,
       accountSnapshots,
-      note: dto.note || 'Monthly Wealth Pulse',
+      note: dto.note?.trim() ? dto.note.trim() : 'Monthly Wealth Pulse',
       createdAt: now,
     };
 
@@ -413,12 +425,13 @@ export class AccountsService {
     const snapshot = await firestore
       .collection('wealth_snapshots')
       .where('userId', '==', userId)
-      .limit(limitCount)
       .get();
 
-    const items = snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() }) as WealthSnapshot,
-    );
+    const items = snapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }) as WealthSnapshot)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, limitCount);
+
     return items.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
@@ -597,141 +610,205 @@ export class AccountsService {
       year: 'numeric',
     });
 
-    // 1. Fetch current accounts - strictly Liquid Cash & Bank accounts only
-    const accounts = await this.findAll(userId);
-    const liquidAccounts = accounts.filter(
-      (a) =>
-        !a.isClosed &&
-        !a.excludeFromAnalytics &&
-        (a.type === 'bank' || a.type === 'cash'),
-    );
-
-    let bankBalance = 0;
-    let cashBalance = 0;
-
-    for (const a of liquidAccounts) {
-      const bal = Number(a.balance) || 0;
-      if (a.type === 'bank') {
-        bankBalance += Math.max(0, bal);
-      } else if (a.type === 'cash') {
-        cashBalance += Math.max(0, bal);
-      }
-    }
-
-    const liquidBalance = bankBalance + cashBalance;
-
-    // 2. Fetch historical snapshots & extract liquid accounts changes
-    const snapshots = await this.getSnapshots(userId, 5);
-    const sortedDesc = [...snapshots].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-
-    let liquidDelta = 0;
-    let percentageDelta = 0;
-    let topGainer: MonthlyDebrief['topGainer'] = null;
-    let topLeak: MonthlyDebrief['topLeak'] = null;
-    const hasSufficientData = sortedDesc.length > 0;
-
-    const latest = sortedDesc[0];
-
-    let pulseInflow = 0;
-    let pulseOutflow = 0;
-
-    if (
-      latest &&
-      latest.accountSnapshots &&
-      latest.accountSnapshots.length > 0
-    ) {
-      // Filter account snapshots to liquid only (bank + cash)
-      const liquidSnapshots = latest.accountSnapshots.filter(
-        (s) => s.type === 'bank' || s.type === 'cash',
+    try {
+      // 1. Fetch current accounts - strictly Liquid Cash & Bank accounts only
+      const accounts = await this.findAll(userId);
+      const liquidAccounts = accounts.filter(
+        (a) =>
+          !a.isClosed &&
+          !a.excludeFromAnalytics &&
+          (a.type === 'bank' || a.type === 'cash'),
       );
 
-      liquidDelta = liquidSnapshots.reduce(
-        (sum, s) => sum + (Number(s.delta) || 0),
-        0,
+      let bankBalance = 0;
+      let cashBalance = 0;
+
+      for (const a of liquidAccounts) {
+        const bal = Number(a.balance) || 0;
+        if (a.type === 'bank') {
+          bankBalance += Math.max(0, bal);
+        } else if (a.type === 'cash') {
+          cashBalance += Math.max(0, bal);
+        }
+      }
+
+      const liquidBalance = Number(bankBalance + cashBalance) || 0;
+
+      // 2. Fetch historical snapshots & extract liquid accounts changes
+      const snapshots = await this.getSnapshots(userId, 5);
+      const sortedDesc = [...snapshots].sort((a, b) => {
+        const timeB = new Date(b.date || b.createdAt || 0).getTime() || 0;
+        const timeA = new Date(a.date || a.createdAt || 0).getTime() || 0;
+        return timeB - timeA;
+      });
+
+      let liquidDelta = 0;
+      let percentageDelta = 0;
+      let topGainer: MonthlyDebrief['topGainer'] = null;
+      let topLeak: MonthlyDebrief['topLeak'] = null;
+      const hasSufficientData = sortedDesc.length > 0;
+
+      const latest = sortedDesc[0];
+
+      let pulseInflow = 0;
+      let pulseOutflow = 0;
+
+      if (
+        latest &&
+        latest.accountSnapshots &&
+        latest.accountSnapshots.length > 0
+      ) {
+        // Filter account snapshots to liquid only (bank + cash)
+        const liquidSnapshots = latest.accountSnapshots.filter(
+          (s) => s.type === 'bank' || s.type === 'cash',
+        );
+
+        liquidDelta = liquidSnapshots.reduce(
+          (sum, s) => sum + (Number(s.delta) || 0),
+          0,
+        );
+
+        const gainers = liquidSnapshots
+          .filter((s) => Number(s.delta) > 0)
+          .sort((a, b) => Number(b.delta) - Number(a.delta));
+        const firstGainer = gainers[0];
+        if (firstGainer) {
+          topGainer = {
+            accountId: firstGainer.accountId,
+            accountName: firstGainer.accountName,
+            delta: Number(firstGainer.delta) || 0,
+            type: firstGainer.type,
+          };
+        }
+        pulseInflow = gainers.reduce(
+          (sum, s) => sum + (Number(s.delta) || 0),
+          0,
+        );
+
+        const decliners = liquidSnapshots
+          .filter((s) => Number(s.delta) < 0)
+          .sort((a, b) => Number(a.delta) - Number(b.delta));
+        const firstDecliner = decliners[0];
+        if (firstDecliner) {
+          topLeak = {
+            accountId: firstDecliner.accountId,
+            accountName: firstDecliner.accountName,
+            delta: Number(firstDecliner.delta) || 0,
+            type: firstDecliner.type,
+          };
+        }
+        pulseOutflow = decliners.reduce(
+          (sum, s) => sum + Math.abs(Number(s.delta) || 0),
+          0,
+        );
+      }
+
+      // Check transactions if available, otherwise safely fall back to pulse flow
+      let txInflow = 0;
+      let txOutflow = 0;
+      try {
+        const firestore = this.firebaseAdmin.getFirestore();
+        const userDoc = await firestore.collection('users').doc(userId).get();
+        const userData = userDoc.exists ? userDoc.data() : null;
+        const monthStartDate = (userData?.monthStartDate as number) || 1;
+
+        let currentFiscalStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          monthStartDate,
+        );
+        if (now < currentFiscalStart) {
+          currentFiscalStart = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            monthStartDate,
+          );
+        }
+        const startDateStr = currentFiscalStart.toISOString().slice(0, 10);
+        // Single-field equality query on userId avoids Firestore composite index requirement
+        const txSnapshot = await firestore
+          .collection('transactions')
+          .where('userId', '==', userId)
+          .get();
+
+        for (const doc of txSnapshot.docs) {
+          const tx = doc.data() as Record<string, unknown>;
+          if (tx.deletedAt || tx.status === 'pending_confirmation') continue;
+          const metadata = tx.metadata as Record<string, unknown> | undefined;
+          if (
+            metadata?.isSystemAdjustment ||
+            tx.category === 'Valuation Adjustment'
+          )
+            continue;
+          const txDate =
+            typeof tx.date === 'string'
+              ? tx.date
+              : tx.date instanceof Date
+                ? tx.date.toISOString()
+                : '';
+          if (txDate && txDate < startDateStr) continue;
+          if (tx.type === 'income') txInflow += Number(tx.amount) || 0;
+          if (tx.type === 'expense') txOutflow += Number(tx.amount) || 0;
+        }
+      } catch (err) {
+        this.logger.debug(
+          `Transactions not queried for debrief, using pulse deltas: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+
+      const inflow = txInflow > 0 || txOutflow > 0 ? txInflow : pulseInflow;
+      const outflow = txInflow > 0 || txOutflow > 0 ? txOutflow : pulseOutflow;
+      const netCashFlow = inflow - outflow;
+      const savingsRate =
+        inflow > 0
+          ? Math.max(-100, Math.min(100, (netCashFlow / inflow) * 100))
+          : 0;
+
+      const baseLiquid = liquidBalance - liquidDelta;
+      percentageDelta = baseLiquid > 0 ? (liquidDelta / baseLiquid) * 100 : 0;
+
+      // 3. Executive Insight
+      let insight = `₹${liquidBalance.toLocaleString('en-IN')} liquid reserves across ${liquidAccounts.length} accounts.`;
+      if (liquidDelta > 0) {
+        insight = `+₹${Math.abs(liquidDelta).toLocaleString('en-IN')} (+${percentageDelta.toFixed(1)}%) expansion. ${topGainer ? `${topGainer.accountName} led inflows.` : 'Disciplined preservation.'}`;
+      } else if (liquidDelta < 0) {
+        insight = `-₹${Math.abs(liquidDelta).toLocaleString('en-IN')} (-${Math.abs(percentageDelta).toFixed(1)}%) outflow. ${topLeak ? `${topLeak.accountName} saw largest drop.` : ''}`;
+      }
+
+      return {
+        period,
+        netWorth: liquidBalance,
+        netWorthDelta: liquidDelta,
+        percentageDelta,
+        inflow,
+        outflow,
+        netCashFlow,
+        savingsRate: Number(savingsRate.toFixed(1)),
+        topGainer,
+        topLeak,
+        insight,
+        hasSufficientData,
+      };
+    } catch (err) {
+      this.logger.error(
+        `Failed to generate monthly debrief for user ${userId}: ${err instanceof Error ? err.message : String(err)}`,
       );
-
-      const gainers = liquidSnapshots
-        .filter((s) => s.delta > 0)
-        .sort((a, b) => b.delta - a.delta);
-      const firstGainer = gainers[0];
-      if (firstGainer) {
-        topGainer = {
-          accountId: firstGainer.accountId,
-          accountName: firstGainer.accountName,
-          delta: firstGainer.delta,
-          type: firstGainer.type,
-        };
-      }
-      pulseInflow = gainers.reduce((sum, s) => sum + s.delta, 0);
-
-      const decliners = liquidSnapshots
-        .filter((s) => s.delta < 0)
-        .sort((a, b) => a.delta - b.delta);
-      const firstDecliner = decliners[0];
-      if (firstDecliner) {
-        topLeak = {
-          accountId: firstDecliner.accountId,
-          accountName: firstDecliner.accountName,
-          delta: firstDecliner.delta,
-          type: firstDecliner.type,
-        };
-      }
-      pulseOutflow = decliners.reduce((sum, s) => sum + Math.abs(s.delta), 0);
+      return {
+        period,
+        netWorth: 0,
+        netWorthDelta: 0,
+        percentageDelta: 0,
+        inflow: 0,
+        outflow: 0,
+        netCashFlow: 0,
+        savingsRate: 0,
+        topGainer: null,
+        topLeak: null,
+        insight:
+          'Complete your periodic Wealth Pulse to see cash flow analytics.',
+        hasSufficientData: false,
+      };
     }
-
-    // Check transactions in the current month for active cash flow
-    const firestore = this.firebaseAdmin.getFirestore();
-    const currentFiscalStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const txSnapshot = await firestore
-      .collection('transactions')
-      .where('userId', '==', userId)
-      .where('date', '>=', currentFiscalStart.toISOString().split('T')[0])
-      .get();
-
-    let txInflow = 0;
-    let txOutflow = 0;
-    for (const doc of txSnapshot.docs) {
-      const tx = doc.data();
-      if (tx.deletedAt || tx.status === 'pending_confirmation') continue;
-      if (tx.type === 'income') txInflow += Number(tx.amount) || 0;
-      if (tx.type === 'expense') txOutflow += Number(tx.amount) || 0;
-    }
-
-    const inflow = txInflow > 0 || txOutflow > 0 ? txInflow : pulseInflow;
-    const outflow = txInflow > 0 || txOutflow > 0 ? txOutflow : pulseOutflow;
-    const netCashFlow = inflow - outflow;
-    const savingsRate =
-      inflow > 0
-        ? Math.max(-100, Math.min(100, (netCashFlow / inflow) * 100))
-        : 0;
-
-    const baseLiquid = liquidBalance - liquidDelta;
-    percentageDelta = baseLiquid > 0 ? (liquidDelta / baseLiquid) * 100 : 0;
-
-    // 3. Executive Insight
-    let insight = `₹${liquidBalance.toLocaleString()} liquid reserves across ${liquidAccounts.length} accounts.`;
-    if (liquidDelta > 0) {
-      insight = `+₹${Math.abs(liquidDelta).toLocaleString()} (+${percentageDelta.toFixed(1)}%) expansion. ${topGainer ? `${topGainer.accountName} led inflows.` : 'Disciplined preservation.'}`;
-    } else if (liquidDelta < 0) {
-      insight = `-₹${Math.abs(liquidDelta).toLocaleString()} (-${Math.abs(percentageDelta).toFixed(1)}%) outflow. ${topLeak ? `${topLeak.accountName} saw largest drop.` : ''}`;
-    }
-
-    return {
-      period,
-      netWorth: liquidBalance,
-      netWorthDelta: liquidDelta,
-      percentageDelta,
-      inflow,
-      outflow,
-      netCashFlow,
-      savingsRate: Number(savingsRate.toFixed(1)),
-      topGainer,
-      topLeak,
-      insight,
-      hasSufficientData,
-    };
   }
 
   async getPulseSchedule(

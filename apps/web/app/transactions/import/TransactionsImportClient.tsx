@@ -29,13 +29,11 @@ import {
 } from "lucide-react";
 
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
 
 import { PageHeader } from "@/components/ui/PageHeader";
 import Papa from "papaparse";
-import * as pdfjs from "pdfjs-dist";
-
-// Set worker from CDN
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 interface PdfItem {
   str: string;
@@ -142,6 +140,9 @@ export default function TransactionsImportClient() {
   const processPdf = async (file: File, pwd = "") => {
     setIsProcessing(true);
     try {
+      const pdfjs = await import("pdfjs-dist");
+      pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+
       const arrayBuffer = await file.arrayBuffer();
       const loadingTask = pdfjs.getDocument({
         data: arrayBuffer,
@@ -628,7 +629,7 @@ export default function TransactionsImportClient() {
                       )}
                     </label>
                     <div className="col-span-2">
-                      <select
+                      <NativeSelect
                         value={
                           mappings[
                             field.key as keyof TransactionImportMapping
@@ -640,7 +641,7 @@ export default function TransactionsImportClient() {
                             [field.key]: e.target.value,
                           })
                         }
-                        className="w-full h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-4 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
+                        className="h-11 text-[10px]"
                       >
                         <option value="">Select Stream Source</option>
                         {rawHeaders.map((h, idx) => (
@@ -648,7 +649,7 @@ export default function TransactionsImportClient() {
                             Col {idx + 1}: {h}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </div>
                   </div>
                 ))}
@@ -670,10 +671,10 @@ export default function TransactionsImportClient() {
                 </div>
               </div>
 
-              <select
+              <NativeSelect
                 value={selectedAccountId}
                 onChange={(e) => setSelectedAccountId(e.target.value)}
-                className="w-full h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-4 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
+                className="h-11 text-[10px]"
               >
                 <option value="">Select Target Account</option>
                 {sortedAccounts.map((a) => (
@@ -681,7 +682,7 @@ export default function TransactionsImportClient() {
                     {a.name} ({a.balance.toLocaleString()})
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
 
@@ -778,14 +779,14 @@ export default function TransactionsImportClient() {
                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
                       Narration
                     </label>
-                    <input
+                    <Input
                       value={t.description}
                       onChange={(e) => {
                         const q = [...reviewQueue];
                         q[idx]!.description = e.target.value;
                         setReviewQueue(q);
                       }}
-                      className="bg-transparent border-none p-0 w-full text-[10px] font-black focus:ring-0 outline-none text-slate-900 dark:text-white"
+                      className="bg-transparent border-none p-0 w-full text-[10px] font-black focus-visible:ring-0 outline-none text-slate-900 dark:text-white h-auto rounded-none"
                     />
                   </div>
                   <button
@@ -822,14 +823,14 @@ export default function TransactionsImportClient() {
                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
                       Category
                     </label>
-                    <select
+                    <NativeSelect
                       value={t.category}
                       onChange={(e) => {
                         const q = [...reviewQueue];
                         q[idx]!.category = e.target.value;
                         setReviewQueue(q);
                       }}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border-none rounded-xl h-10 px-3 text-[10px] font-black outline-none ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary"
+                      className="h-10 text-[10px]"
                     >
                       <option value="Uncategorized">Select Category</option>
                       {sortedCategories.map((c) => (
@@ -837,7 +838,7 @@ export default function TransactionsImportClient() {
                           {c.name}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </div>
                 </div>
               </div>
@@ -874,25 +875,25 @@ export default function TransactionsImportClient() {
                         {formatDate(t.date || new Date().toISOString())}
                       </td>
                       <td className="px-6 py-4">
-                        <input
+                        <Input
                           value={t.description}
                           onChange={(e) => {
                             const q = [...reviewQueue];
                             q[idx]!.description = e.target.value;
                             setReviewQueue(q);
                           }}
-                          className="bg-transparent border-none p-0 w-full text-[10px] font-black focus:ring-0 outline-none text-slate-900 dark:text-white"
+                          className="bg-transparent border-none p-0 w-full text-[10px] font-black focus-visible:ring-0 outline-none text-slate-900 dark:text-white h-auto rounded-none"
                         />
                       </td>
                       <td className="px-6 py-4">
-                        <select
+                        <NativeSelect
                           value={t.category}
                           onChange={(e) => {
                             const q = [...reviewQueue];
                             q[idx]!.category = e.target.value;
                             setReviewQueue(q);
                           }}
-                          className="bg-transparent border-none p-0 text-[10px] font-black focus:ring-0 outline-none text-slate-500 dark:text-slate-400"
+                          className="bg-transparent border-none p-0 text-[10px] font-black focus-visible:ring-0 outline-none text-slate-500 dark:text-slate-400 h-auto"
                         >
                           <option value="Uncategorized">Select Category</option>
                           {sortedCategories.map((c) => (
@@ -900,7 +901,7 @@ export default function TransactionsImportClient() {
                               {c.name}
                             </option>
                           ))}
-                        </select>
+                        </NativeSelect>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div

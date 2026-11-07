@@ -41,10 +41,10 @@ import toast from "react-hot-toast";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { formatDate, calculateRunningBalances } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
 
 const liquidTypes: AccountType[] = ["bank", "cash", "card"];
 
@@ -249,7 +249,9 @@ export default function TransactionsPageClient() {
     toast.success("CSV Exported");
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF("landscape");
     doc.setFontSize(22).setTextColor(19, 91, 236).text("FinEase", 14, 20);
     doc
@@ -421,22 +423,22 @@ export default function TransactionsPageClient() {
 
           <div className="flex-1 flex items-center gap-2 min-w-0 w-full">
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
-              <input
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none z-10" />
+              <Input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-10 bg-white dark:bg-slate-900 rounded-xl pl-10 pr-9 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 border border-slate-300 dark:border-white/15 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
+                className="pl-10 pr-9 h-10 text-xs font-semibold"
                 placeholder="Search transactions..."
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-black p-1 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-black p-1 cursor-pointer z-10"
                   aria-label="Clear search"
                 >
                   ✕
@@ -461,13 +463,13 @@ export default function TransactionsPageClient() {
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">
                 Source Account
               </label>
-              <select
+              <NativeSelect
                 value={filterAccount}
                 onChange={(e) => {
                   setFilterAccount(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
+                className="h-8 text-[10px]"
               >
                 <option value="all">All Accounts</option>
                 {sortedAccounts.map((a, index) => (
@@ -475,7 +477,7 @@ export default function TransactionsPageClient() {
                     {a.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">
@@ -502,28 +504,28 @@ export default function TransactionsPageClient() {
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">
                 From Date
               </label>
-              <input
+              <Input
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => {
                   setFilterDateFrom(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
+                className="h-8 text-[10px]"
               />
             </div>
             <div className="space-y-1">
               <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-1">
                 To Date
               </label>
-              <input
+              <Input
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => {
                   setFilterDateTo(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-8 bg-slate-50 dark:bg-slate-900 rounded-lg px-2 text-[10px] font-bold outline-none ring-1 ring-slate-100 dark:ring-white/5"
+                className="h-8 text-[10px]"
               />
             </div>
           </div>

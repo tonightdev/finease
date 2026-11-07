@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ChevronDown, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Account } from "@repo/types";
@@ -9,6 +9,8 @@ import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
 
 interface AddInvestmentModalProps {
   isOpen: boolean;
@@ -138,14 +140,14 @@ export function AddInvestmentModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Investment Name / Ticker
           </label>
-          <input
+          <Input
             type="text"
             value={formData.assetName}
             onChange={(e) =>
               setFormData({ ...formData, assetName: e.target.value })
             }
             placeholder="e.g. Apple, Bitcoin, NIFTY 50"
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="h-10 text-xs"
           />
         </div>
 
@@ -153,25 +155,22 @@ export function AddInvestmentModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Category
           </label>
-          <div className="relative">
-            <select
-              value={formData.assetType}
-              onChange={(e) =>
-                setFormData({ ...formData, assetType: e.target.value })
-              }
-              className="w-full h-10 appearance-none bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
-            >
-              <option value="" disabled>
-                Select Category
+          <NativeSelect
+            value={formData.assetType}
+            onChange={(e) =>
+              setFormData({ ...formData, assetType: e.target.value })
+            }
+            className="h-10 text-xs"
+          >
+            <option value="" disabled>
+              Select Category
+            </option>
+            {assetTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
               </option>
-              {assetTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          </div>
+            ))}
+          </NativeSelect>
         </div>
 
         <div className="flex flex-wrap gap-3">

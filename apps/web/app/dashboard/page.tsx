@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
@@ -16,7 +16,6 @@ import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { fetchExpiries } from "@/store/slices/expiriesSlice";
 import { openModal } from "@/store/slices/uiSlice";
-import { FinancialGoal } from "@repo/types";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -41,12 +40,18 @@ import {
 } from "@/lib/utils";
 import { MonthlyGrowthDebrief } from "@/components/dashboard/MonthlyGrowthDebrief";
 import { LiquidCapitalCard } from "@/components/dashboard/LiquidCapitalCard";
+import { NetWorthBreakdownModal } from "@/components/dashboard/NetWorthBreakdownModal";
+import { LiquidReservesBreakdownModal } from "@/components/dashboard/LiquidReservesBreakdownModal";
 
 export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { permission, requestPermission } = useNotifications();
+
+  const [isNetWorthModalOpen, setIsNetWorthModalOpen] = useState(false);
+  const [isLiquidReservesModalOpen, setIsLiquidReservesModalOpen] =
+    useState(false);
 
   const allAccounts = useSelector((state: RootState) => state.accounts.items);
   // Accounts used for analytics/stats (excludes those marked as excluded)
@@ -55,7 +60,6 @@ export default function Home() {
     [allAccounts],
   );
 
-  const goals = useSelector((state: RootState) => state.goals.items);
   const assetClasses = useSelector(
     (state: RootState) => state.assetClasses.items,
   );
@@ -90,60 +94,21 @@ export default function Home() {
   }, [expiries]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.uid) {
       dispatch(fetchAccounts());
       dispatch(fetchSnapshots(24));
       dispatch(fetchAssetClasses());
       dispatch(fetchTransactions());
       dispatch(fetchGoals());
       dispatch(fetchExpiries());
-
-      if (permission === "default") {
-        // Request on user action or initial visit if supported
-        void requestPermission();
-      }
     }
-  }, [dispatch, user, permission, requestPermission]);
+  }, [dispatch, user?.uid]);
 
-  // Trigger system notification for upcoming expiries if authorized
   useEffect(() => {
-    if (
-      permission === "granted" &&
-      expiringSoon.length > 0 &&
-      typeof window !== "undefined"
-    ) {
-      const today = new Date().toISOString().slice(0, 10);
-      const lastNotified = localStorage.getItem(
-        "finease_last_expiry_notification_date",
-      );
-
-      if (lastNotified !== today) {
-        localStorage.setItem("finease_last_expiry_notification_date", today);
-        const count = expiringSoon.length;
-        const firstName = expiringSoon[0]?.name ?? "Item";
-        const title = "FinEase Expiry Reminder";
-        const body =
-          count === 1
-            ? `${firstName} is expiring soon. Check your vault.`
-            : `${firstName} and ${count - 1} other item${count > 2 ? "s are" : " is"} expiring soon.`;
-
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.ready
-            .then((reg) => {
-              void reg.showNotification(title, {
-                body,
-                icon: "/icon-192x192.png",
-                badge: "/favicon.svg",
-                data: { url: "/plans?tab=Expiries" },
-              });
-            })
-            .catch((err) =>
-              console.warn("Could not show expiry notification:", err),
-            );
-        }
-      }
+    if (permission === "default") {
+      void requestPermission();
     }
-  }, [permission, expiringSoon]);
+  }, [permission, requestPermission]);
 
   // Regular accounts for display (includes excluded ones)
   const displayRegularAccounts = useMemo(() => {
@@ -205,259 +170,6 @@ export default function Home() {
   }, [analyticsDebts, analyticsCards]);
 
   const realTimeNetWorth = assets - liabilities;
-
-  // Smart Financial Notifications — fires once per day max per type
-  useEffect(() => {
-    if (
-      permission !== "granted" ||
-      typeof window === "undefined" ||
-      !("serviceWorker" in navigator) ||
-      allAccounts.length === 0
-    )
-      return;
-
-    const today = new Date().toISOString().slice(0, 10);
-    const dayOfWeek = new Date().getDay(); // 0 = Sunday
-
-    const showNotif = (
-      key: string,
-      title: string,
-      body: string,
-      url: string,
-    ) => {
-      const storageKey = `finease_notif_${key}`;
-      if (localStorage.getItem(storageKey) === today) return;
-      localStorage.setItem(storageKey, today);
-      navigator.serviceWorker.ready
-        .then((reg) => {
-          void reg.showNotification(title, {
-            body,
-            icon: "/icon-192x192.png",
-            badge: "/favicon.svg",
-            data: { url },
-          });
-        })
-        .catch(() => {});
-    };
-
-    // 1. Weekly Spending Digest — every Sunday
-    if (dayOfWeek === 0 && transactions.length > 0) {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const weekTx = transactions.filter(
-        (tx) =>
-          tx.status !== "pending_confirmation" &&
-          new Date(tx.date) >= sevenDaysAgo,
-      );
-      const weekExpense = weekTx
-        .filter((t) => t.type === "expense")
-        .reduce((s, t) => s + t.amount, 0);
-      const weekIncome = weekTx
-        .filter((t) => t.type === "income")
-        .reduce((s, t) => s + t.amount, 0);
-      if (weekExpense > 0 || weekIncome > 0) {
-        const saved = weekIncome - weekExpense;
-        showNotif(
-          "weekly_digest",
-          "FinEase Weekly Digest",
-          `This week: ${weekIncome > 0 ? `Rs.${Math.round(weekIncome).toLocaleString("en-IN")} in, ` : ""}Rs.${Math.round(weekExpense).toLocaleString("en-IN")} spent. ${saved >= 0 ? `Saved Rs.${Math.round(saved).toLocaleString("en-IN")}.` : `Overspent by Rs.${Math.round(-saved).toLocaleString("en-IN")}.`}`,
-          "/reports",
-        );
-      }
-    }
-
-    // 2. Low Emergency Fund Alert — when runway < 3 months
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const monthlyExpenseAvg = transactions
-      .filter(
-        (tx) =>
-          tx.type === "expense" &&
-          tx.status !== "pending_confirmation" &&
-          new Date(tx.date) >= thirtyDaysAgo,
-      )
-      .reduce((s, tx) => s + tx.amount, 0);
-
-    const liquidBalance = analyticsAccounts
-      .filter((a) => a.type === "bank" || a.type === "cash")
-      .reduce((s, a) => s + Math.max(0, a.balance), 0);
-
-    if (monthlyExpenseAvg > 0 && liquidBalance > 0) {
-      const runway = liquidBalance / monthlyExpenseAvg;
-      if (runway < 3) {
-        showNotif(
-          "low_emergency_fund",
-          "Emergency Fund Alert",
-          `Liquid reserves cover only ${runway.toFixed(1)} months of expenses. Safe minimum is 3 months. Consider building your buffer.`,
-          "/reports",
-        );
-      }
-    }
-
-    // 3. Net Worth Milestone Celebration (25L, 50L, 1Cr, 2Cr, 5Cr, 10Cr)
-    if (realTimeNetWorth > 0) {
-      const milestones = [
-        { amount: 100_000_000, label: "Rs.10Cr" },
-        { amount: 50_000_000, label: "Rs.5Cr" },
-        { amount: 20_000_000, label: "Rs.2Cr" },
-        { amount: 10_000_000, label: "Rs.1Cr" },
-        { amount: 5_000_000, label: "Rs.50L" },
-        { amount: 2_500_000, label: "Rs.25L" },
-      ];
-
-      // Find highest milestone reached
-      const highestMilestone = milestones.find(
-        (m) => realTimeNetWorth >= m.amount,
-      );
-
-      if (highestMilestone) {
-        const lastMilestoneNotifDate = localStorage.getItem(
-          "finease_last_milestone_notif_date",
-        );
-        const lastNotifiedMilestoneAmount = Number(
-          localStorage.getItem("finease_last_milestone_amount") || "0",
-        );
-        const lastNotifiedNetWorth = Number(
-          localStorage.getItem("finease_last_milestone_networth") || "0",
-        );
-
-        // Conditions:
-        // 1. Not already notified today
-        // 2. Highest milestone is strictly higher than previous highest milestone
-        // 3. Net worth has changed since last milestone notification
-        const alreadyNotifiedToday = lastMilestoneNotifDate === today;
-        const isHigherMilestone =
-          highestMilestone.amount > lastNotifiedMilestoneAmount;
-        const netWorthChanged =
-          Math.round(realTimeNetWorth) !== Math.round(lastNotifiedNetWorth);
-
-        if (!alreadyNotifiedToday && isHigherMilestone && netWorthChanged) {
-          localStorage.setItem("finease_last_milestone_notif_date", today);
-          localStorage.setItem(
-            "finease_last_milestone_amount",
-            String(highestMilestone.amount),
-          );
-          localStorage.setItem(
-            "finease_last_milestone_networth",
-            String(Math.round(realTimeNetWorth)),
-          );
-
-          // Mark all lower/equal milestones as satisfied so they never trigger
-          milestones
-            .filter((m) => m.amount <= highestMilestone.amount)
-            .forEach((m) =>
-              localStorage.setItem(`finease_milestone_${m.amount}`, "1"),
-            );
-
-          showNotif(
-            `milestone_${highestMilestone.amount}`,
-            "Milestone Unlocked! 🎉",
-            `Your net worth just crossed ${highestMilestone.label}! Keep the momentum going.`,
-            "/dashboard",
-          );
-        }
-      }
-    }
-
-    // 4. Fiscal Cycle Reset Reminder — 1 or 2 days after Fiscal Cycle Reset Day
-    const monthStartDate = user?.monthStartDate || 1;
-    const now = new Date();
-    const currentFiscalStart = getFiscalMonthStart(now, monthStartDate);
-    const diffMs = now.getTime() - currentFiscalStart.getTime();
-    const daysSinceReset = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (daysSinceReset === 1 || daysSinceReset === 2) {
-      const cycleKey = `cycle_reset_${currentFiscalStart.toISOString().slice(0, 10)}`;
-      showNotif(
-        cycleKey,
-        "Fiscal Cycle Reset 📊",
-        "Your new financial cycle started recently. Time to track your latest expenses, review your balances, and keep your budget in check!",
-        "/transactions",
-      );
-    }
-
-    // 5. Month End / Cycle Ending Reminder — 2 or 3 days before next Fiscal Cycle Reset Day
-    const nextFiscalStart = new Date(currentFiscalStart);
-    nextFiscalStart.setMonth(nextFiscalStart.getMonth() + 1);
-    const msUntilNextCycle = nextFiscalStart.getTime() - now.getTime();
-    const daysUntilReset = Math.ceil(msUntilNextCycle / (1000 * 60 * 60 * 24));
-
-    if (daysUntilReset === 2 || daysUntilReset === 3) {
-      const cycleEndKey = `cycle_ending_${nextFiscalStart.toISOString().slice(0, 10)}`;
-      showNotif(
-        cycleEndKey,
-        "Fiscal Cycle Ending Soon ⏳",
-        `Your financial cycle wraps up in ${daysUntilReset} days. Time to review your expenses, settle pending entries, and keep your budget on target!`,
-        "/reports",
-      );
-    }
-  }, [
-    permission,
-    transactions,
-    analyticsAccounts,
-    allAccounts.length,
-    realTimeNetWorth,
-    user?.monthStartDate,
-  ]);
-
-  // Goal Pacing Notification (separate to use goals from Redux)
-  useEffect(() => {
-    if (
-      permission !== "granted" ||
-      typeof window === "undefined" ||
-      !("serviceWorker" in navigator) ||
-      goals.length === 0
-    )
-      return;
-
-    const today = new Date().toISOString().slice(0, 10);
-    const showNotif = (
-      key: string,
-      title: string,
-      body: string,
-      url: string,
-    ) => {
-      const storageKey = `finease_notif_${key}`;
-      if (localStorage.getItem(storageKey) === today) return;
-      localStorage.setItem(storageKey, today);
-      navigator.serviceWorker.ready
-        .then((reg) => {
-          void reg.showNotification(title, {
-            body,
-            icon: "/icon-192x192.png",
-            badge: "/favicon.svg",
-            data: { url },
-          });
-        })
-        .catch(() => {});
-    };
-
-    const behindGoal = goals.find((g: FinancialGoal) => {
-      if (!g.startDate || !g.targetDate) return false;
-      const start = new Date(g.startDate);
-      const target = new Date(g.targetDate);
-      const now = new Date();
-      if (now >= target) return false;
-      const elapsed = Math.max(0, now.getTime() - start.getTime());
-      const total = Math.max(1, target.getTime() - start.getTime());
-      const timeProgress = elapsed / total;
-      const amountProgress = g.currentAmount / Math.max(1, g.targetAmount);
-      return amountProgress < timeProgress * 0.85;
-    });
-
-    if (behindGoal) {
-      const pct = (
-        (behindGoal.currentAmount / behindGoal.targetAmount) *
-        100
-      ).toFixed(0);
-      showNotif(
-        "goal_pacing",
-        "Goal Falling Behind",
-        `${behindGoal.name} is at ${pct}% — behind schedule. A top-up now keeps you on track.`,
-        "/plans?tab=Goals",
-      );
-    }
-  }, [permission, goals]);
 
   const totalInvestments = useMemo(() => {
     return analyticsInvestmentAccounts.reduce(
@@ -925,6 +637,7 @@ export default function Home() {
           subtitle="Assets minus debt"
           icon={<Sparkles className="size-3 text-emerald-500" />}
           value={realTimeNetWorth}
+          onClick={() => setIsNetWorthModalOpen(true)}
           trend={{
             label: netWorthTrend.label,
             color: netWorthTrend.color,
@@ -939,6 +652,7 @@ export default function Home() {
           icon={<Landmark className="size-3 text-blue-500" />}
           value={dashboardStats.liquidCapital}
           valueColor="text-blue-600 dark:text-blue-400"
+          onClick={() => setIsLiquidReservesModalOpen(true)}
           trend={{
             label: `${analyticsRegularAccounts.length} Active Account${analyticsRegularAccounts.length !== 1 ? "s" : ""}`,
             color: "bg-blue-500",
@@ -1047,6 +761,23 @@ export default function Home() {
           }
         />
       </div>
+
+      <NetWorthBreakdownModal
+        isOpen={isNetWorthModalOpen}
+        onClose={() => setIsNetWorthModalOpen(false)}
+        accounts={allAccounts}
+        assets={assets}
+        liabilities={liabilities}
+        netWorth={realTimeNetWorth}
+      />
+
+      <LiquidReservesBreakdownModal
+        isOpen={isLiquidReservesModalOpen}
+        onClose={() => setIsLiquidReservesModalOpen(false)}
+        accounts={allAccounts}
+        liquidCapital={dashboardStats.liquidCapital}
+        monthlyExpense={dashboardStats.monthlyExpense}
+      />
     </PageContainer>
   );
 }

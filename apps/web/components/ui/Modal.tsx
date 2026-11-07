@@ -43,25 +43,26 @@ export function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center items-center p-4 sm:p-6 bg-slate-900/80 backdrop-blur-sm">
-          {/* Backdrop (non-dismissible on outside click) */}
+        <div className="fixed inset-0 z-[100] flex justify-center items-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md">
+          {/* Backdrop with tap-outside dismissal */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={onClose}
             className="absolute inset-0"
           />
 
           <motion.div
-            initial={{ opacity: 0, y: "100%", scale: 1 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: "100%", scale: 1 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`relative w-full ${maxWidth} bg-white dark:bg-surface-dark rounded-[2.5rem] border border-slate-200 dark:border-border-dark shadow-[0_20px_70px_rgba(0,0,0,0.4)] overflow-hidden ${maxHeight} flex flex-col ${className} mb-4 sm:mb-0`}
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            className={`relative w-full ${maxWidth} bg-white dark:bg-[#0c1017] rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] overflow-hidden ${maxHeight} flex flex-col my-auto ${className}`}
           >
             {/* Header with Close Button */}
             {title ? (
-              <div className="p-4 border-b border-slate-100 dark:border-border-dark flex items-center justify-between shrink-0">
+              <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0">
                 {typeof title === "string" ? (
                   <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                     {title}
@@ -91,7 +92,7 @@ export function Modal({
 
             {/* Content Swiper / Scrollable Body */}
             <div
-              className={`overflow-y-auto flex-1 ${bodyClassName ?? "p-4"} ${!footer ? "pb-10 sm:pb-4" : ""}`}
+              className={`overflow-y-auto no-scrollbar flex-1 ${bodyClassName ?? "p-4"} ${!footer ? "pb-10 sm:pb-4" : ""}`}
             >
               {children}
             </div>

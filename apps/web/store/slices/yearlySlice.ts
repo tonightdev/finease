@@ -26,11 +26,28 @@ const initialState: YearlyExpensesState = {
   lastFetched: null,
 };
 
-export const fetchYearlyExpenses = createAsyncThunk(
+export const fetchYearlyExpenses = createAsyncThunk<
+  YearlyExpense[],
+  { force?: boolean } | void
+>(
   "yearly/fetchAll",
   async () => {
     const response = await api.get<YearlyExpense[]>("/finance/yearly-expenses");
     return response.data;
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const state = getState() as { yearlyExpenses: YearlyExpensesState };
+      const last = state.yearlyExpenses.lastFetched;
+      if (
+        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
+        state.yearlyExpenses.loading
+      ) {
+        return false;
+      }
+      return true;
+    },
   },
 );
 

@@ -137,9 +137,7 @@ function CustomTooltip({
             {/* Net Worth or Liquid Capital */}
             <div className="pt-1 border-t border-white/5 flex items-center justify-between">
               <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
-                {dataScope === "accounts_cash"
-                  ? "Cash & Accounts:"
-                  : "Net Worth:"}
+                {dataScope === "accounts_cash" ? "Accounts:" : "Net Worth:"}
               </span>
               <span className="text-[11px] sm:text-xs font-black text-white">
                 {formatCurrency(data.netWorth)}
@@ -276,6 +274,12 @@ export function MonthlyGrowthChart({
       // Inflow & outflow in that fiscal month
       const txs = transactions.filter((tx) => {
         if (tx.status === "pending_confirmation") return false;
+        // Ignore internal valuation adjustment transactions created when adding/modifying accounts
+        if (
+          tx.category === "Valuation Adjustment" ||
+          tx.metadata?.isSystemAdjustment
+        )
+          return false;
         const d = new Date(tx.date);
         const inWindow =
           d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
@@ -353,7 +357,11 @@ export function MonthlyGrowthChart({
                   ? s.accountSnapshots.filter((acc) => isLiquid(acc.type))
                   : s.accountSnapshots;
               for (const acc of eligibleAccs) {
-                if (acc.delta > 0) snapInflow += acc.delta;
+                // Initial opening balance of a newly added account (previousBalance 0) is capital onboarding, not periodic income
+                const isInitialAccountSetup =
+                  Number(acc.previousBalance ?? 0) === 0;
+                if (acc.delta > 0 && !isInitialAccountSetup)
+                  snapInflow += acc.delta;
                 if (acc.delta < 0) snapOutflow += Math.abs(acc.delta);
               }
             } else if (dataScope === "all" && s.netWorthDelta) {
@@ -493,15 +501,31 @@ export function MonthlyGrowthChart({
         const prevNW = Math.max(0, pt.netWorth - monthDelta);
         pt.growthPercentage = prevNW > 0 ? (pt.growth / prevNW) * 100 : 0;
       } else if (i === firstActiveIdx) {
-        // Initial month where tracking began: established capital vs baseline
-        pt.growth = pt.netWorth - baselineNW;
-        pt.growthPercentage =
-          baselineNW > 0 ? (pt.growth / baselineNW) * 100 : 100;
+        // Initial month where tracking began:
+        // Use net cash flow if transactions exist, or baseline difference if a prior baseline exists
+        if (baselineNW > 0) {
+          pt.growth = pt.netWorth - baselineNW;
+          pt.growthPercentage = (pt.growth / baselineNW) * 100;
+        } else if (pt.inflow > 0 || pt.outflow > 0) {
+          pt.growth = pt.inflow - pt.outflow;
+          const prevNW = Math.max(0, pt.netWorth - pt.growth);
+          pt.growthPercentage = prevNW > 0 ? (pt.growth / prevNW) * 100 : 0;
+        } else {
+          pt.growth = 0;
+          pt.growthPercentage = 0;
+        }
       } else {
         const prev = points[i - 1]!;
-        pt.growth = pt.netWorth - prev.netWorth;
-        pt.growthPercentage =
-          prev.netWorth > 0 ? (pt.growth / prev.netWorth) * 100 : 0;
+        const netFlow = pt.inflow - pt.outflow;
+        if (netFlow !== 0) {
+          pt.growth = netFlow;
+          const prevNW = Math.max(0, pt.netWorth - netFlow);
+          pt.growthPercentage = prevNW > 0 ? (pt.growth / prevNW) * 100 : 0;
+        } else {
+          pt.growth = pt.netWorth - prev.netWorth;
+          pt.growthPercentage =
+            prev.netWorth > 0 ? (pt.growth / prev.netWorth) * 100 : 0;
+        }
       }
     }
 
@@ -672,7 +696,7 @@ export function MonthlyGrowthChart({
 
         {/* Row 3 (Mobile) / Secondary Bar: View Mode & Timeframe Controls */}
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full">
-          {/* Chart View Mode Toggle */}
+          {/* Chart View Mode Toggle: Rate % first and default, Delta (₹) second */}
           <div className="flex items-center gap-0.5 p-0.5 sm:p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0">
             <button
               type="button"
@@ -682,23 +706,23 @@ export function MonthlyGrowthChart({
                   ? "bg-white dark:bg-slate-800 text-indigo-500 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
-              title="Line Chart"
+              title="Growth Rate (%)"
             >
               <LineChartIcon className="size-2.5 sm:size-3" />
-              <span>Line</span>
+              <span>Rate %</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("bar")}
               className={`px-1.5 xs:px-2.5 sm:px-3 py-1 rounded-lg text-[9px] xs:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === "bar"
-                  ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-xs"
+                  ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
                   : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
               }`}
-              title="Bar Chart"
+              title="Monthly Delta (₹)"
             >
               <BarChart3 className="size-2.5 sm:size-3" />
-              <span>Bar</span>
+              <span>Delta (₹)</span>
             </button>
           </div>
 
@@ -869,30 +893,30 @@ export function MonthlyGrowthChart({
               />
             )}
 
-            {/* Left Axis: Net Worth for Line mode */}
+            {/* Left Axis: Growth Rate % for Line mode */}
             {viewMode === "line" && (
               <YAxis
-                yAxisId="netWorthAxis"
+                yAxisId="growthPctAxis"
                 orientation="left"
                 axisLine={false}
                 tickLine={false}
                 width={isMobile ? 44 : 50}
                 tick={{ fill: "#6366f1", fontSize: isMobile ? 8 : 10 }}
-                tickFormatter={(val: number) => formatCompact(val)}
+                tickFormatter={(val: number) =>
+                  `${val > 0 ? "+" : ""}${val.toFixed(1)}%`
+                }
               />
             )}
 
-            {/* Reference Line at 0 for clear gain / loss horizon in Bar mode */}
-            {viewMode === "bar" && (
-              <ReferenceLine
-                y={0}
-                yAxisId="deltaAxis"
-                stroke="#94a3b8"
-                strokeWidth={1}
-                strokeDasharray="2 2"
-                opacity={0.4}
-              />
-            )}
+            {/* Reference Line at 0 for clear gain / loss horizon */}
+            <ReferenceLine
+              y={0}
+              yAxisId={viewMode === "bar" ? "deltaAxis" : "growthPctAxis"}
+              stroke="#94a3b8"
+              strokeWidth={1}
+              strokeDasharray="2 2"
+              opacity={0.4}
+            />
 
             <Tooltip content={<CustomTooltip dataScope={dataScope} />} />
 
@@ -922,17 +946,13 @@ export function MonthlyGrowthChart({
               </Bar>
             )}
 
-            {/* Line for Net Worth Trend */}
+            {/* Line for Growth Velocity Rate (%) */}
             {viewMode === "line" && (
               <Line
-                yAxisId="netWorthAxis"
+                yAxisId="growthPctAxis"
                 type="monotone"
-                dataKey="netWorth"
-                name={
-                  dataScope === "accounts_cash"
-                    ? "Cash & Accounts"
-                    : "Net Worth Trend"
-                }
+                dataKey="growthPercentage"
+                name="Monthly Growth Velocity (%)"
                 stroke="#6366f1"
                 strokeWidth={isMobile ? 2 : 2.5}
                 dot={{
@@ -967,9 +987,7 @@ export function MonthlyGrowthChart({
             <div className="flex items-center gap-1">
               <div className="w-2.5 h-0.5 bg-indigo-500 rounded-full shrink-0" />
               <span className="text-indigo-600 dark:text-indigo-400">
-                {dataScope === "accounts_cash"
-                  ? "Cash & Accounts Line"
-                  : "Net Worth Line"}
+                Monthly Growth Rate (%)
               </span>
             </div>
           )}

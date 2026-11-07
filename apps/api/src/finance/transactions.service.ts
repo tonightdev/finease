@@ -86,7 +86,36 @@ export class TransactionsService {
 
   async create(transaction: Partial<Transaction>): Promise<Transaction> {
     if (!transaction.accountId) {
-      throw new Error('accountId is required');
+      throw new BadRequestException('accountId is required');
+    }
+    if (!transaction.userId) {
+      throw new BadRequestException('userId is required');
+    }
+
+    // IDOR / BOLA Prevention: Verify source account ownership
+    const sourceAccDoc = await this.db
+      .collection(this.accountsCollection)
+      .doc(transaction.accountId)
+      .get();
+    if (!sourceAccDoc.exists || sourceAccDoc.data()?.deletedAt) {
+      throw new NotFoundException('Source account not found');
+    }
+    if (sourceAccDoc.data()?.userId !== transaction.userId) {
+      throw new ForbiddenException('Access denied to source account');
+    }
+
+    // IDOR / BOLA Prevention: If destination account provided, verify destination ownership
+    if (transaction.toAccountId) {
+      const destAccDoc = await this.db
+        .collection(this.accountsCollection)
+        .doc(transaction.toAccountId)
+        .get();
+      if (!destAccDoc.exists || destAccDoc.data()?.deletedAt) {
+        throw new NotFoundException('Destination account not found');
+      }
+      if (destAccDoc.data()?.userId !== transaction.userId) {
+        throw new ForbiddenException('Access denied to destination account');
+      }
     }
 
     const txRef = this.collection.doc();
@@ -125,7 +154,7 @@ export class TransactionsService {
 
     // Log the activity
     await this.activityLogService.logActivity({
-      userId: transaction.userId!,
+      userId: transaction.userId,
       action: 'create',
       entityType: 'transaction',
       entityId: txRef.id,
@@ -144,6 +173,39 @@ export class TransactionsService {
     const oldTx = await this.findOne(id, userId);
     const txRef = this.collection.doc(id);
 
+    // IDOR / BOLA Prevention: Verify new account ownership if changing accountId
+    if (updateData.accountId && updateData.accountId !== oldTx.accountId) {
+      const sourceAccDoc = await this.db
+        .collection(this.accountsCollection)
+        .doc(updateData.accountId)
+        .get();
+      if (!sourceAccDoc.exists || sourceAccDoc.data()?.deletedAt) {
+        throw new NotFoundException('Target account not found');
+      }
+      if (sourceAccDoc.data()?.userId !== oldTx.userId) {
+        throw new ForbiddenException('Access denied to target account');
+      }
+    }
+
+    // IDOR / BOLA Prevention: Verify new destination account ownership if changing toAccountId
+    if (
+      updateData.toAccountId &&
+      updateData.toAccountId !== oldTx.toAccountId
+    ) {
+      const destAccDoc = await this.db
+        .collection(this.accountsCollection)
+        .doc(updateData.toAccountId)
+        .get();
+      if (!destAccDoc.exists || destAccDoc.data()?.deletedAt) {
+        throw new NotFoundException('Target destination account not found');
+      }
+      if (destAccDoc.data()?.userId !== oldTx.userId) {
+        throw new ForbiddenException(
+          'Access denied to target destination account',
+        );
+      }
+    }
+
     // Re-evaluate whether this is a transfer based on merged state.
     const effectiveType =
       (updateData.toAccountId ?? oldTx.toAccountId)
@@ -156,8 +218,14 @@ export class TransactionsService {
       Number(mergedTx.interestAmount),
     );
 
+    // Mass assignment prevention: Strip immutable and sensitive fields
+    const sanitizedUpdate = { ...updateData };
+    delete sanitizedUpdate.id;
+    delete sanitizedUpdate.userId;
+    delete (sanitizedUpdate as Record<string, unknown>).createdAt;
+
     await txRef.update({
-      ...updateData,
+      ...sanitizedUpdate,
       type: effectiveType,
       lastSyncedAt: new Date().toISOString(),
     });
@@ -436,26 +504,29 @@ export class TransactionsService {
     }
 
     // 5. FINAL ACCOUNT UPDATE
+    const round2 = (num: number) =>
+      Math.round((num + Number.EPSILON) * 100) / 100;
+
     const accUpdate: Partial<Account> = {
-      balance,
+      balance: round2(balance),
       lastSyncedAt: new Date().toISOString(),
     };
 
-    if (acc.type === 'investment') accUpdate.investedAmount = invested;
+    if (acc.type === 'investment') accUpdate.investedAmount = round2(invested);
     if (acc.type === 'debt') {
       if (txs.length > 0) {
-        accUpdate.repaidCapital = repaidCapital;
-        accUpdate.burnedInterest = burnedInterest;
+        accUpdate.repaidCapital = round2(repaidCapital);
+        accUpdate.burnedInterest = round2(burnedInterest);
       } else {
-        accUpdate.repaidCapital = Number(acc.repaidCapital) || 0;
-        accUpdate.burnedInterest = Number(acc.burnedInterest) || 0;
+        accUpdate.repaidCapital = round2(Number(acc.repaidCapital) || 0);
+        accUpdate.burnedInterest = round2(Number(acc.burnedInterest) || 0);
       }
     }
 
     // Apply manual valuation adjustments if present
     if (acc.valuationAdjustment) {
       balance += Number(acc.valuationAdjustment);
-      accUpdate.balance = balance;
+      accUpdate.balance = round2(balance);
     }
 
     batch.update(accRef, accUpdate);

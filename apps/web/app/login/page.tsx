@@ -9,6 +9,7 @@ import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Input } from "@/components/ui/Input";
 
 function LoginContent() {
   const { loginWithGoogle, user, resetPassword } = useAuth();
@@ -121,12 +122,11 @@ function LoginContent() {
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
               Email Address
             </label>
-            <input
+            <Input
               type="email"
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
 
@@ -189,12 +189,11 @@ function LoginContent() {
                 <label className="text-xs font-bold text-slate-500 tracking-tight ml-1">
                   Email
                 </label>
-                <input
+                <Input
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full p-3 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
                 />
               </div>
               <div className="flex flex-col gap-1.5">

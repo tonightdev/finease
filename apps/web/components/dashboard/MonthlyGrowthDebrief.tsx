@@ -34,7 +34,8 @@ export function MonthlyGrowthDebrief({
     dispatch(fetchMonthlyDebrief());
   }, [dispatch]);
 
-  if (loading || !debrief) {
+  // Only show skeleton if there is truly no cached debrief and no live transaction figures
+  if (!debrief && loading && monthlyIncome === 0 && monthlyExpense === 0) {
     return (
       <div className="relative w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/30 dark:from-[#0d121c] dark:via-[#090d14] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden">
         {/* Top bar skeleton */}
@@ -74,24 +75,40 @@ export function MonthlyGrowthDebrief({
     );
   }
 
+  const currentPeriod = new Date().toLocaleString("default", {
+    month: "short",
+    year: "numeric",
+  });
+
+  const activeDebrief = debrief || {
+    period: currentPeriod,
+    netWorthDelta: 0,
+    netCashFlow: monthlyIncome - monthlyExpense,
+    topGainer: null,
+    topLeak: null,
+    insight: "Track how income and spending shape your monthly surplus",
+    inflow: monthlyIncome,
+    outflow: monthlyExpense,
+  };
+
   // 1. Inflow: Use monthlyIncome if transactions logged; otherwise use pulse delta from debrief
   const pulseInflow =
-    debrief.inflow ??
-    (debrief.netWorthDelta > 0
-      ? debrief.netWorthDelta
-      : debrief.topGainer?.delta && debrief.topGainer.delta > 0
-        ? debrief.topGainer.delta
+    activeDebrief.inflow ??
+    (activeDebrief.netWorthDelta > 0
+      ? activeDebrief.netWorthDelta
+      : activeDebrief.topGainer?.delta && activeDebrief.topGainer.delta > 0
+        ? activeDebrief.topGainer.delta
         : 0);
 
   const effectiveInflow = monthlyIncome > 0 ? monthlyIncome : pulseInflow;
 
   // 2. Outflow: Use monthlyExpense if transactions logged; otherwise use topLeak or contraction
   const pulseOutflow =
-    debrief.outflow ??
-    (debrief.topLeak && debrief.topLeak.delta < 0
-      ? Math.abs(debrief.topLeak.delta)
-      : debrief.netWorthDelta < 0
-        ? Math.abs(debrief.netWorthDelta)
+    activeDebrief.outflow ??
+    (activeDebrief.topLeak && activeDebrief.topLeak.delta < 0
+      ? Math.abs(activeDebrief.topLeak.delta)
+      : activeDebrief.netWorthDelta < 0
+        ? Math.abs(activeDebrief.netWorthDelta)
         : 0);
 
   const effectiveOutflow = monthlyExpense > 0 ? monthlyExpense : pulseOutflow;
@@ -100,7 +117,7 @@ export function MonthlyGrowthDebrief({
   const netSurplus =
     monthlyIncome > 0 || monthlyExpense > 0
       ? monthlyIncome - monthlyExpense
-      : (debrief.netCashFlow ?? debrief.netWorthDelta);
+      : (activeDebrief.netCashFlow ?? activeDebrief.netWorthDelta);
 
   const isSurplusPositive = netSurplus >= 0;
 
@@ -139,14 +156,14 @@ export function MonthlyGrowthDebrief({
                   Monthly Overview
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-white/5 shrink-0">
-                  {debrief.period}
+                  {activeDebrief.period}
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 hidden sm:inline">
                   • 30-Day Cash Flow
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 font-medium truncate">
-                {debrief.insight ||
+                {activeDebrief.insight ||
                   "Track how income and spending shape your monthly surplus"}
               </p>
             </div>
@@ -171,8 +188,8 @@ export function MonthlyGrowthDebrief({
                 {isMasked ? "*****" : formatCurrency(effectiveInflow)}
               </div>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
-                {debrief.topGainer
-                  ? `Top: ${debrief.topGainer.accountName} (+${formatCurrency(debrief.topGainer.delta)})`
+                {activeDebrief.topGainer
+                  ? `Top: ${activeDebrief.topGainer.accountName} (+${formatCurrency(activeDebrief.topGainer.delta)})`
                   : "Recorded incoming funds"}
               </p>
             </div>
@@ -194,8 +211,8 @@ export function MonthlyGrowthDebrief({
                 {isMasked ? "*****" : formatCurrency(effectiveOutflow)}
               </div>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
-                {debrief.topLeak
-                  ? `Top: ${debrief.topLeak.accountName} (-${formatCurrency(Math.abs(debrief.topLeak.delta))})`
+                {activeDebrief.topLeak
+                  ? `Top: ${activeDebrief.topLeak.accountName} (-${formatCurrency(Math.abs(activeDebrief.topLeak.delta))})`
                   : "Zero leakage • Fully preserved"}
               </p>
             </div>

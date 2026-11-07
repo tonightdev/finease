@@ -63,6 +63,8 @@ export function AmountInput({
       ref={inputRef}
       type="text"
       inputMode="decimal"
+      pattern="[0-9]*"
+      autoComplete="off"
       value={formatWithCommas(value)}
       onChange={handleChange}
       onFocus={() => {}}

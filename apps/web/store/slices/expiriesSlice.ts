@@ -18,11 +18,28 @@ const initialState: ExpiriesState = {
   lastFetched: null,
 };
 
-export const fetchExpiries = createAsyncThunk(
+export const fetchExpiries = createAsyncThunk<
+  Expiry[],
+  { force?: boolean } | void
+>(
   "expiries/fetchExpiries",
   async () => {
     const response = await api.get<Expiry[]>("/finance/expiries");
     return response.data;
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const state = getState() as { expiries: ExpiriesState };
+      const last = state.expiries.lastFetched;
+      if (
+        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
+        state.expiries.loading
+      ) {
+        return false;
+      }
+      return true;
+    },
   },
 );
 

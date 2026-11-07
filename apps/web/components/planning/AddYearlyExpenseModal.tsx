@@ -6,7 +6,9 @@ import { RootState } from "@/store";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
-import { Target, Banknote, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
+import { Target, ShieldCheck } from "lucide-react";
 import { YearlyExpense } from "@/store/slices/yearlySlice";
 
 interface YearlyExpenseFormData {
@@ -122,16 +124,16 @@ export function AddYearlyExpenseModal({
             Commitment Title
           </label>
           <div className="relative group">
-            <input
+            <Input
               type="text"
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="e.g. Life Insurance"
-              className="w-full h-12 pl-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-[11px] font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="h-12 pl-11 text-[11px]"
             />
-            <Target className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <Target className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
           </div>
         </div>
 
@@ -139,22 +141,19 @@ export function AddYearlyExpenseModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Target Account (Node)
           </label>
-          <div className="relative group">
-            <select
-              value={formData.accountId}
-              onChange={(e) =>
-                setFormData({ ...formData, accountId: e.target.value })
-              }
-              className="w-full h-12 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl text-[11px] font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer"
-            >
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                </option>
-              ))}
-            </select>
-            <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
-          </div>
+          <NativeSelect
+            value={formData.accountId}
+            onChange={(e) =>
+              setFormData({ ...formData, accountId: e.target.value })
+            }
+            className="h-12 text-[11px]"
+          >
+            {accounts.map((acc) => (
+              <option key={acc.id} value={acc.id}>
+                {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+              </option>
+            ))}
+          </NativeSelect>
         </div>
 
         <div className="space-y-2">

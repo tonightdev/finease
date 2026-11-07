@@ -11,7 +11,11 @@ import { fetchCategories } from "@/store/slices/categoriesSlice";
 import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
 import { RootState } from "@/store";
-import api, { isTokenOlderThanDays, refreshAuthToken } from "@/lib/api";
+import api, {
+  isTokenOlderThanDays,
+  refreshAuthToken,
+  parseJwtPayload,
+} from "@/lib/api";
 
 interface AuthUser {
   uid: string;
@@ -129,10 +133,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedAccounts) {
         try {
           const parsed = JSON.parse(storedAccounts);
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             // Sanitize: filter out entries with empty UIDs
             const sanitized = parsed.filter((a) => !!a.uid);
             setAccounts(sanitized);
+
+            // Pre-hydrate active user immediately matching current token's UID so PWA mobile opens with 0ms lag
+            if (token) {
+              const payload = parseJwtPayload(token);
+              const activeUid =
+                (payload?.uid as string) || (payload?.sub as string);
+              const matched =
+                sanitized.find((a) => a.uid === activeUid) || sanitized[0];
+              if (matched) {
+                dispatch(setUser(matched));
+              }
+            }
           }
         } catch (e) {
           console.error("Failed to parse stored accounts", e);
@@ -179,16 +195,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err: unknown) {
           const axiosError = err as { response?: { status?: number } };
           // Only logout on 401 Unauthorized
-          // Handle 401 Unauthorized
           if (axiosError.response?.status === 401) {
             localStorage.removeItem("finease_token");
             dispatch({ type: "USER_LOGOUT" });
-          }
-          // Handle 403 Forbidden (Role mismatch during switch)
-          if (axiosError.response?.status === 403) {
+            dispatch(setUser(null));
+          } else if (axiosError.response?.status === 403) {
             window.location.href = "/dashboard";
+          } else {
+            console.warn(
+              "Profile fetch failed, retaining active cached session:",
+              err,
+            );
           }
-          console.error("Profile fetch failed:", err);
         }
       }
       setLoading(false);
@@ -217,10 +235,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (window.navigator as Navigator & { standalone?: boolean }).standalone ||
         document.referrer.includes("android-app://"));
 
+    if (!password) {
+      throw new Error("Password is required");
+    }
+
     const endpoint = name ? "/auth/signup" : "/auth/login";
     const payload = name
-      ? { email, name, password: password ?? "password123", isPWA }
-      : { email, password: password ?? "password123", isPWA };
+      ? { email, name, password, isPWA }
+      : { email, password, isPWA };
 
     const res = await api.post<ApiAuthResponse>(endpoint, payload);
     const { user: userData, token } = res.data;
@@ -299,6 +321,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refreshed = await refreshAuthToken(token);
         if (refreshed) token = refreshed;
       }
+      // Reset current in-memory store to eliminate data leaking between user profiles
+      dispatch({ type: "USER_LOGOUT" });
       localStorage.setItem("finease_token", token);
       window.location.href = "/dashboard";
     }

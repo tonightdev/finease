@@ -16,6 +16,7 @@ import { GlobalLoadingBar } from "@/components/ui/GlobalLoadingBar";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { GlobalModals } from "@/components/modals/GlobalModals";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -67,6 +68,7 @@ export default function RootLayout({
             <GlobalLoadingBar />
             <AuthProvider>
               <NotificationProvider>
+                <OfflineBanner />
                 <SecurityProvider>
                   <ServiceWorkerRegistration />
                   <ClientHeader />
@@ -79,18 +81,58 @@ export default function RootLayout({
                   </main>
                   <BottomNav />
                   <PWAInstallGuide />
-                  <Toaster
-                    position="top-right"
-                    containerClassName="toaster-container"
-                    toastOptions={{
-                      style: {
-                        background: "#333",
-                        color: "#fff",
-                      },
-                      className: "mobile-toast",
-                    }}
-                  />
                 </SecurityProvider>
+                <Toaster
+                  position="top-center"
+                  containerClassName="toaster-container"
+                  containerStyle={{
+                    top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+                    zIndex: 999999,
+                  }}
+                  toastOptions={{
+                    duration: 3500,
+                    style: {
+                      background: "rgba(15, 23, 42, 0.95)",
+                      color: "#f8fafc",
+                      backdropFilter: "blur(16px)",
+                      WebkitBackdropFilter: "blur(16px)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      boxShadow:
+                        "0 20px 35px -8px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.08)",
+                      borderRadius: "1.25rem",
+                      padding: "12px 20px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      letterSpacing: "0.01em",
+                      maxWidth: "92vw",
+                    },
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: "#10b981",
+                        secondary: "#ffffff",
+                      },
+                      style: {
+                        border: "1px solid rgba(16, 185, 129, 0.4)",
+                        boxShadow:
+                          "0 20px 35px -8px rgba(0, 0, 0, 0.5), 0 0 20px -3px rgba(16, 185, 129, 0.25)",
+                      },
+                    },
+                    error: {
+                      duration: 3500,
+                      iconTheme: {
+                        primary: "#f43f5e",
+                        secondary: "#ffffff",
+                      },
+                      style: {
+                        border: "1px solid rgba(244, 63, 94, 0.4)",
+                        boxShadow:
+                          "0 20px 35px -8px rgba(0, 0, 0, 0.5), 0 0 20px -3px rgba(244, 63, 94, 0.25)",
+                      },
+                    },
+                    className: "mobile-toast",
+                  }}
+                />
               </NotificationProvider>
             </AuthProvider>
           </ReduxProvider>

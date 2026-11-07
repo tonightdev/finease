@@ -99,7 +99,9 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
   const [isLocked, setIsLocked] = useState(() => {
     if (typeof window !== "undefined") {
-      const enabled = localStorage.getItem("finease_app_lock") === "true";
+      const enabled =
+        localStorage.getItem("finease_app_lock") === "true" ||
+        !!localStorage.getItem("finease_pin");
       const sessionAuthenticated =
         sessionStorage.getItem("finease_session_authenticated") === "true";
       return enabled && !sessionAuthenticated;
@@ -113,7 +115,30 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   const [isShake, setIsShake] = useState(false);
   const [isError, setIsError] = useState(false);
   const [usePinFallback, setUsePinFallback] = useState(false);
+  const [lockoutRemaining, setLockoutRemaining] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const until = Number(localStorage.getItem("finease_lockout_until")) || 0;
+      const rem = Math.ceil((until - Date.now()) / 1000);
+      return rem > 0 ? rem : 0;
+    }
+    return 0;
+  });
   const isAuthenticatingRef = useRef(false);
+
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutRemaining((prev) => {
+        if (prev <= 1) {
+          localStorage.removeItem("finease_lockout_until");
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutRemaining]);
 
   const hasStoredPin =
     typeof window !== "undefined" && !!localStorage.getItem("finease_pin");
@@ -274,14 +299,20 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   const registerCredential = async (): Promise<boolean> => {
     try {
       if (typeof window === "undefined" || !window.PublicKeyCredential) {
-        toast.error("Biometrics not supported on this browser");
+        toast.dismiss();
+        toast.error("Biometrics not supported on this browser", {
+          id: "security-status",
+        });
         return false;
       }
 
       const available =
         await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (!available) {
-        toast.error("No biometric sensor detected on this device");
+        toast.dismiss();
+        toast.error("No biometric sensor detected on this device", {
+          id: "security-status",
+        });
         return false;
       }
 
@@ -346,10 +377,15 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       return false;
     } catch (err: unknown) {
       const error = err as Error;
+      toast.dismiss();
       if (error?.name === "NotAllowedError") {
-        toast.error("Biometric authentication was cancelled");
+        toast.error("Biometric authentication was cancelled", {
+          id: "security-status",
+        });
       } else {
-        toast.error("Biometric registration failed");
+        toast.error("Biometric registration failed", {
+          id: "security-status",
+        });
       }
       return false;
     }
@@ -381,11 +417,13 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
           setLockType(targetType);
           localStorage.setItem("finease_app_lock", "true");
           localStorage.setItem("finease_lock_type", targetType);
+          toast.dismiss();
           toast.success(
             targetType === "facelock" ||
               (targetType === "biometric" && isAppleFaceDevice)
               ? "Face Lock Activated"
               : "Biometric Lock Activated",
+            { id: "security-status" },
           );
           return true;
         }
@@ -397,7 +435,8 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("finease_lock_type", "pin");
         const hashed = await hashPin(pin);
         localStorage.setItem("finease_pin", hashed);
-        toast.success("Security PIN Activated");
+        toast.dismiss();
+        toast.success("Security PIN Activated", { id: "security-status" });
         return true;
       }
       return false;
@@ -408,56 +447,103 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("finease_lock_type");
       localStorage.removeItem("finease_pin");
       sessionStorage.removeItem("finease_session_authenticated");
-      toast.success("Vault Lock Deactivated");
+      toast.dismiss();
+      toast.success("Vault Lock Deactivated", { id: "security-status" });
       return true;
     }
   };
 
-  const handlePinInput = useCallback((num: string) => {
-    if (typeof window !== "undefined" && window.navigator?.vibrate) {
-      window.navigator.vibrate(10);
-    }
-
-    setEnteredPin((prev) => {
-      if (prev.length >= 4) return prev;
-      const next = prev + num;
-
-      if (next.length === 4) {
-        const storedPin = localStorage.getItem("finease_pin");
-        void (async () => {
-          const hashedInput = await hashPin(next);
-          if (next === storedPin || hashedInput === storedPin) {
-            if (next === storedPin) {
-              localStorage.setItem("finease_pin", hashedInput);
-            }
-            setIsLocked(false);
-            sessionStorage.setItem("finease_session_authenticated", "true");
-            toast.success("Vault Unlocked");
-            setEnteredPin("");
-          } else {
-            setIsShake(true);
-            setIsError(true);
-            if (typeof window !== "undefined" && window.navigator?.vibrate) {
-              window.navigator.vibrate([80, 50, 80]);
-            }
-            toast.error("Incorrect PIN. Try again.");
-            setTimeout(() => setIsShake(false), 450);
-            setTimeout(() => {
-              setIsError(false);
-              setEnteredPin("");
-            }, 600);
-          }
-        })();
-        return next;
+  const handlePinInput = useCallback(
+    (num: string) => {
+      if (lockoutRemaining > 0) {
+        toast.dismiss("vault-pin-toast");
+        toast.error(`Keypad locked. Please wait ${lockoutRemaining}s.`, {
+          id: "vault-pin-toast",
+        });
+        return;
       }
-      return next;
-    });
-  }, []);
+
+      if (typeof window !== "undefined" && window.navigator?.vibrate) {
+        window.navigator.vibrate(10);
+      }
+
+      setEnteredPin((prev) => {
+        if (prev.length >= 4) return prev;
+        const next = prev + num;
+
+        // As user begins re-typing, immediately dismiss any prior error toast
+        if (prev.length === 0) {
+          toast.dismiss("vault-pin-toast");
+        }
+
+        if (next.length === 4) {
+          const storedPin = localStorage.getItem("finease_pin");
+          void (async () => {
+            const hashedInput = await hashPin(next);
+            if (next === storedPin || hashedInput === storedPin) {
+              if (next === storedPin) {
+                localStorage.setItem("finease_pin", hashedInput);
+              }
+              localStorage.removeItem("finease_pin_failures");
+              localStorage.removeItem("finease_lockout_until");
+              setLockoutRemaining(0);
+              toast.dismiss();
+              setIsLocked(false);
+              sessionStorage.setItem("finease_session_authenticated", "true");
+              toast.success("Vault Unlocked", { id: "vault-pin-toast" });
+              setEnteredPin("");
+            } else {
+              const currentFails =
+                (Number(localStorage.getItem("finease_pin_failures")) || 0) + 1;
+              localStorage.setItem(
+                "finease_pin_failures",
+                String(currentFails),
+              );
+
+              setIsShake(true);
+              setIsError(true);
+              if (typeof window !== "undefined" && window.navigator?.vibrate) {
+                window.navigator.vibrate([80, 50, 80]);
+              }
+              toast.dismiss();
+
+              if (currentFails >= 5) {
+                const lockoutUntil = Date.now() + 30000;
+                localStorage.setItem(
+                  "finease_lockout_until",
+                  String(lockoutUntil),
+                );
+                setLockoutRemaining(30);
+                toast.error("Too many failed attempts. Locked for 30s.", {
+                  id: "vault-pin-toast",
+                });
+              } else {
+                toast.error(
+                  `Incorrect PIN. ${5 - currentFails} attempt${5 - currentFails === 1 ? "" : "s"} remaining.`,
+                  { id: "vault-pin-toast" },
+                );
+              }
+
+              setTimeout(() => setIsShake(false), 450);
+              setTimeout(() => {
+                setIsError(false);
+                setEnteredPin("");
+              }, 600);
+            }
+          })();
+          return next;
+        }
+        return next;
+      });
+    },
+    [lockoutRemaining],
+  );
 
   const handleDeleteDigit = useCallback(() => {
     if (typeof window !== "undefined" && window.navigator?.vibrate) {
       window.navigator.vibrate(10);
     }
+    toast.dismiss("vault-pin-toast");
     setEnteredPin((prev) => prev.slice(0, -1));
   }, []);
 
@@ -554,7 +640,18 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
               {/* View 1: PIN Unlock Pad (Web + Mobile) */}
               {activeLockMode === "pin" ? (
-                <div className="w-full flex flex-col items-center space-y-8 sm:space-y-10">
+                <div className="w-full flex flex-col items-center space-y-6 sm:space-y-8">
+                  {/* Lockout Warning Banner if Active */}
+                  {lockoutRemaining > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="px-4 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-bold tracking-wide text-center"
+                    >
+                      Keypad temporarily locked. Wait {lockoutRemaining}s
+                    </motion.div>
+                  )}
+
                   {/* 4 Animated Indicator Dots */}
                   <motion.div
                     animate={isShake ? { x: [-12, 12, -8, 8, -4, 4, 0] } : {}}
@@ -577,13 +674,20 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                   </motion.div>
 
                   {/* 3x4 Responsive Keypad Grid */}
-                  <div className="grid grid-cols-3 gap-y-3.5 sm:gap-y-4 gap-x-5 sm:gap-x-7 w-full max-w-[280px] sm:max-w-[320px] mx-auto">
+                  <div
+                    className={`grid grid-cols-3 gap-y-3.5 sm:gap-y-4 gap-x-5 sm:gap-x-7 w-full max-w-[280px] sm:max-w-[320px] mx-auto transition-opacity ${
+                      lockoutRemaining > 0
+                        ? "opacity-40 pointer-events-none"
+                        : "opacity-100"
+                    }`}
+                  >
                     {DIAL_KEYS.map(({ num, sub }) => (
                       <button
                         key={num}
                         type="button"
+                        disabled={lockoutRemaining > 0}
                         onClick={() => handlePinInput(num)}
-                        className="size-16 sm:size-18 rounded-full mx-auto flex flex-col items-center justify-center bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-primary/20 active:text-primary active:scale-95 transition-all shadow-sm hover:shadow select-none cursor-pointer"
+                        className="size-16 sm:size-18 rounded-full mx-auto flex flex-col items-center justify-center bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-primary/20 active:text-primary active:scale-95 transition-all shadow-sm hover:shadow select-none cursor-pointer disabled:cursor-not-allowed"
                       >
                         <span className="text-2xl sm:text-[26px] font-black text-slate-800 dark:text-white leading-none">
                           {num}
@@ -624,8 +728,9 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                     {/* Digit 0 */}
                     <button
                       type="button"
+                      disabled={lockoutRemaining > 0}
                       onClick={() => handlePinInput("0")}
-                      className="size-16 sm:size-18 rounded-full mx-auto flex flex-col items-center justify-center bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-primary/20 active:text-primary active:scale-95 transition-all shadow-sm hover:shadow select-none cursor-pointer"
+                      className="size-16 sm:size-18 rounded-full mx-auto flex flex-col items-center justify-center bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-primary/20 active:text-primary active:scale-95 transition-all shadow-sm hover:shadow select-none cursor-pointer disabled:cursor-not-allowed"
                     >
                       <span className="text-2xl sm:text-[26px] font-black text-slate-800 dark:text-white leading-none">
                         0
@@ -635,8 +740,9 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                     {/* Backspace / Delete Key */}
                     <button
                       type="button"
+                      disabled={lockoutRemaining > 0}
                       onClick={handleDeleteDigit}
-                      className="size-16 sm:size-18 rounded-full mx-auto flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-90 transition-all select-none cursor-pointer"
+                      className="size-16 sm:size-18 rounded-full mx-auto flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-90 transition-all select-none cursor-pointer disabled:cursor-not-allowed"
                       aria-label="Delete digit"
                     >
                       <Delete className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -678,7 +784,12 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                       disabled={authenticating}
                       onClick={async () => {
                         const success = await authenticate();
-                        if (!success) toast.error("Face authentication failed");
+                        if (!success) {
+                          toast.dismiss();
+                          toast.error("Face authentication failed", {
+                            id: "security-status",
+                          });
+                        }
                       }}
                       className="w-full h-12 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                     >
@@ -758,7 +869,12 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                       disabled={authenticating}
                       onClick={async () => {
                         const success = await authenticate();
-                        if (!success) toast.error("Fingerprint scan failed");
+                        if (!success) {
+                          toast.dismiss();
+                          toast.error("Fingerprint scan failed", {
+                            id: "security-status",
+                          });
+                        }
                       }}
                       className="w-full h-12 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                     >

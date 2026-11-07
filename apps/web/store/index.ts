@@ -10,6 +10,7 @@ import strategiesReducer from "./slices/strategiesSlice";
 import simulationsReducer from "./slices/simulationsSlice";
 import yearlyExpensesReducer from "./slices/yearlySlice";
 import uiReducer from "./slices/uiSlice";
+import { parseJwtPayload } from "@/lib/api";
 
 const appReducer = combineReducers({
   accounts: accountsReducer,
@@ -25,12 +26,94 @@ const appReducer = combineReducers({
   ui: uiReducer,
 });
 
+export function getActiveReduxPersistenceKey(): string {
+  if (typeof window === "undefined") return "finease_redux_cache";
+  try {
+    const token = localStorage.getItem("finease_token");
+    if (!token) return "finease_redux_cache";
+    const payload = parseJwtPayload(token);
+    const uid = (payload?.uid as string) || (payload?.sub as string);
+    return uid ? `finease_redux_cache_${uid}` : "finease_redux_cache";
+  } catch {
+    return "finease_redux_cache";
+  }
+}
+
+function loadPreloadedState() {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const key = getActiveReduxPersistenceKey();
+    const raw = localStorage.getItem(key);
+    // Cleanup legacy un-scoped cache if user-scoped cache is active
+    if (!raw && key !== "finease_redux_cache") {
+      try {
+        localStorage.removeItem("finease_redux_cache");
+      } catch {
+        // ignore storage errors
+      }
+    }
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    // Sanitize cached state: reset active loaders and transient error messages
+    if (parsed.accounts) {
+      parsed.accounts.loading = false;
+      parsed.accounts.error = null;
+      parsed.accounts.debriefLoading = false;
+    }
+    if (parsed.transactions) {
+      parsed.transactions.loading = false;
+      parsed.transactions.error = null;
+    }
+    if (parsed.goals) {
+      parsed.goals.loading = false;
+      parsed.goals.error = null;
+    }
+    if (parsed.categories) {
+      parsed.categories.loading = false;
+      parsed.categories.error = null;
+    }
+    if (parsed.assetClasses) {
+      parsed.assetClasses.loading = false;
+      parsed.assetClasses.error = null;
+    }
+    if (parsed.expiries) {
+      parsed.expiries.loading = false;
+      parsed.expiries.error = null;
+    }
+    if (parsed.strategies) {
+      parsed.strategies.loading = false;
+      parsed.strategies.error = null;
+    }
+    if (parsed.simulations) {
+      parsed.simulations.loading = false;
+      parsed.simulations.error = null;
+    }
+    if (parsed.yearlyExpenses) {
+      parsed.yearlyExpenses.loading = false;
+      parsed.yearlyExpenses.error = null;
+    }
+    return parsed;
+  } catch (e) {
+    console.warn("Failed to load preloaded state from cache", e);
+    return undefined;
+  }
+}
+
 const rootReducer = (
   state: Parameters<typeof appReducer>[0] | undefined,
   action: Action,
 ) => {
   if (action.type === "USER_LOGOUT") {
     // Reset state completely to prevent data leaking across users
+    if (typeof window !== "undefined") {
+      try {
+        const key = getActiveReduxPersistenceKey();
+        localStorage.removeItem(key);
+        localStorage.removeItem("finease_redux_cache");
+      } catch {
+        // ignore storage errors
+      }
+    }
     return appReducer(undefined, action);
   }
   return appReducer(state, action);
@@ -38,7 +121,37 @@ const rootReducer = (
 
 export const store = configureStore({
   reducer: rootReducer,
+  preloadedState: loadPreloadedState(),
 });
+
+// Debounced background state sync to local storage for instant 0ms PWA re-launches
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+if (typeof window !== "undefined") {
+  store.subscribe(() => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      try {
+        const state = store.getState();
+        const cache = {
+          accounts: state.accounts,
+          transactions: state.transactions,
+          goals: state.goals,
+          categories: state.categories,
+          assetClasses: state.assetClasses,
+          expiries: state.expiries,
+          strategies: state.strategies,
+          simulations: state.simulations,
+          yearlyExpenses: state.yearlyExpenses,
+        };
+        const key = getActiveReduxPersistenceKey();
+        localStorage.setItem(key, JSON.stringify(cache));
+      } catch (err) {
+        console.warn("Failed to persist Redux state to cache", err);
+      }
+    }, 1000);
+  });
+}
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

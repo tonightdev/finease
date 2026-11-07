@@ -213,8 +213,11 @@ export function ProfileTab() {
 
         <SettingsField label="Fiscal Reset Day (1 - 28)">
           <div className="relative group">
-            <input
+            <Input
               type="number"
+              name="monthStartDate"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="28"
               value={monthStartDate}
@@ -223,7 +226,7 @@ export function ProfileTab() {
                 if (isNaN(val)) setMonthStartDate(1);
                 else setMonthStartDate(Math.max(1, Math.min(28, val)));
               }}
-              className="w-full h-10 px-3 pl-10 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-50"
+              className="h-10 pl-10 pr-3 text-xs font-semibold"
             />
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
           </div>

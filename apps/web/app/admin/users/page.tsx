@@ -5,6 +5,8 @@ import api from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import {
   User as UserIcon,
   Shield,
@@ -206,19 +208,20 @@ export default function AdminUsersPage() {
         subtitle={`Commanding ${users.length} registered identities`}
         actions={
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-            <button
+            <Button
+              size="sm"
               onClick={enableGlobalTour}
-              className="w-full sm:w-auto h-9 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto"
+              leftIcon={<Zap className="size-3.5 fill-current" />}
             >
-              <Zap className="size-3.5 fill-current" />
               Global Tour Reset
-            </button>
+            </Button>
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-              <input
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 z-10 pointer-events-none" />
+              <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-9 bg-white dark:bg-slate-900 border-none rounded-xl pl-9 text-[10px] font-bold ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                className="pl-9 h-9 text-[10px]"
                 placeholder="Search identities..."
               />
             </div>

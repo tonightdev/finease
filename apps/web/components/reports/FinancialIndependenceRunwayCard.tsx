@@ -12,15 +12,18 @@ import {
   Sparkles,
   Info,
   TrendingUp,
+  SlidersHorizontal,
 } from "lucide-react";
 import { formatCompact, formatCurrency } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 type FireModelType = "lean" | "standard" | "fat";
+type ExpensePreset = "auto" | 30000 | 50000 | 75000 | 100000 | 150000;
 
 export function FinancialIndependenceRunwayCard() {
   const [model, setModel] = useState<FireModelType>("standard");
   const [showFormulaInfo, setShowFormulaInfo] = useState(false);
+  const [expenseMode, setExpenseMode] = useState<ExpensePreset>("auto");
 
   const rawAccounts = useSelector((state: RootState) => state.accounts.items);
   const rawTransactions = useSelector(
@@ -30,6 +33,7 @@ export function FinancialIndependenceRunwayCard() {
     (state: RootState) => state.accounts.snapshots || [],
   );
   const strategy = useSelector((state: RootState) => state.strategies.current);
+  const user = useSelector((state: RootState) => state.user.profile);
 
   const firMetrics = useMemo(() => {
     // 1. Filter accounts: non-excluded from analytics & not closed
@@ -58,10 +62,16 @@ export function FinancialIndependenceRunwayCard() {
     const currentNetWorth = Math.max(0, totalAssets - totalLiabilities);
 
     // 2. Realistic monthly expense baseline:
-    // Group all valid expenses by month to compute the actual monthly burn
+    // A. From logged transactions (recent 30-day or month averages)
     const validExpenseTx = rawTransactions.filter(
       (tx) => tx.type === "expense" && tx.status !== "pending_confirmation",
     );
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recent30DayExpense = validExpenseTx
+      .filter((t) => new Date(t.date) >= thirtyDaysAgo)
+      .reduce((s, t) => s + t.amount, 0);
+
     const expensesByMonth: Record<string, number> = {};
     validExpenseTx.forEach((tx) => {
       const d = new Date(tx.date);
@@ -76,7 +86,11 @@ export function FinancialIndependenceRunwayCard() {
           monthExpenseValues.length
         : 0;
 
-    // Strategy monthly planned outflow fallback
+    // B. From user budget targets (needs + wants)
+    const userBudgetExpense =
+      (user?.budgetTargets?.needs || 0) + (user?.budgetTargets?.wants || 0);
+
+    // C. Strategy monthly planned outflow fallback
     const strategyOutflow = (strategy?.entries || [])
       .filter((e) => e.type === "outflow")
       .reduce((s, e) => {
@@ -84,12 +98,26 @@ export function FinancialIndependenceRunwayCard() {
         return s + (e.isMonthly !== false ? amt : amt / 12);
       }, 0);
 
+    // Pick best auto expense: recent 30d > historical avg > user budget > strategy > fallback 50k
+    const detectedAutoExpense =
+      recent30DayExpense > 0
+        ? recent30DayExpense
+        : txAvgMonthlyExpense > 0
+          ? txAvgMonthlyExpense
+          : userBudgetExpense > 0
+            ? userBudgetExpense
+            : strategyOutflow > 0
+              ? strategyOutflow
+              : 50000;
+
+    const isEstimatedAuto =
+      recent30DayExpense === 0 &&
+      txAvgMonthlyExpense === 0 &&
+      userBudgetExpense === 0 &&
+      strategyOutflow === 0;
+
     const avgMonthlyExpense =
-      txAvgMonthlyExpense > 0
-        ? txAvgMonthlyExpense
-        : strategyOutflow > 0
-          ? strategyOutflow
-          : 0;
+      expenseMode === "auto" ? detectedAutoExpense : expenseMode;
 
     const annualExpenses = avgMonthlyExpense * 12;
 
@@ -221,6 +249,7 @@ export function FinancialIndependenceRunwayCard() {
       totalLiabilities,
       currentNetWorth,
       avgMonthlyExpense,
+      isEstimatedAuto,
       annualExpenses,
       liquidRunwayMonths,
       totalWealthRunwayMonths,
@@ -238,7 +267,15 @@ export function FinancialIndependenceRunwayCard() {
       yearsToFreedom,
       projectedRetirementDate,
     };
-  }, [rawAccounts, rawTransactions, rawSnapshots, model, strategy]);
+  }, [
+    rawAccounts,
+    rawTransactions,
+    rawSnapshots,
+    model,
+    strategy,
+    user,
+    expenseMode,
+  ]);
 
   return (
     <div className="w-full">
@@ -256,7 +293,7 @@ export function FinancialIndependenceRunwayCard() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    Financial Independence Runway
+                    Financial Runway
                   </h3>
                   <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
                     FIRE Engine
@@ -306,6 +343,46 @@ export function FinancialIndependenceRunwayCard() {
             </div>
           </div>
 
+          {/* Lifestyle Monthly Expense Baseline Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50/80 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <SlidersHorizontal className="size-3.5 text-violet-500 shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Living Cost Baseline:
+              </span>
+              <span className="text-xs font-mono font-black text-violet-600 dark:text-violet-400">
+                {formatCurrency(firMetrics.avgMonthlyExpense)}/mo
+              </span>
+              {firMetrics.isEstimatedAuto && expenseMode === "auto" && (
+                <span className="text-[9px] font-bold text-amber-500 dark:text-amber-400">
+                  (Estimated)
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+              <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mr-1 hidden xs:inline">
+                Test Lifestyle:
+              </span>
+              {(["auto", 30000, 50000, 75000, 100000, 150000] as const).map(
+                (preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setExpenseMode(preset)}
+                    className={`text-[9px] font-black px-2 py-0.5 rounded-lg whitespace-nowrap transition-all ${
+                      expenseMode === preset
+                        ? "bg-violet-600 text-white shadow-xs"
+                        : "bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200/60 dark:border-white/5"
+                    }`}
+                  >
+                    {preset === "auto" ? "Auto" : formatCompact(preset)}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+
           {/* 4 Main Core Metrics Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             {/* Metric 1: Liquid Cash Runway */}
@@ -338,8 +415,24 @@ export function FinancialIndependenceRunwayCard() {
                   {formatCompact(firMetrics.liquidCash)} bank & cash
                 </p>
               </div>
-              <div className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                Zero-Income Survival
+              <div
+                className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md w-fit ${
+                  firMetrics.liquidRunwayMonths !== null &&
+                  firMetrics.liquidRunwayMonths >= 6
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : firMetrics.liquidRunwayMonths !== null &&
+                        firMetrics.liquidRunwayMonths >= 3
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                }`}
+              >
+                {firMetrics.liquidRunwayMonths !== null &&
+                firMetrics.liquidRunwayMonths >= 6
+                  ? "Ironclad Buffer (≥6m)"
+                  : firMetrics.liquidRunwayMonths !== null &&
+                      firMetrics.liquidRunwayMonths >= 3
+                    ? "Moderate Buffer (3-6m)"
+                    : "Low Buffer (<3m)"}
               </div>
             </div>
 
@@ -356,7 +449,7 @@ export function FinancialIndependenceRunwayCard() {
                   {firMetrics.totalWealthRunwayMonths === null
                     ? "—"
                     : firMetrics.totalWealthRunwayMonths >= 360
-                      ? "30+ yrs (FI!)"
+                      ? "30+ yrs (Perpetual)"
                       : firMetrics.totalWealthRunwayMonths >= 12
                         ? `${(firMetrics.totalWealthRunwayMonths / 12).toFixed(1)} yrs`
                         : `${firMetrics.totalWealthRunwayMonths.toFixed(1)} mo`}
@@ -368,7 +461,7 @@ export function FinancialIndependenceRunwayCard() {
                 </p>
               </div>
               <div className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md w-fit bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-300">
-                Full Portfolio Horizon
+                Full Corpus Duration
               </div>
             </div>
 
@@ -391,7 +484,7 @@ export function FinancialIndependenceRunwayCard() {
                 </p>
               </div>
               <div className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md w-fit bg-primary/10 text-primary">
-                Perpetual Yield
+                Safe 4% SWR Rule
               </div>
             </div>
 
@@ -520,9 +613,7 @@ export function FinancialIndependenceRunwayCard() {
                 className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-1 leading-relaxed"
               >
                 <p>
-                  <strong>
-                    The FIR (Financial Independence Runway) Formula:
-                  </strong>{" "}
+                  <strong>The FIR (Financial Runway) Formula:</strong>{" "}
                   Multiplies your annualized living costs by 20x (Lean, 5% SWR),
                   25x (Standard 4% Trinity Rule), or 33x (Fat FI, 3%
                   conservative rule).

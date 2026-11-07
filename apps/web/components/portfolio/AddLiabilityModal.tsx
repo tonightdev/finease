@@ -6,6 +6,7 @@ import { type Account } from "@repo/types";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { Input } from "@/components/ui/Input";
 import toast from "react-hot-toast";
 
 interface AddLiabilityModalProps {
@@ -132,12 +133,12 @@ export function AddLiabilityModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Loan / Liability Name
           </label>
-          <input
+          <Input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g. Home Loan, Car Loan, Personal Loan"
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="h-10 text-xs"
           />
         </div>
 

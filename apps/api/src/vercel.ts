@@ -13,34 +13,68 @@ export const createServer = async (expressInstance: express.Express) => {
     new ExpressAdapter(expressInstance),
   );
 
-  app.enableCors();
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim())
+    : ['http://localhost:3000', 'https://finease.app'];
 
-  const config = new DocumentBuilder()
-    .setTitle('FinEase Wealth Architect API')
-    .setDescription(
-      'Personal finance management API for tracking wealth, assets, and goals.',
-    )
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter Firebase ID token',
-        in: 'header',
-      },
-      'bearer',
-    )
-    .build();
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      const isAllowedVercel =
+        !!origin &&
+        origin.startsWith('https://finease') &&
+        origin.endsWith('.vercel.app');
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document, {
-    explorer: true,
-    swaggerOptions: {
-      persistAuthorization: true,
+      if (!origin || allowedOrigins.includes(origin) || isAllowedVercel) {
+        callback(null, true);
+      } else {
+        callback(new Error('Blocked by CORS policy'));
+      }
     },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'x-cron-secret',
+    ],
   });
+
+  // Only setup Swagger if explicitly enabled or in development to eliminate cold-start overhead
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.ENABLE_SWAGGER === 'true'
+  ) {
+    const config = new DocumentBuilder()
+      .setTitle('FinEase Wealth Architect API')
+      .setDescription(
+        'Personal finance management API for tracking wealth, assets, and goals.',
+      )
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter Firebase ID token',
+          in: 'header',
+        },
+        'bearer',
+      )
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api-docs', app, document, {
+      explorer: true,
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
+  }
 
   await app.init();
   return app;

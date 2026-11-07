@@ -1,8 +1,17 @@
-import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as webpush from 'web-push';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { NotificationsService } from './notifications.service';
 import type { RequestWithUser } from '../common/interfaces/request.interface';
+import type { Request } from 'express';
 
 @Controller('auth/notifications')
 export class NotificationsController {
@@ -48,7 +57,31 @@ export class NotificationsController {
   }
 
   @Get('cron/daily')
-  async cronDaily() {
+  async cronDaily(@Req() req: Request) {
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = req.headers['authorization'];
+    const customHeader = req.headers['x-cron-secret'];
+    const isVercelCron = req.headers['x-vercel-cron'] === '1';
+    const isLocal =
+      req.hostname === 'localhost' || req.hostname === '127.0.0.1';
+
+    const bearerToken =
+      typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.split(' ')[1]
+        : undefined;
+    const providedSecret = bearerToken || customHeader;
+
+    const isAuthorized =
+      isVercelCron ||
+      (cronSecret && providedSecret === cronSecret) ||
+      (process.env.NODE_ENV !== 'production' && isLocal);
+
+    if (!isAuthorized) {
+      throw new UnauthorizedException(
+        'Invalid or missing cron secret authorization',
+      );
+    }
+
     return this.notificationsService.dispatchDailyNotifications();
   }
 }

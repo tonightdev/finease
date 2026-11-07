@@ -6,6 +6,8 @@ import api from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
 import {
   Database,
   Users as UsersIcon,
@@ -21,7 +23,6 @@ import {
   Mail,
   Zap,
   CheckCircle2,
-  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -235,21 +236,18 @@ export default function AdminPurgePage() {
         <div className="flex-1 lg:flex-[4] min-w-[300px]">
           {/* Mobile Dropdown Selector */}
           <div className="lg:hidden">
-            <div className="relative">
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-sm font-bold appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-xl"
-              >
-                <option value="">Select Identity Cluster...</option>
-                {filteredUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.displayName} ({u.email})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
-            </div>
+            <NativeSelect
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="h-14 text-sm"
+            >
+              <option value="">Select Identity Cluster...</option>
+              {filteredUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.displayName} ({u.email})
+                </option>
+              ))}
+            </NativeSelect>
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col lg:h-[calc(100dvh-12rem)] hidden lg:flex">
@@ -272,11 +270,11 @@ export default function AdminPurgePage() {
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                <input
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 z-10 pointer-events-none" />
+                <Input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl pl-11 text-xs font-bold ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all shadow-inner"
+                  className="pl-11 h-11 text-xs"
                   placeholder="Scan Identities..."
                 />
               </div>

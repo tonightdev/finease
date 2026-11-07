@@ -89,6 +89,7 @@ export function SecurityTab() {
     setConfirmPin("");
     setSetupStep(1);
     setSetupError(false);
+    toast.dismiss("pin-setup-toast");
   }, []);
 
   const handleSetupPinInput = useCallback(
@@ -106,11 +107,14 @@ export function SecurityTab() {
           }
         }
       } else {
+        // Clear any existing error toast as soon as user types next attempt
+        toast.dismiss("pin-setup-toast");
         if (confirmPin.length < 4) {
           const next = confirmPin + num;
           setConfirmPin(next);
           if (next.length === 4) {
             if (next === setupPin) {
+              toast.dismiss();
               const success = await toggleLock(true, "pin", next);
               if (success) {
                 handleClosePinSetup();
@@ -120,7 +124,10 @@ export function SecurityTab() {
               if (typeof window !== "undefined" && window.navigator?.vibrate) {
                 window.navigator.vibrate([80, 50, 80]);
               }
-              toast.error("PINs do not match. Try again.");
+              toast.dismiss();
+              toast.error("PINs do not match. Try again.", {
+                id: "pin-setup-toast",
+              });
               setTimeout(() => {
                 setConfirmPin("");
                 setSetupError(false);
@@ -137,6 +144,7 @@ export function SecurityTab() {
     if (typeof window !== "undefined" && window.navigator?.vibrate) {
       window.navigator.vibrate(10);
     }
+    toast.dismiss("pin-setup-toast");
     if (setupStep === 1) {
       setSetupPin((p) => p.slice(0, -1));
     } else {

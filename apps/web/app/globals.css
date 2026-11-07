@@ -27,7 +27,6 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
-
 @layer base {
   :root {
     --background: #f6f6f8;
@@ -65,7 +64,6 @@
 
   /* Prevent automatic viewport zoom on iOS Safari when focusing inputs */
   @media screen and (max-width: 768px) {
-
     input,
     select,
     textarea {
@@ -79,13 +77,31 @@
   }
 }
 
-.no-scrollbar {
+/* Universal Scrollbar Elimination: Hide default scrollbar across all browsers, PWA viewports, and modals while keeping full smooth touch and mouse scrolling intact */
+html,
+body,
+.no-scrollbar,
+.scrollbar-none,
+.scrollbar-hide,
+.overflow-y-auto,
+.overflow-x-auto,
+dialog {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
 
-.no-scrollbar::-webkit-scrollbar {
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+dialog::-webkit-scrollbar {
   display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
 }
 
 @layer components {
@@ -113,29 +129,22 @@
 /* Custom Component Styles - Outside of Tailwind Layers if they use !important to override */
 .toaster-container {
   z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+.toaster-container > * {
+  pointer-events: auto !important;
 }
 
 @media (max-width: 640px) {
   .toaster-container {
-    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem) !important;
+    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
   }
 }
 
 .mobile-toast {
-  font-size: 14px !important;
-}
-
-@media (min-width: 1024px) {
-  .mobile-toast {
-    font-size: 16px !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .mobile-toast {
-    font-size: 12px !important;
-  }
+  font-size: 13px !important;
+  line-height: 1.4 !important;
 }
 
 /* Premium Date Picker Hub Customization */

@@ -140,12 +140,7 @@ export class AuthService {
     }
 
     // Correctly determine role from available fields
-    let role: string = userData.role || 'user';
-
-    // Hardcoded logic for the specific admin email to ensure they can always access admin panel
-    if (userData.email === 'devdpadmin@gmail.com') {
-      role = 'admin';
-    }
+    const role: string = userData.role || 'user';
 
     const lastActiveAt = new Date().toISOString();
     await userDoc.ref.update({ lastActiveAt });
@@ -343,10 +338,7 @@ export class AuthService {
     // Remove old session doc to prevent token accumulation
     await oldSessionDoc.ref.delete().catch(() => {});
 
-    let role: string = userData.role || payload.role || 'user';
-    if (userData.email === 'devdpadmin@gmail.com') {
-      role = 'admin';
-    }
+    const role: string = userData.role || payload.role || 'user';
 
     const newToken = this.jwtService.sign({
       uid: userDoc.id,

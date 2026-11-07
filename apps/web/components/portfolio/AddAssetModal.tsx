@@ -6,6 +6,7 @@ import { type Account } from "@repo/types";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { Input } from "@/components/ui/Input";
 
 interface AddAssetModalProps {
   isOpen: boolean;
@@ -91,12 +92,12 @@ export function AddAssetModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Asset Name
           </label>
-          <input
+          <Input
             type="text"
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="h-10 text-xs"
             placeholder="e.g. Gold, Real Estate, Vehicle"
           />
         </div>

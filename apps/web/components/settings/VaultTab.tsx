@@ -51,6 +51,10 @@ import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Textarea } from "@/components/ui/Textarea";
+import { Checkbox } from "@/components/ui/Checkbox";
 import {
   Select,
   SelectContent,
@@ -583,14 +587,13 @@ export function VaultTab() {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Master Password
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 value={newMasterPassword}
                 onChange={(e) => setNewMasterPassword(e.target.value)}
                 placeholder="At least 8 characters..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="h-11"
               />
             </div>
 
@@ -598,14 +601,13 @@ export function VaultTab() {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Confirm Master Password
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 value={confirmMasterPassword}
                 onChange={(e) => setConfirmMasterPassword(e.target.value)}
                 placeholder="Re-enter master password..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="h-11"
               />
             </div>
 
@@ -676,20 +678,17 @@ export function VaultTab() {
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   Master Password
                 </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    required
-                    autoFocus
-                    value={unlockPassword}
-                    onChange={(e) => {
-                      setUnlockPassword(e.target.value);
-                      setUnlockError("");
-                    }}
-                    placeholder="Enter Master Password..."
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
-                  />
-                </div>
+                <PasswordInput
+                  required
+                  autoFocus
+                  value={unlockPassword}
+                  onChange={(e) => {
+                    setUnlockPassword(e.target.value);
+                    setUnlockError("");
+                  }}
+                  placeholder="Enter Master Password..."
+                  className="h-11"
+                />
                 {unlockError && (
                   <p className="text-xs font-medium text-rose-500 mt-1">
                     {unlockError}
@@ -762,12 +761,12 @@ export function VaultTab() {
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search by title or website..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="pl-10 pr-10 h-10 text-sm"
               />
               {searchQuery && (
                 <button
@@ -1103,13 +1102,13 @@ export function VaultTab() {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Title / Account Name *
               </label>
-              <input
+              <Input
                 type="text"
                 required
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
                 placeholder="e.g. Netflix, HDFC Bank, Gmail"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="h-10 text-xs font-bold"
               />
             </div>
 
@@ -1121,7 +1120,7 @@ export function VaultTab() {
                 value={formCategory}
                 onValueChange={(val) => setFormCategory(val as VaultCategory)}
               >
-                <SelectTrigger className="w-full h-[42px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
+                <SelectTrigger className="w-full h-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="z-[9999] bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-xl">
@@ -1156,12 +1155,12 @@ export function VaultTab() {
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
               Login ID / Username / Email
             </label>
-            <input
+            <Input
               type="text"
               value={formUsername}
               onChange={(e) => setFormUsername(e.target.value)}
               placeholder="e.g. john.doe@gmail.com or user123"
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="h-10 text-xs font-bold"
             />
           </div>
 
@@ -1183,13 +1182,13 @@ export function VaultTab() {
               </button>
             </div>
             <div className="relative">
-              <input
+              <Input
                 type="text"
                 required
                 value={formPassword}
                 onChange={(e) => setFormPassword(e.target.value)}
                 placeholder="Enter password..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none font-mono transition-all"
+                className="h-10 text-xs font-mono font-bold"
               />
             </div>
           </div>
@@ -1223,30 +1222,24 @@ export function VaultTab() {
               />
 
               <div className="grid grid-cols-3 gap-2">
-                <label className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
-                  <input
-                    type="checkbox"
+                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+                  <Checkbox
                     checked={genUppercase}
                     onChange={(e) => setGenUppercase(e.target.checked)}
-                    className="accent-primary size-3.5"
                   />
                   <span>A-Z</span>
                 </label>
-                <label className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
-                  <input
-                    type="checkbox"
+                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+                  <Checkbox
                     checked={genNumbers}
                     onChange={(e) => setGenNumbers(e.target.checked)}
-                    className="accent-primary size-3.5"
                   />
                   <span>0-9</span>
                 </label>
-                <label className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
-                  <input
-                    type="checkbox"
+                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+                  <Checkbox
                     checked={genSymbols}
                     onChange={(e) => setGenSymbols(e.target.checked)}
-                    className="accent-primary size-3.5"
                   />
                   <span>!@#$</span>
                 </label>
@@ -1259,12 +1252,12 @@ export function VaultTab() {
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
               Encrypted Notes / Recovery Codes (Optional)
             </label>
-            <textarea
+            <Textarea
               rows={2}
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
               placeholder="Security questions, backup codes, or account number..."
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-primary outline-none resize-none transition-all"
+              className="min-h-[70px] text-xs font-bold resize-none"
             />
           </div>
 

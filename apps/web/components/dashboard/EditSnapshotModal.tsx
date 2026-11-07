@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { WealthSnapshot, AccountSnapshotItem } from "@repo/types";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface EditSnapshotModalProps {
   snapshot: WealthSnapshot | null;
@@ -212,28 +213,33 @@ export function EditSnapshotModal({
         <div className="flex items-center gap-1.5 shrink-0">
           {!isLiability && (
             <div className="hidden sm:flex items-center gap-1">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="xs"
                 onClick={() => adjustBalance(acc.accountId, 5000)}
-                className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                className="rounded-lg font-bold"
               >
                 +5k
-              </button>
+              </Button>
             </div>
           )}
 
           <div className="relative w-24 sm:w-32">
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none select-none">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none select-none z-10">
               ₹
             </span>
-            <input
-              type="number"
+            <Input
+              type="text"
+              name="amount"
+              inputMode="decimal"
+              pattern="[0-9]*"
               value={currentVal || ""}
               onChange={(e) =>
                 handleBalanceChange(acc.accountId, e.target.value)
               }
               placeholder="0"
-              className="w-full pl-5 pr-2 py-1.5 text-right font-mono text-xs sm:text-sm font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              className="pl-5 pr-2 py-1 text-right font-mono text-xs sm:text-sm h-8 rounded-xl font-bold"
             />
           </div>
         </div>
@@ -339,12 +345,12 @@ export function EditSnapshotModal({
           <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
             Check-in Note or Milestone (Optional)
           </label>
-          <input
+          <Input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. October month-end check-in, salary & bonus credited"
-            className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-[11px] placeholder:font-normal placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            className="h-10 text-xs rounded-xl"
           />
         </div>
 

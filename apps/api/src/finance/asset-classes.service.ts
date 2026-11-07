@@ -65,7 +65,12 @@ export class AssetClassesService {
       throw new ForbiddenException('Access denied to this asset class');
     }
 
-    await docRef.update(assetClass);
+    const sanitizedAssetClass = { ...assetClass };
+    delete sanitizedAssetClass.id;
+    delete sanitizedAssetClass.userId;
+    delete (sanitizedAssetClass as Record<string, unknown>).createdAt;
+
+    await docRef.update(sanitizedAssetClass);
     const doc = await docRef.get();
     const updatedAssetClass = {
       id: doc.id,

@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DateInput } from "@/components/ui/DateInput";
-import { ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
 
 import {
   Transaction,
@@ -188,7 +189,7 @@ export function TransactionModal({
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
             Merchant / Narration
           </label>
-          <input
+          <Input
             type="text"
             value={formData.description}
             onChange={(e) =>
@@ -196,7 +197,7 @@ export function TransactionModal({
             }
             disabled={isSaving}
             placeholder="e.g. Grocery, Salary..."
-            className="w-full p-2.5 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
+            className="h-10 text-xs"
           />
         </div>
 
@@ -274,147 +275,139 @@ export function TransactionModal({
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                   Pay From
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.accountId}
-                    onChange={(e) => {
-                      const newAccId = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountId: newAccId,
-                        toAccountId:
-                          prev.toAccountId === newAccId ? "" : prev.toAccountId,
-                      }));
-                    }}
-                    disabled={isSaving}
-                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
-                  >
-                    <option value="" disabled>
-                      Select Source
-                    </option>
-                    <optgroup label="Bank Accounts">
-                      {sortedAccounts
-                        .filter((a) => !a.isClosed && a.type === "bank")
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Cash & Others">
-                      {sortedAccounts
-                        .filter(
-                          (a) =>
-                            !a.isClosed && ["cash", "card"].includes(a.type),
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
+                <NativeSelect
+                  value={formData.accountId}
+                  onChange={(e) => {
+                    const newAccId = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountId: newAccId,
+                      toAccountId:
+                        prev.toAccountId === newAccId ? "" : prev.toAccountId,
+                    }));
+                  }}
+                  disabled={isSaving}
+                  className="h-10 text-xs"
+                >
+                  <option value="" disabled>
+                    Select Source
+                  </option>
+                  <optgroup label="Bank Accounts">
+                    {sortedAccounts
+                      .filter((a) => !a.isClosed && a.type === "bank")
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Cash & Others">
+                    {sortedAccounts
+                      .filter(
+                        (a) => !a.isClosed && ["cash", "card"].includes(a.type),
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                </NativeSelect>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                   Credit To (Optional)
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.toAccountId}
-                    onChange={(e) => {
-                      const newToId = e.target.value;
-                      const targetAccount = accounts.find(
-                        (a) => a.id === newToId,
+                <NativeSelect
+                  value={formData.toAccountId}
+                  onChange={(e) => {
+                    const newToId = e.target.value;
+                    const targetAccount = accounts.find(
+                      (a) => a.id === newToId,
+                    );
+                    const isInternal =
+                      targetAccount &&
+                      ["bank", "cash", "card", "investment"].includes(
+                        targetAccount.type,
                       );
-                      const isInternal =
-                        targetAccount &&
-                        ["bank", "cash", "card", "investment"].includes(
-                          targetAccount.type,
-                        );
 
-                      setFormData((prev) => ({
-                        ...prev,
-                        toAccountId: newToId,
-                        type: isInternal ? "transfer" : prev.type,
-                      }));
-                    }}
-                    disabled={isSaving}
-                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
-                  >
-                    <option value="">(None)</option>
-                    <optgroup label="Debts & Loans">
-                      {sortedAccounts
-                        .filter(
-                          (acc) =>
-                            !acc.isClosed &&
-                            acc.type === "debt" &&
-                            acc.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹
-                            {Math.abs(acc.balance).toLocaleString("en-IN")})
-                          </option>
-                        ))}
+                    setFormData((prev) => ({
+                      ...prev,
+                      toAccountId: newToId,
+                      type: isInternal ? "transfer" : prev.type,
+                    }));
+                  }}
+                  disabled={isSaving}
+                  className="h-10 text-xs"
+                >
+                  <option value="">(None)</option>
+                  <optgroup label="Debts & Loans">
+                    {sortedAccounts
+                      .filter(
+                        (acc) =>
+                          !acc.isClosed &&
+                          acc.type === "debt" &&
+                          acc.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹
+                          {Math.abs(acc.balance).toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Bank Accounts">
+                    {sortedAccounts
+                      .filter(
+                        (acc) =>
+                          !acc.isClosed &&
+                          acc.type === "bank" &&
+                          acc.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Cash & Others">
+                    {sortedAccounts
+                      .filter(
+                        (acc) =>
+                          !acc.isClosed &&
+                          ["cash", "card"].includes(acc.type) &&
+                          acc.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Investments">
+                    {sortedAccounts
+                      .filter(
+                        (acc) =>
+                          !acc.isClosed &&
+                          acc.type === "investment" &&
+                          acc.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  {sortedGoals && sortedGoals.length > 0 && (
+                    <optgroup label="Financial Goals">
+                      {sortedGoals.map((g: FinancialGoal) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name} (₹{g.currentAmount.toLocaleString("en-IN")})
+                        </option>
+                      ))}
                     </optgroup>
-                    <optgroup label="Bank Accounts">
-                      {sortedAccounts
-                        .filter(
-                          (acc) =>
-                            !acc.isClosed &&
-                            acc.type === "bank" &&
-                            acc.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Cash & Others">
-                      {sortedAccounts
-                        .filter(
-                          (acc) =>
-                            !acc.isClosed &&
-                            ["cash", "card"].includes(acc.type) &&
-                            acc.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Investments">
-                      {sortedAccounts
-                        .filter(
-                          (acc) =>
-                            !acc.isClosed &&
-                            acc.type === "investment" &&
-                            acc.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    {sortedGoals && sortedGoals.length > 0 && (
-                      <optgroup label="Financial Goals">
-                        {sortedGoals.map((g: FinancialGoal) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name} (₹{g.currentAmount.toLocaleString("en-IN")}
-                            )
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
+                  )}
+                </NativeSelect>
                 {accounts.find((a) => a.id === formData.toAccountId)?.type ===
                   "debt" && (
                   <div className="pt-2">
@@ -442,122 +435,16 @@ export function TransactionModal({
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                   From Account
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.accountId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, accountId: e.target.value })
-                    }
-                    disabled={isSaving}
-                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
-                  >
-                    <option value="" disabled>
-                      Select Source
-                    </option>
-                    <optgroup label="Bank Accounts">
-                      {sortedAccounts
-                        .filter((a) => !a.isClosed && a.type === "bank")
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Cash & Others">
-                      {sortedAccounts
-                        .filter(
-                          (a) =>
-                            !a.isClosed && ["cash", "card"].includes(a.type),
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                  To Account
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.toAccountId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, toAccountId: e.target.value })
-                    }
-                    disabled={isSaving}
-                    className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
-                  >
-                    <option value="" disabled>
-                      Select Destination
-                    </option>
-                    <optgroup label="Bank Accounts">
-                      {sortedAccounts
-                        .filter(
-                          (a) =>
-                            !a.isClosed &&
-                            a.type === "bank" &&
-                            a.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Cash & Others">
-                      {sortedAccounts
-                        .filter(
-                          (a) =>
-                            !a.isClosed &&
-                            ["cash", "card"].includes(a.type) &&
-                            a.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Investments">
-                      {sortedAccounts
-                        .filter(
-                          (a) =>
-                            !a.isClosed &&
-                            a.type === "investment" &&
-                            a.id !== formData.accountId,
-                        )
-                        .map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
-                          </option>
-                        ))}
-                    </optgroup>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                Deposit To
-              </label>
-              <div className="relative">
-                <select
+                <NativeSelect
                   value={formData.accountId}
                   onChange={(e) =>
                     setFormData({ ...formData, accountId: e.target.value })
                   }
                   disabled={isSaving}
-                  className="w-full p-2.5 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs text-slate-900 dark:text-white font-medium disabled:opacity-50"
+                  className="h-10 text-xs"
                 >
                   <option value="" disabled>
-                    Select Destination
+                    Select Source
                   </option>
                   <optgroup label="Bank Accounts">
                     {sortedAccounts
@@ -579,18 +466,114 @@ export function TransactionModal({
                         </option>
                       ))}
                   </optgroup>
-                  <optgroup label="Investments">
+                </NativeSelect>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  To Account
+                </label>
+                <NativeSelect
+                  value={formData.toAccountId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, toAccountId: e.target.value })
+                  }
+                  disabled={isSaving}
+                  className="h-10 text-xs"
+                >
+                  <option value="" disabled>
+                    Select Destination
+                  </option>
+                  <optgroup label="Bank Accounts">
                     {sortedAccounts
-                      .filter((a) => !a.isClosed && a.type === "investment")
+                      .filter(
+                        (a) =>
+                          !a.isClosed &&
+                          a.type === "bank" &&
+                          a.id !== formData.accountId,
+                      )
                       .map((acc) => (
                         <option key={acc.id} value={acc.id}>
                           {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
                         </option>
                       ))}
                   </optgroup>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <optgroup label="Cash & Others">
+                    {sortedAccounts
+                      .filter(
+                        (a) =>
+                          !a.isClosed &&
+                          ["cash", "card"].includes(a.type) &&
+                          a.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Investments">
+                    {sortedAccounts
+                      .filter(
+                        (a) =>
+                          !a.isClosed &&
+                          a.type === "investment" &&
+                          a.id !== formData.accountId,
+                      )
+                      .map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                        </option>
+                      ))}
+                  </optgroup>
+                </NativeSelect>
               </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                Deposit To
+              </label>
+              <NativeSelect
+                value={formData.accountId}
+                onChange={(e) =>
+                  setFormData({ ...formData, accountId: e.target.value })
+                }
+                disabled={isSaving}
+                className="h-10 text-xs"
+              >
+                <option value="" disabled>
+                  Select Destination
+                </option>
+                <optgroup label="Bank Accounts">
+                  {sortedAccounts
+                    .filter((a) => !a.isClosed && a.type === "bank")
+                    .map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="Cash & Others">
+                  {sortedAccounts
+                    .filter(
+                      (a) => !a.isClosed && ["cash", "card"].includes(a.type),
+                    )
+                    .map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="Investments">
+                  {sortedAccounts
+                    .filter((a) => !a.isClosed && a.type === "investment")
+                    .map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} (₹{acc.balance.toLocaleString("en-IN")})
+                      </option>
+                    ))}
+                </optgroup>
+              </NativeSelect>
             </div>
           )}
         </div>
@@ -610,23 +593,20 @@ export function TransactionModal({
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
               Category
             </label>
-            <div className="relative">
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-                disabled={isSaving}
-                className="w-full h-12 p-3 pr-10 appearance-none bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm text-slate-900 dark:text-white font-medium disabled:opacity-50"
-              >
-                {sortedCategories.map((cat: Category) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
+            <NativeSelect
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              disabled={isSaving}
+              className="h-12 text-sm"
+            >
+              {sortedCategories.map((cat: Category) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </NativeSelect>
           </div>
         </div>
 
@@ -637,37 +617,38 @@ export function TransactionModal({
                 <label className="text-[9px] font-black text-purple-500 uppercase tracking-widest ml-1">
                   Frequency
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.frequency}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        frequency: e.target.value as TransactionFrequency,
-                      })
-                    }
-                    disabled={isSaving}
-                    className="w-full p-2 bg-white dark:bg-[#0b0d12] border border-purple-500/20 rounded-xl focus:ring-2 focus:ring-purple-500 transition-all outline-none text-[10px] font-bold text-purple-600 dark:text-purple-400 disabled:opacity-50"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                </div>
+                <NativeSelect
+                  value={formData.frequency}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      frequency: e.target.value as TransactionFrequency,
+                    })
+                  }
+                  disabled={isSaving}
+                  className="h-9 text-[10px] font-bold border-purple-500/20 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-500"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </NativeSelect>
               </div>
               <div className="flex-1 min-w-[120px] space-y-1">
                 <label className="text-[9px] font-black text-purple-500 uppercase tracking-widest ml-1">
                   Occurrences
                 </label>
-                <input
-                  type="number"
+                <Input
+                  type="text"
+                  name="recurringCount"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formData.recurringCount}
                   onChange={(e) =>
                     setFormData({ ...formData, recurringCount: e.target.value })
                   }
                   disabled={isSaving}
-                  className="w-full p-2 bg-white dark:bg-[#0b0d12] border border-purple-500/20 rounded-xl focus:ring-2 focus:ring-purple-500 transition-all outline-none text-[10px] font-bold text-purple-600 dark:text-purple-400 disabled:opacity-50"
+                  className="h-9 text-[10px] font-bold border-purple-500/20 text-purple-600 dark:text-purple-400 focus-visible:ring-purple-500"
                 />
               </div>
             </div>

@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { formatDate } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
 
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<
@@ -80,15 +81,15 @@ export default function ActivitiesPage() {
       />
 
       <div className="relative">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
           <Search className="h-4 w-4 text-slate-400" />
         </div>
-        <input
+        <Input
           type="text"
           placeholder="Search activities, users, or entities..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+          className="pl-11 pr-4 h-12 text-sm"
         />
       </div>
 

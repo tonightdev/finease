@@ -15,11 +15,12 @@ async function bootstrap() {
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app')
-      ) {
+      const isAllowedVercel =
+        !!origin &&
+        origin.startsWith('https://finease') &&
+        origin.endsWith('.vercel.app');
+
+      if (!origin || allowedOrigins.includes(origin) || isAllowedVercel) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by CORS policy'));
@@ -27,7 +28,12 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'x-cron-secret',
+    ],
   });
 
   const config = new DocumentBuilder()

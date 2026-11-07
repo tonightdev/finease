@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/Logo";
 import type { AxiosError } from "axios";
 import { Button } from "@/components/ui/Button";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Input } from "@/components/ui/Input";
 
 export default function SignupPage() {
   const { loginWithGoogle, user } = useAuth();
@@ -62,12 +63,11 @@ export default function SignupPage() {
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-tight">
               Full Name
             </label>
-            <input
+            <Input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               placeholder="John Doe"
-              className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
 
@@ -75,12 +75,11 @@ export default function SignupPage() {
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-tight">
               Email Address
             </label>
-            <input
+            <Input
               type="email"
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white"
             />
           </div>
 

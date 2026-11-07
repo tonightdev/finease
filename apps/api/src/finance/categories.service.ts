@@ -76,7 +76,12 @@ export class CategoriesService {
       throw new NotFoundException(`Category with ID ${id} not found.`);
     }
 
-    await this.collection.doc(id).update(category);
+    const sanitizedCategory = { ...category };
+    delete sanitizedCategory.id;
+    delete sanitizedCategory.userId;
+    delete (sanitizedCategory as Record<string, unknown>).createdAt;
+
+    await this.collection.doc(id).update(sanitizedCategory);
     const updatedCategory = await this.findOne(id, userId);
     if (!updatedCategory) {
       throw new NotFoundException(

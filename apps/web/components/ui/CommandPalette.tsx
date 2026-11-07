@@ -26,6 +26,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Input } from "./Input";
 
 interface CommandItem {
   id: string;
@@ -279,12 +280,12 @@ export function CommandPalette() {
                     <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
                     <Search className="w-6 h-6 text-primary relative z-10" />
                   </div>
-                  <input
+                  <Input
                     autoFocus
                     placeholder="Search commands, nodes, or protocols..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-lg text-slate-900 dark:text-white placeholder-slate-400 font-black tracking-tight"
+                    className="flex-1 bg-transparent border-none outline-none text-lg text-slate-900 dark:text-white placeholder-slate-400 font-black tracking-tight focus-visible:ring-0 p-0 h-auto rounded-none"
                   />
                   <div className="flex items-center gap-2 group">
                     <div className="px-2 py-1 rounded-xl bg-slate-100 dark:bg-white/5 text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-white/10 group-hover:text-primary transition-colors">

@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 15000, // 15-second timeout prevents indefinite hanging
 });
 
 let activeRequests = 0;
@@ -156,6 +157,30 @@ api.interceptors.response.use(
   async (error) => {
     updateLoadingState(-1);
     const originalRequest = error.config;
+
+    // Handle transient network errors / cold-start timeouts (502, 503, 504, ECONNABORTED) on idempotent GET requests
+    const isIdempotent = originalRequest?.method?.toLowerCase() === "get";
+    const status = error.response?.status;
+    const isTransientError =
+      !status ||
+      status === 502 ||
+      status === 503 ||
+      status === 504 ||
+      error.code === "ECONNABORTED" ||
+      error.message?.includes("Network Error");
+
+    if (
+      isIdempotent &&
+      isTransientError &&
+      originalRequest &&
+      (originalRequest._networkRetryCount || 0) < 2
+    ) {
+      originalRequest._networkRetryCount =
+        (originalRequest._networkRetryCount || 0) + 1;
+      const delayMs = originalRequest._networkRetryCount * 500;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return api(originalRequest);
+    }
 
     // Don't retry if the failed request was already /auth/refresh or has already been retried
     if (

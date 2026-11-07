@@ -13,8 +13,11 @@ export interface AccountsState {
   error: string | null;
   lastFetched: number | null;
   snapshots: WealthSnapshot[];
+  snapshotsLoading: boolean;
+  snapshotsLastFetched: number | null;
   debrief: MonthlyDebrief | null;
   debriefLoading: boolean;
+  debriefLastFetched: number | null;
 }
 
 const initialState: AccountsState = {
@@ -23,8 +26,11 @@ const initialState: AccountsState = {
   error: null,
   lastFetched: null,
   snapshots: [],
+  snapshotsLoading: false,
+  snapshotsLastFetched: null,
   debrief: null,
   debriefLoading: false,
+  debriefLastFetched: null,
 };
 
 export const fetchAccounts = createAsyncThunk<
@@ -83,21 +89,60 @@ export const batchSyncAccounts = createAsyncThunk(
   },
 );
 
-export const fetchSnapshots = createAsyncThunk(
+export const fetchSnapshots = createAsyncThunk<
+  WealthSnapshot[],
+  number | { limit?: number; force?: boolean } | void
+>(
   "accounts/fetchSnapshots",
-  async (limit: number = 12) => {
+  async (arg) => {
+    const limit = typeof arg === "number" ? arg : (arg?.limit ?? 12);
     const response = await api.get<WealthSnapshot[]>(
       `/finance/snapshots?limit=${limit}`,
     );
     return response.data;
   },
+  {
+    condition: (arg, { getState }) => {
+      const force = typeof arg === "object" && arg?.force;
+      if (force) return true;
+      const state = getState() as { accounts: AccountsState };
+      // Prevent duplicate concurrent requests in-flight
+      if (state.accounts.snapshotsLoading) return false;
+      const last = state.accounts.snapshotsLastFetched;
+      if (
+        last !== null &&
+        Date.now() - last < 5 * 60 * 1000 &&
+        state.accounts.snapshots.length > 0
+      ) {
+        return false;
+      }
+      return true;
+    },
+  },
 );
 
-export const fetchMonthlyDebrief = createAsyncThunk(
+export const fetchMonthlyDebrief = createAsyncThunk<
+  MonthlyDebrief,
+  { force?: boolean } | void
+>(
   "accounts/fetchDebrief",
   async () => {
     const response = await api.get<MonthlyDebrief>("/finance/debrief");
     return response.data;
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const state = getState() as { accounts: AccountsState };
+      const last = state.accounts.debriefLastFetched;
+      if (
+        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
+        state.accounts.debriefLoading
+      ) {
+        return false;
+      }
+      return true;
+    },
   },
 );
 
@@ -186,8 +231,16 @@ export const accountsSlice = createSlice({
           state.snapshots.unshift(action.payload.snapshot);
         }
       })
+      .addCase(fetchSnapshots.pending, (state) => {
+        state.snapshotsLoading = true;
+      })
       .addCase(fetchSnapshots.fulfilled, (state, action) => {
+        state.snapshotsLoading = false;
         state.snapshots = action.payload;
+        state.snapshotsLastFetched = Date.now();
+      })
+      .addCase(fetchSnapshots.rejected, (state) => {
+        state.snapshotsLoading = false;
       })
       .addCase(deleteSnapshotAction.fulfilled, (state, action) => {
         if (state.snapshots) {
@@ -234,6 +287,7 @@ export const accountsSlice = createSlice({
       .addCase(fetchMonthlyDebrief.fulfilled, (state, action) => {
         state.debriefLoading = false;
         state.debrief = action.payload;
+        state.debriefLastFetched = Date.now();
       })
       .addCase(fetchMonthlyDebrief.rejected, (state) => {
         state.debriefLoading = false;

@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { closeModal } from "@/store/slices/uiSlice";
-import {
-  batchSyncAccounts,
-  optimisticUpdateBalances,
-} from "@/store/slices/accountsSlice";
+import { batchSyncAccounts } from "@/store/slices/accountsSlice";
 import { Sparkles, Landmark, ArrowRight, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { Account } from "@repo/types";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export function WealthPulseModal() {
   const dispatch = useDispatch<AppDispatch>();
@@ -36,9 +35,11 @@ export function WealthPulseModal() {
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const prevIsOpenRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen) {
+    // Only initialize form fields once upon opening the modal
+    if (isOpen && !prevIsOpenRef.current) {
       const initial: Record<string, number> = {};
       liquidAccounts.forEach((acc) => {
         initial[acc.id] = acc.balance;
@@ -46,6 +47,7 @@ export function WealthPulseModal() {
       setBalances(initial);
       setNote("");
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, liquidAccounts]);
 
   // Live real-time calculations
@@ -103,6 +105,7 @@ export function WealthPulseModal() {
   const handleSave = async () => {
     try {
       setIsSubmitting(true);
+      const noteToSave = note.trim();
       const itemsToSync = liquidAccounts.map((acc) => ({
         accountId: acc.id,
         balance:
@@ -111,14 +114,11 @@ export function WealthPulseModal() {
             : Number(acc.balance) || 0,
       }));
 
-      // 1. Optimistic instant update (<50ms feedback)
-      dispatch(optimisticUpdateBalances(itemsToSync));
-
-      // 2. Dispatch API batch sync
+      // Dispatch API batch sync with explicit user-provided note
       await dispatch(
         batchSyncAccounts({
           accounts: itemsToSync,
-          note: note.trim() || undefined,
+          note: noteToSave || undefined,
         }),
       ).unwrap();
 
@@ -172,32 +172,39 @@ export function WealthPulseModal() {
         <div className="flex items-center gap-2">
           {/* Quick delta chips for bank & cash */}
           <div className="hidden sm:flex items-center gap-1">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="xs"
               onClick={() => adjustBalance(acc.id, 5000)}
-              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              className="rounded-lg font-bold"
             >
               +5k
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
+              size="xs"
               onClick={() => adjustBalance(acc.id, 10000)}
-              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              className="rounded-lg font-bold"
             >
               +10k
-            </button>
+            </Button>
           </div>
 
           <div className="relative flex-1 sm:w-44">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 z-10">
               ₹
             </span>
-            <input
-              type="number"
+            <Input
+              type="text"
+              name="amount"
+              inputMode="decimal"
+              pattern="[0-9]*"
               value={currentVal || ""}
               onChange={(e) => handleBalanceChange(acc.id, e.target.value)}
               placeholder="0"
-              className="w-full pl-7 pr-3 py-2 text-right font-mono text-sm font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              className="pl-7 pr-3 py-2 text-right font-mono text-sm h-10 rounded-xl"
             />
           </div>
         </div>
@@ -234,28 +241,28 @@ export function WealthPulseModal() {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => dispatch(closeModal("isWealthPulseOpen"))}
-              className="px-4 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               disabled={isSubmitting || liquidAccounts.length === 0}
+              isLoading={isSubmitting}
               onClick={handleSave}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-primary/25 disabled:opacity-50 transition-all active:scale-95"
+              className="flex-1 sm:flex-initial"
+              rightIcon={
+                !isSubmitting ? <ArrowRight className="size-3.5" /> : undefined
+              }
             >
-              {isSubmitting ? (
-                "Syncing..."
-              ) : (
-                <>
-                  <span>Recalculate</span>
-                  <ArrowRight className="size-3.5" />
-                </>
-              )}
-            </button>
+              Recalculate
+            </Button>
           </div>
         </div>
       }
@@ -313,12 +320,12 @@ export function WealthPulseModal() {
             <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
               Check-in Note or Milestone (Optional)
             </label>
-            <input
+            <Input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Month-end check-in, salary credited"
-              className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-[11px] placeholder:font-normal placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              className="h-10 text-xs rounded-xl"
             />
           </div>
         )}

@@ -28,6 +28,7 @@ import { WealthSnapshot, AccountSnapshotItem } from "@repo/types";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EditSnapshotModal } from "./EditSnapshotModal";
 import { MonthlyGrowthChart } from "@/components/reports/MonthlyGrowthChart";
+import { AccountTrajectoryChart } from "@/components/accounts/AccountTrajectoryChart";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export function TrajectoryHistoryView() {
@@ -71,19 +72,6 @@ export function TrajectoryHistoryView() {
     );
   }, [snapshots]);
 
-  const { latestNetWorth } = useMemo(() => {
-    if (sortedSnapshots.length === 0) {
-      return { totalPulses: 0, netGainSinceFirst: 0, latestNetWorth: 0 };
-    }
-    const latest = sortedSnapshots[0]?.netWorth || 0;
-    const earliest = sortedSnapshots[sortedSnapshots.length - 1]?.netWorth || 0;
-    return {
-      totalPulses: sortedSnapshots.length,
-      netGainSinceFirst: latest - earliest,
-      latestNetWorth: latest,
-    };
-  }, [sortedSnapshots]);
-
   const toggleExpand = (id: string) => {
     setExpandedSnapshotId((prev) => (prev === id ? null : id));
   };
@@ -103,26 +91,6 @@ export function TrajectoryHistoryView() {
 
   return (
     <div className="space-y-4">
-      {sortedSnapshots.length > 0 && (
-        <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-white via-slate-50 to-indigo-50/20 dark:from-[#0d1117] dark:via-[#090b0e] dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-200/60 dark:border-white/5">
-            <div className="p-3.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/5 flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                  Current Net Worth
-                </span>
-                <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                  {formatCurrency(latestNetWorth)}
-                </div>
-              </div>
-              <div className="size-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400">
-                <Landmark className="size-4" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Monthly Growth Graph */}
       <MonthlyGrowthChart
         accounts={accounts}
@@ -130,6 +98,9 @@ export function TrajectoryHistoryView() {
         snapshots={snapshots}
         monthStartDate={user?.monthStartDate || 1}
       />
+
+      {/* Account-Wise Trajectory & Progression */}
+      <AccountTrajectoryChart />
 
       {/* Snapshots Log List */}
       <div className="space-y-3">

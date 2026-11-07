@@ -1,237 +1,62 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { Transaction, Account, Category } from "@repo/types";
+import { Account } from "@repo/types";
 import { Card } from "@/components/ui/Card";
-import { formatCurrency, getFiscalMonthStart } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import {
-  TrendingDown,
+  TrendingUp,
   ArrowUpRight,
   Activity,
-  Percent,
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-  ChevronDown,
-  Check,
-  Wallet,
-  PiggyBank,
-  Briefcase,
   History,
+  Landmark,
+  ShieldCheck,
+  Building2,
+  CreditCard,
+  Wallet,
+  CheckCircle2,
+  Briefcase,
+  PieChart,
+  Percent,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { fetchTransactions } from "@/store/slices/transactionsSlice";
 import { fetchAccounts, fetchSnapshots } from "@/store/slices/accountsSlice";
-import { fetchCategories } from "@/store/slices/categoriesSlice";
+import { fetchAssetClasses } from "@/store/slices/assetClassesSlice";
 import { fetchGoals } from "@/store/slices/goalsSlice";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TrajectoryHistoryView } from "@/components/dashboard/TrajectoryHistoryView";
 import { FinancialIndependenceRunwayCard } from "@/components/reports/FinancialIndependenceRunwayCard";
 
-type ViewType = "Day" | "Week" | "Month" | "Year";
-
 const EMPTY_ACCOUNTS: Account[] = [];
-const EMPTY_TRANSACTIONS: Transaction[] = [];
-const EMPTY_CATEGORIES: Category[] = [];
 
-// Custom Dropdown Component
-function FilterDropdown({
-  label,
-  value,
-  options,
-  onSelect,
-  onClear,
-  multi = false,
-  icon: Icon,
-  placeholder,
-}: {
-  label: string;
-  value: string | string[];
-  options: { id: string; name: string }[];
-  onSelect: (id: string) => void;
-  onClear?: () => void;
-  multi?: boolean;
-  icon?: React.ElementType;
-  placeholder?: string;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, []);
-
-  const selectedCount = multi
-    ? (value as string[]).length
-    : value === "all"
-      ? 0
-      : 1;
-
-  const isSelected = (id: string) =>
-    multi ? (value as string[]).includes(id) : value === id;
-
-  const displayText = useMemo(() => {
-    if (multi) {
-      const arr = value as string[];
-      if (arr.length === 0) return placeholder || `All ${label}s`;
-      if (arr.length === 1) {
-        const match = options.find((o) => o.id === arr[0]);
-        return match?.name || arr[0];
-      }
-      return `${arr.length} ${label}s`;
-    }
-    if (value === "all") return placeholder || `All ${label}s`;
-    const match = options.find((o) => o.id === value);
-    return match?.name || (value as string);
-  }, [multi, value, options, placeholder, label]);
-
-  return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 h-8.5 rounded-xl border transition-all duration-200 text-[10px] font-black uppercase tracking-wider ${
-          isOpen || selectedCount > 0
-            ? "bg-primary/5 dark:bg-primary/10 border-primary text-primary shadow-xs"
-            : "bg-slate-50 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-primary/40"
-        }`}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          {Icon && <Icon className="size-3.5 shrink-0" />}
-          <span className="truncate">{displayText}</span>
-          {selectedCount > 1 && (
-            <span className="bg-primary text-white text-[9px] px-1.5 py-0.2 rounded-md shrink-0">
-              {selectedCount}
-            </span>
-          )}
-        </div>
-        <ChevronDown
-          className={`size-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5 ${
-            isOpen ? "rotate-180 text-primary" : ""
-          }`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className="absolute left-0 mt-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/20 min-w-[200px] w-full max-w-[calc(100vw-32px)]"
-          >
-            <div className="p-1.5 max-h-[260px] overflow-y-auto no-scrollbar">
-              {options.map((option) => (
-                <button
-                  type="button"
-                  key={option.id}
-                  onClick={() => {
-                    onSelect(option.id);
-                    if (!multi) setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-xs font-bold ${
-                    isSelected(option.id)
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <span className="truncate">{option.name}</span>
-                  {isSelected(option.id) && (
-                    <Check className="size-3.5 text-primary shrink-0 ml-2" />
-                  )}
-                </button>
-              ))}
-            </div>
-            {onClear && selectedCount > 0 && (
-              <div className="p-2 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClear();
-                    setIsOpen(false);
-                  }}
-                  className="w-full py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-                >
-                  Clear Selection
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+type AccountFilterType =
+  | "all"
+  | "liquid"
+  | "investment"
+  | "asset"
+  | "liability";
 
 export default function ReportsPageClient() {
   const [activeTab, setActiveTab] = useState<"trajectory" | "analytics">(
     "trajectory",
   );
-  const [viewType, setViewType] = useState<ViewType>("Month");
-  const [cursorDate, setCursorDate] = useState<Date>(new Date());
-  const [showAllExpenses, setShowAllExpenses] = useState(false);
-  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
-  const [showAllLiquidity, setShowAllLiquidity] = useState(false);
+  const [accountFilter, setAccountFilter] = useState<AccountFilterType>("all");
 
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
+
   const allAccounts =
     useSelector((state: RootState) => state.accounts?.items) ?? EMPTY_ACCOUNTS;
+
+  // Active accounts for analytics (non-closed & non-excluded)
   const accounts = useMemo(
-    () => allAccounts.filter((a) => !a.excludeFromAnalytics),
+    () => allAccounts.filter((a) => !a.isClosed && !a.excludeFromAnalytics),
     [allAccounts],
   );
 
-  const categories =
-    useSelector((state: RootState) => state.categories?.items) ??
-    EMPTY_CATEGORIES;
-
-  const allTransactions =
-    useSelector((state: RootState) => state.transactions?.items) ??
-    EMPTY_TRANSACTIONS;
-  const transactions = useMemo(() => {
-    const includedIds = new Set(accounts.map((a) => a.id));
-    let filtered = allTransactions.filter(
-      (tx) =>
-        includedIds.has(tx.accountId) ||
-        (tx.toAccountId && includedIds.has(tx.toAccountId)),
-    );
-
-    if (selectedAccountIds.length > 0) {
-      const selectedSet = new Set(selectedAccountIds);
-      filtered = filtered.filter(
-        (tx) =>
-          selectedSet.has(tx.accountId) ||
-          (tx.toAccountId && selectedSet.has(tx.toAccountId)),
-      );
-    }
-
-    return filtered;
-  }, [allTransactions, accounts, selectedAccountIds]);
-  const loading = useSelector(
-    (state: RootState) =>
-      state.transactions?.loading || state.accounts?.loading,
-  );
   const rawSnapshots = useSelector(
     (state: RootState) => state.accounts?.snapshots,
   );
@@ -241,246 +66,87 @@ export default function ReportsPageClient() {
     if (user) {
       dispatch(fetchAccounts());
       dispatch(fetchSnapshots(50));
-      dispatch(fetchTransactions());
-      dispatch(fetchCategories());
+      dispatch(fetchAssetClasses());
       dispatch(fetchGoals());
     }
   }, [dispatch, user]);
 
-  const now = useMemo(() => new Date(), []);
-
-  // Adjust cursor date when view type changes
-  useEffect(() => {
-    setCursorDate(new Date());
-  }, [viewType]);
-
-  const handlePrev = () => {
-    setCursorDate((prev) => {
-      const next = new Date(prev);
-      if (viewType === "Day") next.setDate(next.getDate() - 1);
-      if (viewType === "Week") next.setDate(next.getDate() - 7);
-      if (viewType === "Month") {
-        next.setMonth(next.getMonth() - 1);
-      }
-      if (viewType === "Year") next.setFullYear(next.getFullYear() - 1);
-      return next;
-    });
-  };
-
-  const handleNext = () => {
-    setCursorDate((prev) => {
-      const next = new Date(prev);
-      if (viewType === "Day") next.setDate(next.getDate() + 1);
-      if (viewType === "Week") next.setDate(next.getDate() + 7);
-      if (viewType === "Month") {
-        next.setMonth(next.getMonth() + 1);
-      }
-      if (viewType === "Year") next.setFullYear(next.getFullYear() + 1);
-      return next;
-    });
-  };
-
-  const formattedCursorDate = useMemo(() => {
-    if (viewType === "Day") {
-      return cursorDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    }
-    if (viewType === "Week") {
-      const start = new Date(cursorDate);
-      start.setDate(cursorDate.getDate() - cursorDate.getDay()); // Sunday
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6); // Saturday
-      return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
-    }
-    if (viewType === "Month") {
-      const fiscalStartDay = user?.monthStartDate || 1;
-      const start = getFiscalMonthStart(cursorDate, fiscalStartDay);
-
-      const end = new Date(start);
-      end.setMonth(end.getMonth() + 1);
-      end.setDate(end.getDate() - 1);
-
-      // Helper to get ordinal suffix (st, nd, rd, th)
-      const getOrdinal = (n: number) => {
-        const v = n % 100;
-        if (v >= 11 && v <= 13) return n + "th";
-        const tail = n % 10;
-        if (tail === 1) return n + "st";
-        if (tail === 2) return n + "nd";
-        if (tail === 3) return n + "rd";
-        return n + "th";
-      };
-
-      const startDay = getOrdinal(start.getDate());
-      const endDay = getOrdinal(end.getDate());
-
-      const startMonth = start.toLocaleDateString("en-US", { month: "short" });
-      const endMonth = end.toLocaleDateString("en-US", { month: "short" });
-
-      const startYear = start.getFullYear();
-      const endYear = end.getFullYear();
-
-      if (startYear !== endYear) {
-        return `${startDay} ${startMonth} ${startYear} to ${endDay} ${endMonth} ${endYear}`;
-      }
-      return `${startDay} ${startMonth} to ${endDay} ${endMonth} ${startYear}`;
-    }
-    return cursorDate.getFullYear().toString();
-  }, [cursorDate, viewType, user?.monthStartDate]);
-
-  const budgetTargets = user?.budgetTargets || {
-    needs: 50,
-    wants: 30,
-    savings: 20,
-  };
-
-  const filteredAccounts = useMemo(() => {
-    if (selectedAccountIds.length === 0) return accounts;
-    const set = new Set(selectedAccountIds);
-    return accounts.filter((a) => set.has(a.id));
-  }, [accounts, selectedAccountIds]);
-
-  const assets = filteredAccounts
-    .filter((acc: { type: string }) => acc.type !== "debt")
-    .reduce((sum: number, item: { balance: number }) => sum + item.balance, 0);
-  const liabilities = Math.abs(
-    filteredAccounts
-      .filter((acc: { type: string }) => acc.type === "debt")
-      .reduce(
-        (sum: number, item: { balance: number }) => sum + item.balance,
-        0,
-      ),
+  // Asset Breakdown Categories
+  const liquidAccounts = useMemo(
+    () =>
+      accounts
+        .filter(
+          (a) => (a.type === "bank" || a.type === "cash") && a.balance > 0,
+        )
+        .sort((a, b) => b.balance - a.balance),
+    [accounts],
   );
-  const netWorth = assets - liabilities;
 
-  // Calculate Net Worth History (Last 6 Months)
-  const computedNetWorthHistory = useMemo(() => {
-    const history: { month: string; value: number; dateObj: Date }[] = [];
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
+  const investmentAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.type === "investment" && a.balance > 0)
+        .sort((a, b) => b.balance - a.balance),
+    [accounts],
+  );
 
-    const monthStartDate = user?.monthStartDate || 1;
-    for (let i = 0; i < 6; i++) {
-      const d = getFiscalMonthStart(now, monthStartDate);
-      d.setMonth(d.getMonth() - i);
-      history.unshift({
-        month: `${monthNames[d.getMonth()]}`,
-        value: 0,
-        dateObj: d,
-      });
-    }
+  const physicalAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.type === "asset" && a.balance > 0)
+        .sort((a, b) => b.balance - a.balance),
+    [accounts],
+  );
 
-    // Populate each month from snapshots if available
-    for (let i = 0; i < history.length; i++) {
-      const item = history[i]!;
-      const start = item.dateObj;
-      const end = new Date(start);
-      end.setMonth(end.getMonth() + 1);
-      end.setMilliseconds(end.getMilliseconds() - 1);
+  // Liabilities Breakdown Categories
+  const cardAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.type === "card" && Math.abs(a.balance) > 0)
+        .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance)),
+    [accounts],
+  );
 
-      const matchingSnapshots = snapshots.filter((s) => {
-        const sd = new Date(s.createdAt || s.date);
-        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
-      });
+  const debtAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.type === "debt" && Math.abs(a.balance) > 0)
+        .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance)),
+    [accounts],
+  );
 
-      if (matchingSnapshots.length > 0) {
-        const latest = matchingSnapshots.sort(
-          (a, b) =>
-            new Date(b.createdAt || b.date).getTime() -
-            new Date(a.createdAt || a.date).getTime(),
-        )[0]!;
-        item.value = latest.netWorth;
-      }
-    }
+  // Totals
+  const totalLiquid = liquidAccounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalInvested = investmentAccounts.reduce(
+    (sum, a) => sum + a.balance,
+    0,
+  );
+  const totalPhysical = physicalAccounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalAssets = totalLiquid + totalInvested + totalPhysical;
 
-    // Latest month defaults to real-time Net Worth
-    if (history[5]) {
-      history[5].value = netWorth;
-    }
+  const totalCards = cardAccounts.reduce(
+    (sum, a) => sum + Math.abs(a.balance),
+    0,
+  );
+  const totalDebts = debtAccounts.reduce(
+    (sum, a) => sum + Math.abs(a.balance),
+    0,
+  );
+  const totalLiabilities = totalCards + totalDebts;
 
-    // Determine first month with active data
-    let firstActiveIdx = -1;
-    for (let i = 0; i < history.length; i++) {
-      const item = history[i]!;
-      const start = item.dateObj;
-      const end = new Date(start);
-      end.setMonth(end.getMonth() + 1);
-      end.setMilliseconds(end.getMilliseconds() - 1);
+  const netWorth = totalAssets - totalLiabilities;
 
-      const hasSnap = snapshots.some((s) => {
-        const sd = new Date(s.createdAt || s.date);
-        return sd.getTime() >= start.getTime() && sd.getTime() <= end.getTime();
-      });
+  // Solvency & Health Ratios
+  const solvencyRatio = totalAssets > 0 ? (netWorth / totalAssets) * 100 : 100;
+  const debtToAssetRatio =
+    totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : 0;
+  const liquidRatio = totalAssets > 0 ? (totalLiquid / totalAssets) * 100 : 0;
+  const investedRatio =
+    totalAssets > 0 ? (totalInvested / totalAssets) * 100 : 0;
+  const physicalRatio =
+    totalAssets > 0 ? (totalPhysical / totalAssets) * 100 : 0;
 
-      const hasTx = transactions.some((tx) => {
-        if (tx.status === "pending_confirmation") return false;
-        const d = new Date(tx.date);
-        return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
-      });
-
-      const isCurWithNW = i === 5 && netWorth > 0;
-      if (hasSnap || hasTx || isCurWithNW) {
-        firstActiveIdx = i;
-        break;
-      }
-    }
-
-    if (firstActiveIdx !== -1) {
-      // Pre-tracking months remain 0
-      for (let i = 0; i < firstActiveIdx; i++) {
-        history[i]!.value = 0;
-      }
-      // Fill gap months between firstActiveIdx and current
-      for (let i = firstActiveIdx + 1; i <= 4; i++) {
-        const current = history[i]!;
-        if (current.value === 0) {
-          const prev = history[i - 1]!;
-          const start = current.dateObj;
-          const end = new Date(start);
-          end.setMonth(end.getMonth() + 1);
-          end.setMilliseconds(end.getMilliseconds() - 1);
-
-          const txInMonth = transactions.filter((tx) => {
-            if (tx.status === "pending_confirmation") return false;
-            const txDate = new Date(tx.date);
-            return (
-              txDate.getTime() >= start.getTime() &&
-              txDate.getTime() <= end.getTime()
-            );
-          });
-
-          const netFlow = txInMonth.reduce(
-            (acc, tx) => acc + (tx.type === "income" ? tx.amount : -tx.amount),
-            0,
-          );
-
-          current.value = Math.max(0, prev.value + netFlow);
-        }
-      }
-    }
-
-    return history.map((h) => ({
-      month: h.month,
-      value: h.value > 0 ? h.value : 0,
-    }));
-  }, [transactions, snapshots, netWorth, now, user?.monthStartDate]);
-
-  // Calculate Net Worth Change percentage
+  // Calculate Net Worth Change percentage from snapshots
   const netWorthChange = useMemo(() => {
     if (snapshots.length >= 2) {
       const sorted = [...snapshots].sort(
@@ -509,722 +175,500 @@ export default function ReportsPageClient() {
         return parseFloat(((delta / prev) * 100).toFixed(1));
       }
     }
+    return 0;
+  }, [snapshots]);
 
-    if (computedNetWorthHistory.length < 2) return 0;
-    const last =
-      computedNetWorthHistory[computedNetWorthHistory.length - 1]?.value || 0;
-    const prev =
-      computedNetWorthHistory[computedNetWorthHistory.length - 2]?.value || 0;
-    if (prev === 0) return last > 0 ? 100 : 0;
-    return parseFloat((((last - prev) / prev) * 100).toFixed(1));
-  }, [computedNetWorthHistory, snapshots]);
-
-  const currentYear = cursorDate.getFullYear();
-
-  // Filtering logic based on viewType
-  const filteredTx = useMemo(() => {
-    const monthStartDate = user?.monthStartDate || 1;
-    const currentFiscalStart = getFiscalMonthStart(cursorDate, monthStartDate);
-
-    const dStartOfWeek = new Date(cursorDate);
-    dStartOfWeek.setDate(cursorDate.getDate() - cursorDate.getDay());
-    dStartOfWeek.setHours(0, 0, 0, 0);
-
-    const dEndOfWeek = new Date(dStartOfWeek);
-    dEndOfWeek.setDate(dStartOfWeek.getDate() + 6);
-    dEndOfWeek.setHours(23, 59, 59, 999);
-
-    return transactions.filter((tx: Transaction) => {
-      if (tx.status === "pending_confirmation") return false;
-      const d = new Date(tx.date);
-
-      if (viewType === "Day") {
-        return (
-          d.getDate() === cursorDate.getDate() &&
-          d.getMonth() === cursorDate.getMonth() &&
-          d.getFullYear() === cursorDate.getFullYear()
-        );
-      } else if (viewType === "Week") {
-        return (
-          d.getTime() >= dStartOfWeek.getTime() &&
-          d.getTime() <= dEndOfWeek.getTime()
-        );
-      } else if (viewType === "Month") {
-        // Find end of month based on start of month
-        const currentFiscalEnd = new Date(currentFiscalStart);
-        currentFiscalEnd.setMonth(currentFiscalEnd.getMonth() + 1);
-        currentFiscalEnd.setMilliseconds(
-          currentFiscalEnd.getMilliseconds() - 1,
-        );
-        return (
-          d.getTime() >= currentFiscalStart.getTime() &&
-          d.getTime() <= currentFiscalEnd.getTime()
-        );
-      } else {
-        return d.getFullYear() === currentYear;
-      }
-    });
-  }, [transactions, currentYear, viewType, cursorDate, user?.monthStartDate]);
-
-  const inflow = useMemo(
-    () =>
-      filteredTx
-        .filter((tx: Transaction) => tx.type === "income")
-        .reduce((sum, tx) => sum + tx.amount, 0),
-    [filteredTx],
-  );
-  const outflow = useMemo(
-    () =>
-      filteredTx
-        .filter(
-          (tx: Transaction) => tx.type === "expense" || tx.type === "transfer",
-        )
-        .reduce((sum, tx) => sum + tx.amount, 0),
-    [filteredTx],
-  );
-
-  const fiftyThirtyTwenty = useMemo(() => {
-    let needs = 0;
-    let wants = 0;
-    let savings = 0;
-
-    filteredTx.forEach((tx: Transaction) => {
-      if (tx.type === "expense" || tx.type === "transfer") {
-        const cat = categories.find(
-          (c) => c.id === tx.category || c.name === tx.category,
-        );
-        const pType =
-          cat?.parentType || (tx.type === "transfer" ? "savings" : "needs");
-        if (pType === "needs") needs += tx.amount;
-        else if (pType === "wants") wants += tx.amount;
-        else if (pType === "savings") savings += tx.amount;
-      }
-    });
-
-    return {
-      needs: {
-        amount: needs,
-        percent: outflow > 0 ? (needs / outflow) * 100 : 0,
-      },
-      wants: {
-        amount: wants,
-        percent: outflow > 0 ? (wants / outflow) * 100 : 0,
-      },
-      savings: {
-        amount: savings,
-        percent: outflow > 0 ? (savings / outflow) * 100 : 0,
-      },
-    };
-  }, [filteredTx, categories, outflow]);
-
-  const insights = useMemo(() => {
-    const monthStartDate = user?.monthStartDate || 1;
-    const currentFiscalStart = getFiscalMonthStart(new Date(), monthStartDate);
-
-    const periodTx = transactions.filter((tx) => {
-      if (tx.status === "pending_confirmation") return false;
-      const d = new Date(tx.date);
-      return d >= currentFiscalStart;
-    });
-
-    const monthlyIncome = periodTx
-      .filter((tx) => tx.type === "income")
-      .reduce((sum, tx) => sum + tx.amount, 0);
-
-    const monthlyExpense = periodTx
-      .filter((tx) => tx.type === "expense")
-      .reduce((sum, tx) => sum + tx.amount, 0);
-
-    const savingsRate =
-      monthlyIncome > 0
-        ? ((monthlyIncome - monthlyExpense) / monthlyIncome) * 100
-        : 0;
-
-    const liquidCapital = filteredAccounts
-      .filter((a) => !a.excludeFromAnalytics && a.type !== "card")
-      .reduce((sum, a) => sum + a.balance, 0);
-
-    const score =
-      monthlyExpense > 0
-        ? (liquidCapital / monthlyExpense).toFixed(1)
-        : liquidCapital > 0
-          ? "100+"
-          : "0";
-
-    return {
-      monthlyIncome,
-      monthlyExpense,
-      savingsRate: savingsRate.toFixed(1),
-      liquidCapital,
-      score: parseFloat(score),
-    };
-  }, [transactions, filteredAccounts, user?.monthStartDate]);
-
-  const expenseBreakdown = useMemo(() => {
-    const totals = filteredTx
-      .filter(
-        (tx: Transaction) => tx.type === "expense" || tx.type === "transfer",
-      )
-      .reduce(
-        (acc: Record<string, number>, tx: Transaction) => {
-          const catKey = tx.category || "transfer";
-          acc[catKey] = (acc[catKey] || 0) + tx.amount;
-          return acc;
-        },
-        {} as Record<string, number>,
-      );
-
-    return Object.entries(totals)
-      .sort((a, b) => b[1] - a[1])
-      .map(([catKey, amount]) => {
-        const catSettings = categories.find(
-          (c) => c.id === catKey || c.name === catKey,
-        );
-        let displayName = catKey;
-        let color = "bg-slate-500";
-        if (catSettings) {
-          displayName = catSettings.name;
-          color = catSettings.color;
-        } else if (catKey === "transfer") {
-          displayName = "Transfers & Scaling";
-          color = "bg-primary";
-        }
-        return {
-          category: displayName,
-          amount,
-          percent: outflow > 0 ? (amount / outflow) * 100 : 0,
-          color,
-        };
-      });
-  }, [filteredTx, categories, outflow]);
-
-  if (authLoading || (loading && transactions.length === 0)) {
-    return (
-      <PageContainer>
-        <div className="space-y-3 mb-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={`stat-skeleton-${i}`}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-4 rounded-3xl shadow-sm space-y-4"
-            >
-              <div className="space-y-2">
-                <Skeleton className="h-2 w-12" />
-                <Skeleton className="h-2 w-24" />
-              </div>
-              <Skeleton className="h-6 w-32" />
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-white/5 h-[400px] flex flex-col gap-6">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="flex-1 w-full rounded-2xl" />
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-white/5 h-[400px] flex flex-col gap-6">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="flex-1 w-full rounded-2xl" />
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (!user) return null;
-
-  const analyticsFilters = (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-      {/* Account Filter button directly replacing the Filter button */}
-      <div className="w-full sm:w-auto min-w-[140px] sm:min-w-[170px]">
-        <FilterDropdown
-          label="Account"
-          placeholder="All Accounts"
-          multi
-          value={selectedAccountIds}
-          options={accounts.map((a) => ({ id: a.id, name: a.name }))}
-          onSelect={(id) => {
-            setSelectedAccountIds((prev) =>
-              prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-            );
-          }}
-          onClear={() => setSelectedAccountIds([])}
-          icon={Wallet}
-        />
-      </div>
-
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 overflow-x-auto no-scrollbar shadow-xs w-full sm:w-auto">
-        {(["Day", "Week", "Month", "Year"] as ViewType[]).map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => {
-              setViewType(type);
-            }}
-            className={`flex-1 sm:flex-none px-2.5 h-7.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
-              viewType === type
-                ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            {type}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between sm:justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-xl p-0.5 shadow-xs w-full sm:w-auto">
-        <button
-          type="button"
-          onClick={handlePrev}
-          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors shrink-0 disabled:opacity-20"
-          aria-label="Previous Period"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <div className="flex items-center gap-1.5 px-2 min-w-[110px] sm:min-w-[130px] justify-center flex-1 sm:flex-auto">
-          <CalendarIcon className="w-3 h-3 text-primary shrink-0" />
-          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate">
-            {formattedCursorDate}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={cursorDate.getTime() > now.getTime()}
-          className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
-            cursorDate.getTime() > now.getTime()
-              ? "opacity-20 cursor-not-allowed text-slate-300 dark:text-slate-600"
-              : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary"
-          }`}
-          aria-label="Next Period"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
+  // Filtered Accounts list for the Node explorer
+  const displayedAccounts = useMemo(() => {
+    if (accountFilter === "liquid") return liquidAccounts;
+    if (accountFilter === "investment") return investmentAccounts;
+    if (accountFilter === "asset") return physicalAccounts;
+    if (accountFilter === "liability")
+      return [...cardAccounts, ...debtAccounts];
+    return accounts;
+  }, [
+    accountFilter,
+    liquidAccounts,
+    investmentAccounts,
+    physicalAccounts,
+    cardAccounts,
+    debtAccounts,
+    accounts,
+  ]);
 
   return (
     <PageContainer className="gap-1.5 sm:gap-2">
       <PageHeader
         title="Review & Trajectory"
-        subtitle="Periodic wealth trajectory & deep analytics"
-        className="space-y-1.5"
+        subtitle="Periodic wealth trajectory & deep portfolio intelligence"
+        className="space-y-1"
       />
 
-      {/* Top Tab Switcher & Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 my-2 sm:my-3">
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl w-full sm:w-fit border border-slate-200/50 dark:border-white/5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveTab("trajectory")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-              activeTab === "trajectory"
-                ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <History className="size-3.5" />
-            <span>Trajectory</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("analytics")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
-              activeTab === "analytics"
-                ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Activity className="size-3.5" />
-            <span>Analytics</span>
-          </button>
-        </div>
-
-        {/* Analytics Filters (Rendered AFTER tab switcher on mobile, right-aligned on desktop) */}
-        {activeTab === "analytics" && (
-          <div className="w-full lg:w-auto">{analyticsFilters}</div>
-        )}
+      {/* Top Tab Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl w-full sm:w-fit border border-slate-200/50 dark:border-white/5 my-1.5 sm:my-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveTab("trajectory")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "trajectory"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <History className="size-3.5" />
+          <span>Trajectory</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("analytics")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === "analytics"
+              ? "bg-white dark:bg-slate-800 text-primary shadow-xs"
+              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Activity className="size-3.5" />
+          <span>Wealth Analytics</span>
+        </button>
       </div>
 
       {activeTab === "trajectory" ? (
         <TrajectoryHistoryView />
       ) : (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2 mb-0">
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group p-3">
-              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-primary transition-colors uppercase tracking-widest truncate">
-                {selectedAccountIds.length > 0
-                  ? selectedAccountIds.length === 1
-                    ? accounts.find((a) => a.id === selectedAccountIds[0])
-                        ?.name || "Account Balance"
-                    : `${selectedAccountIds.length} Accounts Balance`
-                  : "Net Worth"}
-              </div>
-              <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mb-1 truncate shrink-0">
+        <div className="space-y-3">
+          {/* 1. Four Pillar Wealth Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {/* Card 1: Net Worth */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-2.5 sm:p-3 space-y-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block truncate">
+                Net Worth
+              </span>
+              <div className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate">
                 {formatCurrency(netWorth)}
               </div>
               <div
-                className={`flex items-center gap-1.5 text-[10px] font-black ${netWorthChange >= 0 ? "text-emerald-500" : "text-rose-500"}`}
+                className={`flex items-center gap-1 text-[9px] font-black ${
+                  netWorthChange >= 0 ? "text-emerald-500" : "text-rose-500"
+                }`}
               >
                 <ArrowUpRight
-                  className={`w-3 h-3 ${netWorthChange < 0 ? "rotate-90" : ""}`}
+                  className={`size-3 ${netWorthChange < 0 ? "rotate-90" : ""}`}
                 />
-                <span className="truncate">
+                <span>
                   {netWorthChange >= 0 ? "+" : ""}
-                  {netWorthChange}%
+                  {netWorthChange}% MoM
                 </span>
               </div>
             </Card>
 
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all group p-3">
-              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-emerald-500 transition-colors uppercase tracking-widest">
-                Total Inflow
+            {/* Card 2: Total Assets */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-2.5 sm:p-3 space-y-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block truncate">
+                Total Assets
+              </span>
+              <div className="text-sm sm:text-lg font-black text-emerald-600 dark:text-emerald-400 truncate">
+                {formatCurrency(totalAssets)}
               </div>
-              <div className="text-base sm:text-xl font-black text-emerald-600 mb-1 truncate shrink-0">
-                {formatCurrency(inflow)}
-              </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                {filteredTx.filter((t) => t.type === "income").length}{" "}
-                Confirmations
-              </div>
-            </Card>
-
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-rose-500/50 transition-all group p-3">
-              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-rose-500 transition-colors uppercase tracking-widest">
-                Total Outflow
-              </div>
-              <div className="text-base sm:text-xl font-black text-rose-500 mb-1 truncate shrink-0">
-                {formatCurrency(outflow)}
-              </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                {filteredTx.filter((t) => t.type !== "income").length}{" "}
-                Authorizations
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                {liquidAccounts.length +
+                  investmentAccounts.length +
+                  physicalAccounts.length}{" "}
+                contributing nodes
               </div>
             </Card>
 
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 hover:border-amber-500/50 transition-all group p-3">
-              <div className="text-[10px] font-bold text-slate-400 mb-1 group-hover:text-amber-500 transition-colors uppercase tracking-widest">
-                Net Results
+            {/* Card 3: Total Liabilities */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-2.5 sm:p-3 space-y-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block truncate">
+                Total Debt
+              </span>
+              <div className="text-sm sm:text-lg font-black text-rose-500 truncate">
+                {totalLiabilities > 0
+                  ? `-${formatCurrency(totalLiabilities)}`
+                  : "₹0"}
               </div>
-              <div
-                className={`text-base sm:text-xl font-black mb-1 truncate shrink-0 ${inflow - outflow >= 0 ? "text-emerald-600" : "text-rose-500"}`}
-              >
-                {formatCurrency(inflow - outflow)}
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                {debtToAssetRatio > 0
+                  ? `${debtToAssetRatio.toFixed(1)}% Debt Ratio`
+                  : "Debt Free 🎉"}
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                Final Balance
+            </Card>
+
+            {/* Card 4: Liquid Reserves */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-2.5 sm:p-3 space-y-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block truncate">
+                Liquid Reserves
+              </span>
+              <div className="text-sm sm:text-lg font-black text-blue-600 dark:text-blue-400 truncate">
+                {formatCurrency(totalLiquid)}
+              </div>
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                {liquidRatio.toFixed(1)}% of Gross Assets
               </div>
             </Card>
           </div>
 
-          {/* Financial Independence Runway placed at top before Equilibrium Scan */}
-          <div className="mt-2.5 mb-2.5">
-            <FinancialIndependenceRunwayCard />
-          </div>
+          {/* 2. Financial Runway Engine */}
+          <FinancialIndependenceRunwayCard />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-2.5 mb-0">
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
+          {/* 3. Asset Allocation & Solvency Matrix (Dual Grid) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+            {/* Widget A: Asset Allocation & Diversification */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-3 sm:p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <Percent className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <PieChart className="size-3.5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                      Equilibrium Scan
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Asset Allocation
                     </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      Target Protocol Analysis
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                      Capital Diversification
                     </p>
                   </div>
                 </div>
-                <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">
-                  {viewType} Status
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  {totalAssets > 0 ? "Balanced Portfolio" : "Setup Accounts"}
+                </span>
+              </div>
+
+              {/* Multi-Segment Allocation Bar */}
+              <div className="space-y-1">
+                <div className="h-2.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex">
+                  {liquidRatio > 0 && (
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-500"
+                      style={{ width: `${liquidRatio}%` }}
+                      title={`Liquid: ${liquidRatio.toFixed(1)}%`}
+                    />
+                  )}
+                  {investedRatio > 0 && (
+                    <div
+                      className="h-full bg-indigo-500 transition-all duration-500"
+                      style={{ width: `${investedRatio}%` }}
+                      title={`Investments: ${investedRatio.toFixed(1)}%`}
+                    />
+                  )}
+                  {physicalRatio > 0 && (
+                    <div
+                      className="h-full bg-amber-500 transition-all duration-500"
+                      style={{ width: `${physicalRatio}%` }}
+                      title={`Physical: ${physicalRatio.toFixed(1)}%`}
+                    />
+                  )}
+                </div>
+
+                <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-widest pt-0.5">
+                  <span className="flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-blue-500" />{" "}
+                    Liquid {liquidRatio.toFixed(0)}%
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-indigo-500" />{" "}
+                    Investments {investedRatio.toFixed(0)}%
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-amber-500" />{" "}
+                    Physical {physicalRatio.toFixed(0)}%
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-1">
-                <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 space-y-3 border border-slate-100 dark:border-white/5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="size-6 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Activity className="size-3 text-primary" />
-                      </div>
-                      <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                        Financial Freedom Score
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg tracking-widest">
-                      SCORE: {insights.score}
+              {/* 3 Detailed Asset Class Rows */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <Landmark className="size-3.5 text-blue-500" />
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      Liquid Bank & Cash
                     </span>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                        Capital Endurance
-                      </span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white">
-                        {insights.score} Months
-                      </span>
-                    </div>
-                    <ProgressBar
-                      progress={Math.min((insights.score / 6) * 100, 100)}
-                      className="h-1.5"
-                    />
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                      Your liquid capital covers{" "}
-                      <span className="text-primary">
-                        {insights.score} months
-                      </span>{" "}
-                      of current expansion. Target is 6.0 units.
-                    </p>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-slate-900 dark:text-white">
+                      {formatCurrency(totalLiquid)}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 ml-1.5">
+                      ({liquidRatio.toFixed(1)}%)
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4 pt-2">
-                {Object.entries(fiftyThirtyTwenty).map(([key, data]) => {
-                  const target =
-                    budgetTargets[key as keyof typeof budgetTargets];
-                  const isOver =
-                    key !== "savings"
-                      ? data.percent > target
-                      : data.percent < target;
-                  const diff = Math.abs(data.percent - target);
+                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="size-3.5 text-indigo-500" />
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      Investments & Equity
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-slate-900 dark:text-white">
+                      {formatCurrency(totalInvested)}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 ml-1.5">
+                      ({investedRatio.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
 
-                  return (
-                    <div key={key} className="space-y-2">
-                      <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.2em]">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-slate-400">{key}</span>
-                          <span className="text-slate-900 dark:text-white text-xs">
-                            {formatCurrency(data.amount)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span
-                            className={
-                              isOver && diff > 5
-                                ? "text-rose-500"
-                                : "text-emerald-500"
-                            }
-                          >
-                            {data.percent.toFixed(1)}% / {target}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                        <div
-                          className="absolute top-0 bottom-0 left-0 bg-primary/20 p-px z-10 border-r-2 border-primary/40"
-                          style={{ width: `${target}%` }}
-                        />
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${isOver && diff > 5 ? "bg-rose-500" : "bg-emerald-500"}`}
-                          style={{ width: `${Math.min(data.percent, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="size-3.5 text-amber-500" />
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      Real Estate & Physical Assets
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-slate-900 dark:text-white">
+                      {formatCurrency(totalPhysical)}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 ml-1.5">
+                      ({physicalRatio.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
               </div>
             </Card>
 
-            <Card className="shadow-none border-slate-100 dark:border-slate-800 space-y-1.5 p-2.5">
+            {/* Widget B: Capital Resilience & Solvency Matrix */}
+            <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-3 sm:p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <TrendingDown className="w-4 h-4 text-rose-500" />
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <ShieldCheck className="size-3.5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                      Absorption Grid
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Capital Resilience
                     </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      Top Outflow Categories
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                      Solvency & Leverage Health
                     </p>
                   </div>
                 </div>
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  Financial Stability
+                </span>
               </div>
 
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
-                {(showAllExpenses
-                  ? expenseBreakdown
-                  : expenseBreakdown.slice(0, 6)
-                ).map((e) => (
-                  <div key={e.category} className="space-y-2 group">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className="text-slate-400 group-hover:text-primary transition-colors">
-                        {e.category}
-                      </span>
-                      <div className="flex gap-3">
-                        <span className="text-slate-400">
-                          {e.percent.toFixed(1)}%
-                        </span>
-                        <span className="text-slate-900 dark:text-white">
-                          {formatCurrency(e.amount)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`${e.color} h-full rounded-full`}
-                        style={{ width: `${e.percent}%` }}
-                      />
-                    </div>
+              {/* 4 Health Indicator Tiles */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400">
+                    <span>Solvency Ratio</span>
+                    <Percent className="size-2.5 text-emerald-500" />
                   </div>
-                ))}
-                {expenseBreakdown.length === 0 && (
-                  <div className="col-span-full py-6 sm:py-10 text-center">
-                    <Activity className="w-8 h-8 text-slate-200 mx-auto mb-4" />
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                      No transaction data traced
-                    </p>
+                  <div className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
+                    {solvencyRatio.toFixed(1)}%
                   </div>
-                )}
-              </div>
-              {expenseBreakdown.length > 6 && (
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
-                  <button
-                    onClick={() => setShowAllExpenses(!showAllExpenses)}
-                    className="flex items-center gap-2 px-6 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                  >
-                    {showAllExpenses
-                      ? "Collapse Breakdown"
-                      : `Show ${expenseBreakdown.length - 6} More Categories`}
-                  </button>
+                  <p className="text-[8px] font-bold text-slate-400">
+                    {solvencyRatio >= 80
+                      ? "High Equity Buffer"
+                      : "Moderate Solvency"}
+                  </p>
                 </div>
-              )}
-            </Card>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 mt-1.5 mb-0">
-            {/* Account Liquidity Widget */}
-            <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Wallet className="size-4 text-primary" />
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400">
+                    <span>Debt-to-Asset</span>
+                    <CreditCard className="size-2.5 text-rose-500" />
                   </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                      Liquidity Grid
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      Active Asset Distribution
-                    </p>
-                  </div>
-                </div>
-                <div className="text-[10px] font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
-                  {filteredAccounts.length} Nodes
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-2 no-scrollbar">
-                {(showAllLiquidity
-                  ? filteredAccounts
-                  : filteredAccounts.slice(0, 4)
-                ).map((acc) => (
                   <div
-                    key={acc.id}
-                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all group"
+                    className={`text-base sm:text-lg font-black ${
+                      debtToAssetRatio === 0
+                        ? "text-emerald-600"
+                        : debtToAssetRatio < 30
+                          ? "text-blue-600"
+                          : "text-rose-600"
+                    }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="size-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/10 group-hover:scale-110 transition-transform">
-                        <Briefcase className="size-3.5 text-slate-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[11px] font-black text-slate-900 dark:text-white truncate">
-                          {acc.name}
-                        </div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                          {acc.type}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-[11px] font-black text-slate-900 dark:text-white font-mono">
-                      {formatCurrency(acc.balance)}
-                    </div>
+                    {debtToAssetRatio.toFixed(1)}%
                   </div>
-                ))}
-              </div>
-              {filteredAccounts.length > 4 && (
-                <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex justify-center">
-                  <button
-                    onClick={() => setShowAllLiquidity(!showAllLiquidity)}
-                    className="flex items-center gap-2 px-6 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all"
-                  >
-                    {showAllLiquidity
-                      ? "Minimize View"
-                      : `Audit ${filteredAccounts.length - 4} More Nodes`}
-                  </button>
-                </div>
-              )}
-            </Card>
-
-            {/* Savings Performance Widget */}
-            <Card className="shadow-none border-slate-100 dark:border-white/5 space-y-1.5 p-2.5 overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                <PiggyBank size={140} />
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <PiggyBank className="size-4 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                      Savings Vector
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      Accumulation Performance
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative z-10 space-y-4 py-4">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="text-4xl font-black text-emerald-500 tracking-tighter">
-                    {fiftyThirtyTwenty.savings.percent.toFixed(1)}%
-                  </div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Current Savings Rate
-                  </div>
+                  <p className="text-[8px] font-bold text-slate-400">
+                    {debtToAssetRatio === 0
+                      ? "Zero Debt Exposure"
+                      : debtToAssetRatio < 30
+                        ? "Conservative Leverage"
+                        : "High Leverage"}
+                  </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
-                    <span className="text-slate-400">Target Efficiency</span>
-                    <span className="text-primary">
-                      {budgetTargets.savings}%
-                    </span>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400">
+                    <span>Liquidity Share</span>
+                    <Wallet className="size-2.5 text-blue-500" />
                   </div>
-                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${Math.min((fiftyThirtyTwenty.savings.percent / budgetTargets.savings) * 100, 100)}%`,
-                      }}
-                      className={`h-full rounded-full ${fiftyThirtyTwenty.savings.percent >= budgetTargets.savings ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-primary"}`}
-                    />
+                  <div className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400">
+                    {liquidRatio.toFixed(1)}%
                   </div>
-                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed text-center px-4">
-                    {fiftyThirtyTwenty.savings.percent >= budgetTargets.savings
-                      ? "EXCELLENT: Your accumulation vector is outperforming the target protocol. Surplus capital identified."
-                      : `ATTENTION: You are currently operating at ${(budgetTargets.savings - fiftyThirtyTwenty.savings.percent).toFixed(1)}% below your defined savings architecture.`}
+                  <p className="text-[8px] font-bold text-slate-400">
+                    Accessible 24/7
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-slate-400">
+                    <span>Debt Status</span>
+                    <CheckCircle2 className="size-2.5 text-emerald-500" />
+                  </div>
+                  <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
+                    {totalLiabilities === 0
+                      ? "Debt Free 🎉"
+                      : `${cardAccounts.length + debtAccounts.length} Active Debts`}
+                  </div>
+                  <p className="text-[8px] font-bold text-slate-400">
+                    {totalLiabilities === 0
+                      ? "100% Unencumbered"
+                      : formatCurrency(totalLiabilities)}
                   </p>
                 </div>
               </div>
+
+              {/* Solvency Summary Note */}
+              <div className="p-2 rounded-xl bg-slate-100/70 dark:bg-white/[0.03] text-[9px] text-slate-600 dark:text-slate-300 leading-relaxed flex items-center gap-1.5">
+                <ShieldCheck className="size-3 text-emerald-500 shrink-0" />
+                <span>
+                  {solvencyRatio >= 90
+                    ? "Excellent posture: Your net worth accounts for over 90% of your gross assets with minimal debt exposure."
+                    : "Stable balance: Continue building liquid reserves while amortizing high-interest liabilities."}
+                </span>
+              </div>
             </Card>
           </div>
-        </>
+
+          {/* 4. Account Nodes Portfolio & Allocation Explorer */}
+          <Card className="shadow-none border-slate-100 dark:border-slate-800/80 p-3 sm:p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <Briefcase className="size-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    Node Distribution Explorer
+                  </h3>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                    Individual Account Holdings & Capital Weight
+                  </p>
+                </div>
+              </div>
+
+              {/* Filter Chips */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+                {(
+                  [
+                    { id: "all", label: `All (${accounts.length})` },
+                    {
+                      id: "liquid",
+                      label: `Liquid (${liquidAccounts.length})`,
+                    },
+                    {
+                      id: "investment",
+                      label: `Invested (${investmentAccounts.length})`,
+                    },
+                    {
+                      id: "asset",
+                      label: `Physical (${physicalAccounts.length})`,
+                    },
+                    {
+                      id: "liability",
+                      label: `Debts (${cardAccounts.length + debtAccounts.length})`,
+                    },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setAccountFilter(tab.id)}
+                    className={`text-[9px] font-black px-2 py-1 rounded-lg whitespace-nowrap transition-all ${
+                      accountFilter === tab.id
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                        : "bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Account Rows */}
+            <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1 no-scrollbar">
+              {displayedAccounts.map((acc) => {
+                const isDebt = acc.type === "debt" || acc.type === "card";
+                const share =
+                  totalAssets > 0
+                    ? (Math.abs(acc.balance) / totalAssets) * 100
+                    : 0;
+
+                return (
+                  <div
+                    key={acc.id}
+                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                      <div
+                        className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
+                          isDebt
+                            ? "bg-rose-500/10 text-rose-500"
+                            : acc.type === "bank" || acc.type === "cash"
+                              ? "bg-blue-500/10 text-blue-500"
+                              : acc.type === "investment"
+                                ? "bg-indigo-500/10 text-indigo-500"
+                                : "bg-amber-500/10 text-amber-500"
+                        }`}
+                      >
+                        {isDebt ? (
+                          <CreditCard className="size-3" />
+                        ) : acc.type === "bank" || acc.type === "cash" ? (
+                          <Landmark className="size-3" />
+                        ) : acc.type === "investment" ? (
+                          <TrendingUp className="size-3" />
+                        ) : (
+                          <Building2 className="size-3" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-xs">
+                          {acc.name}
+                        </span>
+                        {acc.institutionName && (
+                          <span className="text-[7px] font-bold px-1.5 py-0.2 rounded bg-slate-200/60 dark:bg-white/10 text-slate-500 uppercase shrink-0">
+                            {acc.institutionName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-slate-400 font-mono">
+                        {share.toFixed(1)}%
+                      </span>
+                      <span
+                        className={`font-mono font-black ${
+                          isDebt
+                            ? "text-rose-500"
+                            : "text-slate-900 dark:text-white"
+                        }`}
+                      >
+                        {isDebt ? "-" : ""}
+                        {formatCurrency(Math.abs(acc.balance))}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {displayedAccounts.length === 0 && (
+                <div className="text-center py-6 text-slate-400 text-xs">
+                  No accounts found in this category
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
       )}
     </PageContainer>
   );

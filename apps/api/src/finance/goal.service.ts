@@ -76,15 +76,22 @@ export class GoalService {
       throw new ForbiddenException('Access denied to this goal');
     }
 
+    const sanitizedGoal = { ...goal };
+    delete sanitizedGoal.id;
+    delete sanitizedGoal.userId;
+    delete (sanitizedGoal as Record<string, unknown>).createdAt;
+
     if (
-      goal.currentAmount !== undefined &&
-      Math.abs(goal.currentAmount - (currentGoal.currentAmount || 0)) > 0.01
+      sanitizedGoal.currentAmount !== undefined &&
+      Math.abs(sanitizedGoal.currentAmount - (currentGoal.currentAmount || 0)) >
+        0.01
     ) {
-      const delta = goal.currentAmount - (currentGoal.currentAmount || 0);
+      const delta =
+        sanitizedGoal.currentAmount - (currentGoal.currentAmount || 0);
       const newInitial = (currentGoal.initialAmount || 0) + delta;
 
       await this.collection.doc(id).update({
-        ...goal,
+        ...sanitizedGoal,
         initialAmount: newInitial,
       });
 
@@ -92,7 +99,7 @@ export class GoalService {
       await this.transactionsService.recalculateGoalProgress(id);
     } else {
       // General update for non-financial fields
-      await this.collection.doc(id).update(goal);
+      await this.collection.doc(id).update(sanitizedGoal);
     }
 
     const updatedDoc = await this.collection.doc(id).get();

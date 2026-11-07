@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { CategoryParentType } from "@repo/types";
 import toast from "react-hot-toast";
 
@@ -161,13 +162,13 @@ export function AddCategoryModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Category Name
           </label>
-          <input
+          <Input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isSaving}
             placeholder="e.g. Groceries, SaaS, Salary..."
-            className="w-full h-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400 disabled:opacity-50"
+            className="h-10 text-xs"
           />
         </div>
 

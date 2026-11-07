@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "FinEase",
     short_name: "FinEase",
     description: "Architectural Wealth Management & Financial Command Center",
-    start_url: "/",
+    start_url: "/dashboard",
     display: "standalone",
     background_color: "#020408",
     theme_color: "#135bec",

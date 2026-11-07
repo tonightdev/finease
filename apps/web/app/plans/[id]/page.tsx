@@ -22,6 +22,7 @@ import {
   Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -272,12 +273,12 @@ export default function TacticalSimulationPage({
         backHref="/plans?tab=Simulations"
         backLabel="Back to Simulations"
         title={
-          <input
+          <Input
             type="text"
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
             onBlur={handleSaveName}
-            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-auto max-w-[240px] shrink truncate focus:ring-0 p-0"
+            className="bg-transparent text-[15px] md:text-lg font-black tracking-tight border-none outline-none w-auto max-w-[240px] shrink truncate focus-visible:ring-0 p-0 h-auto"
           />
         }
         subtitle=""
@@ -448,7 +449,7 @@ export default function TacticalSimulationPage({
                     >
                       {editingNodeId === acc.id ? (
                         <div className="space-y-2">
-                          <input
+                          <Input
                             autoFocus
                             type="text"
                             value={editNodeForm.name}
@@ -458,10 +459,13 @@ export default function TacticalSimulationPage({
                                 name: e.target.value,
                               })
                             }
-                            className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                            className="w-full text-[10px] font-black h-8 rounded-lg"
                           />
-                          <input
-                            type="number"
+                          <Input
+                            type="text"
+                            name="balance"
+                            inputMode="decimal"
+                            pattern="[0-9]*"
                             value={editNodeForm.balance}
                             onChange={(e) =>
                               setEditNodeForm({
@@ -469,7 +473,7 @@ export default function TacticalSimulationPage({
                                 balance: e.target.value,
                               })
                             }
-                            className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                            className="w-full text-[10px] font-black h-8 rounded-lg"
                           />
                           <div className="flex gap-1 pt-1">
                             <Button
@@ -561,19 +565,22 @@ export default function TacticalSimulationPage({
               </div>
 
               <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5">
-                <input
+                <Input
                   type="text"
                   placeholder="Node Name (e.g. Savings)"
                   value={newAccName}
                   onChange={(e) => setNewAccName(e.target.value)}
-                  className="w-full text-[10px] font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-primary"
+                  className="w-full text-[10px] font-bold h-9 rounded-xl"
                 />
-                <input
-                  type="number"
+                <Input
+                  type="text"
+                  name="balance"
+                  inputMode="decimal"
+                  pattern="[0-9]*"
                   placeholder="Balance Amount"
                   value={newAccBalance}
                   onChange={(e) => setNewAccBalance(e.target.value)}
-                  className="w-full text-[10px] font-bold font-mono p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-primary"
+                  className="w-full text-[10px] font-bold font-mono h-9 rounded-xl"
                 />
                 <Button
                   onClick={handleAddAccount}
@@ -618,7 +625,7 @@ export default function TacticalSimulationPage({
                       >
                         {editingVectorId === exp.id ? (
                           <div className="space-y-2">
-                            <input
+                            <Input
                               autoFocus
                               type="text"
                               value={editVectorForm.name}
@@ -628,11 +635,14 @@ export default function TacticalSimulationPage({
                                   name: e.target.value,
                                 })
                               }
-                              className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                              className="w-full text-[10px] font-black h-8 rounded-lg"
                             />
                             <div className="grid grid-cols-2 gap-2">
-                              <input
-                                type="number"
+                              <Input
+                                type="text"
+                                name="amount"
+                                inputMode="decimal"
+                                pattern="[0-9]*"
                                 value={editVectorForm.amount}
                                 onChange={(e) =>
                                   setEditVectorForm({
@@ -640,7 +650,7 @@ export default function TacticalSimulationPage({
                                     amount: e.target.value,
                                   })
                                 }
-                                className="w-full text-[10px] font-black p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none"
+                                className="w-full text-[10px] font-black h-8 rounded-lg"
                               />
                               <Select
                                 value={editVectorForm.accountId}
@@ -759,19 +769,22 @@ export default function TacticalSimulationPage({
               </div>
 
               <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5">
-                <input
+                <Input
                   type="text"
                   placeholder="Vector Name (e.g. Flight Ticket)"
                   value={newExpName}
                   onChange={(e) => setNewExpName(e.target.value)}
-                  className="w-full text-[10px] font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500"
+                  className="w-full text-[10px] font-bold h-9 rounded-xl"
                 />
-                <input
-                  type="number"
+                <Input
+                  type="text"
+                  name="amount"
+                  inputMode="decimal"
+                  pattern="[0-9]*"
                   placeholder="Estimated Amount"
                   value={newExpAmount}
                   onChange={(e) => setNewExpAmount(e.target.value)}
-                  className="w-full text-[10px] font-bold font-mono p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 outline-none focus:border-rose-500"
+                  className="w-full text-[10px] font-bold font-mono h-9 rounded-xl"
                 />
                 <Select value={newExpAccount} onValueChange={setNewExpAccount}>
                   <SelectTrigger className="w-full text-[10px] font-bold h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 rounded-xl">

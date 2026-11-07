@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Calendar, IndianRupee } from "lucide-react";
+import { Bell, IndianRupee } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Expiry } from "@repo/types";
 import { Button } from "@/components/ui/Button";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { Input } from "@/components/ui/Input";
+import { NativeSelect } from "@/components/ui/NativeSelect";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface AddExpiryModalProps {
   isOpen: boolean;
@@ -96,12 +99,12 @@ export function AddExpiryModal({
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
             Expiry Identifier
           </label>
-          <input
+          <Input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g. LIC Policy, Passport Expiry"
-            className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-4 text-sm font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="h-12 text-sm"
           />
         </div>
 
@@ -110,7 +113,7 @@ export function AddExpiryModal({
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
               Expiry Category
             </label>
-            <select
+            <NativeSelect
               value={formData.type}
               onChange={(e) =>
                 setFormData({
@@ -118,12 +121,12 @@ export function AddExpiryModal({
                   type: e.target.value as Expiry["type"],
                 })
               }
-              className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl px-4 text-sm font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none"
+              className="h-12 text-sm"
             >
               <option value="document">Document</option>
               <option value="other">Other</option>
               <option value="policy">Policy</option>
-            </select>
+            </NativeSelect>
           </div>
           <div className="flex-1 min-w-[140px] space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
@@ -147,21 +150,15 @@ export function AddExpiryModal({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-            Horizon Date (Expiration)
-          </label>
-          <div className="relative group">
-            <input
-              type="date"
-              value={formData.expiryDate}
-              onChange={(e) =>
-                setFormData({ ...formData, expiryDate: e.target.value })
-              }
-              className="w-full h-12 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl pl-10 pr-4 text-sm font-bold text-slate-900 dark:text-white ring-1 ring-slate-100 dark:ring-white/5 focus:ring-2 focus:ring-primary outline-none transition-all appearance-none"
-            />
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
-          </div>
+        <div>
+          <DateInput
+            label="Horizon Date (Expiration)"
+            value={formData.expiryDate}
+            onChange={(e) =>
+              setFormData({ ...formData, expiryDate: e.target.value })
+            }
+            disabled={isSaving}
+          />
         </div>
       </div>
     </Modal>
