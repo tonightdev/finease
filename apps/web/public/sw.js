@@ -116,15 +116,13 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "You have an update from FinEase.",
     icon: data.icon || "/icon-192x192.png",
-    badge: data.badge || "/favicon.svg",
+    badge: "/icon-192x192.png",
     vibrate: [100, 50, 100],
     data: {
       url: data.url || "/dashboard",
     },
-    actions: [
-      { action: "open", title: "View" },
-      { action: "close", title: "Dismiss" },
-    ],
+    tag: data.tag || "finease-alert",
+    renotify: true,
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

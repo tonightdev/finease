@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useEffect, useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
 import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
@@ -42,12 +42,36 @@ import { MonthlyGrowthDebrief } from "@/components/dashboard/MonthlyGrowthDebrie
 import { LiquidCapitalCard } from "@/components/dashboard/LiquidCapitalCard";
 import { NetWorthBreakdownModal } from "@/components/dashboard/NetWorthBreakdownModal";
 import { LiquidReservesBreakdownModal } from "@/components/dashboard/LiquidReservesBreakdownModal";
+import { appBadge } from "@/lib/badge";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { permission, requestPermission } = useNotifications();
+
+  // Instant PWA Shortcut handler (?action=wealth-pulse or ?tab=expiries)
+  useEffect(() => {
+    const action = searchParams?.get("action");
+    if (action === "wealth-pulse") {
+      dispatch(openModal("isWealthPulseOpen"));
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("action");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + (url.search ? url.search : ""),
+        );
+      }
+    }
+    const tab = searchParams?.get("tab");
+    if (tab && tab.toLowerCase() === "expiries") {
+      router.replace("/plans?tab=Expiries");
+    }
+  }, [searchParams, dispatch, router]);
 
   const [isNetWorthModalOpen, setIsNetWorthModalOpen] = useState(false);
   const [isLiquidReservesModalOpen, setIsLiquidReservesModalOpen] =
@@ -93,16 +117,29 @@ export default function Home() {
     });
   }, [expiries]);
 
+  // Sync mobile home screen app badge
   useEffect(() => {
+    appBadge.set(expiringSoon.length);
+  }, [expiringSoon.length]);
+
+  const handleRefresh = useCallback(async () => {
     if (user?.uid) {
-      dispatch(fetchAccounts());
-      dispatch(fetchSnapshots(24));
-      dispatch(fetchAssetClasses());
-      dispatch(fetchTransactions());
-      dispatch(fetchGoals());
-      dispatch(fetchExpiries());
+      await Promise.allSettled([
+        dispatch(fetchAccounts()).unwrap(),
+        dispatch(fetchSnapshots(24)).unwrap(),
+        dispatch(fetchAssetClasses()).unwrap(),
+        dispatch(fetchTransactions()).unwrap(),
+        dispatch(fetchGoals()).unwrap(),
+        dispatch(fetchExpiries()).unwrap(),
+      ]);
     }
   }, [dispatch, user?.uid]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      void handleRefresh();
+    }
+  }, [handleRefresh, user?.uid]);
 
   useEffect(() => {
     if (permission === "default") {
@@ -580,204 +617,206 @@ export default function Home() {
   }
 
   return (
-    <PageContainer>
-      <FeatureTour />
-      <PageHeader
-        title="Dashboard"
-        subtitle="Unified wealth landscape"
-        className="space-y-3"
-        actions={
-          <div className="flex w-full sm:w-auto items-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => dispatch(openModal("isWealthPulseOpen"))}
-              className="flex-1 sm:flex-initial bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md shadow-primary/20"
-              leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-300" />}
-            >
-              60s Wealth Pulse
-            </Button>
-          </div>
-        }
-      />
-
-      {expiringSoon.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-auto w-full"
-        >
-          <Link href="/plans?tab=Expiries" className="block">
-            <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
-                  <AlertTriangle size={20} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-                    {expiringSoon.length} Expiry Horizon
-                    {expiringSoon.length > 1 ? "s" : ""} require
-                    {expiringSoon.length === 1 ? "s" : ""} immediate attention
-                  </h4>
-                  <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
-                    Impending expiry detected within 7-day window
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="size-5 text-rose-500 group-hover:translate-x-1 transition-transform" />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <PageContainer>
+        <FeatureTour />
+        <PageHeader
+          title="Dashboard"
+          subtitle="Unified wealth landscape"
+          className="space-y-3"
+          actions={
+            <div className="flex w-full sm:w-auto items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => dispatch(openModal("isWealthPulseOpen"))}
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md shadow-primary/20"
+                leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-300" />}
+              >
+                60s Wealth Pulse
+              </Button>
             </div>
-          </Link>
-        </motion.div>
-      )}
-
-      {/* 4 Distinctive Wealth Pillars */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <DashboardStatCard
-          className="w-full"
-          label="Net Worth"
-          subtitle="Assets minus debt"
-          icon={<Sparkles className="size-3 text-emerald-500" />}
-          value={realTimeNetWorth}
-          onClick={() => setIsNetWorthModalOpen(true)}
-          trend={{
-            label: netWorthTrend.label,
-            color: netWorthTrend.color,
-            showPulse: netWorthTrend.delta !== 0,
-          }}
+          }
         />
 
-        <DashboardStatCard
-          className="w-full"
-          label="Liquid Reserves"
-          subtitle="Cash & Bank"
-          icon={<Landmark className="size-3 text-blue-500" />}
-          value={dashboardStats.liquidCapital}
-          valueColor="text-blue-600 dark:text-blue-400"
-          onClick={() => setIsLiquidReservesModalOpen(true)}
-          trend={{
-            label: `${analyticsRegularAccounts.length} Active Account${analyticsRegularAccounts.length !== 1 ? "s" : ""}`,
-            color: "bg-blue-500",
-          }}
-        />
+        {expiringSoon.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto w-full"
+          >
+            <Link href="/plans?tab=Expiries" className="block">
+              <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
+                    <AlertTriangle size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                      {expiringSoon.length} Expiry Horizon
+                      {expiringSoon.length > 1 ? "s" : ""} require
+                      {expiringSoon.length === 1 ? "s" : ""} immediate attention
+                    </h4>
+                    <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
+                      Impending expiry detected within 7-day window
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="size-5 text-rose-500 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </motion.div>
+        )}
 
-        <DashboardStatCard
-          className="w-full"
-          label="Investments"
-          subtitle="Portfolio value"
-          icon={<TrendingUp className="size-3 text-indigo-500" />}
-          value={totalInvestments}
-          valueColor="text-indigo-600 dark:text-indigo-400"
-          onClick={() => router.push("/portfolio")}
-          trend={{
-            label:
-              totalInvestedCapital > 0
-                ? `${investmentGain >= 0 ? "+" : ""}${investmentYieldPct.toFixed(1)}% Return`
-                : "Active Holdings",
-            color: investmentGain >= 0 ? "bg-emerald-500" : "bg-rose-500",
-          }}
-        />
+        {/* 4 Distinctive Wealth Pillars */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <DashboardStatCard
+            className="w-full"
+            label="Net Worth"
+            subtitle="Assets minus debt"
+            icon={<Sparkles className="size-3 text-emerald-500" />}
+            value={realTimeNetWorth}
+            onClick={() => setIsNetWorthModalOpen(true)}
+            trend={{
+              label: netWorthTrend.label,
+              color: netWorthTrend.color,
+              showPulse: netWorthTrend.delta !== 0,
+            }}
+          />
 
-        <DashboardStatCard
-          className="w-full"
-          label="Liabilities"
-          subtitle="Loans & Cards"
-          icon={<CreditCard className="size-3 text-rose-500" />}
-          value={liabilities}
-          valueColor="text-rose-500"
-          onClick={() => router.push("/portfolio")}
-          trend={{
-            label: `${activeDebtsCount} Active ${activeDebtsCount === 1 ? "Debt" : "Debts"}`,
-            color: "bg-rose-500",
-          }}
-        />
-      </div>
+          <DashboardStatCard
+            className="w-full"
+            label="Liquid Reserves"
+            subtitle="Cash & Bank"
+            icon={<Landmark className="size-3 text-blue-500" />}
+            value={dashboardStats.liquidCapital}
+            valueColor="text-blue-600 dark:text-blue-400"
+            onClick={() => setIsLiquidReservesModalOpen(true)}
+            trend={{
+              label: `${analyticsRegularAccounts.length} Active Account${analyticsRegularAccounts.length !== 1 ? "s" : ""}`,
+              color: "bg-blue-500",
+            }}
+          />
 
-      {/* Monthly Overview & Liquid Accounts (Restored below Monthly Overview) */}
-      <div className="space-y-2.5">
-        <MonthlyGrowthDebrief
-          monthlyIncome={dashboardStats.monthlyIncome}
-          monthlyExpense={dashboardStats.monthlyExpense}
-          savingsRate={dashboardStats.savingsRate}
-        />
+          <DashboardStatCard
+            className="w-full"
+            label="Investments"
+            subtitle="Portfolio value"
+            icon={<TrendingUp className="size-3 text-indigo-500" />}
+            value={totalInvestments}
+            valueColor="text-indigo-600 dark:text-indigo-400"
+            onClick={() => router.push("/portfolio")}
+            trend={{
+              label:
+                totalInvestedCapital > 0
+                  ? `${investmentGain >= 0 ? "+" : ""}${investmentYieldPct.toFixed(1)}% Return`
+                  : "Active Holdings",
+              color: investmentGain >= 0 ? "bg-emerald-500" : "bg-rose-500",
+            }}
+          />
 
-        <LiquidCapitalCard
-          accounts={displayRegularAccounts}
-          totalBalance={dashboardStats.liquidCapital}
-        />
-      </div>
+          <DashboardStatCard
+            className="w-full"
+            label="Liabilities"
+            subtitle="Loans & Cards"
+            icon={<CreditCard className="size-3 text-rose-500" />}
+            value={liabilities}
+            valueColor="text-rose-500"
+            onClick={() => router.push("/portfolio")}
+            trend={{
+              label: `${activeDebtsCount} Active ${activeDebtsCount === 1 ? "Debt" : "Debts"}`,
+              color: "bg-rose-500",
+            }}
+          />
+        </div>
 
-      {allAccounts.length === 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 text-center border border-slate-100 dark:border-white/5 shadow-sm">
-          <div className="flex flex-col items-center gap-3">
-            <Landmark className="w-8 h-8 text-slate-300 dark:text-slate-700" />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              No accounts configured
-            </p>
-            <Button
-              size="sm"
-              onClick={() => dispatch(openModal("isAccountModalOpen"))}
-            >
-              Add your first account
-            </Button>
+        {/* Monthly Overview & Liquid Accounts (Restored below Monthly Overview) */}
+        <div className="space-y-2.5">
+          <MonthlyGrowthDebrief
+            monthlyIncome={dashboardStats.monthlyIncome}
+            monthlyExpense={dashboardStats.monthlyExpense}
+            savingsRate={dashboardStats.savingsRate}
+          />
+
+          <LiquidCapitalCard
+            accounts={displayRegularAccounts}
+            totalBalance={dashboardStats.liquidCapital}
+          />
+        </div>
+
+        {allAccounts.length === 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 text-center border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="flex flex-col items-center gap-3">
+              <Landmark className="w-8 h-8 text-slate-300 dark:text-slate-700" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                No accounts configured
+              </p>
+              <Button
+                size="sm"
+                onClick={() => dispatch(openModal("isAccountModalOpen"))}
+              >
+                Add your first account
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Premium Insights & Capital Pulse Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+          <div className="lg:col-span-1 h-full">
+            <WealthIndex />
+          </div>
+          <div className="lg:col-span-2 h-full">
+            <FinancialIntelligencePulse />
           </div>
         </div>
-      )}
 
-      {/* Premium Insights & Capital Pulse Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-        <div className="lg:col-span-1 h-full">
-          <WealthIndex />
+        {/* Asset Allocation & Capital Structure */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
+          <div className="w-full h-full">
+            <AssetAllocationDonut data={realTimeAssetAllocation} />
+          </div>
+          <div className="w-full h-full">
+            <CapitalResilienceCard />
+          </div>
         </div>
-        <div className="lg:col-span-2 h-full">
-          <FinancialIntelligencePulse />
-        </div>
-      </div>
 
-      {/* Asset Allocation & Capital Structure */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch">
-        <div className="w-full h-full">
-          <AssetAllocationDonut data={realTimeAssetAllocation} />
+        <div>
+          <NetWorthChart
+            data={computedNetWorthHistory}
+            currentNetWorth={realTimeNetWorth}
+            percentageChange={netWorthTrend.pct}
+            trendPercentage={netWorthTrend.trendPercentage}
+            trendDelta={
+              netWorthTrend.delta !== 0 ? netWorthTrend.trendDelta : undefined
+            }
+            trendLabel={netWorthTrend.label}
+            isPositive={
+              netWorthTrend.delta > 0
+                ? true
+                : netWorthTrend.delta < 0
+                  ? false
+                  : undefined
+            }
+          />
         </div>
-        <div className="w-full h-full">
-          <CapitalResilienceCard />
-        </div>
-      </div>
 
-      <div>
-        <NetWorthChart
-          data={computedNetWorthHistory}
-          currentNetWorth={realTimeNetWorth}
-          percentageChange={netWorthTrend.pct}
-          trendPercentage={netWorthTrend.trendPercentage}
-          trendDelta={
-            netWorthTrend.delta !== 0 ? netWorthTrend.trendDelta : undefined
-          }
-          trendLabel={netWorthTrend.label}
-          isPositive={
-            netWorthTrend.delta > 0
-              ? true
-              : netWorthTrend.delta < 0
-                ? false
-                : undefined
-          }
+        <NetWorthBreakdownModal
+          isOpen={isNetWorthModalOpen}
+          onClose={() => setIsNetWorthModalOpen(false)}
+          accounts={allAccounts}
+          assets={assets}
+          liabilities={liabilities}
+          netWorth={realTimeNetWorth}
         />
-      </div>
 
-      <NetWorthBreakdownModal
-        isOpen={isNetWorthModalOpen}
-        onClose={() => setIsNetWorthModalOpen(false)}
-        accounts={allAccounts}
-        assets={assets}
-        liabilities={liabilities}
-        netWorth={realTimeNetWorth}
-      />
-
-      <LiquidReservesBreakdownModal
-        isOpen={isLiquidReservesModalOpen}
-        onClose={() => setIsLiquidReservesModalOpen(false)}
-        accounts={allAccounts}
-        liquidCapital={dashboardStats.liquidCapital}
-        monthlyExpense={dashboardStats.monthlyExpense}
-      />
-    </PageContainer>
+        <LiquidReservesBreakdownModal
+          isOpen={isLiquidReservesModalOpen}
+          onClose={() => setIsLiquidReservesModalOpen(false)}
+          accounts={allAccounts}
+          liquidCapital={dashboardStats.liquidCapital}
+          monthlyExpense={dashboardStats.monthlyExpense}
+        />
+      </PageContainer>
+    </PullToRefresh>
   );
 }

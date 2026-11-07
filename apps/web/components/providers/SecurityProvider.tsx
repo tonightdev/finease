@@ -23,6 +23,7 @@ import { SplashScreen } from "@/components/ui/SplashScreen";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useSelector } from "react-redux";
+import { haptics } from "@/lib/haptics";
 import { RootState } from "@/store";
 
 export type LockType = "fingerprint" | "facelock" | "pin" | "biometric";
@@ -142,9 +143,12 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
   const hasStoredPin =
     typeof window !== "undefined" && !!localStorage.getItem("finease_pin");
+  const hasStoredBiometric =
+    typeof window !== "undefined" &&
+    !!localStorage.getItem("finease_credential_id");
 
   const authenticate = useCallback(async (): Promise<boolean> => {
-    if (lockType === "pin" || isAuthenticatingRef.current) return false;
+    if (isAuthenticatingRef.current) return false;
 
     try {
       isAuthenticatingRef.current = true;
@@ -227,7 +231,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
       setAuthenticating(false);
       return false;
     }
-  }, [lockType, hasStoredPin]);
+  }, [hasStoredPin]);
 
   const { user, loading: authLoading } = useAuth();
   const accountsLoading = useSelector(
@@ -463,9 +467,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (typeof window !== "undefined" && window.navigator?.vibrate) {
-        window.navigator.vibrate(10);
-      }
+      haptics.tick();
 
       setEnteredPin((prev) => {
         if (prev.length >= 4) return prev;
@@ -490,6 +492,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
               toast.dismiss();
               setIsLocked(false);
               sessionStorage.setItem("finease_session_authenticated", "true");
+              haptics.success();
               toast.success("Vault Unlocked", { id: "vault-pin-toast" });
               setEnteredPin("");
             } else {
@@ -502,9 +505,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
               setIsShake(true);
               setIsError(true);
-              if (typeof window !== "undefined" && window.navigator?.vibrate) {
-                window.navigator.vibrate([80, 50, 80]);
-              }
+              haptics.warning();
               toast.dismiss();
 
               if (currentFails >= 5) {
@@ -540,9 +541,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   );
 
   const handleDeleteDigit = useCallback(() => {
-    if (typeof window !== "undefined" && window.navigator?.vibrate) {
-      window.navigator.vibrate(10);
-    }
+    haptics.tick();
     toast.dismiss("vault-pin-toast");
     setEnteredPin((prev) => prev.slice(0, -1));
   }, []);
@@ -702,10 +701,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
 
                     {/* Bottom Row: Quick Biometric Switch / Empty Slot */}
                     <div className="size-16 sm:size-18 mx-auto flex items-center justify-center">
-                      {usePinFallback &&
-                      (lockType === "fingerprint" ||
-                        lockType === "facelock" ||
-                        lockType === "biometric") ? (
+                      {usePinFallback || hasStoredBiometric ? (
                         <button
                           type="button"
                           onClick={() => {
@@ -713,8 +709,8 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
                             setEnteredPin("");
                             void authenticate();
                           }}
-                          className="size-14 sm:size-16 rounded-full flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 active:scale-95 transition-all"
-                          title="Switch back to Biometrics"
+                          className="size-14 sm:size-16 rounded-full flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 active:scale-95 transition-all cursor-pointer"
+                          title="Authenticate with Biometrics / Face ID"
                         >
                           {lockType === "facelock" ? (
                             <ScanFace className="w-6 h-6 text-primary" />

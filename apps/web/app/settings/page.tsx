@@ -30,6 +30,7 @@ import {
   IdentitiesTab,
   DataArchiveTab,
 } from "@/components/settings";
+import { useSwipe } from "@/lib/useSwipe";
 
 const SETTINGS_TABS: SettingsTabItem[] = [
   {
@@ -103,7 +104,10 @@ function SettingsPageContent() {
 
   // Synchronize active tab with URL ?tab= parameter and enforce role restrictions
   useEffect(() => {
-    const tabParam = searchParams.get("tab") as SettingsTabId | null;
+    const rawTabParam = searchParams.get("tab");
+    const tabParam = rawTabParam
+      ? (rawTabParam.toLowerCase() as SettingsTabId)
+      : null;
     const allowedTabIds = availableTabs.map((t) => t.id);
 
     if (tabParam && allowedTabIds.includes(tabParam)) {
@@ -112,6 +116,26 @@ function SettingsPageContent() {
       setActiveTab("profile");
     }
   }, [searchParams, availableTabs, isAdmin, activeTab]);
+
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: () => {
+      const allowedTabIds = availableTabs.map((t) => t.id);
+      const currentIndex = allowedTabIds.indexOf(activeTab);
+      if (
+        currentIndex < allowedTabIds.length - 1 &&
+        allowedTabIds[currentIndex + 1]
+      ) {
+        setActiveTab(allowedTabIds[currentIndex + 1]!);
+      }
+    },
+    onSwipeRight: () => {
+      const allowedTabIds = availableTabs.map((t) => t.id);
+      const currentIndex = allowedTabIds.indexOf(activeTab);
+      if (currentIndex > 0 && allowedTabIds[currentIndex - 1]) {
+        setActiveTab(allowedTabIds[currentIndex - 1]!);
+      }
+    },
+  });
 
   if (authLoading) {
     return (
@@ -158,8 +182,8 @@ function SettingsPageContent() {
           onTabChange={setActiveTab}
         />
 
-        {/* Dynamic Sub-Page Content Area */}
-        <div className="flex-1 min-w-0 w-full">
+        {/* Dynamic Sub-Page Content Area with Mobile Horizontal Swipe Gesture */}
+        <div {...swipeHandlers} className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${activeTab}-${user?.uid || "anon"}`}

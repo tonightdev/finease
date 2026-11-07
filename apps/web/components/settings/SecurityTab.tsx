@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { SessionList } from "@/components/dashboard/SessionList";
 import { SettingsCard } from "./SettingsCard";
 import { SettingsOptionCard } from "./SettingsOptionCard";
+import { haptics } from "@/lib/haptics";
 
 export function SecurityTab() {
   const { isLockEnabled, lockType, toggleLock } = useSecurity();
@@ -94,9 +95,7 @@ export function SecurityTab() {
 
   const handleSetupPinInput = useCallback(
     async (num: string) => {
-      if (typeof window !== "undefined" && window.navigator?.vibrate) {
-        window.navigator.vibrate(10);
-      }
+      haptics.tick();
 
       if (setupStep === 1) {
         if (setupPin.length < 4) {
@@ -117,13 +116,12 @@ export function SecurityTab() {
               toast.dismiss();
               const success = await toggleLock(true, "pin", next);
               if (success) {
+                haptics.success();
                 handleClosePinSetup();
               }
             } else {
               setSetupError(true);
-              if (typeof window !== "undefined" && window.navigator?.vibrate) {
-                window.navigator.vibrate([80, 50, 80]);
-              }
+              haptics.warning();
               toast.dismiss();
               toast.error("PINs do not match. Try again.", {
                 id: "pin-setup-toast",
@@ -141,9 +139,7 @@ export function SecurityTab() {
   );
 
   const handleSetupPinDelete = useCallback(() => {
-    if (typeof window !== "undefined" && window.navigator?.vibrate) {
-      window.navigator.vibrate(10);
-    }
+    haptics.tick();
     toast.dismiss("pin-setup-toast");
     if (setupStep === 1) {
       setSetupPin((p) => p.slice(0, -1));

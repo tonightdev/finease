@@ -17,6 +17,7 @@ import { CommandPalette } from "@/components/ui/CommandPalette";
 import { GlobalModals } from "@/components/modals/GlobalModals";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { EdgeSwipeBack } from "@/components/navigation/EdgeSwipeBack";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -81,6 +82,7 @@ export default function RootLayout({
                   </main>
                   <BottomNav />
                   <PWAInstallGuide />
+                  <EdgeSwipeBack />
                 </SecurityProvider>
                 <Toaster
                   position="top-center"

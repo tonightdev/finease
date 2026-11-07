@@ -114,6 +114,15 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           url: payload.url || '/dashboard',
           ...(payload.data ?? {}),
         }),
+        {
+          TTL: 86400,
+          urgency: 'high',
+          headers: {
+            Urgency: 'high',
+            'apns-priority': '10',
+            'apns-push-type': 'alert',
+          },
+        },
       );
       this.logger.log(`Push notification sent successfully to user ${userId}`);
       return { success: true };
@@ -269,8 +278,8 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
         if (daysSinceReset === 1 || daysSinceReset === 2) {
           const res = await this.sendNotification(userId, {
             title: 'Fiscal Cycle Reset 📊',
-            body: 'Your new financial cycle started recently. Time to track your latest expenses, review your balances, and keep your budget in check!',
-            url: '/transactions',
+            body: 'Your new financial cycle started recently. Check in with your 60-second Wealth Pulse to update balances and track net worth growth!',
+            url: '/dashboard?action=wealth-pulse',
           });
           if (res.success) {
             sent++;

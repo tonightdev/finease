@@ -75,6 +75,15 @@
   .ghost-mode {
     user-select: none;
   }
+
+  /* PWA Standalone Mode Optimization: Native App Feel */
+  @media (display-mode: standalone) {
+    html,
+    body {
+      overscroll-behavior-y: contain;
+      -webkit-touch-callout: none;
+    }
+  }
 }
 
 /* Universal Scrollbar Elimination: Hide default scrollbar across all browsers, PWA viewports, and modals while keeping full smooth touch and mouse scrolling intact */

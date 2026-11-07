@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { haptics } from "@/lib/haptics";
 import {
   Home,
   TrendingUp,
@@ -56,6 +57,7 @@ export function BottomNav() {
           <Link
             key={link.href}
             href={link.href}
+            onClick={() => haptics.tick()}
             className={clsx(
               "flex flex-col items-center justify-center gap-1 py-1 px-1.5 min-w-[48px] rounded-xl transition-all active:scale-90 touch-manipulation select-none",
               isActive

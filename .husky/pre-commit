@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# Ensure terminal mouse tracking is disabled and input buffer flushed upon exit
+cleanup() {
+  printf '\033[?1000l\033[?1002l\033[?1003l\033[?1006l' 2>/dev/null || true
+  if [ -t 0 ]; then
+    python3 -c "import termios, sys; termios.tcflush(sys.stdin, termios.TCIFLUSH)" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT INT TERM
+
 # Get list of staged files (excluding deleted files)
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=d)
 
@@ -59,10 +68,10 @@ fi
 
 # 3. Run Linter on affected app(s) only
 echo "🔍 Running linter on modified app(s)..."
-npx turbo run lint $FILTERS
+npx turbo run lint $FILTERS --ui=stream
 
 # 4. Run TypeScript checks on affected app(s) only
 echo "🛡️ Verifying TypeScript types on modified app(s)..."
-npx turbo run check-types $FILTERS
+npx turbo run check-types $FILTERS --ui=stream
 
 echo "✅ Pre-commit checks passed successfully!"
