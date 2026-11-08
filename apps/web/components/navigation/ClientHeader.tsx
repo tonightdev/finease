@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { RefreshButton } from "@/components/navigation/RefreshButton";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -17,7 +16,6 @@ import { useLongPress } from "@/lib/useLongPress";
 export function ClientHeader() {
   const { user, loading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
 
   const targetHomeUrl = user
     ? user.role === "admin"
@@ -25,25 +23,19 @@ export function ClientHeader() {
       : "/dashboard"
     : "/";
 
-  const logoLongPress = useLongPress(
-    () => {
-      if (user) {
-        dispatch(openModal("isQuickShortcutsOpen"));
-      }
-    },
-    () => {
-      router.push(targetHomeUrl);
-    },
-  );
+  const logoLongPress = useLongPress(() => {
+    if (user) {
+      dispatch(openModal("isQuickShortcutsOpen"));
+    }
+  });
 
   return (
     <header className="sticky top-0 w-full z-50 border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-black/40 backdrop-blur-xl pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <div
+          <Link
+            href={targetHomeUrl}
             {...logoLongPress}
-            role="button"
-            tabIndex={0}
             title="Click to go Home • Long-press for Quick Shortcuts"
             className="flex items-center gap-2 group transition-all active:scale-95 cursor-pointer select-none"
           >
@@ -53,7 +45,7 @@ export function ClientHeader() {
             <span className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">
               Fin<span className="text-primary">Ease</span>
             </span>
-          </div>
+          </Link>
         </div>
 
         {user && <TopNav />}

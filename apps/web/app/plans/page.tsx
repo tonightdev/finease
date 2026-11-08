@@ -571,9 +571,9 @@ function PlansDirectoryPageContent() {
                     ) : (
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         <AnimatePresence mode="popLayout">
-                          {filteredPlans.map((plan: Simulation) => (
+                          {filteredPlans.map((plan: Simulation, planIdx) => (
                             <motion.div
-                              key={plan.id}
+                              key={plan.id || `sim-plan-${planIdx}`}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0 }}
@@ -789,7 +789,7 @@ function PlansDirectoryPageContent() {
                       />
                     ) : (
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        {filteredGoals.map((goal: FinancialGoal) => {
+                        {filteredGoals.map((goal: FinancialGoal, goalIdx) => {
                           const reqMonthly = calculateGap(goal);
                           const isCompleted =
                             goal.currentAmount >= goal.targetAmount;
@@ -799,7 +799,7 @@ function PlansDirectoryPageContent() {
                           ).toFixed(1);
                           return (
                             <div
-                              key={goal.id}
+                              key={goal.id || `goal-${goalIdx}`}
                               className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl flex flex-col justify-between group shadow-sm hover:shadow-md transition-all h-full"
                             >
                               <div className="flex justify-between items-start mb-2 gap-1.5">
@@ -971,6 +971,7 @@ function PlansDirectoryPageContent() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
                       {yearlyBurdenByAccount.length > 1 && (
                         <YearlyBurdenCard
+                          key="all-accounts"
                           name="All Accounts"
                           monthlyAmount={totalYearlyBurden}
                           count={yearlyExpenses.length}
@@ -979,9 +980,13 @@ function PlansDirectoryPageContent() {
                           onClick={() => setYearlyAccountFilter("all")}
                         />
                       )}
-                      {yearlyBurdenByAccount.map((group) => (
+                      {yearlyBurdenByAccount.map((group, idx) => (
                         <YearlyBurdenCard
-                          key={group.accountId}
+                          key={
+                            group.accountId
+                              ? `burden-${group.accountId}`
+                              : `burden-${idx}`
+                          }
                           name={group.name}
                           balance={group.balance}
                           monthlyAmount={group.amount}
@@ -1035,8 +1040,15 @@ function PlansDirectoryPageContent() {
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      {displayedAccountGroups.map((group) => (
-                        <div key={group.accountId} className="space-y-3">
+                      {displayedAccountGroups.map((group, groupIdx) => (
+                        <div
+                          key={
+                            group.accountId
+                              ? `account-group-${group.accountId}`
+                              : `account-group-${groupIdx}`
+                          }
+                          className="space-y-3"
+                        >
                           {/* Account Dividing Header */}
                           <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-white/5">
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -1073,17 +1085,22 @@ function PlansDirectoryPageContent() {
                           {/* Account Commitments Grid */}
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             <AnimatePresence mode="popLayout" initial={false}>
-                              {group.expenses.map((exp: YearlyExpense) => (
-                                <YearlyExpenseCard
-                                  key={exp.id}
-                                  expense={exp}
-                                  onEdit={(data) => {
-                                    setEditingYearly(data);
-                                    setIsYearlyModalOpen(true);
-                                  }}
-                                  onDelete={(id) => setYearlyToDelete(id)}
-                                />
-                              ))}
+                              {group.expenses.map(
+                                (exp: YearlyExpense, expIdx) => (
+                                  <YearlyExpenseCard
+                                    key={
+                                      exp.id ||
+                                      `yearly-exp-${group.accountId}-${expIdx}`
+                                    }
+                                    expense={exp}
+                                    onEdit={(data) => {
+                                      setEditingYearly(data);
+                                      setIsYearlyModalOpen(true);
+                                    }}
+                                    onDelete={(id) => setYearlyToDelete(id)}
+                                  />
+                                ),
+                              )}
                             </AnimatePresence>
                           </div>
                         </div>

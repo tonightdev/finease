@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { haptics } from "@/lib/haptics";
@@ -34,22 +35,20 @@ function BottomNavItem({
   isActive: boolean;
   onOpenShortcuts: () => void;
 }) {
-  const router = useRouter();
-  const gesture = useLongPress(
-    () => {
-      onOpenShortcuts();
-    },
-    () => {
-      haptics.tick();
-      router.push(link.href);
-    },
-  );
+  const gesture = useLongPress(() => {
+    onOpenShortcuts();
+  });
 
   return (
-    <div
+    <Link
+      href={link.href}
       {...gesture}
-      role="button"
-      tabIndex={0}
+      onClick={(e) => {
+        gesture.onClick(e);
+        if (!e.defaultPrevented) {
+          haptics.tick();
+        }
+      }}
       title={`${link.label} (Hold for Quick Shortcuts)`}
       className={clsx(
         "flex flex-col items-center justify-center gap-1 py-1 px-1.5 min-w-[48px] rounded-xl transition-all active:scale-90 touch-manipulation select-none cursor-pointer",
@@ -72,7 +71,7 @@ function BottomNavItem({
       >
         {link.label}
       </span>
-    </div>
+    </Link>
   );
 }
 

@@ -1,0 +1,96 @@
+{
+  "name": "FinEase",
+  "short_name": "FinEase",
+  "description": "Architectural Wealth Management & Financial Command Center",
+  "start_url": "/dashboard",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#020408",
+  "theme_color": "#135bec",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Monthly Wealth Pulse",
+      "short_name": "Wealth Pulse",
+      "description": "Update liquid cash balances & recalculate live net worth",
+      "url": "/dashboard?action=wealth-pulse",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    },
+    {
+      "name": "Portfolio & Assets",
+      "short_name": "Portfolio",
+      "description": "Inspect asset allocation, investments, gold, and debt",
+      "url": "/portfolio",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    },
+    {
+      "name": "Expiries & Horizon",
+      "short_name": "Expiries",
+      "description": "View upcoming insurance policies and fiscal deadlines",
+      "url": "/plans?tab=Expiries",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    },
+    {
+      "name": "Password & Key Vault",
+      "short_name": "Vault",
+      "description": "Access encrypted financial credentials and recovery keys",
+      "url": "/settings?tab=vault",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    }
+  ]
+}

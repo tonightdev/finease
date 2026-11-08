@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useToaster, resolveValue, Toast, toast } from "react-hot-toast";
+import { Toaster, resolveValue, Toast, toast } from "react-hot-toast";
 import { CheckCircle2, AlertCircle, Loader2, Info, X } from "lucide-react";
 
 interface TouchState {
@@ -16,7 +16,7 @@ interface ToastCardProps {
   toast: Toast;
 }
 
-function ToastCard({ toast: t }: ToastCardProps) {
+export function ToastCard({ toast: t }: ToastCardProps) {
   const [touchState, setTouchState] = useState<TouchState>({
     startX: 0,
     startY: 0,
@@ -132,7 +132,7 @@ function ToastCard({ toast: t }: ToastCardProps) {
           : "transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out",
         willChange: "transform, opacity",
       }}
-      className={`pointer-events-auto flex items-center justify-between gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border shadow-xl max-w-[92vw] sm:max-w-md w-fit select-none transition-colors ${
+      className={`pointer-events-auto flex items-center justify-between gap-2.5 p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border shadow-xl max-w-[92vw] sm:max-w-md w-fit select-none transition-colors ${
         t.type === "success"
           ? "border-emerald-500/30 shadow-[0_10px_30px_-5px_rgba(16,185,129,0.22)]"
           : t.type === "error"
@@ -193,46 +193,23 @@ function ToastCard({ toast: t }: ToastCardProps) {
 }
 
 export function AppToaster() {
-  const { toasts, handlers } = useToaster({
-    duration: 3000,
-  });
-
   return (
-    <div
-      className="fixed z-[999999] pointer-events-none inset-x-0 flex flex-col items-center"
-      style={{
+    <Toaster
+      position="top-center"
+      gutter={8}
+      containerStyle={{
         top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+        zIndex: 999999,
       }}
-      onMouseEnter={handlers.startPause}
-      onMouseLeave={handlers.endPause}
+      toastOptions={{
+        duration: 3000,
+        success: { duration: 3000 },
+        error: { duration: 3000 },
+        blank: { duration: 3000 },
+      }}
     >
-      {toasts.map((t) => {
-        const offset = handlers.calculateOffset(t, {
-          gutter: 8,
-          defaultPosition: "top-center",
-        });
-
-        return (
-          <div
-            key={t.id}
-            ref={(el) => {
-              if (el) {
-                const height = el.getBoundingClientRect().height;
-                handlers.updateHeight(t.id, height);
-              }
-            }}
-            className="absolute transition-all duration-200 ease-out"
-            style={{
-              top: 0,
-              transform: `translate3d(0, ${offset}px, 0)`,
-              pointerEvents: "none",
-            }}
-          >
-            <ToastCard toast={t} />
-          </div>
-        );
-      })}
-    </div>
+      {(t) => <ToastCard key={t.id} toast={t} />}
+    </Toaster>
   );
 }
 

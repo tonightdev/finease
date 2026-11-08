@@ -1,10 +1,8 @@
-const CACHE_NAME = "finease-cache-v4";
+const CACHE_NAME = "finease-cache-v6";
 const STATIC_ASSETS = [
-  "/",
   "/favicon.svg",
   "/icon-192x192.png",
   "/icon-512x512.png",
-  "/manifest.webmanifest",
   "/manifest.json",
 ];
 
@@ -17,12 +15,22 @@ const isLocalhost = Boolean(
   ),
 );
 
-// 1. Install Event: Pre-cache static assets
+// 1. Install Event: Resilient pre-cache static assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("[SW] Pre-caching static assets");
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.allSettled(
+        STATIC_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn(
+              "[SW] Pre-cache skipped for:",
+              asset,
+              err?.message || err,
+            );
+          }),
+        ),
+      );
     }),
   );
   self.skipWaiting();
@@ -55,6 +63,14 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (request.method !== "GET") return;
 
+  // Only handle HTTP/HTTPS requests - skip chrome-extension, moz-extension, data, blob, etc.
+  if (
+    !request.url.startsWith("http://") &&
+    !request.url.startsWith("https://")
+  ) {
+    return;
+  }
+
   const url = new URL(request.url);
 
   // Strategy for Images/Fonts: Cache-First
@@ -68,10 +84,13 @@ self.addEventListener("fetch", (event) => {
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
         return fetch(request).then((networkResponse) => {
-          const cacheCopy = networkResponse.clone();
-          caches
-            .open(CACHE_NAME)
-            .then((cache) => cache.put(request, cacheCopy));
+          if (networkResponse && networkResponse.ok) {
+            const cacheCopy = networkResponse.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(request, cacheCopy).catch(() => {}))
+              .catch(() => {});
+          }
           return networkResponse;
         });
       }),
@@ -84,10 +103,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         const fetchPromise = fetch(request).then((networkResponse) => {
-          const cacheCopy = networkResponse.clone();
-          caches
-            .open(CACHE_NAME)
-            .then((cache) => cache.put(request, cacheCopy));
+          if (networkResponse && networkResponse.ok) {
+            const cacheCopy = networkResponse.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(request, cacheCopy).catch(() => {}))
+              .catch(() => {});
+          }
           return networkResponse;
         });
         return cachedResponse || fetchPromise;

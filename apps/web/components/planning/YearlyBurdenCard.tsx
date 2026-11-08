@@ -128,7 +128,7 @@ export function YearlyBurdenCard({
       <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-end justify-between gap-2">
         <div className="min-w-0">
           <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest block leading-none mb-1">
-            Monthly Reserve
+            Monthly
           </span>
           <p className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none">
             ₹

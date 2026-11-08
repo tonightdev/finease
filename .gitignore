@@ -25,6 +25,7 @@ build/
 !tsconfig*.json
 !turbo.json
 !postcss.config*.json
+!manifest.json
 
 # Logs
 npm-debug.log*
