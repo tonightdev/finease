@@ -48,6 +48,28 @@ export function SessionList() {
 
   useEffect(() => {
     fetchSessions();
+
+    const handleTokenRefreshed = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        oldToken?: string;
+        newToken?: string;
+      }>;
+      const oldToken = customEvent.detail?.oldToken;
+      if (oldToken) {
+        setSessions((prev) =>
+          prev.filter((s) => s.token !== oldToken && s.id !== oldToken),
+        );
+      }
+      void fetchSessions();
+    };
+
+    window.addEventListener("finease-token-refreshed", handleTokenRefreshed);
+    return () => {
+      window.removeEventListener(
+        "finease-token-refreshed",
+        handleTokenRefreshed,
+      );
+    };
   }, []);
 
   const handleRevoke = async (token: string) => {

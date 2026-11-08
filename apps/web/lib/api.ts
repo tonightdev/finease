@@ -96,6 +96,14 @@ export async function refreshAuthToken(
         } catch (e) {
           console.warn("Could not update token map during refresh", e);
         }
+
+        // Notify client components (e.g. SessionList / Identity Nodes) that the token was refreshed
+        window.dispatchEvent(
+          new CustomEvent("finease-token-refreshed", {
+            detail: { oldToken: token, newToken },
+          }),
+        );
+
         return newToken;
       }
       return null;

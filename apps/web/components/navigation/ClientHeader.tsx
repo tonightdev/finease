@@ -94,7 +94,7 @@ export function ClientHeader() {
           )}
           {user && <GhostModeToggle />}
           {user && <RefreshButton />}
-          <ThemeToggle />
+          <ThemeToggle className="hidden sm:inline-flex" />
 
           {!loading && !user && (
             <div className="flex items-center gap-4">

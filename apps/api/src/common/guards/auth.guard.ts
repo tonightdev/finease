@@ -26,6 +26,11 @@ export class AuthGuard implements CanActivate {
   private static readonly ACTIVITY_THROTTLE_MS = 15 * 60 * 1000; // Update lastActiveAt at most once every 15 minutes
   private static readonly MAX_CACHE_SIZE = 1000;
 
+  public static invalidate(token?: string | null) {
+    if (!token) return;
+    AuthGuard.sessionCache.delete(token);
+  }
+
   private static pruneSessionCache() {
     if (AuthGuard.sessionCache.size >= AuthGuard.MAX_CACHE_SIZE) {
       const now = Date.now();

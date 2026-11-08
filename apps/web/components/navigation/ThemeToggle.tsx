@@ -5,7 +5,11 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  className?: string;
+}
+
+export function ThemeToggle({ className = "" }: ThemeToggleProps = {}) {
   const { setTheme, resolvedTheme } = useTheme();
   const { user, updateProfile } = useAuth();
 
@@ -25,7 +29,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
+      className={`relative rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 ${className}`}
       aria-label="Toggle theme"
     >
       <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-slate-600 dark:text-slate-400" />

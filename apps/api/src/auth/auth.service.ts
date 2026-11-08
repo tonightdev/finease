@@ -5,11 +5,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { ActivityType } from '@repo/types';
+import * as admin from 'firebase-admin';
+import { ActivityType, UserSession } from '@repo/types';
 import { FirebaseAdminService } from '../common/services/firebase-admin.service';
 import { SignupDto, LoginDto, ResetPasswordDto } from './dto/auth.dto';
 import { ActivityLogService } from '../common/services/activity-log.service';
 import type { JwtPayload } from '../common/interfaces/request.interface';
+import { AuthGuard } from '../common/guards/auth.guard';
 
 interface StoredUser {
   id: string;
@@ -327,16 +329,46 @@ export class AuthService {
     }
 
     // Verify the session still exists (not revoked)
-    const oldSessionDoc = await this.sessionCollection.doc(oldToken).get();
+    let oldSessionDoc: admin.firestore.DocumentSnapshot | undefined =
+      await this.sessionCollection.doc(oldToken).get();
+    let oldSessionData = oldSessionDoc.exists ? oldSessionDoc.data() : null;
+
     if (!oldSessionDoc.exists) {
+      const querySnap = await this.sessionCollection
+        .where('token', '==', oldToken)
+        .limit(1)
+        .get();
+      if (!querySnap.empty && querySnap.docs[0]) {
+        oldSessionDoc = querySnap.docs[0];
+        oldSessionData = oldSessionDoc.data();
+      }
+    }
+
+    if (!oldSessionDoc || !oldSessionDoc.exists) {
       throw new UnauthorizedException(
         'Session has been revoked. Please log in again.',
       );
     }
-    const oldSessionData = oldSessionDoc.data();
 
-    // Remove old session doc to prevent token accumulation
+    // Invalidate in-memory session cache immediately
+    AuthGuard.invalidate(oldToken);
+
+    // Remove old session doc from Firestore to prevent accumulation in Identity Nodes
     await oldSessionDoc.ref.delete().catch(() => {});
+
+    // Also purge any duplicate records matching oldToken
+    try {
+      const duplicateDocs = await this.sessionCollection
+        .where('token', '==', oldToken)
+        .get();
+      if (!duplicateDocs.empty) {
+        const batch = this.firebaseAdmin.getFirestore().batch();
+        duplicateDocs.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+      }
+    } catch {
+      // Non-fatal
+    }
 
     const role: string = userData.role || payload.role || 'user';
 
@@ -376,26 +408,77 @@ export class AuthService {
   }
 
   async logout(token: string): Promise<void> {
-    await this.sessionCollection.doc(token).delete();
+    AuthGuard.invalidate(token);
+    await this.sessionCollection
+      .doc(token)
+      .delete()
+      .catch(() => {});
+    try {
+      const matchDocs = await this.sessionCollection
+        .where('token', '==', token)
+        .get();
+      if (!matchDocs.empty) {
+        const batch = this.firebaseAdmin.getFirestore().batch();
+        matchDocs.docs.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+    } catch {
+      // Non-fatal
+    }
   }
 
-  async getSessionsForUser(userId: string) {
+  async getSessionsForUser(userId: string): Promise<UserSession[]> {
     const snapshot = await this.sessionCollection
       .where('userId', '==', userId)
       .get();
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const now = Date.now();
+    return snapshot.docs
+      .map((doc) => ({ id: doc.id, ...(doc.data() as object) }) as UserSession)
+      .filter((s) => {
+        if (!s.expiresAt) return true;
+        return new Date(s.expiresAt).getTime() > now;
+      });
   }
 
   async revokeSession(userId: string, targetToken: string) {
-    const doc = await this.sessionCollection.doc(targetToken).get();
+    AuthGuard.invalidate(targetToken);
+    let doc: admin.firestore.DocumentSnapshot | undefined =
+      await this.sessionCollection.doc(targetToken).get();
     if (!doc.exists) {
+      const querySnap = await this.sessionCollection
+        .where('token', '==', targetToken)
+        .limit(1)
+        .get();
+      if (!querySnap.empty && querySnap.docs[0]) {
+        doc = querySnap.docs[0];
+      }
+    }
+
+    if (!doc || !doc.exists) {
       throw new ConflictException('Session not found');
     }
     const sessionData = doc.data();
     if (!sessionData || sessionData.userId !== userId) {
       throw new UnauthorizedException('Access denied');
     }
-    await doc.ref.delete();
+    await doc.ref.delete().catch(() => {});
+
+    try {
+      const matchDocs = await this.sessionCollection
+        .where('token', '==', targetToken)
+        .get();
+      if (!matchDocs.empty) {
+        const batch = this.firebaseAdmin.getFirestore().batch();
+        matchDocs.docs.forEach((d) => {
+          if (d.data().userId === userId) {
+            batch.delete(d.ref);
+          }
+        });
+        await batch.commit();
+      }
+    } catch {
+      // Non-fatal
+    }
 
     // Log activity
     await this.activityLogService.logActivity({
@@ -418,7 +501,11 @@ export class AuthService {
     let count = 0;
 
     snapshot.docs.forEach((doc) => {
-      if (doc.id !== currentToken) {
+      const data = doc.data();
+      const tokenVal = (data?.token as string) || doc.id;
+      if (doc.id !== currentToken && tokenVal !== currentToken) {
+        AuthGuard.invalidate(doc.id);
+        AuthGuard.invalidate(tokenVal);
         batch.delete(doc.ref);
         count++;
       }
