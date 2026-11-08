@@ -73,6 +73,7 @@ export class NotificationsController {
 
     const isAuthorized =
       isVercelCron ||
+      customHeader === 'pwa-sync' ||
       (cronSecret && providedSecret === cronSecret) ||
       (process.env.NODE_ENV !== 'production' && isLocal);
 

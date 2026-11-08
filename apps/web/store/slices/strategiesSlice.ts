@@ -36,7 +36,7 @@ export const fetchStrategy = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { strategies: StrategyState };
-      if (state.strategies.lastFetched !== null || state.strategies.loading) {
+      if (state.strategies.loading) {
         return false;
       }
       return true;
@@ -136,15 +136,19 @@ export const strategiesSlice = createSlice({
       .addCase(saveStrategy.fulfilled, (state, action) => {
         state.saveLoading = false;
         state.current = action.payload;
+        state.lastFetched = Date.now();
       })
       .addCase(addStrategyEntry.fulfilled, (state, action) => {
         state.current = action.payload;
+        state.lastFetched = Date.now();
       })
       .addCase(updateStrategyEntry.fulfilled, (state, action) => {
         state.current = action.payload;
+        state.lastFetched = Date.now();
       })
       .addCase(removeStrategyEntry.fulfilled, (state, action) => {
         state.current = action.payload;
+        state.lastFetched = Date.now();
       });
   },
 });

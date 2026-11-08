@@ -29,7 +29,6 @@ export class StrategyService {
     data: Partial<BudgetStrategy>,
   ): Promise<BudgetStrategy> {
     const docRef = this.collection.doc(userId);
-    const doc = await docRef.get();
 
     const payload = {
       ...data,
@@ -37,16 +36,12 @@ export class StrategyService {
       updatedAt: new Date().toISOString(),
     };
 
-    if (doc.exists) {
-      await docRef.update(payload);
-    } else {
-      await docRef.set(payload);
-    }
+    await docRef.set(payload, { merge: true });
 
     // Log activity
     await this.activityLogService.logActivity({
       userId,
-      action: doc.exists ? 'update' : 'create',
+      action: 'update',
       entityType: 'strategy',
       entityId: userId,
       description: `Saved Budget Strategy state`,
@@ -77,9 +72,9 @@ export class StrategyService {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
     const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
-    if (!currentData) throw new Error('Strategy not found');
+    const entries = currentData?.entries || [];
 
-    const newEntries = currentData.entries.map((e) =>
+    const newEntries = entries.map((e) =>
       e.id === entryId ? { ...e, ...entryData } : e,
     );
     return this.saveStrategy(userId, { entries: newEntries });
@@ -89,9 +84,9 @@ export class StrategyService {
     const docRef = this.collection.doc(userId);
     const doc = await docRef.get();
     const currentData = doc.exists ? (doc.data() as BudgetStrategy) : null;
-    if (!currentData) throw new Error('Strategy not found');
+    const entries = currentData?.entries || [];
 
-    const newEntries = currentData.entries.filter((e) => e.id !== entryId);
+    const newEntries = entries.filter((e) => e.id !== entryId);
     return this.saveStrategy(userId, { entries: newEntries });
   }
 }

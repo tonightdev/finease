@@ -67,6 +67,48 @@ export function CommandPalette() {
 
   const commands = React.useMemo(
     (): CommandItem[] => [
+      // PWA Quick Shortcuts
+      {
+        id: "shortcut-wealth-pulse",
+        name: "Monthly Wealth Pulse",
+        description: "Update liquid cash balances & recalculate live net worth",
+        category: "Global Actions",
+        icon: <Sparkles className="w-4 h-4" />,
+        action: () => dispatch(openModal("isWealthPulseOpen")),
+        shortcut: "⌥W",
+        color: "bg-amber-500",
+      },
+      {
+        id: "shortcut-portfolio",
+        name: "Portfolio & Assets",
+        description: "Inspect asset allocation, investments, gold, and debt",
+        category: "Global Actions",
+        icon: <TrendingUp className="w-4 h-4" />,
+        action: () => router.push("/portfolio"),
+        shortcut: "⌥P",
+        color: "bg-emerald-500",
+      },
+      {
+        id: "shortcut-expiries",
+        name: "Expiries & Horizon",
+        description: "View upcoming insurance policies and fiscal deadlines",
+        category: "Global Actions",
+        icon: <Bell className="w-4 h-4" />,
+        action: () => router.push("/plans?tab=Expiries"),
+        shortcut: "⌥E",
+        color: "bg-sky-500",
+      },
+      {
+        id: "shortcut-vault",
+        name: "Password & Key Vault",
+        description: "Access encrypted financial credentials and recovery keys",
+        category: "Global Actions",
+        icon: <Shield className="w-4 h-4" />,
+        action: () => router.push("/settings?tab=vault"),
+        shortcut: "⌥V",
+        color: "bg-indigo-500",
+      },
+
       // Navigation - Engine Core
       {
         id: "nav-dash",

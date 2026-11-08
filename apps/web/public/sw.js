@@ -1,9 +1,11 @@
-const CACHE_NAME = "finease-cache-v3";
+const CACHE_NAME = "finease-cache-v4";
 const STATIC_ASSETS = [
   "/",
   "/favicon.svg",
   "/icon-192x192.png",
   "/icon-512x512.png",
+  "/manifest.webmanifest",
+  "/manifest.json",
 ];
 
 // Check if running on localhost / loopback
@@ -117,7 +119,6 @@ self.addEventListener("push", (event) => {
     body: data.body || "You have an update from FinEase.",
     icon: data.icon || "/icon-192x192.png",
     badge: "/icon-192x192.png",
-    vibrate: [100, 50, 100],
     data: {
       url: data.url || "/dashboard",
     },
@@ -125,7 +126,23 @@ self.addEventListener("push", (event) => {
     renotify: true,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // Only include vibrate on platforms where supported
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    options.vibrate = [100, 50, 100];
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, options).catch((err) => {
+      console.error(
+        "[SW] showNotification failed with options, retrying basic:",
+        err,
+      );
+      return self.registration.showNotification(title, {
+        body: data.body || "You have an update from FinEase.",
+        icon: "/icon-192x192.png",
+      });
+    }),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -155,8 +172,11 @@ self.addEventListener("notificationclick", (event) => {
 // 5. Periodic Background Sync (PWA Background Updates)
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "finease-daily-sync") {
+    const syncUrl = isLocalhost
+      ? "http://localhost:3001/auth/notifications/cron/daily"
+      : "/auth/notifications/cron/daily";
     event.waitUntil(
-      fetch("/auth/notifications/cron/daily", {
+      fetch(syncUrl, {
         headers: { "x-cron-secret": "pwa-sync" },
       }).catch(() => {}),
     );

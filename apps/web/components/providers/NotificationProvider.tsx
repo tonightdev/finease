@@ -108,6 +108,18 @@ export function NotificationProvider({
         registration = await navigator.serviceWorker.register("/sw.js", {
           scope: "/",
         });
+        // Ensure the service worker is active before subscribing
+        if (!registration.active) {
+          const worker = registration.installing || registration.waiting;
+          if (worker) {
+            await new Promise<void>((resolve) => {
+              worker.addEventListener("statechange", () => {
+                if (worker.state === "activated") resolve();
+              });
+              setTimeout(resolve, 2000);
+            });
+          }
+        }
       }
 
       // Check if already subscribed in browser
@@ -134,7 +146,10 @@ export function NotificationProvider({
         const token = localStorage.getItem("finease_token");
         if (token) {
           try {
-            await api.post("/auth/notifications/subscribe", subscription);
+            const subData = subscription.toJSON
+              ? subscription.toJSON()
+              : JSON.parse(JSON.stringify(subscription));
+            await api.post("/auth/notifications/subscribe", subData);
             console.log("Push subscription synchronized with sovereign node");
           } catch (syncErr) {
             console.warn(
@@ -168,17 +183,19 @@ export function NotificationProvider({
       "standalone" in window.navigator &&
       (window.navigator as Navigator & { standalone: boolean }).standalone;
 
-    if (!isSupported) {
+    const supported = "Notification" in window && "serviceWorker" in navigator;
+
+    if (!supported) {
       if (isIOS && !isStandalone) {
         toast(
-          "To enable notifications on iOS: \n1. Share (up arrow) \n2. 'Add to Home Screen' \n3. Open from Home Screen",
+          "To enable notifications on iOS:\n1. Tap the Share button (⬆)\n2. Tap 'Add to Home Screen'\n3. Open FinEase from your Home Screen",
           {
-            duration: 6000,
+            duration: 5000,
             icon: "📱",
           },
         );
       } else {
-        toast.error("Notifications not supported on this browser.");
+        toast.error("Push notifications are not supported on this browser.");
       }
       return;
     }
@@ -195,7 +212,7 @@ export function NotificationProvider({
         if (isIOS) {
           toast.error(
             "Notifications blocked. Go to Settings > Notifications > FinEase to enable.",
-            { duration: 5000 },
+            { duration: 4000 },
           );
         } else {
           toast.error(
@@ -209,10 +226,15 @@ export function NotificationProvider({
         error instanceof Error ? error.message : String(error),
       );
     }
-  }, [isSupported, subscribeUser]);
+  }, [subscribeUser]);
 
   const sendTestNotification = useCallback(async () => {
     if (typeof window === "undefined") return;
+
+    if (typeof Notification === "undefined") {
+      toast.error("Notifications are not supported on this browser.");
+      return;
+    }
 
     if (Notification.permission !== "granted") {
       toast.error("Please enable notifications first.");
@@ -223,10 +245,10 @@ export function NotificationProvider({
       const token = localStorage.getItem("finease_token");
       let backendDispatched = false;
 
-      // 1. If authenticated, dispatch via backend push roundtrip
+      // 1. Dispatch via backend push roundtrip if authenticated
       if (token) {
         try {
-          const res = await api.post<{ success: boolean }>(
+          const res = await api.post<{ success: boolean; reason?: string }>(
             "/auth/notifications/test",
           );
           if (res.data?.success) {
@@ -240,25 +262,48 @@ export function NotificationProvider({
         }
       }
 
-      // 2. Only show local notification if backend didn't already send it (avoids duplicate notification)
-      if (!backendDispatched) {
-        if ("serviceWorker" in navigator) {
-          const registration = await navigator.serviceWorker.ready;
-          await registration.showNotification("FinEase System Alert", {
-            body: "Notifications are operational and verified on this device.",
-            icon: "/icon-192x192.png",
-            badge: "/favicon.svg",
-            data: { url: "/dashboard" },
-          });
-        } else {
+      // 2. Local notification trigger: guaranteed delivery
+      let localDispatched = false;
+
+      // Try Service Worker showNotification with short race timeout so it NEVER hangs
+      if ("serviceWorker" in navigator) {
+        try {
+          const reg = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<null>((r) => setTimeout(() => r(null), 1500)),
+          ]);
+          if (reg && "showNotification" in reg) {
+            await reg.showNotification("FinEase System Alert", {
+              body: "Notifications are operational and verified on this device.",
+              icon: "/icon-192x192.png",
+              badge: "/icon-192x192.png",
+              data: { url: "/dashboard" },
+            });
+            localDispatched = true;
+          }
+        } catch (swErr) {
+          console.warn("SW showNotification failed:", swErr);
+        }
+      }
+
+      // If SW couldn't show it and backend didn't confirm dispatch, use window Notification
+      if (
+        !localDispatched &&
+        !backendDispatched &&
+        typeof Notification !== "undefined"
+      ) {
+        try {
           new Notification("FinEase System Alert", {
             body: "Notifications are operational and verified on this device.",
             icon: "/icon-192x192.png",
           });
+          localDispatched = true;
+        } catch (notifErr) {
+          console.warn("Window Notification constructor failed:", notifErr);
         }
       }
 
-      toast.success("Test notification displayed on your device!");
+      toast.success("Test notification fired! Check your screen/center.");
     } catch (error) {
       console.error("Failed to display test notification:", error);
       toast.error(

@@ -1,34 +1,51 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { RefreshButton } from "@/components/navigation/RefreshButton";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { TopNav } from "@/components/navigation/TopNav";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Wallet, Search } from "lucide-react";
+import { Wallet, Search, Zap } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
-import { setCommandPalette } from "@/store/slices/uiSlice";
+import { setCommandPalette, openModal } from "@/store/slices/uiSlice";
 import { GhostModeToggle } from "@/components/navigation/GhostModeToggle";
+import { useLongPress } from "@/lib/useLongPress";
 
 export function ClientHeader() {
   const { user, loading } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  const targetHomeUrl = user
+    ? user.role === "admin"
+      ? "/admin/dashboard"
+      : "/dashboard"
+    : "/";
+
+  const logoLongPress = useLongPress(
+    () => {
+      if (user) {
+        dispatch(openModal("isQuickShortcutsOpen"));
+      }
+    },
+    () => {
+      router.push(targetHomeUrl);
+    },
+  );
 
   return (
     <header className="sticky top-0 w-full z-50 border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-black/40 backdrop-blur-xl pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link
-            href={
-              user
-                ? user.role === "admin"
-                  ? "/admin/dashboard"
-                  : "/dashboard"
-                : "/"
-            }
-            className="flex items-center gap-2 group transition-all active:scale-95"
+          <div
+            {...logoLongPress}
+            role="button"
+            tabIndex={0}
+            title="Click to go Home • Long-press for Quick Shortcuts"
+            className="flex items-center gap-2 group transition-all active:scale-95 cursor-pointer select-none"
           >
             <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
               <Wallet className="w-5 h-5" />
@@ -36,7 +53,7 @@ export function ClientHeader() {
             <span className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">
               Fin<span className="text-primary">Ease</span>
             </span>
-          </Link>
+          </div>
         </div>
 
         {user && <TopNav />}
@@ -72,6 +89,17 @@ export function ClientHeader() {
             </>
           )}
 
+          {user && (
+            <button
+              type="button"
+              onClick={() => dispatch(openModal("isQuickShortcutsOpen"))}
+              className="flex items-center justify-center size-9 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-all active:scale-90 cursor-pointer"
+              title="Quick Shortcuts (Hold logo anytime)"
+              aria-label="Quick Shortcuts"
+            >
+              <Zap className="size-4" />
+            </button>
+          )}
           {user && <GhostModeToggle />}
           {user && <RefreshButton />}
           <ThemeToggle />

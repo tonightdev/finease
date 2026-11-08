@@ -5,6 +5,7 @@ import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, useAnimation } from "framer-motion";
 import toast from "react-hot-toast";
+import { getActiveReduxPersistenceKey } from "@/store";
 
 export function RefreshButton() {
   const router = useRouter();
@@ -26,6 +27,16 @@ export function RefreshButton() {
     controls.set({ rotate: 0 });
 
     try {
+      // Clear user scoped cache so reload fetches completely fresh server state
+      if (typeof window !== "undefined") {
+        const key = getActiveReduxPersistenceKey();
+        try {
+          localStorage.removeItem(key);
+        } catch {
+          // ignore storage error
+        }
+      }
+
       // Refresh Next.js server fragments
       router.refresh();
 

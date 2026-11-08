@@ -30,6 +30,9 @@ import {
   GitCompare,
   CheckCircle2,
   AlertTriangle,
+  Wallet,
+  Building2,
+  Filter,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -39,6 +42,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { haptics } from "@/lib/haptics";
 import {
   Select,
   SelectContent,
@@ -55,16 +60,14 @@ export default function StrategiesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector((state: RootState) => state.categories.items);
   const accounts = useSelector((state: RootState) => state.accounts.items);
-  const {
-    current,
-    loading: strategyLoading,
-    lastFetched,
-  } = useSelector((state: RootState) => state.strategies);
+  const { current, loading: strategyLoading } = useSelector(
+    (state: RootState) => state.strategies,
+  );
 
   useEffect(() => {
-    dispatch(fetchCategories());
-    dispatch(fetchAccounts());
-    dispatch(fetchStrategy());
+    dispatch(fetchCategories({ force: true }));
+    dispatch(fetchAccounts({ force: true }));
+    dispatch(fetchStrategy({ force: true }));
   }, [dispatch]);
 
   // Local state for sandbox strategy
@@ -76,9 +79,22 @@ export default function StrategiesPage() {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [mobileTab, setMobileTab] = useState<"matrix" | "controls">("matrix");
   const [projectionMonths, setProjectionMonths] = useState(12);
+  const [selectedDeductFilter, setSelectedDeductFilter] =
+    useState<string>("all");
+  const [isNetFlowModalOpen, setIsNetFlowModalOpen] = useState(false);
+
+  // Helper for dynamic entry amount scaling based on basis
+  const getEntryScaledAmount = (entry: StrategyEntry) => {
+    let amt = parseFloat(entry.amount) || 0;
+    if (current?.basis === "yearly" && (entry.isMonthly ?? true)) {
+      amt *= 12;
+    } else if (current?.basis === "monthly" && !(entry.isMonthly ?? true)) {
+      amt /= 12;
+    }
+    return amt;
+  };
 
   // Helper for protocol colors
   const getProtocolColor = (parentType?: string, type?: string) => {
@@ -121,6 +137,31 @@ export default function StrategiesPage() {
     });
   }, [entries]);
 
+  // Unique deduction accounts found across current entries
+  const deductAccountOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    entries.forEach((e) => {
+      if (e.accountId) {
+        const found = accounts.find((a) => a.id === e.accountId);
+        const name = e.accountName || found?.name || "Account";
+        map.set(e.accountId, name);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+  }, [entries, accounts]);
+
+  // Filtered matrix entries based on selected deduct account
+  const filteredMatrixEntries = useMemo(() => {
+    if (selectedDeductFilter === "all") return sortedEntries;
+    return sortedEntries.filter(
+      (entry) => entry.accountId === selectedDeductFilter,
+    );
+  }, [sortedEntries, selectedDeductFilter]);
+
   // New entry form state
   const [newEntry, setNewEntry] = useState<{
     amount: string;
@@ -140,39 +181,17 @@ export default function StrategiesPage() {
     isMonthly: true,
   });
 
-  // Load persistence state locally
+  // Keep local sandbox entries synchronized with Redux cloud strategy store
   useEffect(() => {
-    // Wait for the strategy to finish loading from the backend
-    if (strategyLoading || lastFetched === null) return;
-
-    // Only auto-initialize if we haven't already or if we are stuck in an empty state while data is available
-    const hasCloudData =
-      current &&
-      (current.entries?.length > 0 ||
-        (current.userId && current.userId !== ""));
-    const isSandboxEmpty = entries.length === 0;
-
-    if (hasCloudData && (isSandboxEmpty || !isInitialized)) {
+    if (current) {
       setEntries(current.entries || []);
-      const initialProtocol = current.protocol ||
-        user?.budgetTargets || { needs: 50, savings: 20, wants: 30 };
-      setProtocol(initialProtocol);
-      setIsInitialized(true);
-    } else if (current?.userId === "" && !isInitialized) {
-      // Handle case where strategy is truly empty/new (after first fetch)
-      if (user?.budgetTargets) {
+      if (current.protocol) {
+        setProtocol(current.protocol);
+      } else if (user?.budgetTargets) {
         setProtocol(user.budgetTargets);
       }
-      setIsInitialized(true);
     }
-  }, [
-    current,
-    isInitialized,
-    strategyLoading,
-    user,
-    lastFetched,
-    entries.length,
-  ]);
+  }, [current, user?.budgetTargets]);
 
   useEffect(() => {
     if (user?.budgetTargets) {
@@ -563,7 +582,7 @@ export default function StrategiesPage() {
     };
   }, [hasData, protocol, strategyMetrics]);
 
-  const handleAddEntry = () => {
+  const handleAddEntry = async () => {
     if (!newEntry.amount || parseFloat(newEntry.amount) <= 0) {
       toast.error("Valid positive amount is required.");
       return;
@@ -627,27 +646,37 @@ export default function StrategiesPage() {
       type: newEntry.type,
     };
 
-    if (editingId) {
-      setEntries((prev) =>
-        prev.map((e) => (e.id === editingId ? { ...e, ...entryData } : e)),
-      );
-      dispatch(updateStrategyEntry({ id: editingId, data: entryData }));
-      setEditingId(null);
-      toast.success("Vector updated.");
-    } else {
-      setEntries((prev) => [...prev, entryData]);
-      dispatch(addStrategyEntry(entryData));
-      toast.success("Vector recorded.");
+    try {
+      if (editingId) {
+        setEntries((prev) =>
+          prev.map((e) => (e.id === editingId ? { ...e, ...entryData } : e)),
+        );
+        await dispatch(
+          updateStrategyEntry({ id: editingId, data: entryData }),
+        ).unwrap();
+        setEditingId(null);
+        toast.success("Vector updated.");
+      } else {
+        setEntries((prev) => [...prev, entryData]);
+        await dispatch(addStrategyEntry(entryData)).unwrap();
+        toast.success("Vector recorded.");
+      }
+      setNewEntry({
+        amount: "",
+        description: "",
+        categoryId: "",
+        accountId: "",
+        toAccountId: "",
+        type: "outflow",
+        isMonthly: true,
+      });
+    } catch (err) {
+      console.error("Failed to persist vector:", err);
+      toast.error("Failed to save vector to cloud.");
+      if (current?.entries) {
+        setEntries(current.entries);
+      }
     }
-    setNewEntry({
-      amount: "",
-      description: "",
-      categoryId: "",
-      accountId: "",
-      toAccountId: "",
-      type: "outflow",
-      isMonthly: true,
-    });
   };
 
   const handleEditEntry = (entry: StrategyEntry) => {
@@ -664,16 +693,24 @@ export default function StrategiesPage() {
     setMobileTab("controls");
   };
 
-  const handleRemoveEntry = (id: string) => {
+  const handleRemoveEntry = async (id: string) => {
+    const backup = entries;
     setEntries((prev) => prev.filter((o) => o.id !== id));
-    dispatch(removeStrategyEntry(id));
+    try {
+      await dispatch(removeStrategyEntry(id)).unwrap();
+      toast.success("Vector removed.");
+    } catch (err) {
+      console.error("Failed to remove vector:", err);
+      setEntries(backup);
+      toast.error("Failed to remove vector from cloud.");
+    }
   };
 
   const handleProtocolChange = (key: keyof typeof protocol, value: number) => {
     setProtocol((prev) => ({ ...prev, [key]: value }));
   };
 
-  if (authLoading || (strategyLoading && !isInitialized)) {
+  if (authLoading || (strategyLoading && !current)) {
     return (
       <PageContainer>
         <div className="space-y-2 mb-3">
@@ -1050,86 +1087,175 @@ export default function StrategiesPage() {
             </div>
 
             {entries.length > 0 && (
-              <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
-                <div className="flex items-center justify-between px-0.5">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    Traction Matrix
-                  </span>
-                </div>
-                <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2 pb-2 no-scrollbar">
-                  <AnimatePresence mode="popLayout">
-                    {sortedEntries.map((entry) => (
-                      <motion.div
-                        key={entry.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm group/item"
+              <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-2.5">
+                <div className="flex flex-col gap-1.5 px-0.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <span>Traction Matrix</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[8px] font-mono font-bold text-slate-500">
+                        {filteredMatrixEntries.length}
+                        {selectedDeductFilter !== "all"
+                          ? `/${entries.length}`
+                          : ""}
+                      </span>
+                    </span>
+                    {selectedDeductFilter !== "all" && (
+                      <button
+                        onClick={() => {
+                          haptics.tick();
+                          setSelectedDeductFilter("all");
+                        }}
+                        className="text-[9px] font-bold text-primary hover:underline transition-all cursor-pointer"
                       >
-                        <div className="flex flex-col min-w-0 pr-2">
-                          <span className="text-[11px] font-black text-slate-900 dark:text-white truncate">
-                            {entry.description}
-                          </span>
-                          <span
-                            className={`text-[9px] font-black uppercase tracking-widest truncate ${entry.type === "transfer" ? "text-sky-500" : getProtocolColor(entry.parentType)}`}
-                          >
-                            {entry.type === "transfer" ? (
-                              <span className="flex items-center gap-1">
-                                <span>{entry.accountName}</span>
-                                <span className="opacity-40">➔</span>
-                                <span>{entry.toAccountName || "Account"}</span>
-                              </span>
-                            ) : (
-                              <>
-                                {entry.categoryName}{" "}
-                                <span className="opacity-30">/</span>{" "}
-                                {entry.accountName}
-                              </>
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <div className="text-right mr-3">
-                            <div
-                              className={`text-[11px] font-mono font-black ${
-                                entry.type === "income"
-                                  ? "text-emerald-500"
+                        Reset Filter
+                      </button>
+                    )}
+                  </div>
+
+                  {deductAccountOptions.length > 0 && (
+                    <div className="w-full">
+                      <Select
+                        value={selectedDeductFilter}
+                        onValueChange={(val: string) => {
+                          haptics.tick();
+                          setSelectedDeductFilter(val);
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-[11px] font-bold bg-slate-50/80 dark:bg-slate-800/60 border-slate-200/80 dark:border-white/10 rounded-xl px-2.5 py-0 shadow-none">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Filter className="size-3 text-slate-400 shrink-0" />
+                            <SelectValue placeholder="Filter by deduct account..." />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent className="max-h-56">
+                          <SelectItem value="all" className="text-xs font-bold">
+                            All Deduct Accounts ({entries.length})
+                          </SelectItem>
+                          {deductAccountOptions.map((acc) => {
+                            const count = entries.filter(
+                              (e) => e.accountId === acc.id,
+                            ).length;
+                            return (
+                              <SelectItem
+                                key={acc.id}
+                                value={acc.id}
+                                className="text-xs"
+                              >
+                                {acc.name} ({count})
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2 pb-2 no-scrollbar">
+                  {filteredMatrixEntries.length === 0 ? (
+                    <div className="py-8 px-3 text-center rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-white/10">
+                      <p className="text-[10px] font-bold text-slate-400">
+                        No entries deduct from this account.
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          haptics.tick();
+                          setSelectedDeductFilter("all");
+                        }}
+                        className="mt-2 h-7 text-[9px] font-bold text-primary"
+                      >
+                        Show All Accounts
+                      </Button>
+                    </div>
+                  ) : (
+                    <AnimatePresence mode="popLayout">
+                      {filteredMatrixEntries.map((entry) => (
+                        <motion.div
+                          key={entry.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-white/5 shadow-sm group/item"
+                        >
+                          <div className="flex flex-col min-w-0 pr-2">
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white truncate">
+                              {entry.description}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black uppercase tracking-widest truncate ${entry.type === "transfer" ? "text-sky-500" : getProtocolColor(entry.parentType)}`}
+                            >
+                              {entry.type === "transfer" ? (
+                                <span className="flex items-center gap-1">
+                                  <span>{entry.accountName}</span>
+                                  <span className="opacity-40">➔</span>
+                                  <span>
+                                    {entry.toAccountName || "Account"}
+                                  </span>
+                                </span>
+                              ) : (
+                                <>
+                                  {entry.categoryName}{" "}
+                                  <span className="opacity-30">/</span>{" "}
+                                  {entry.accountName}
+                                </>
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <div className="text-right mr-2 sm:mr-3">
+                              <div
+                                className={`text-[11px] font-mono font-black ${
+                                  entry.type === "income"
+                                    ? "text-emerald-500"
+                                    : entry.type === "transfer"
+                                      ? "text-sky-500"
+                                      : getProtocolColor(entry.parentType)
+                                }`}
+                              >
+                                {entry.type === "income"
+                                  ? "+"
                                   : entry.type === "transfer"
-                                    ? "text-sky-500"
-                                    : getProtocolColor(entry.parentType)
-                              }`}
-                            >
-                              {entry.type === "income"
-                                ? "+"
-                                : entry.type === "transfer"
-                                  ? "⇄ "
-                                  : "-"}
-                              {formatCurrency(parseFloat(entry.amount) || 0)}
+                                    ? "⇄ "
+                                    : "-"}
+                                {formatCurrency(parseFloat(entry.amount) || 0)}
+                              </div>
+                              <div className="text-[8px] font-black uppercase tracking-tighter text-slate-400 opacity-70">
+                                {(entry.isMonthly ?? true)
+                                  ? "Monthly"
+                                  : "Yearly"}{" "}
+                                Flow
+                              </div>
                             </div>
-                            <div className="text-[8px] font-black uppercase tracking-tighter text-slate-400 opacity-70">
-                              {(entry.isMonthly ?? true) ? "Monthly" : "Yearly"}{" "}
-                              Flow
+                            <div className="flex items-center gap-0.5 opacity-100 transition-opacity">
+                              <button
+                                onClick={() => {
+                                  haptics.tap();
+                                  handleEditEntry(entry);
+                                }}
+                                aria-label="Edit entry"
+                                className="min-w-[30px] min-h-[30px] flex items-center justify-center p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors active:scale-95"
+                              >
+                                <Edit2 className="size-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  haptics.impact();
+                                  handleRemoveEntry(entry.id);
+                                }}
+                                aria-label="Delete entry"
+                                className="min-w-[30px] min-h-[30px] flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors active:scale-95"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-0.5 opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditEntry(entry)}
-                              className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                            >
-                              <Edit2 className="size-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleRemoveEntry(entry.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  )}
                 </div>
               </div>
             )}
@@ -1306,21 +1432,50 @@ export default function StrategiesPage() {
                 {/* 1. Primary Metrics Grid (2x2) */}
                 <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                   <div
-                    className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-between min-h-[80px] ${strategyMetrics.surplus < 0 ? "bg-rose-50/50 dark:bg-rose-500/5 border-rose-200/50 dark:border-rose-500/10" : "bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-500/10"}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      haptics.impact();
+                      setIsNetFlowModalOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        haptics.impact();
+                        setIsNetFlowModalOpen(true);
+                      }
+                    }}
+                    className={`p-2 sm:p-2.5 rounded-xl border transition-all duration-200 flex flex-col justify-between min-h-[85px] sm:min-h-[90px] cursor-pointer group hover:shadow-md active:scale-[0.98] select-none relative overflow-hidden ${
+                      strategyMetrics.surplus < 0
+                        ? "bg-rose-50/60 dark:bg-rose-500/10 border-rose-200/80 dark:border-rose-500/20 hover:border-rose-400/50"
+                        : "bg-emerald-50/60 dark:bg-emerald-500/10 border-emerald-200/80 dark:border-emerald-500/20 hover:border-emerald-400/50"
+                    }`}
                   >
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                      Net {current?.basis === "yearly" ? "Annual" : "Monthly"}{" "}
-                      Flow
-                    </span>
-                    <div className="mt-auto">
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 truncate">
+                        Net {current?.basis === "yearly" ? "Annual" : "Monthly"}{" "}
+                        Flow
+                      </span>
+                      <span className="flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider text-primary group-hover:translate-x-0.5 transition-transform bg-primary/10 dark:bg-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
+                        <span>Details</span>
+                        <ArrowRight className="size-2" />
+                      </span>
+                    </div>
+                    <div className="mt-auto pt-1">
                       <div
                         className={`text-base sm:text-lg font-black tracking-tighter truncate w-full ${strategyMetrics.surplus < 0 ? "text-rose-500" : "text-emerald-500"}`}
                         title={formatCurrency(strategyMetrics.surplus)}
                       >
+                        {strategyMetrics.surplus > 0 ? "+" : ""}
                         {formatCurrency(strategyMetrics.surplus)}
                       </div>
-                      <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">
-                        {strategyMetrics.surplus >= 0 ? "Surplus" : "Deficit"}
+                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 mt-0.5">
+                        <span className="uppercase tracking-widest">
+                          {strategyMetrics.surplus >= 0 ? "Surplus" : "Deficit"}
+                        </span>
+                        <span className="text-[8px] text-slate-400/80 hidden sm:inline">
+                          Tap for accounts
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1806,6 +1961,282 @@ export default function StrategiesPage() {
           </Card>
         </div>
       </div>
+
+      {/* Net Monthly Flow Breakdown Modal */}
+      <Modal
+        isOpen={isNetFlowModalOpen}
+        onClose={() => setIsNetFlowModalOpen(false)}
+        maxWidth="max-w-xl"
+        title={
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center shrink-0">
+              <Wallet className="size-4.5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight truncate">
+                Net {current?.basis === "yearly" ? "Annual" : "Monthly"} Flow
+                Breakdown
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400">
+                Account distribution & liquidity trajectory
+              </p>
+            </div>
+          </div>
+        }
+        footer={
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="text-[10px] font-bold text-slate-400 hidden sm:block">
+              {strategyMetrics.activeAccounts.length} active account
+              {strategyMetrics.activeAccounts.length === 1 ? "" : "s"}
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => setIsNetFlowModalOpen(false)}
+              className="w-full sm:w-auto px-6 h-9 text-xs font-black uppercase tracking-wider rounded-xl"
+            >
+              Done
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-1">
+          {/* Hero Overall Net Flow Pill */}
+          <div
+            className={`p-3.5 sm:p-4 rounded-2xl border transition-all ${
+              strategyMetrics.surplus < 0
+                ? "bg-rose-50/70 dark:bg-rose-500/10 border-rose-200/80 dark:border-rose-500/20"
+                : "bg-emerald-50/70 dark:bg-emerald-500/10 border-emerald-200/80 dark:border-emerald-500/20"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Total Net {current?.basis === "yearly" ? "Annual" : "Monthly"}{" "}
+                Flow
+              </span>
+              <span
+                className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                  strategyMetrics.surplus < 0
+                    ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                    : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                }`}
+              >
+                {strategyMetrics.surplus >= 0
+                  ? "Surplus Buffer"
+                  : "Deficit Warning"}
+              </span>
+            </div>
+            <div
+              className={`text-2xl sm:text-3xl font-black font-mono tracking-tight my-1 ${
+                strategyMetrics.surplus < 0
+                  ? "text-rose-500"
+                  : "text-emerald-500"
+              }`}
+            >
+              {strategyMetrics.surplus > 0 ? "+" : ""}
+              {formatCurrency(strategyMetrics.surplus)}
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2.5 mt-2 border-t border-slate-200/60 dark:border-white/5">
+              <div className="flex flex-col">
+                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">
+                  Total Inflows
+                </span>
+                <span className="text-xs font-mono font-black text-emerald-500">
+                  +{formatCurrency(strategyMetrics.income)}
+                </span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">
+                  Total Outflows
+                </span>
+                <span className="text-xs font-mono font-black text-rose-500">
+                  -{formatCurrency(strategyMetrics.totalOutflows)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Account Breakdown List */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
+                <Building2 className="size-3.5 text-primary" />
+                <span>Account Balances & Monthly Allocations</span>
+              </h4>
+              <span className="text-[9px] font-mono font-bold text-slate-400">
+                {current?.basis === "yearly" ? "Yearly View" : "Monthly View"}
+              </span>
+            </div>
+
+            {strategyMetrics.activeAccounts.length === 0 ? (
+              <div className="py-8 px-4 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-white/10 space-y-2">
+                <p className="text-xs font-black text-slate-700 dark:text-slate-300">
+                  No accounts linked to vectors yet
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 max-w-xs mx-auto">
+                  Assign specific bank or cash accounts when adding inflows and
+                  outflows to see per-account balance trajectories.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1 no-scrollbar">
+                {strategyMetrics.activeAccounts.map((acc) => {
+                  const accountObj = accounts.find((a) => a.id === acc.id);
+                  const currentBalance = accountObj?.balance ?? 0;
+                  const institution = accountObj?.institutionName;
+                  const accountType = accountObj?.type;
+
+                  // Find all strategy entries that touch this account
+                  const relevantEntries = entries.filter(
+                    (e) => e.accountId === acc.id || e.toAccountId === acc.id,
+                  );
+
+                  return (
+                    <div
+                      key={acc.id}
+                      className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-white/5 space-y-2.5"
+                    >
+                      {/* Account Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+                              {acc.name}
+                            </span>
+                            {institution && (
+                              <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                                {institution}
+                              </span>
+                            )}
+                            {accountType && (
+                              <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                · {accountType}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            Current balance:{" "}
+                            <span className="font-bold text-slate-600 dark:text-slate-300">
+                              {formatCurrency(currentBalance)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Net Account Delta */}
+                        <div className="text-right shrink-0">
+                          <div
+                            className={`text-sm font-mono font-black ${
+                              acc.netFlow > 0
+                                ? "text-emerald-500"
+                                : acc.netFlow < 0
+                                  ? "text-rose-500"
+                                  : "text-slate-400"
+                            }`}
+                          >
+                            {acc.netFlow > 0 ? "+" : ""}
+                            {formatCurrency(acc.netFlow)}
+                          </div>
+                          <div className="text-[8px] font-black uppercase tracking-wider text-slate-400">
+                            Net / {current?.basis === "yearly" ? "yr" : "mo"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Inflow vs Outflow Mini Summary Bar */}
+                      <div className="grid grid-cols-2 gap-1.5 p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 text-[9px] font-mono">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="text-[8px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+                            Inflow
+                          </span>
+                          <span className="font-bold text-emerald-500">
+                            +{formatCurrency(acc.income)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between px-1 border-l border-slate-200/60 dark:border-white/5">
+                          <span className="text-[8px] font-black uppercase text-rose-600 dark:text-rose-400">
+                            Outflow
+                          </span>
+                          <span className="font-bold text-rose-500">
+                            -{formatCurrency(acc.outflow)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Entries Breakdown List for this Account */}
+                      {relevantEntries.length > 0 && (
+                        <div className="pt-1.5 space-y-1.5 border-t border-slate-200/40 dark:border-white/5">
+                          <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 block px-0.5">
+                            Active Vectors ({relevantEntries.length}):
+                          </span>
+                          <div className="space-y-1">
+                            {relevantEntries.map((entry) => {
+                              const scaledAmt = getEntryScaledAmount(entry);
+                              const isTransferSource =
+                                entry.type === "transfer" &&
+                                entry.accountId === acc.id;
+                              const isTransferDest =
+                                entry.type === "transfer" &&
+                                entry.toAccountId === acc.id;
+                              const isInflow =
+                                entry.type === "income" || isTransferDest;
+
+                              return (
+                                <div
+                                  key={entry.id}
+                                  className="flex items-center justify-between py-1 px-2 rounded-lg bg-white/40 dark:bg-slate-900/40 text-[10px]"
+                                >
+                                  <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                                    <div
+                                      className={`size-1.5 rounded-full shrink-0 ${
+                                        isInflow
+                                          ? "bg-emerald-500"
+                                          : entry.type === "transfer"
+                                            ? "bg-sky-500"
+                                            : "bg-rose-500"
+                                      }`}
+                                    />
+                                    <span className="font-bold text-slate-700 dark:text-slate-200 truncate">
+                                      {entry.description ||
+                                        entry.categoryName ||
+                                        "Entry"}
+                                    </span>
+                                    {entry.type === "transfer" ? (
+                                      <span className="text-[8px] text-sky-500 font-bold shrink-0">
+                                        {isTransferSource
+                                          ? `➔ ${entry.toAccountName || "Transfer"}`
+                                          : `⇠ ${entry.accountName || "Transfer"}`}
+                                      </span>
+                                    ) : (
+                                      entry.categoryName && (
+                                        <span className="text-[8px] text-slate-400 truncate">
+                                          ({entry.categoryName})
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`font-mono font-black shrink-0 ${
+                                      isInflow
+                                        ? "text-emerald-500"
+                                        : "text-rose-500"
+                                    }`}
+                                  >
+                                    {isInflow ? "+" : "-"}
+                                    {formatCurrency(scaledAmt)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </PageContainer>
   );
 }

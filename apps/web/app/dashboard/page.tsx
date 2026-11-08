@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
-import { useNotifications } from "@/components/providers/NotificationProvider";
 import { Button } from "@/components/ui/Button";
 import { FeatureTour } from "@/components/ui/FeatureTour";
 import { motion } from "framer-motion";
@@ -50,7 +49,6 @@ export default function Home() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const { permission, requestPermission } = useNotifications();
 
   // Instant PWA Shortcut handler (?action=wealth-pulse or ?tab=expiries)
   useEffect(() => {
@@ -140,12 +138,6 @@ export default function Home() {
       void handleRefresh();
     }
   }, [handleRefresh, user?.uid]);
-
-  useEffect(() => {
-    if (permission === "default") {
-      void requestPermission();
-    }
-  }, [permission, requestPermission]);
 
   // Regular accounts for display (includes excluded ones)
   const displayRegularAccounts = useMemo(() => {

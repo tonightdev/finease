@@ -100,8 +100,14 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
       | webpush.PushSubscription
       | undefined;
 
-    if (!subscription || !userData?.notificationsEnabled) {
-      this.logger.log(`No active push subscription for user ${userId}`);
+    if (
+      !subscription ||
+      !subscription.endpoint ||
+      !userData?.notificationsEnabled
+    ) {
+      this.logger.log(
+        `No active or valid push subscription for user ${userId}`,
+      );
       return { success: false, reason: 'No active subscription' };
     }
 
@@ -117,11 +123,6 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
         {
           TTL: 86400,
           urgency: 'high',
-          headers: {
-            Urgency: 'high',
-            'apns-priority': '10',
-            'apns-push-type': 'alert',
-          },
         },
       );
       this.logger.log(`Push notification sent successfully to user ${userId}`);

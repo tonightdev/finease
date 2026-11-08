@@ -46,7 +46,7 @@ export const fetchAccounts = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { accounts: AccountsState };
-      if (state.accounts.lastFetched !== null || state.accounts.loading) {
+      if (state.accounts.loading) {
         return false;
       }
       return true;
@@ -108,14 +108,6 @@ export const fetchSnapshots = createAsyncThunk<
       const state = getState() as { accounts: AccountsState };
       // Prevent duplicate concurrent requests in-flight
       if (state.accounts.snapshotsLoading) return false;
-      const last = state.accounts.snapshotsLastFetched;
-      if (
-        last !== null &&
-        Date.now() - last < 5 * 60 * 1000 &&
-        state.accounts.snapshots.length > 0
-      ) {
-        return false;
-      }
       return true;
     },
   },
@@ -134,13 +126,8 @@ export const fetchMonthlyDebrief = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { accounts: AccountsState };
-      const last = state.accounts.debriefLastFetched;
-      if (
-        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
-        state.accounts.debriefLoading
-      ) {
-        return false;
-      }
+      // Prevent duplicate concurrent requests in-flight
+      if (state.accounts.debriefLoading) return false;
       return true;
     },
   },

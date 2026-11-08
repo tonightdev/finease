@@ -137,7 +137,7 @@ export function WealthPulseModal() {
       haptics.success();
       toast.success(
         `✨ Wealth Pulse synced! Net Worth: ${formatCurrency(previewNetWorth)}`,
-        { icon: "🚀", duration: 4000 },
+        { icon: "🚀", duration: 3000 },
       );
 
       dispatch(closeModal("isWealthPulseOpen"));

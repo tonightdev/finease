@@ -31,11 +31,7 @@ export const fetchExpiries = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { expiries: ExpiriesState };
-      const last = state.expiries.lastFetched;
-      if (
-        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
-        state.expiries.loading
-      ) {
+      if (state.expiries.loading) {
         return false;
       }
       return true;

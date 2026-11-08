@@ -14,6 +14,7 @@ import { TransactionModal } from "@/components/transactions/TransactionModal";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
 import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
 import { WealthPulseModal } from "@/components/dashboard/WealthPulseModal";
+import { QuickShortcutsModal } from "@/components/modals/QuickShortcutsModal";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AccountType } from "@repo/types";
 
@@ -90,6 +91,9 @@ export function GlobalModals() {
 
       {/* Global Wealth Pulse Modal */}
       <WealthPulseModal />
+
+      {/* Global Quick Shortcuts Modal */}
+      <QuickShortcutsModal />
     </>
   );
 }

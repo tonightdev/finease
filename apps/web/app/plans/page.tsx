@@ -27,6 +27,7 @@ import {
   Bell,
   CheckCircle2,
   RefreshCw,
+  Wallet,
 } from "lucide-react";
 
 import { PlanningStatusFilter } from "@/components/planning/PlanningStatusFilter";
@@ -141,6 +142,7 @@ function PlansDirectoryPageContent() {
     null,
   );
   const [yearlyToDelete, setYearlyToDelete] = useState<string | null>(null);
+  const [yearlyAccountFilter, setYearlyAccountFilter] = useState<string>("all");
 
   // Sync tab with URL parameter
   useEffect(() => {
@@ -156,6 +158,10 @@ function PlansDirectoryPageContent() {
       if (match) {
         setActiveTab(match);
       }
+    }
+    const accParam = searchParams.get("account");
+    if (accParam) {
+      setYearlyAccountFilter(accParam);
     }
   }, [searchParams]);
 
@@ -225,7 +231,13 @@ function PlansDirectoryPageContent() {
   const yearlyBurdenByAccount = useMemo(() => {
     const groups: Record<
       string,
-      { name: string; amount: number; balance: number; accountId: string }
+      {
+        accountId: string;
+        name: string;
+        amount: number;
+        balance: number;
+        expenses: YearlyExpense[];
+      }
     > = {};
     (yearlyExpenses || []).forEach((exp: YearlyExpense) => {
       const accountId = exp.accountId || "unlinked";
@@ -240,12 +252,44 @@ function PlansDirectoryPageContent() {
           name: accountName,
           amount: 0,
           balance,
+          expenses: [],
         };
       }
       groups[accountId].amount += monthlyAmount;
+      groups[accountId].expenses.push(exp);
     });
-    return Object.values(groups);
+
+    Object.values(groups).forEach((g) => {
+      g.expenses.sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "", undefined, {
+          sensitivity: "base",
+        }),
+      );
+    });
+
+    return Object.values(groups).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
   }, [yearlyExpenses, accounts]);
+
+  const effectiveAccountFilter = useMemo(() => {
+    if (
+      yearlyAccountFilter !== "all" &&
+      !yearlyBurdenByAccount.some((g) => g.accountId === yearlyAccountFilter)
+    ) {
+      return "all";
+    }
+    return yearlyAccountFilter;
+  }, [yearlyAccountFilter, yearlyBurdenByAccount]);
+
+  const displayedAccountGroups = useMemo(() => {
+    if (effectiveAccountFilter === "all") {
+      return yearlyBurdenByAccount;
+    }
+    return yearlyBurdenByAccount.filter(
+      (g) => g.accountId === effectiveAccountFilter,
+    );
+  }, [yearlyBurdenByAccount, effectiveAccountFilter]);
 
   // Handlers
   const handleCreatePlan = async () => {
@@ -326,14 +370,6 @@ function PlansDirectoryPageContent() {
       );
   }, [goals, goalFilter]);
 
-  const sortedYearlyExpenses = useMemo(() => {
-    return [...(yearlyExpenses || [])].sort((a, b) =>
-      (a.title || "").localeCompare(b.title || "", undefined, {
-        sensitivity: "base",
-      }),
-    );
-  }, [yearlyExpenses]);
-
   return (
     <div {...swipeHandlers} className="flex-1 flex flex-col min-h-0">
       <PageContainer>
@@ -355,7 +391,24 @@ function PlansDirectoryPageContent() {
             ) : activeTab === "Expiries" ? (
               "Active triggers and financial expiries"
             ) : activeTab === "Yearly" ? (
-              `Monthly capital reserves: ₹${totalYearlyBurden.toLocaleString("en-IN", { maximumFractionDigits: 0 })}/mo`
+              effectiveAccountFilter !== "all" && displayedAccountGroups[0] ? (
+                <div className="flex items-center gap-1.5 transition-all">
+                  Reserve for{" "}
+                  <span className="text-primary font-bold">
+                    {displayedAccountGroups[0].name}
+                  </span>
+                  :{" "}
+                  <span className="text-primary font-bold">
+                    ₹
+                    {displayedAccountGroups[0].amount.toLocaleString("en-IN", {
+                      maximumFractionDigits: 0,
+                    })}
+                    /mo
+                  </span>
+                </div>
+              ) : (
+                `Monthly capital reserves: ₹${totalYearlyBurden.toLocaleString("en-IN", { maximumFractionDigits: 0 })}/mo`
+              )
             ) : (
               "Tactical simulations for capital management and events"
             )
@@ -911,17 +964,38 @@ function PlansDirectoryPageContent() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="space-y-6"
+                className="space-y-6 sm:space-y-3"
               >
-                <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4">
+                <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
                   {yearlyBurdenByAccount.length > 0 && (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
+                      {yearlyBurdenByAccount.length > 1 && (
+                        <YearlyBurdenCard
+                          name="All Accounts"
+                          monthlyAmount={totalYearlyBurden}
+                          count={yearlyExpenses.length}
+                          isAll={true}
+                          isSelected={effectiveAccountFilter === "all"}
+                          onClick={() => setYearlyAccountFilter("all")}
+                        />
+                      )}
                       {yearlyBurdenByAccount.map((group) => (
                         <YearlyBurdenCard
                           key={group.accountId}
                           name={group.name}
                           balance={group.balance}
                           monthlyAmount={group.amount}
+                          count={group.expenses.length}
+                          isSelected={
+                            effectiveAccountFilter === group.accountId
+                          }
+                          onClick={() => {
+                            setYearlyAccountFilter((prev) =>
+                              prev === group.accountId
+                                ? "all"
+                                : group.accountId,
+                            );
+                          }}
                         />
                       ))}
                     </div>
@@ -945,23 +1019,75 @@ function PlansDirectoryPageContent() {
                       }}
                       actionIcon={<Plus className="w-3.5 h-3.5" />}
                     />
+                  ) : displayedAccountGroups.length === 0 ? (
+                    <div className="py-10 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-white/50 dark:bg-slate-900/50">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        No commitments found for this account
+                      </p>
+                      <Button
+                        onClick={() => setYearlyAccountFilter("all")}
+                        variant="outline"
+                        size="sm"
+                        className="w-auto mt-4"
+                      >
+                        Show All Accounts
+                      </Button>
+                    </div>
                   ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      <AnimatePresence mode="popLayout" initial={false}>
-                        {(sortedYearlyExpenses || []).map(
-                          (exp: YearlyExpense) => (
-                            <YearlyExpenseCard
-                              key={exp.id}
-                              expense={exp}
-                              onEdit={(data) => {
-                                setEditingYearly(data);
-                                setIsYearlyModalOpen(true);
-                              }}
-                              onDelete={(id) => setYearlyToDelete(id)}
-                            />
-                          ),
-                        )}
-                      </AnimatePresence>
+                    <div className="space-y-6">
+                      {displayedAccountGroups.map((group) => (
+                        <div key={group.accountId} className="space-y-3">
+                          {/* Account Dividing Header */}
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-white/5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="size-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/10">
+                                <Wallet className="size-3.5" />
+                              </div>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
+                                  {group.name}
+                                </h3>
+                                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-200/50 dark:border-white/10 shrink-0">
+                                  {group.expenses.length}{" "}
+                                  {group.expenses.length === 1
+                                    ? "commitment"
+                                    : "commitments"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
+                                Monthly Reserve
+                              </span>
+                              <span className="text-xs font-black text-primary">
+                                ₹
+                                {group.amount.toLocaleString("en-IN", {
+                                  maximumFractionDigits: 0,
+                                })}
+                                /mo
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Account Commitments Grid */}
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <AnimatePresence mode="popLayout" initial={false}>
+                              {group.expenses.map((exp: YearlyExpense) => (
+                                <YearlyExpenseCard
+                                  key={exp.id}
+                                  expense={exp}
+                                  onEdit={(data) => {
+                                    setEditingYearly(data);
+                                    setIsYearlyModalOpen(true);
+                                  }}
+                                  onDelete={(id) => setYearlyToDelete(id)}
+                                />
+                              ))}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

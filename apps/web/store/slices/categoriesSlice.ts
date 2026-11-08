@@ -29,7 +29,7 @@ export const fetchCategories = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { categories: CategoriesState };
-      if (state.categories.lastFetched !== null || state.categories.loading) {
+      if (state.categories.loading) {
         return false;
       }
       return true;

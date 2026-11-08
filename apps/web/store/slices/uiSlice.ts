@@ -8,6 +8,7 @@ export interface UIState {
     isGoalModalOpen: boolean;
     isExpiryModalOpen: boolean;
     isWealthPulseOpen: boolean;
+    isQuickShortcutsOpen: boolean;
   };
   selection: {
     selectedGoal: FinancialGoal | null;
@@ -33,6 +34,7 @@ const initialState: UIState = {
     isGoalModalOpen: false,
     isExpiryModalOpen: false,
     isWealthPulseOpen: false,
+    isQuickShortcutsOpen: false,
   },
   selection: {
     selectedGoal: null,

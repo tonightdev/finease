@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { haptics } from "@/lib/haptics";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { openModal } from "@/store/slices/uiSlice";
+import { useLongPress } from "@/lib/useLongPress";
 import {
   Home,
   TrendingUp,
@@ -16,15 +19,73 @@ import {
   Layers,
 } from "lucide-react";
 
+interface NavLinkItem {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}
+
+function BottomNavItem({
+  link,
+  isActive,
+  onOpenShortcuts,
+}: {
+  link: NavLinkItem;
+  isActive: boolean;
+  onOpenShortcuts: () => void;
+}) {
+  const router = useRouter();
+  const gesture = useLongPress(
+    () => {
+      onOpenShortcuts();
+    },
+    () => {
+      haptics.tick();
+      router.push(link.href);
+    },
+  );
+
+  return (
+    <div
+      {...gesture}
+      role="button"
+      tabIndex={0}
+      title={`${link.label} (Hold for Quick Shortcuts)`}
+      className={clsx(
+        "flex flex-col items-center justify-center gap-1 py-1 px-1.5 min-w-[48px] rounded-xl transition-all active:scale-90 touch-manipulation select-none cursor-pointer",
+        isActive
+          ? "text-primary"
+          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white",
+      )}
+    >
+      <div className="relative">
+        <link.Icon className="w-5 h-5 transition-transform" />
+        {isActive && (
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-primary" />
+        )}
+      </div>
+      <span
+        className={clsx(
+          "text-[9px] uppercase tracking-tight transition-colors",
+          isActive ? "font-black text-primary" : "font-semibold",
+        )}
+      >
+        {link.label}
+      </span>
+    </div>
+  );
+}
+
 export function BottomNav() {
   const pathname = usePathname();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useAuth();
 
   if (!user) return null;
 
   const isAdmin = user.role === "admin";
 
-  const userLinks = [
+  const userLinks: NavLinkItem[] = [
     { href: "/dashboard", label: "Home", Icon: Home },
     { href: "/portfolio", label: "Portfolio", Icon: TrendingUp },
     { href: "/strategies", label: "Strategies", Icon: Zap },
@@ -32,7 +93,7 @@ export function BottomNav() {
     { href: "/reports", label: "Review", Icon: FileText },
   ];
 
-  const adminLinks = [
+  const adminLinks: NavLinkItem[] = [
     { href: "/admin/dashboard", label: "Admin", Icon: BarChart3 },
     { href: "/admin/users", label: "Users", Icon: Users },
     { href: "/admin/purge", label: "Purge", Icon: Trash2 },
@@ -54,32 +115,12 @@ export function BottomNav() {
           pathname?.startsWith(link.href) ||
           (link.href === "/dashboard" && pathname === "/");
         return (
-          <Link
+          <BottomNavItem
             key={link.href}
-            href={link.href}
-            onClick={() => haptics.tick()}
-            className={clsx(
-              "flex flex-col items-center justify-center gap-1 py-1 px-1.5 min-w-[48px] rounded-xl transition-all active:scale-90 touch-manipulation select-none",
-              isActive
-                ? "text-primary"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white",
-            )}
-          >
-            <div className="relative">
-              <link.Icon className="w-5 h-5 transition-transform" />
-              {isActive && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-primary" />
-              )}
-            </div>
-            <span
-              className={clsx(
-                "text-[9px] uppercase tracking-tight transition-colors",
-                isActive ? "font-black text-primary" : "font-semibold",
-              )}
-            >
-              {link.label}
-            </span>
-          </Link>
+            link={link}
+            isActive={!!isActive}
+            onOpenShortcuts={() => dispatch(openModal("isQuickShortcutsOpen"))}
+          />
         );
       })}
     </nav>

@@ -29,7 +29,7 @@ export const fetchGoals = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { goals: GoalsState };
-      if (state.goals.lastFetched !== null || state.goals.loading) {
+      if (state.goals.loading) {
         return false;
       }
       return true;

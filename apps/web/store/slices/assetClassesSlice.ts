@@ -29,10 +29,7 @@ export const fetchAssetClasses = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { assetClasses: AssetClassesState };
-      if (
-        state.assetClasses.lastFetched !== null ||
-        state.assetClasses.loading
-      ) {
+      if (state.assetClasses.loading) {
         return false;
       }
       return true;

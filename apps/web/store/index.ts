@@ -54,43 +54,56 @@ function loadPreloadedState() {
     }
     if (!raw) return undefined;
     const parsed = JSON.parse(raw);
-    // Sanitize cached state: reset active loaders and transient error messages
+    // Sanitize cached state: reset active loaders, transient error messages, and lastFetched
+    // to allow background revalidation while preserving instant 0ms preloaded data
     if (parsed.accounts) {
       parsed.accounts.loading = false;
       parsed.accounts.error = null;
       parsed.accounts.debriefLoading = false;
+      parsed.accounts.snapshotsLoading = false;
+      parsed.accounts.lastFetched = null;
+      parsed.accounts.snapshotsLastFetched = null;
+      parsed.accounts.debriefLastFetched = null;
     }
     if (parsed.transactions) {
       parsed.transactions.loading = false;
       parsed.transactions.error = null;
+      parsed.transactions.lastFetched = null;
     }
     if (parsed.goals) {
       parsed.goals.loading = false;
       parsed.goals.error = null;
+      parsed.goals.lastFetched = null;
     }
     if (parsed.categories) {
       parsed.categories.loading = false;
       parsed.categories.error = null;
+      parsed.categories.lastFetched = null;
     }
     if (parsed.assetClasses) {
       parsed.assetClasses.loading = false;
       parsed.assetClasses.error = null;
+      parsed.assetClasses.lastFetched = null;
     }
     if (parsed.expiries) {
       parsed.expiries.loading = false;
       parsed.expiries.error = null;
+      parsed.expiries.lastFetched = null;
     }
     if (parsed.strategies) {
       parsed.strategies.loading = false;
       parsed.strategies.error = null;
+      parsed.strategies.lastFetched = null;
     }
     if (parsed.simulations) {
       parsed.simulations.loading = false;
       parsed.simulations.error = null;
+      parsed.simulations.lastFetched = null;
     }
     if (parsed.yearlyExpenses) {
       parsed.yearlyExpenses.loading = false;
       parsed.yearlyExpenses.error = null;
+      parsed.yearlyExpenses.lastFetched = null;
     }
     return parsed;
   } catch (e) {

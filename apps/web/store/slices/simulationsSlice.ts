@@ -29,7 +29,7 @@ export const fetchSimulations = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { simulations: SimulationsState };
-      if (state.simulations.lastFetched !== null || state.simulations.loading) {
+      if (state.simulations.loading) {
         return false;
       }
       return true;

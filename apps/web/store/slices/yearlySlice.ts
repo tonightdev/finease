@@ -39,11 +39,7 @@ export const fetchYearlyExpenses = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { yearlyExpenses: YearlyExpensesState };
-      const last = state.yearlyExpenses.lastFetched;
-      if (
-        (last !== null && Date.now() - last < 5 * 60 * 1000) ||
-        state.yearlyExpenses.loading
-      ) {
+      if (state.yearlyExpenses.loading) {
         return false;
       }
       return true;

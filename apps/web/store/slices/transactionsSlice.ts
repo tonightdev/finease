@@ -29,10 +29,7 @@ export const fetchTransactions = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const state = getState() as { transactions: TransactionsState };
-      if (
-        state.transactions.lastFetched !== null ||
-        state.transactions.loading
-      ) {
+      if (state.transactions.loading) {
         return false;
       }
       return true;
