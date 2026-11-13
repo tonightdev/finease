@@ -27,47 +27,60 @@ export function PreferencesTab() {
       title="System Preferences"
       subtitle="Visual theme and regional denomination"
     >
-      {/* 2-Option Theme Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <SettingsOptionCard
-          icon={Sun}
-          title="Brilliant"
-          subtitle="High-contrast daylight optimization"
-          selected={theme === "light"}
-          onClick={() => handleSelectTheme("light")}
-        />
+      <div className="space-y-4">
+        {/* Appearance Section */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block px-0.5">
+            Appearance
+          </label>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <SettingsOptionCard
+              icon={Sun}
+              title="Light Mode"
+              subtitle="Daylight theme"
+              selected={theme === "light"}
+              onClick={() => handleSelectTheme("light")}
+            />
 
-        <SettingsOptionCard
-          icon={Moon}
-          title="Abyssal"
-          subtitle="Low-light OLED-ready obsidian interface"
-          selected={theme === "dark"}
-          onClick={() => handleSelectTheme("dark")}
-        />
-      </div>
+            <SettingsOptionCard
+              icon={Moon}
+              title="Dark Mode"
+              subtitle="Obsidian theme"
+              selected={theme === "dark"}
+              onClick={() => handleSelectTheme("dark")}
+            />
+          </div>
+        </div>
 
-      {/* Currency Configuration */}
-      <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
-        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 block">
-          Standard Fiscal Currency (Locked)
-        </label>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="size-11 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5 flex items-center justify-center text-xl font-black text-primary">
-              ₹
-            </div>
-            <div>
-              <span className="text-sm font-black text-slate-900 dark:text-white block">
-                Indian Rupee (INR)
-              </span>
-              <span className="text-[10px] font-bold text-slate-400">
-                Primary localized denomination
-              </span>
+        {/* Divider for appearance */}
+        <div className="border-t border-slate-100 dark:border-white/5" />
+
+        {/* Fiscal Currency Section */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block px-0.5">
+            Fiscal Currency (Locked)
+          </label>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="relative overflow-hidden p-2.5 sm:p-3.5 rounded-2xl border-2 border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex flex-col justify-between items-start gap-2 w-full h-full">
+              <div className="flex items-start justify-between w-full gap-1.5">
+                <div className="size-7 sm:size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                  ₹
+                </div>
+                <span className="text-[7px] font-black uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
+                  Active
+                </span>
+              </div>
+
+              <div className="min-w-0 w-full pr-1">
+                <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
+                  Indian Rupee
+                </div>
+                <div className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 truncate">
+                  INR (₹) • Default
+                </div>
+              </div>
             </div>
           </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 shrink-0">
-            Active Node
-          </span>
         </div>
       </div>
     </SettingsCard>

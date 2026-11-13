@@ -81,7 +81,7 @@ export function IdentitiesTab() {
                     variant="outline"
                     size="sm"
                     onClick={() => switchAccount(acc.uid)}
-                    className="h-8 px-3 rounded-lg text-[8px] font-black uppercase tracking-widest border-slate-200 dark:border-white/10 hover:border-primary hover:text-primary transition-all gap-1 shadow-none"
+                    className="h-8 px-2.5 sm:px-3 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border-slate-200 dark:border-white/10 hover:border-primary hover:text-primary transition-all gap-1 shadow-none"
                   >
                     Switch <ArrowRight size={10} />
                   </Button>

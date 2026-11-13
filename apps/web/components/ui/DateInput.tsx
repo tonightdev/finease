@@ -23,7 +23,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             ref={ref}
             type="date"
             className={cn(
-              "w-full h-12 p-3 pl-10 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm font-medium text-slate-900 dark:text-white disabled:opacity-50 appearance-none",
+              "w-full h-9 sm:h-10 px-3 sm:px-4 pl-10 bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-xs sm:text-sm font-medium text-slate-900 dark:text-white disabled:opacity-50 appearance-none",
               error && "border-rose-500 focus:ring-rose-500",
               className,
             )}

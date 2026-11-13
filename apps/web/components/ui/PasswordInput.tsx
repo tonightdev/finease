@@ -34,7 +34,7 @@ export function PasswordInput({
         {...props}
         type={showPassword ? "text" : "password"}
         className={cn(
-          "w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white placeholder:text-slate-400/50",
+          "w-full bg-slate-50 dark:bg-[#0b0d12] border border-slate-200 dark:border-border-dark rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 pr-10 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-slate-900 dark:text-white placeholder:text-[11px] sm:placeholder:text-xs placeholder:text-slate-400/60",
           className,
         )}
       />

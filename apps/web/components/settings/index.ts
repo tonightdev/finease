@@ -9,5 +9,6 @@ export * from "./AccountsTab";
 export * from "./CategoriesTab";
 export * from "./SecurityTab";
 export * from "./VaultTab";
+export * from "./VaultItemCard";
 export * from "./IdentitiesTab";
 export * from "./DataArchiveTab";

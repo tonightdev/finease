@@ -40,12 +40,6 @@ const SETTINGS_TABS: SettingsTabItem[] = [
     subtitle: "Manage your primary account credentials",
   },
   {
-    id: "preferences",
-    label: "Preferences",
-    icon: SettingsIcon,
-    subtitle: "Configure appearance and system preferences",
-  },
-  {
     id: "accounts",
     label: "Accounts",
     icon: Wallet,
@@ -58,16 +52,22 @@ const SETTINGS_TABS: SettingsTabItem[] = [
     subtitle: "Manage spending and income categories",
   },
   {
-    id: "security",
-    label: "Security",
-    icon: Shield,
-    subtitle: "Manage active sessions and security credentials",
-  },
-  {
     id: "vault",
     label: "Password Protector",
     icon: KeyRound,
     subtitle: "Store encrypted IDs, passwords, and logins",
+  },
+  {
+    id: "preferences",
+    label: "Preferences",
+    icon: SettingsIcon,
+    subtitle: "Configure appearance and system preferences",
+  },
+  {
+    id: "security",
+    label: "Security",
+    icon: Shield,
+    subtitle: "Manage active sessions and security credentials",
   },
   {
     id: "identities",
@@ -194,13 +194,13 @@ function SettingsPageContent() {
               className="space-y-4"
             >
               {activeTab === "profile" && <ProfileTab />}
-              {activeTab === "preferences" && <PreferencesTab />}
               {!isAdmin && activeTab === "accounts" && <AccountsTab />}
               {!isAdmin && activeTab === "categories" && <CategoriesTab />}
-              {activeTab === "security" && <SecurityTab />}
               {!isAdmin && activeTab === "vault" && (
                 <VaultTab key={user?.uid} />
               )}
+              {activeTab === "preferences" && <PreferencesTab />}
+              {activeTab === "security" && <SecurityTab />}
               {activeTab === "identities" && <IdentitiesTab />}
               {!isAdmin && activeTab === "data" && <DataArchiveTab />}
             </motion.div>

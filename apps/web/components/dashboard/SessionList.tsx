@@ -4,15 +4,7 @@ import { useState, useEffect } from "react";
 import { UserSession } from "@repo/types";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/Button";
-import {
-  Smartphone,
-  Monitor,
-  LogOut,
-  Loader2,
-  Clock,
-  Globe,
-  Shield,
-} from "lucide-react";
+import { Smartphone, Monitor, LogOut, Loader2, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatDate, parseUserAgent } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -142,7 +134,7 @@ export function SessionList() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {sessions.map((session) => {
           const {
             isMobile,
@@ -158,78 +150,73 @@ export function SessionList() {
           return (
             <div
               key={session.token}
-              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border rounded-2xl transition-all p-4 sm:p-5 ${
+              className={`p-2.5 sm:p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-2.5 ${
                 isCurrent
-                  ? "border-primary ring-1 ring-primary/20 bg-primary/5 shadow-sm"
-                  : "border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/50 hover:border-primary/30 shadow-sm"
+                  ? "border-primary ring-1 ring-primary/20 bg-primary/5 shadow-xs"
+                  : "border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xs hover:border-primary/40"
               }`}
             >
-              <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                <div
-                  className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}
-                >
-                  {isMobile ? <Smartphone size={16} /> : <Monitor size={16} />}
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-tight truncate">
-                      {session.userName || user?.displayName}
-                    </span>
-                    {isCurrent && (
-                      <span className="text-[7px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-1 py-0.5 rounded tracking-widest shrink-0">
-                        Current
-                      </span>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-1">
+                  <div
+                    className={`size-7 sm:size-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      isCurrent
+                        ? "bg-primary text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                    }`}
+                  >
+                    {isMobile ? (
+                      <Smartphone size={14} />
+                    ) : (
+                      <Monitor size={14} />
                     )}
                   </div>
-                  <div className="flex items-center flex-wrap gap-2 mt-0.5">
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
-                      {os} • {browser}
-                    </span>
+                  <div className="flex items-center gap-1 shrink-0">
                     {isPWA && (
-                      <span className="text-[7px] font-black text-primary uppercase bg-primary/10 px-1 py-0.5 rounded tracking-widest flex items-center gap-0.5">
-                        <Shield className="size-2" />
+                      <span className="text-[7px] font-bold text-primary bg-primary/10 px-1 py-0.5 rounded uppercase">
                         PWA
                       </span>
                     )}
+                    {isCurrent ? (
+                      <span className="text-[7px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full uppercase">
+                        Current
+                      </span>
+                    ) : null}
                   </div>
-                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1">
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                      <Globe className="size-3" />
-                      {session.ipAddress || "Unknown IP"}
-                    </div>
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                      <Clock className="size-3" />
-                      {formatDate(session.lastActiveAt)}
-                    </div>
+                </div>
+
+                <div className="min-w-0">
+                  <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {browser || "Browser"} • {os || "Device"}
+                  </div>
+                  <div className="text-[8px] sm:text-[9px] text-slate-400 truncate mt-0.5">
+                    {formatDate(session.lastActiveAt)}
                   </div>
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSessionToRevoke(session)}
-                disabled={revokingToken === session.token || isCurrent}
-                className={`h-8 sm:h-9 px-3 rounded-xl transition-all flex items-center justify-center gap-2 font-black text-[9px] uppercase tracking-widest w-full sm:w-auto ${
-                  isCurrent
-                    ? "opacity-40 cursor-not-allowed border-slate-100 dark:border-white/5"
-                    : "hover:bg-rose-500 hover:text-white border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50 text-rose-500"
-                }`}
-                title={
-                  isCurrent
-                    ? "Cannot revoke current session"
-                    : "Revoke identity node"
-                }
-              >
-                {revokingToken === session.token ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>{isCurrent ? "Active" : "Revoke"}</span>
-                  </>
-                )}
-              </Button>
+              {!isCurrent ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSessionToRevoke(session)}
+                  disabled={revokingToken === session.token}
+                  className="w-full h-7 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-500 hover:text-white border-rose-500/20 transition-all gap-1"
+                >
+                  {revokingToken === session.token ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <>
+                      <LogOut className="size-3" />
+                      <span>Revoke</span>
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <div className="text-[8px] font-bold uppercase tracking-wider text-emerald-500 text-center py-1">
+                  Active Device
+                </div>
+              )}
             </div>
           );
         })}

@@ -4,11 +4,11 @@ import { Check, LucideIcon } from "lucide-react";
 
 export type SettingsTabId =
   | "profile"
-  | "preferences"
   | "accounts"
   | "categories"
-  | "security"
   | "vault"
+  | "preferences"
+  | "security"
   | "identities"
   | "data";
 
@@ -65,7 +65,7 @@ export function SettingsSidebar({
                 data-tab-id={tab.id}
                 type="button"
                 onClick={() => onTabChange(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer select-none active:scale-95 touch-manipulation ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer select-none active:scale-95 touch-manipulation min-h-[36px] ${
                   isActive
                     ? "bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]"
                     : "bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -91,7 +91,7 @@ export function SettingsSidebar({
                 key={tab.id}
                 type="button"
                 onClick={() => onTabChange(tab.id)}
-                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all font-black text-[9px] uppercase tracking-widest cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl transition-all font-bold text-[10px] sm:text-xs uppercase tracking-wider cursor-pointer ${
                   isActive
                     ? "bg-primary text-white shadow-md shadow-primary/20 scale-[1.01]"
                     : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"

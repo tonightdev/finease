@@ -3,20 +3,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   KeyRound,
-  Shield,
-  ShieldAlert,
   ShieldCheck,
   Lock,
   Unlock,
   Plus,
   Search,
-  Eye,
-  EyeOff,
-  Copy,
-  Check,
-  ExternalLink,
   Trash2,
-  Edit3,
   RefreshCw,
   Sparkles,
   Globe,
@@ -45,7 +37,7 @@ import type {
   CreateVaultItemDto,
   UpdateVaultItemDto,
 } from "@repo/types";
-import { SettingsCard } from "./SettingsCard";
+import { VaultItemCard } from "./VaultItemCard";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -496,31 +488,44 @@ export function VaultTab() {
 
   // Filtered Items
   const filteredItems = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return items.filter((item) => {
       const matchesCategory =
         selectedCategory === "all" || item.category === selectedCategory;
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      const cached = decryptedValues[item.id];
       const matchesSearch =
-        !searchQuery.trim() ||
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.websiteUrl &&
-          item.websiteUrl.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesCategory && matchesSearch;
+        item.title.toLowerCase().includes(q) ||
+        (item.websiteUrl && item.websiteUrl.toLowerCase().includes(q)) ||
+        item.category.toLowerCase().includes(q) ||
+        (cached?.username && cached.username.toLowerCase().includes(q));
+      return matchesSearch;
     });
-  }, [items, selectedCategory, searchQuery]);
+  }, [items, selectedCategory, searchQuery, decryptedValues]);
+
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: items.length };
+    for (const it of items) {
+      counts[it.category] = (counts[it.category] || 0) + 1;
+    }
+    return counts;
+  }, [items]);
 
   // Loading Skeleton
   if (loading) {
     return (
-      <div className="space-y-4">
-        <SettingsCard>
-          <div className="flex items-center gap-4">
-            <Skeleton className="size-12 rounded-2xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-72" />
-            </div>
-          </div>
-        </SettingsCard>
+      <div className="space-y-4 animate-in fade-in duration-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <Skeleton className="h-10 w-full sm:w-72 rounded-xl" />
+          <Skeleton className="h-10 w-full sm:w-44 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Skeleton key={i} className="h-44 rounded-2xl" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -528,43 +533,35 @@ export function VaultTab() {
   // State 1: Vault not configured yet
   if (!settings) {
     return (
-      <div className="space-y-6">
-        <SettingsCard
-          icon={ShieldAlert}
-          title="Password Protector & Vault"
-          subtitle="End-to-End Encrypted Storage"
-        >
-          <div className="w-full space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Never forget your app or website logins again. Store your IDs,
-              passwords, and PINs in an encrypted vault.
-            </p>
-
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 space-y-2 text-xs">
-              <div className="flex items-center gap-2 font-bold text-sm">
-                <ShieldCheck className="size-4 text-amber-500 shrink-0" />
-                Zero-Knowledge Privacy Guarantee
-              </div>
-              <p>
-                Your credentials are encrypted directly in your browser using{" "}
-                <strong>AES-256-GCM</strong>. Your Master Password is{" "}
-                <strong>never sent to our servers</strong> or saved in the
-                database. Only you can unlock and read your credentials.
+      <div className="space-y-4 animate-in fade-in duration-200">
+        <div className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Password Protector
+              </h4>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                AES-256 Client Encryption
               </p>
             </div>
-
-            <div className="pt-1 flex flex-col sm:flex-row sm:items-center">
-              <Button
-                variant="primary"
-                onClick={() => setShowSetupModal(true)}
-                className="w-full sm:w-auto justify-center gap-2 py-3 sm:py-2.5 text-xs sm:text-sm font-bold active:scale-98 transition-all"
-              >
-                <KeyRound className="size-4" />
-                Set Up Password Protector
-              </Button>
-            </div>
           </div>
-        </SettingsCard>
+
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+            Store logins, IDs, and passwords securely in zero-knowledge
+            encrypted storage.
+          </p>
+
+          <Button
+            variant="primary"
+            onClick={() => setShowSetupModal(true)}
+            className="w-full sm:w-auto h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 shadow-xs"
+          >
+            <KeyRound size={14} /> Set Up Vault
+          </Button>
+        </div>
 
         {/* Setup Modal */}
         <Modal
@@ -577,14 +574,14 @@ export function VaultTab() {
             </div>
           }
         >
-          <form onSubmit={handleSetupVault} className="space-y-4 pt-2">
+          <form onSubmit={handleSetupVault} className="space-y-3.5 pt-2">
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Choose a strong Master Password. This single password will encrypt
               and decrypt all your stored logins.
             </p>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Master Password
               </label>
               <PasswordInput
@@ -593,12 +590,12 @@ export function VaultTab() {
                 value={newMasterPassword}
                 onChange={(e) => setNewMasterPassword(e.target.value)}
                 placeholder="At least 8 characters..."
-                className="h-11"
+                className="h-9 sm:h-10 text-xs placeholder:text-[11px]"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Confirm Master Password
               </label>
               <PasswordInput
@@ -607,25 +604,24 @@ export function VaultTab() {
                 value={confirmMasterPassword}
                 onChange={(e) => setConfirmMasterPassword(e.target.value)}
                 placeholder="Re-enter master password..."
-                className="h-11"
+                className="h-9 sm:h-10 text-xs placeholder:text-[11px]"
               />
             </div>
 
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex gap-2.5">
-              <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-[10px] sm:text-[11px] flex gap-2">
+              <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
               <span>
-                <strong>Warning:</strong> If you forget this Master Password, it
-                cannot be recovered or reset by anyone because it is strictly
-                zero-knowledge.
+                <strong>Warning:</strong> Cannot be recovered if forgotten
+                (zero-knowledge encryption).
               </span>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setShowSetupModal(false)}
-                className="w-full sm:w-auto h-11 sm:h-9"
+                className="w-full sm:w-auto h-9 sm:h-10 text-xs font-bold"
               >
                 Cancel
               </Button>
@@ -633,7 +629,7 @@ export function VaultTab() {
                 type="submit"
                 variant="primary"
                 disabled={settingUp}
-                className="w-full sm:w-auto h-11 sm:h-9 font-bold"
+                className="w-full sm:w-auto h-9 sm:h-10 text-xs font-bold"
               >
                 {settingUp ? "Encrypting & Setting Up..." : "Initialize Vault"}
               </Button>
@@ -647,67 +643,66 @@ export function VaultTab() {
   // State 2: Vault configured, but LOCKED
   if (!isUnlocked) {
     return (
-      <div className="space-y-6">
-        <SettingsCard
-          icon={Lock}
-          title="Password Protector (Locked)"
-          subtitle="Protected by Master Encryption Key"
-          headerAction={
+      <div className="space-y-4 animate-in fade-in duration-200">
+        <div className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+          {/* Header row: Status + Reset Action */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <Lock className="size-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                  Vault Locked
+                </h4>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  Master Key Decryption
+                </p>
+              </div>
+            </div>
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowResetConfirm(true)}
-              className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 gap-1.5"
+              className="text-[10px] font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 gap-1 h-7 px-2"
             >
-              <Trash2 className="size-3.5" />
-              Reset Vault
+              <Trash2 className="size-3 shrink-0" />
+              <span>Reset</span>
             </Button>
-          }
-        >
-          <div className="w-full sm:max-w-md space-y-4">
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-primary/5 border border-primary/10">
-              <ShieldCheck className="size-6 text-primary shrink-0" />
-              <div className="text-xs text-slate-600 dark:text-slate-300">
-                Your vault is locked. Enter your Master Password to decrypt your
-                credentials in this browser session.
-              </div>
+          </div>
+
+          <form onSubmit={handleUnlock} className="space-y-3">
+            <div className="space-y-1">
+              <PasswordInput
+                required
+                autoFocus
+                value={unlockPassword}
+                onChange={(e) => {
+                  setUnlockPassword(e.target.value);
+                  setUnlockError("");
+                }}
+                placeholder="Enter Master Password..."
+                className="h-10 text-xs placeholder:text-[11px]"
+              />
+              {unlockError && (
+                <p className="text-[10px] font-bold text-rose-500 mt-1">
+                  {unlockError}
+                </p>
+              )}
             </div>
 
-            <form onSubmit={handleUnlock} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Master Password
-                </label>
-                <PasswordInput
-                  required
-                  autoFocus
-                  value={unlockPassword}
-                  onChange={(e) => {
-                    setUnlockPassword(e.target.value);
-                    setUnlockError("");
-                  }}
-                  placeholder="Enter Master Password..."
-                  className="h-11"
-                />
-                {unlockError && (
-                  <p className="text-xs font-medium text-rose-500 mt-1">
-                    {unlockError}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={unlocking}
-                className="w-full gap-2 justify-center py-3.5 h-12 text-sm font-bold active:scale-98 transition-transform"
-              >
-                <Unlock className="size-4" />
-                {unlocking ? "Decrypting..." : "Unlock Vault"}
-              </Button>
-            </form>
-          </div>
-        </SettingsCard>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={unlocking}
+              className="w-full h-10 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 shadow-xs"
+            >
+              <Unlock className="size-3.5" />
+              {unlocking ? "Decrypting..." : "Unlock Vault"}
+            </Button>
+          </form>
+        </div>
 
         {/* Reset Confirmation Modal */}
         <ConfirmModal
@@ -725,347 +720,161 @@ export function VaultTab() {
 
   // State 3: Vault UNLOCKED (Manage credentials)
   return (
-    <div className="space-y-6">
-      {/* Top Banner / Controls */}
-      <SettingsCard
-        icon={Unlock}
-        title="Password Protector & Vault"
-        subtitle="End-to-End Encrypted Logins"
-        headerAction={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={lockVault}
-              className="gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 h-9 px-2.5 sm:px-3 active:scale-95 transition-transform"
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Controls Row: Search Input & Action Buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+          <Input
+            type="text"
+            placeholder="Search by title, username, website..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9 h-10 text-xs placeholder:text-[11px]"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              aria-label="Clear search"
             >
-              <Lock className="size-3.5 text-amber-500" />
-              <span className="hidden sm:inline">Lock Vault</span>
-              <span className="sm:hidden">Lock</span>
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenAdd}
-              className="gap-1.5 text-xs font-bold h-9 px-3 sm:px-3.5 active:scale-95 transition-transform"
-            >
-              <Plus className="size-4" />
-              <span className="hidden sm:inline">Add Credential</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {/* Search bar & Category filter */}
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search by title or website..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 h-10 text-sm"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  aria-label="Clear search"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 shrink-0">
-              <Shield className="size-3.5 text-emerald-500" />
-              <span>
-                {itemsLoading
-                  ? "Decrypting credentials..."
-                  : `${items.length} items secured`}
-              </span>
-            </div>
-          </div>
-
-          {/* Category Filter Pills (Horizontal swipeable on mobile) */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1.5 -mx-1 px-1 touch-pan-x">
-            {CATEGORIES.map((cat) => {
-              const isSelected = selectedCategory === cat.id;
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
-                    isSelected
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <Icon className="size-3.5" />
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
-      </SettingsCard>
 
-      {/* Items Grid / List */}
+        {/* Action Buttons: Full on mobile, inline on web, matching other pages */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={lockVault}
+            className="flex-1 sm:flex-none h-10 px-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest gap-1.5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs"
+          >
+            <Lock className="size-3.5 text-amber-500 shrink-0" />
+            <span>Lock</span>
+          </Button>
+          <Button
+            onClick={handleOpenAdd}
+            className="flex-1 sm:flex-none h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 shadow-xs"
+          >
+            <Plus size={14} /> Add Credential
+          </Button>
+        </div>
+      </div>
+
+      {/* Category Filter Pills (Horizontal swipeable on mobile) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1 touch-pan-x">
+        {CATEGORIES.map((cat) => {
+          const isSelected = selectedCategory === cat.id;
+          const Icon = cat.icon;
+          const count = categoryCounts[cat.id] || 0;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shrink-0 active:scale-95 cursor-pointer ${
+                isSelected
+                  ? "bg-primary text-white shadow-xs"
+                  : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
+              }`}
+            >
+              <Icon className="size-3 shrink-0" />
+              <span>{cat.label}</span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                  isSelected
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Items Grid */}
       {itemsLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 sm:p-4 space-y-3 shadow-xs"
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-2.5 sm:p-3.5 space-y-2.5 shadow-xs"
             >
-              {/* Header: Avatar + Title/Category + Action buttons */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                  <Skeleton className="size-8 sm:size-9 rounded-xl shrink-0" />
-                  <div className="space-y-1.5 min-w-0">
-                    <Skeleton className="h-3.5 w-24 sm:w-28" />
-                    <Skeleton className="h-3 w-16 rounded-md" />
+              <div className="flex items-start justify-between gap-1.5">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Skeleton className="size-7 sm:size-8 rounded-xl shrink-0" />
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <Skeleton className="h-3 w-16 sm:w-20" />
+                    <Skeleton className="h-2 w-10 rounded-md" />
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Skeleton className="size-7 rounded-lg" />
-                  <Skeleton className="size-7 rounded-lg" />
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <Skeleton className="size-5 rounded-lg" />
+                  <Skeleton className="size-5 rounded-lg" />
                 </div>
               </div>
-
-              {/* Username row */}
-              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1 border border-slate-100 dark:border-white/5">
-                <Skeleton className="h-2 w-12" />
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-3.5 w-28 sm:w-32" />
-                  <Skeleton className="size-5 rounded-md" />
-                </div>
-              </div>
-
-              {/* Password row */}
-              <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-1 border border-slate-100 dark:border-white/5">
-                <Skeleton className="h-2 w-12" />
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-3.5 w-24 sm:w-28" />
-                  <div className="flex items-center gap-1">
-                    <Skeleton className="size-5 rounded-md" />
-                    <Skeleton className="size-5 rounded-md" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer: timestamp / website */}
-              <div className="pt-1 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
-                <Skeleton className="h-2.5 w-20" />
-                <Skeleton className="h-2.5 w-12" />
+              <div className="space-y-1.5">
+                <Skeleton className="h-9 rounded-xl" />
+                <Skeleton className="h-9 rounded-xl" />
               </div>
             </div>
           ))}
         </div>
       ) : filteredItems.length === 0 ? (
-        <SettingsCard>
-          <div className="text-center py-10 space-y-3">
-            <div className="size-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto">
-              <KeyRound className="size-6" />
-            </div>
-            <h4 className="text-base font-bold text-slate-900 dark:text-white">
-              {searchQuery
-                ? "No matching credentials"
-                : "No credentials stored yet"}
-            </h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              {searchQuery
-                ? "Try adjusting your search query or category filter."
-                : "Save your bank accounts, email IDs, apps, and website passwords safely."}
-            </p>
-            {!searchQuery && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleOpenAdd}
-                className="gap-2 mt-2"
-              >
-                <Plus className="size-4" />
-                Store First Password
-              </Button>
-            )}
+        <div className="py-16 text-center bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/10">
+          <div className="size-16 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-center mx-auto mb-4 shadow-xs">
+            <KeyRound className="size-8 text-primary/40" />
           </div>
-        </SettingsCard>
+          <h5 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1.5">
+            {searchQuery
+              ? "No matching credentials"
+              : "No credentials stored yet"}
+          </h5>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-[240px] mx-auto leading-relaxed">
+            {searchQuery
+              ? "Try adjusting search or category filter."
+              : "Store logins, IDs, and passwords securely."}
+          </p>
+          {!searchQuery && (
+            <Button
+              onClick={handleOpenAdd}
+              className="mt-4 h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 shadow-xs"
+            >
+              <Plus size={14} /> Add First Credential
+            </Button>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {filteredItems.map((item) => {
-            const isRevealed = Boolean(revealedPasswords[item.id]);
-            const cached = decryptedValues[item.id];
-            const displayUsername = cached ? cached.username : "••••••••";
-            const displayPassword = isRevealed
-              ? cached?.password || "••••••••"
-              : "••••••••••••";
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 sm:p-4 space-y-3 hover:border-primary/40 transition-all shadow-xs flex flex-col justify-between"
-              >
-                {/* Header: Title + Category + Actions */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                    <div className="size-8 sm:size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm">
-                      {item.title.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {item.title}
-                        </h4>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 capitalize shrink-0 font-semibold border border-slate-200 dark:border-white/10">
-                          {item.category}
-                        </span>
-                      </div>
-                      {item.websiteUrl && (
-                        <a
-                          href={
-                            item.websiteUrl.startsWith("http")
-                              ? item.websiteUrl
-                              : `https://${item.websiteUrl}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 truncate"
-                        >
-                          <span className="truncate">{item.websiteUrl}</span>
-                          <ExternalLink className="size-3 shrink-0" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(item)}
-                      title="Edit item"
-                      className="p-2 sm:p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all"
-                      aria-label="Edit credential"
-                    >
-                      <Edit3 className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeletingItem(item)}
-                      title="Delete item"
-                      className="p-2 sm:p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 active:scale-90 transition-all"
-                      aria-label="Delete credential"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* ID / Username Field */}
-                <div className="space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    ID / Username / Email
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs sm:text-sm font-mono font-medium text-slate-800 dark:text-slate-200 truncate select-all">
-                      {cached
-                        ? displayUsername || "(none)"
-                        : "Click copy or reveal to load"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const dec = await getOrDecryptItem(item);
-                        if (dec?.username) {
-                          copyToClipboard(
-                            dec.username,
-                            "Username",
-                            `${item.id}-user`,
-                          );
-                        } else {
-                          toast.error("No username saved for this item");
-                        }
-                      }}
-                      title="Copy Username"
-                      className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-700/50 active:scale-90 transition-all shrink-0"
-                      aria-label="Copy username"
-                    >
-                      {copiedId === `${item.id}-user` ? (
-                        <Check className="size-4 text-emerald-500" />
-                      ) : (
-                        <Copy className="size-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Password
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs sm:text-sm font-mono font-medium text-slate-800 dark:text-slate-200 truncate select-all tracking-wider">
-                      {displayPassword}
-                    </span>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => togglePasswordReveal(item)}
-                        title={isRevealed ? "Hide Password" : "Show Password"}
-                        className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-700/50 active:scale-90 transition-all"
-                        aria-label={
-                          isRevealed ? "Hide password" : "Show password"
-                        }
-                      >
-                        {isRevealed ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const dec = await getOrDecryptItem(item);
-                          if (dec?.password) {
-                            copyToClipboard(
-                              dec.password,
-                              "Password",
-                              `${item.id}-pass`,
-                            );
-                          }
-                        }}
-                        title="Copy Password"
-                        className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-700/50 active:scale-90 transition-all"
-                        aria-label="Copy password"
-                      >
-                        {copiedId === `${item.id}-pass` ? (
-                          <Check className="size-4 text-emerald-500" />
-                        ) : (
-                          <Copy className="size-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notes (if decrypted and exists) */}
-                {cached?.notes && (
-                  <div className="pt-1 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-white/5">
-                    <span className="font-bold text-slate-400 uppercase text-[9px] block">
-                      Notes
-                    </span>
-                    <p className="line-clamp-2 mt-0.5 italic">{cached.notes}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          {filteredItems.map((item) => (
+            <VaultItemCard
+              key={item.id}
+              item={item}
+              cached={decryptedValues[item.id]}
+              isRevealed={Boolean(revealedPasswords[item.id])}
+              copiedId={copiedId}
+              onToggleReveal={togglePasswordReveal}
+              onCopyUsername={async (it) => {
+                const dec = await getOrDecryptItem(it);
+                if (dec?.username) {
+                  copyToClipboard(dec.username, "Username", `${it.id}-user`);
+                } else {
+                  toast.error("No username saved for this item");
+                }
+              }}
+              onCopyPassword={async (it) => {
+                const dec = await getOrDecryptItem(it);
+                if (dec?.password) {
+                  copyToClipboard(dec.password, "Password", `${it.id}-pass`);
+                }
+              }}
+              onEdit={handleOpenEdit}
+              onDelete={(it) => setDeletingItem(it)}
+            />
+          ))}
         </div>
       )}
 
@@ -1095,11 +904,11 @@ export function VaultTab() {
           </div>
         }
       >
-        <form onSubmit={handleSaveItem} className="space-y-4 pt-2">
+        <form onSubmit={handleSaveItem} className="space-y-3.5 pt-2">
           {/* Title & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Title / Account Name *
               </label>
               <Input
@@ -1108,19 +917,19 @@ export function VaultTab() {
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
                 placeholder="e.g. Netflix, HDFC Bank, Gmail"
-                className="h-10 text-xs font-bold"
+                className="h-9 sm:h-10 text-xs placeholder:text-[11px]"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Category
               </label>
               <Select
                 value={formCategory}
                 onValueChange={(val) => setFormCategory(val as VaultCategory)}
               >
-                <SelectTrigger className="w-full h-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
+                <SelectTrigger className="w-full h-9 sm:h-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="z-[9999] bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-xl">
@@ -1138,8 +947,8 @@ export function VaultTab() {
                           value={cat.id}
                           className="text-xs font-bold py-2 cursor-pointer"
                         >
-                          <div className="flex items-center gap-2.5">
-                            <CatIcon className="size-4 text-slate-500 dark:text-slate-400" />
+                          <div className="flex items-center gap-2">
+                            <CatIcon className="size-3.5 text-slate-500 dark:text-slate-400" />
                             <span>{cat.label}</span>
                           </div>
                         </SelectItem>
@@ -1150,32 +959,47 @@ export function VaultTab() {
             </div>
           </div>
 
-          {/* ID / Username */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Login ID / Username / Email
-            </label>
-            <Input
-              type="text"
-              value={formUsername}
-              onChange={(e) => setFormUsername(e.target.value)}
-              placeholder="e.g. john.doe@gmail.com or user123"
-              className="h-10 text-xs font-bold"
-            />
+          {/* Website URL & Login ID / Username */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Website or App URL
+              </label>
+              <Input
+                type="text"
+                value={formWebsiteUrl}
+                onChange={(e) => setFormWebsiteUrl(e.target.value)}
+                placeholder="e.g. netflix.com or https://..."
+                className="h-9 sm:h-10 text-xs placeholder:text-[11px]"
+              />
+            </div>
+
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Login ID / Username / Email
+              </label>
+              <Input
+                type="text"
+                value={formUsername}
+                onChange={(e) => setFormUsername(e.target.value)}
+                placeholder="e.g. user@gmail.com"
+                className="h-9 sm:h-10 text-xs placeholder:text-[11px]"
+              />
+            </div>
           </div>
 
           {/* Password with Generator trigger */}
-          <div className="space-y-1.5">
+          <div className="space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Password *
               </label>
               <button
                 type="button"
                 onClick={() => setShowGenerator(!showGenerator)}
-                className="text-xs font-bold text-primary flex items-center gap-1 hover:underline active:scale-95 transition-transform"
+                className="text-[11px] sm:text-xs font-bold text-primary flex items-center gap-1 hover:underline active:scale-95 transition-transform cursor-pointer"
               >
-                <Sparkles className="size-3.5" />
+                <Sparkles className="size-3" />
                 <span>
                   {showGenerator ? "Hide Generator" : "Generate Strong"}
                 </span>
@@ -1188,16 +1012,16 @@ export function VaultTab() {
                 value={formPassword}
                 onChange={(e) => setFormPassword(e.target.value)}
                 placeholder="Enter password..."
-                className="h-10 text-xs font-mono font-bold"
+                className="h-9 sm:h-10 text-xs font-mono font-bold placeholder:text-[11px]"
               />
             </div>
           </div>
 
           {/* Inline Generator Panel */}
           {showGenerator && (
-            <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/20 space-y-3">
+            <div className="p-3 rounded-2xl bg-primary/5 border border-primary/20 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200">
                   Password Length ({genLength})
                 </span>
                 <Button
@@ -1205,7 +1029,7 @@ export function VaultTab() {
                   variant="outline"
                   size="sm"
                   onClick={handleApplyGeneratedPassword}
-                  className="gap-1.5 text-xs h-8 px-2.5 active:scale-95"
+                  className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-2.5 active:scale-95 font-bold"
                 >
                   <RefreshCw className="size-3" />
                   Generate & Insert
@@ -1218,25 +1042,25 @@ export function VaultTab() {
                 max="32"
                 value={genLength}
                 onChange={(e) => setGenLength(Number(e.target.value))}
-                className="w-full accent-primary cursor-pointer h-2 rounded-lg"
+                className="w-full accent-primary cursor-pointer h-1.5 rounded-lg"
               />
 
-              <div className="grid grid-cols-3 gap-2">
-                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                <label className="flex items-center justify-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-[10px] sm:text-xs font-semibold">
                   <Checkbox
                     checked={genUppercase}
                     onChange={(e) => setGenUppercase(e.target.checked)}
                   />
                   <span>A-Z</span>
                 </label>
-                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+                <label className="flex items-center justify-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-[10px] sm:text-xs font-semibold">
                   <Checkbox
                     checked={genNumbers}
                     onChange={(e) => setGenNumbers(e.target.checked)}
                   />
                   <span>0-9</span>
                 </label>
-                <label className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-xs font-semibold">
+                <label className="flex items-center justify-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-white/10 active:scale-95 cursor-pointer text-[10px] sm:text-xs font-semibold">
                   <Checkbox
                     checked={genSymbols}
                     onChange={(e) => setGenSymbols(e.target.checked)}
@@ -1248,8 +1072,8 @@ export function VaultTab() {
           )}
 
           {/* Notes */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="space-y-1 sm:space-y-1.5">
+            <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Encrypted Notes / Recovery Codes (Optional)
             </label>
             <Textarea
@@ -1257,16 +1081,16 @@ export function VaultTab() {
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
               placeholder="Security questions, backup codes, or account number..."
-              className="min-h-[70px] text-xs font-bold resize-none"
+              className="min-h-[64px] text-xs resize-none placeholder:text-[11px]"
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-white/5">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setShowAddEditModal(false)}
-              className="w-full sm:w-auto h-11 sm:h-9"
+              className="w-full sm:w-auto h-9 sm:h-10 text-xs font-bold"
             >
               Cancel
             </Button>
@@ -1274,7 +1098,7 @@ export function VaultTab() {
               type="submit"
               variant="primary"
               disabled={savingItem}
-              className="w-full sm:w-auto h-11 sm:h-9 font-bold"
+              className="w-full sm:w-auto h-9 sm:h-10 text-xs font-bold"
             >
               {savingItem ? "Encrypting & Storing..." : "Save Credential"}
             </Button>
