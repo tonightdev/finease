@@ -25,21 +25,13 @@ export function PWAInstallGuide() {
   );
 
   useEffect(() => {
-    // Check if user dismissed it recently
+    // Check if user dismissed or closed it
     if (typeof window !== "undefined") {
-      const dismissalData = localStorage.getItem("pwa-guide-dismissal");
-      if (dismissalData) {
-        try {
-          const { timestamp } = JSON.parse(dismissalData);
-          const now = Date.now();
-          const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
-
-          if (now - timestamp < threeDaysInMs) {
-            return; // Still in cooldown
-          }
-        } catch {
-          // If JSON error, just proceed
-        }
+      const isDismissed =
+        localStorage.getItem("finease_pwa_install_dismissed") === "true" ||
+        Boolean(localStorage.getItem("pwa-guide-dismissal"));
+      if (isDismissed) {
+        return; // Permanently closed by user - do not show again
       }
     }
 
@@ -52,6 +44,7 @@ export function PWAInstallGuide() {
 
     if (isPWA) {
       setShow(false);
+      localStorage.setItem("finease_pwa_install_dismissed", "true");
       return;
     }
 
@@ -86,12 +79,9 @@ export function PWAInstallGuide() {
   const handleDismiss = useCallback(() => {
     haptics.tick();
     setShow(false);
-    localStorage.setItem(
-      "pwa-guide-dismissal",
-      JSON.stringify({
-        timestamp: Date.now(),
-      }),
-    );
+    if (typeof window !== "undefined") {
+      localStorage.setItem("finease_pwa_install_dismissed", "true");
+    }
   }, []);
 
   const handleInstallClick = useCallback(async () => {
@@ -100,9 +90,12 @@ export function PWAInstallGuide() {
       try {
         await deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
+        setShow(false);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("finease_pwa_install_dismissed", "true");
+        }
         if (choice.outcome === "accepted") {
           haptics.success();
-          setShow(false);
         }
       } catch {
         // Fallback to manual guide
@@ -154,13 +147,23 @@ export function PWAInstallGuide() {
                     Install FinEase on your home screen for instantaneous 0ms
                     launches, offline access, and haptic feedback.
                   </p>
-                  <Button
-                    onClick={handleInstallClick}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider py-2.5 rounded-xl shadow-lg shadow-primary/25"
-                    leftIcon={<Sparkles className="w-4 h-4 text-amber-300" />}
-                  >
-                    Install App Now
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleInstallClick}
+                      className="flex-1 bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider py-2.5 rounded-xl shadow-lg shadow-primary/25"
+                      leftIcon={<Sparkles className="w-4 h-4 text-amber-300" />}
+                    >
+                      Install App
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleDismiss}
+                      className="text-slate-400 hover:text-white hover:bg-white/10 font-bold text-xs uppercase tracking-wider py-2.5 px-3 rounded-xl"
+                    >
+                      Not Now
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
@@ -221,6 +224,15 @@ export function PWAInstallGuide() {
                       </div>
                     </div>
                   )}
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleDismiss}
+                    className="w-full text-slate-400 hover:text-white hover:bg-white/10 font-bold text-[10px] uppercase tracking-widest py-2 rounded-xl mt-1 border border-white/5"
+                  >
+                    Got It • Don&apos;t Show Again
+                  </Button>
                 </div>
               )}
 
