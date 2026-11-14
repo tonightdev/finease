@@ -4,7 +4,7 @@ import { useMemo, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { NetWorthChart } from "@/components/dashboard/NetWorthChart";
 import { AssetAllocationDonut } from "@/components/dashboard/AssetLiabilityDonut";
-import { DashboardStatCard } from "@/components/dashboard/DashboardStatCard";
+import { StatCard } from "@/components/ui/StatCard";
 import { WealthIndex } from "@/components/dashboard/WealthIndex";
 import { FinancialIntelligencePulse } from "@/components/dashboard/FinancialIntelligencePulse";
 import { CapitalResilienceCard } from "@/components/dashboard/CapitalResilienceCard";
@@ -637,23 +637,23 @@ export default function Home() {
             className="mx-auto w-full"
           >
             <Link href="/plans?tab=Expiries" className="block">
-              <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
-                    <AlertTriangle size={20} />
+              <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-3 sm:p-4 flex items-center justify-between group hover:bg-rose-500/20 transition-all gap-2">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="size-9 sm:size-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
+                    <AlertTriangle size={18} />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider break-words leading-snug">
                       {expiringSoon.length} Expiry Horizon
-                      {expiringSoon.length > 1 ? "s" : ""} require
-                      {expiringSoon.length === 1 ? "s" : ""} immediate attention
+                      {expiringSoon.length > 1 ? "s" : ""} Require
+                      {expiringSoon.length === 1 ? "s" : ""} Attention
                     </h4>
-                    <p className="text-[10px] font-bold text-rose-500/70 uppercase tracking-widest">
+                    <p className="text-[9px] sm:text-[10px] font-bold text-rose-500/70 uppercase tracking-widest break-words mt-0.5 leading-none">
                       Impending expiry detected within 7-day window
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="size-5 text-rose-500 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="size-4 sm:size-5 text-rose-500 group-hover:translate-x-1 transition-transform shrink-0" />
               </div>
             </Link>
           </motion.div>
@@ -661,10 +661,10 @@ export default function Home() {
 
         {/* 4 Distinctive Wealth Pillars */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <DashboardStatCard
+          <StatCard
             className="w-full"
             label="Net Worth"
-            subtitle="Assets minus debt"
+            description="Assets minus debt"
             icon={<Sparkles className="size-3 text-emerald-500" />}
             value={realTimeNetWorth}
             onClick={() => setIsNetWorthModalOpen(true)}
@@ -675,10 +675,10 @@ export default function Home() {
             }}
           />
 
-          <DashboardStatCard
+          <StatCard
             className="w-full"
             label="Liquid Reserves"
-            subtitle="Cash & Bank"
+            description="Cash & Bank"
             icon={<Landmark className="size-3 text-blue-500" />}
             value={dashboardStats.liquidCapital}
             valueColor="text-blue-600 dark:text-blue-400"
@@ -689,10 +689,10 @@ export default function Home() {
             }}
           />
 
-          <DashboardStatCard
+          <StatCard
             className="w-full"
             label="Investments"
-            subtitle="Portfolio value"
+            description="Portfolio value"
             icon={<TrendingUp className="size-3 text-indigo-500" />}
             value={totalInvestments}
             valueColor="text-indigo-600 dark:text-indigo-400"
@@ -706,10 +706,10 @@ export default function Home() {
             }}
           />
 
-          <DashboardStatCard
+          <StatCard
             className="w-full"
             label="Liabilities"
-            subtitle="Loans & Cards"
+            description="Loans & Cards"
             icon={<CreditCard className="size-3 text-rose-500" />}
             value={liabilities}
             valueColor="text-rose-500"

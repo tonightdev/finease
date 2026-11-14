@@ -717,8 +717,8 @@ export default function StrategiesPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
         </div>
-        <div className="flex flex-col xl:flex-row gap-6 xl:gap-4 items-start">
-          <div className="xl:w-[380px] w-full shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-4 items-start">
+          <div className="lg:w-[380px] w-full shrink-0 flex flex-col gap-4 sm:gap-4 lg:gap-5">
             <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
               <Skeleton className="h-10 w-32 rounded-xl" />
               <Skeleton className="h-12 w-full rounded-xl" />
@@ -827,7 +827,7 @@ export default function StrategiesPage() {
               </button>
             </div>
 
-            <div className="xl:hidden flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm sm:w-[240px] h-11">
+            <div className="lg:hidden flex bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm sm:w-[240px] h-11">
               <button
                 onClick={() => setMobileTab("matrix")}
                 className={`flex-1 h-full text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${mobileTab === "matrix" ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-500 hover:text-slate-700"}`}
@@ -845,9 +845,9 @@ export default function StrategiesPage() {
         }
       />
 
-      <div className="flex flex-col xl:flex-row gap-6 xl:gap-4 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-4 items-start">
         <div
-          className={`xl:w-[380px] shrink-0 flex flex-col gap-4 sm:gap-4 xl:gap-5 w-full min-w-0 ${mobileTab === "controls" ? "flex" : "hidden xl:flex"}`}
+          className={`lg:w-[380px] shrink-0 flex flex-col gap-4 sm:gap-4 lg:gap-5 w-full min-w-0 ${mobileTab === "controls" ? "flex" : "hidden lg:flex"}`}
         >
           <Card className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm w-full space-y-3.5">
             <div className="flex p-1 mb-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/5">
@@ -1380,7 +1380,7 @@ export default function StrategiesPage() {
         </div>
 
         <div
-          className={`flex-1 w-full min-w-0 ${mobileTab === "matrix" ? "block" : "hidden xl:block"}`}
+          className={`flex-1 w-full min-w-0 ${mobileTab === "matrix" ? "block" : "hidden lg:block"}`}
         >
           <Card className="h-auto sm:h-full min-h-[400px] sm:min-h-[500px] flex flex-col pt-0 px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-5 sm:space-y-4">
             {isSwitching ? (

@@ -194,6 +194,20 @@ export default function TransactionsPageClient() {
     currentPage * itemsPerPage,
   );
 
+  const { totalIncome, totalExpense, netFlow } = useMemo(() => {
+    let inc = 0;
+    let exp = 0;
+    for (const t of filtered) {
+      if (t.type === "income") inc += t.amount;
+      else if (t.type === "expense") exp += t.amount;
+    }
+    return {
+      totalIncome: inc,
+      totalExpense: exp,
+      netFlow: inc - exp,
+    };
+  }, [filtered]);
+
   const [showExportOptions, setShowExportOptions] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -337,58 +351,63 @@ export default function TransactionsPageClient() {
           </div>
         }
       >
-        <div
-          className={`flex items-center gap-1.5 py-0.5 ${showAllCategories ? "flex-wrap" : "overflow-x-auto no-scrollbar"}`}
-        >
-          <button
-            onClick={() => {
-              setEditingCategory(null);
-              setIsCategoryModalOpen(true);
-            }}
-            className="size-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center shrink-0"
+        <div className="relative">
+          <div
+            className={`flex items-center gap-1.5 py-0.5 ${showAllCategories ? "flex-wrap" : "overflow-x-auto no-scrollbar pr-8"}`}
           >
-            <Plus size={12} />
-          </button>
-          {(showAllCategories ? categories : categories.slice(0, 7)).map(
-            (c, index) => (
-              <div
-                key={c.id || `category-${index}`}
-                className="relative group shrink-0"
-              >
-                <button
-                  onClick={() => {
-                    setFilterCategory(filterCategory === c.id ? "all" : c.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`flex items-center gap-1.5 pl-2.5 pr-6 py-1 rounded-lg border transition-all ${filterCategory === c.id ? "bg-primary/10 border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"}`}
-                >
-                  <div className={`w-1 h-1 rounded-full ${c.color}`} />
-                  <span
-                    className={`font-black text-[8px] uppercase tracking-widest ${filterCategory === c.id ? "text-primary" : "text-slate-500"}`}
-                  >
-                    {c.name}
-                  </span>
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingCategory(c);
-                    setIsCategoryModalOpen(true);
-                  }}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-primary bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-white/5 transition-all hover:scale-110 active:scale-90"
-                >
-                  <Edit2 size={8} />
-                </button>
-              </div>
-            ),
-          )}
-          {categories.length > 7 && (
             <button
-              onClick={() => setShowAllCategories(!showAllCategories)}
-              className="px-2 h-7 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[8px] font-black uppercase text-slate-500 hover:text-primary transition-all shrink-0"
+              onClick={() => {
+                setEditingCategory(null);
+                setIsCategoryModalOpen(true);
+              }}
+              className="size-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center shrink-0"
             >
-              {showAllCategories ? "Less" : `+${categories.length - 7} More`}
+              <Plus size={12} />
             </button>
+            {(showAllCategories ? categories : categories.slice(0, 7)).map(
+              (c, index) => (
+                <div
+                  key={c.id || `category-${index}`}
+                  className="relative group shrink-0"
+                >
+                  <button
+                    onClick={() => {
+                      setFilterCategory(filterCategory === c.id ? "all" : c.id);
+                      setCurrentPage(1);
+                    }}
+                    className={`flex items-center gap-1.5 pl-2.5 pr-6 py-1 rounded-lg border transition-all ${filterCategory === c.id ? "bg-primary/10 border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"}`}
+                  >
+                    <div className={`w-1 h-1 rounded-full ${c.color}`} />
+                    <span
+                      className={`font-black text-[8px] uppercase tracking-widest ${filterCategory === c.id ? "text-primary" : "text-slate-500"}`}
+                    >
+                      {c.name}
+                    </span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCategory(c);
+                      setIsCategoryModalOpen(true);
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-primary bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-white/5 transition-all hover:scale-110 active:scale-90"
+                  >
+                    <Edit2 size={8} />
+                  </button>
+                </div>
+              ),
+            )}
+            {categories.length > 7 && (
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="px-2 h-7 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[8px] font-black uppercase text-slate-500 hover:text-primary transition-all shrink-0"
+              >
+                {showAllCategories ? "Less" : `+${categories.length - 7} More`}
+              </button>
+            )}
+          </div>
+          {!showAllCategories && (
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[var(--background)] to-transparent" />
           )}
         </div>
 
@@ -532,6 +551,54 @@ export default function TransactionsPageClient() {
         )}
       </PageHeader>
 
+      {/* 3-Pillar Ledger Performance Indicator */}
+      <div className="grid grid-cols-3 gap-2.5 my-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl p-3 text-center shadow-xs flex flex-col justify-between">
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+            Total Inflow
+          </span>
+          <span
+            data-balance="true"
+            className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1 cloaked-balance tracking-tight"
+          >
+            +₹
+            {totalIncome.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+          </span>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl p-3 text-center shadow-xs flex flex-col justify-between">
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+            Total Outflow
+          </span>
+          <span
+            data-balance="true"
+            className="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-400 mt-1 cloaked-balance tracking-tight"
+          >
+            -₹
+            {totalExpense.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+          </span>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl p-3 text-center shadow-xs flex flex-col justify-between">
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+            Net Activity
+          </span>
+          <span
+            data-balance="true"
+            className={`text-xs sm:text-sm font-black mt-1 cloaked-balance tracking-tight ${
+              netFlow >= 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-rose-600 dark:text-rose-400"
+            }`}
+          >
+            {netFlow >= 0 ? "+" : "-"}₹
+            {Math.abs(netFlow).toLocaleString("en-IN", {
+              maximumFractionDigits: 0,
+            })}
+          </span>
+        </div>
+      </div>
+
       <div className="mb-4">
         <Pagination
           currentPage={currentPage}
@@ -633,7 +700,7 @@ export default function TransactionsPageClient() {
                   </td>
                   <td className="px-3 py-1.5">
                     <div
-                      className="text-[11px] font-black text-slate-900 dark:text-white truncate max-w-[200px]"
+                      className="text-[11px] font-black text-slate-900 dark:text-white max-w-[240px] leading-snug break-words"
                       title={tx.description}
                     >
                       {tx.description}

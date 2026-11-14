@@ -61,10 +61,10 @@ export function IdentitiesTab() {
                   {acc.displayName?.[0] || acc.email?.[0] || "?"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-black text-[13px] text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                  <h4 className="font-black text-[13px] text-slate-900 dark:text-white uppercase tracking-tight break-words leading-snug">
                     {acc.displayName || "Linked Node"}
                   </h4>
-                  <p className="text-[9px] font-bold text-slate-400 truncate w-full">
+                  <p className="text-[9px] font-bold text-slate-400 break-words w-full">
                     {acc.email}
                   </p>
                   {isPrimary && (

@@ -918,7 +918,8 @@ export default function TransactionsImportClient() {
                               reviewQueue.filter((_, i) => i !== idx),
                             )
                           }
-                          className="size-6 flex items-center justify-center rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100"
+                          className="size-7 flex items-center justify-center rounded-lg bg-rose-50/50 dark:bg-rose-500/10 text-slate-400 hover:text-rose-500 hover:bg-rose-100 transition-all cursor-pointer"
+                          title="Remove Entry"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

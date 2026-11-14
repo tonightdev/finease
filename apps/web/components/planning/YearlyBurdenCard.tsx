@@ -80,7 +80,7 @@ export function YearlyBurdenCard({
           </div>
           <div className="min-w-0">
             <h4
-              className={`text-xs font-black uppercase tracking-tight truncate leading-tight transition-colors ${
+              className={`text-xs font-black uppercase tracking-tight leading-snug break-words transition-colors ${
                 isSelected
                   ? "text-primary"
                   : "text-slate-900 dark:text-white group-hover:text-primary"
@@ -91,7 +91,7 @@ export function YearlyBurdenCard({
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5">
               {count !== undefined && (
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                   {count} {count === 1 ? "Commitment" : "Commitments"}
                 </span>
               )}

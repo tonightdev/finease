@@ -36,14 +36,14 @@ export function YearlyExpenseCard({
           </div>
           <div className="min-w-0 flex-1">
             <h4
-              className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate leading-snug"
+              className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight leading-snug break-words"
               title={expense.title}
             >
               {expense.title}
             </h4>
             <div className="flex items-center gap-1 mt-0.5">
               <Banknote className="size-2.5 text-slate-400 shrink-0" />
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate">
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest break-words">
                 {expense.accountName || "Unlinked Node"}
               </p>
             </div>
@@ -54,7 +54,7 @@ export function YearlyExpenseCard({
       {/* Bottom Section: Monthly & Yearly amounts + Actions */}
       <div className="mt-2 pt-2 border-t border-slate-100 dark:border-white/5 flex items-end justify-between gap-2 relative z-10">
         <div className="min-w-0">
-          <div className="text-[7px] font-bold text-slate-400 uppercase tracking-widest truncate">
+          <div className="text-[7px] font-bold text-slate-400 uppercase tracking-widest leading-none">
             ₹{expense.yearlyAmount.toLocaleString("en-IN")}/yr
           </div>
           <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight leading-tight mt-0.5">

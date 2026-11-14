@@ -198,10 +198,10 @@ export function AccountsTab() {
                       <Wallet className="size-3.5 sm:size-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                      <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight break-words leading-snug">
                         {acc.name}
                       </h4>
-                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                         {acc.type.toUpperCase()}
                       </p>
                     </div>

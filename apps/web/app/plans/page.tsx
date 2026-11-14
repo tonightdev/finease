@@ -22,7 +22,6 @@ import {
   Zap,
   Plus,
   Trash2,
-  Pencil,
   Target,
   Bell,
   CheckCircle2,
@@ -69,9 +68,9 @@ import {
   SimExpense,
   Expiry,
 } from "@repo/types";
-import { formatDate } from "@/lib/utils";
 
 // Modal Components
+import { GoalCard } from "@/components/goals/GoalCard";
 import { EditGoalModal } from "@/components/goals/EditGoalModal";
 import { TopUpModal } from "@/components/goals/TopUpModal";
 import { AddExpiryModal } from "@/components/expiries/AddExpiryModal";
@@ -416,7 +415,7 @@ function PlansDirectoryPageContent() {
           className="space-y-2"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl h-11 w-full sm:w-auto">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl h-11 w-full sm:w-auto overflow-x-auto no-scrollbar">
               {(
                 ["Goals", "Yearly", "Expiries", "Simulations"] as TabType[]
               ).map((tab) => (
@@ -425,7 +424,7 @@ function PlansDirectoryPageContent() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleTabChange(tab)}
-                  className={`flex-1 sm:flex-none px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`flex-1 sm:flex-none shrink-0 px-3 sm:px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                     activeTab === tab
                       ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -522,7 +521,7 @@ function PlansDirectoryPageContent() {
                     />
 
                     {plansLoading || !plansFetched ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                         {Array.from({ length: 4 }).map((_, i) => (
                           <div
                             key={`plan-skeleton-${i}`}
@@ -569,7 +568,7 @@ function PlansDirectoryPageContent() {
                         )}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                         <AnimatePresence mode="popLayout">
                           {filteredPlans.map((plan: Simulation, planIdx) => (
                             <motion.div
@@ -582,7 +581,7 @@ function PlansDirectoryPageContent() {
                                 setIsNavigating(true);
                                 router.push(`/plans/${plan.id}`);
                               }}
-                              className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all h-full flex flex-col justify-between cursor-pointer ${
+                              className={`group relative p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all h-full flex flex-col justify-between cursor-pointer ${
                                 plan.status === "completed"
                                   ? "opacity-75 grayscale-[0.2]"
                                   : ""
@@ -593,111 +592,104 @@ function PlansDirectoryPageContent() {
 
                               {/* Accent Edge */}
                               <div
-                                className={`absolute top-0 left-0 w-full h-[3px] transition-all duration-300 ${plan.status === "completed" ? "bg-slate-300 dark:bg-slate-700" : "bg-gradient-to-r from-primary via-indigo-500 to-emerald-500"}`}
+                                className={`absolute top-0 left-0 w-full h-[2.5px] transition-all duration-300 ${plan.status === "completed" ? "bg-slate-300 dark:bg-slate-700" : "bg-gradient-to-r from-primary via-indigo-500 to-emerald-500"}`}
                               />
 
-                              <div className="space-y-3.5 sm:space-y-5 relative z-10">
-                                <div className="flex justify-between items-start">
-                                  <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl border bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-900/40 dark:to-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner">
-                                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
-                                  </div>
-
-                                  <div className="flex flex-col items-end gap-2">
-                                    <div className="flex items-center gap-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-1 rounded-xl border border-slate-100 dark:border-white/10 shadow-sm transition-all">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleTogglePlanStatus(plan);
-                                        }}
-                                        className="p-1 px-2 text-slate-400 hover:text-emerald-500 transition-all rounded-lg hover:bg-emerald-500/5"
-                                        title={
-                                          plan.status === "completed"
-                                            ? "Reopen Strategy"
-                                            : "Complete Strategy"
-                                        }
-                                      >
-                                        {plan.status === "completed" ? (
-                                          <RefreshCw className="size-3.5" />
-                                        ) : (
-                                          <CheckCircle2 className="size-3.5" />
-                                        )}
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setPlanToDelete(plan.id);
-                                        }}
-                                        className={`p-1 px-2 transition-all rounded-lg ${plan.status === "completed" ? "text-rose-500 hover:bg-rose-500/10" : "text-slate-400 hover:text-rose-500 hover:bg-rose-500/5"}`}
-                                        title={
-                                          plan.status === "completed"
-                                            ? "Purge Strategy"
-                                            : "Delete Strategy"
-                                        }
-                                      >
-                                        {plan.status === "completed" ? (
-                                          <Zap className="size-3.5" />
-                                        ) : (
-                                          <Trash2 className="size-3.5" />
-                                        )}
-                                      </button>
+                              <div className="space-y-3 relative z-10">
+                                <div className="flex items-start justify-between gap-2.5">
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="size-8 sm:size-9 rounded-xl border bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-900/40 dark:to-indigo-500/10 text-primary border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shrink-0 shadow-xs">
+                                      <TrendingUp className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase transition-colors group-hover:text-primary leading-snug break-words">
+                                        {plan.name}
+                                      </h4>
+                                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 leading-none">
+                                        {new Date(
+                                          plan.createdAt,
+                                        ).toLocaleDateString("en-IN", {
+                                          day: "2-digit",
+                                          month: "short",
+                                          year: "numeric",
+                                        })}
+                                      </p>
                                     </div>
                                   </div>
-                                </div>
 
-                                <div className="flex flex-col items-center text-center">
-                                  <h4 className="text-[13px] sm:text-[15px] font-black tracking-tighter text-slate-900 dark:text-white uppercase transition-colors group-hover:text-primary leading-tight">
-                                    {plan.name}
-                                  </h4>
-                                  <div className="flex items-center gap-2 mt-1.5 justify-center">
-                                    <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
-                                    <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                                      {new Date(
-                                        plan.createdAt,
-                                      ).toLocaleDateString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                      })}
-                                    </p>
-                                    <div className="h-0.5 w-4 bg-primary/20 rounded-full" />
+                                  <div className="flex items-center gap-1 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-0.5 rounded-lg border border-slate-100 dark:border-white/10 shrink-0">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTogglePlanStatus(plan);
+                                      }}
+                                      className="p-1 px-1.5 text-slate-400 hover:text-emerald-500 transition-all rounded hover:bg-emerald-500/10"
+                                      title={
+                                        plan.status === "completed"
+                                          ? "Reopen Strategy"
+                                          : "Complete Strategy"
+                                      }
+                                    >
+                                      {plan.status === "completed" ? (
+                                        <RefreshCw className="size-3.5" />
+                                      ) : (
+                                        <CheckCircle2 className="size-3.5" />
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPlanToDelete(plan.id);
+                                      }}
+                                      className={`p-1 px-1.5 transition-all rounded ${plan.status === "completed" ? "text-rose-500 hover:bg-rose-500/10" : "text-slate-400 hover:text-rose-500 hover:bg-rose-500/10"}`}
+                                      title={
+                                        plan.status === "completed"
+                                          ? "Purge Strategy"
+                                          : "Delete Strategy"
+                                      }
+                                    >
+                                      {plan.status === "completed" ? (
+                                        <Zap className="size-3.5" />
+                                      ) : (
+                                        <Trash2 className="size-3.5" />
+                                      )}
+                                    </button>
                                   </div>
                                 </div>
 
-                                <div className="">
-                                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-                                    {/* Stat Pill: Liquidity */}
-                                    <div className="flex flex-col p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-emerald-50/30 dark:bg-emerald-500/5 border border-emerald-100/50 dark:border-emerald-500/10 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
-                                      <span className="text-[6px] sm:text-[7px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-none mb-1 sm:mb-1.5">
-                                        Liquidity
-                                      </span>
-                                      <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">
-                                        ₹
-                                        {(plan.accounts || [])
-                                          .reduce(
-                                            (acc: number, a: SimAccount) =>
-                                              acc + a.balance,
-                                            0,
-                                          )
-                                          .toLocaleString("en-IN")}
-                                      </span>
-                                    </div>
+                                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
+                                  {/* Stat Pill: Liquidity */}
+                                  <div className="flex flex-col p-2 rounded-xl bg-emerald-50/40 dark:bg-emerald-500/5 border border-emerald-100/60 dark:border-emerald-500/10 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
+                                    <span className="text-[7px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-none mb-1">
+                                      Liquidity
+                                    </span>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">
+                                      ₹
+                                      {(plan.accounts || [])
+                                        .reduce(
+                                          (acc: number, a: SimAccount) =>
+                                            acc + a.balance,
+                                          0,
+                                        )
+                                        .toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
 
-                                    {/* Stat Pill: Burn Rate */}
-                                    <div className="flex flex-col p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-rose-50/30 dark:bg-rose-500/5 border border-rose-100/50 dark:border-rose-500/10 group-hover:border-rose-300 dark:group-hover:border-rose-500/30 transition-colors">
-                                      <span className="text-[6px] sm:text-[7px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest leading-none mb-1 sm:mb-1.5">
-                                        Burn Rate
-                                      </span>
-                                      <span className="text-xs font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                                        ₹
-                                        {(plan.expenses || [])
-                                          .reduce(
-                                            (acc: number, e: SimExpense) =>
-                                              acc + e.amount,
-                                            0,
-                                          )
-                                          .toLocaleString("en-IN")}
-                                      </span>
-                                    </div>
+                                  {/* Stat Pill: Burn Rate */}
+                                  <div className="flex flex-col p-2 rounded-xl bg-rose-50/40 dark:bg-rose-500/5 border border-rose-100/60 dark:border-rose-500/10 group-hover:border-rose-300 dark:group-hover:border-rose-500/30 transition-colors">
+                                    <span className="text-[7px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest leading-none mb-1">
+                                      Burn Rate
+                                    </span>
+                                    <span className="text-xs font-black text-rose-600 dark:text-rose-400 tabular-nums">
+                                      ₹
+                                      {(plan.expenses || [])
+                                        .reduce(
+                                          (acc: number, e: SimExpense) =>
+                                            acc + e.amount,
+                                          0,
+                                        )
+                                        .toLocaleString("en-IN")}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -788,118 +780,25 @@ function PlansDirectoryPageContent() {
                         actionIcon={<Plus className="w-3.5 h-3.5" />}
                       />
                     ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        {filteredGoals.map((goal: FinancialGoal, goalIdx) => {
-                          const reqMonthly = calculateGap(goal);
-                          const isCompleted =
-                            goal.currentAmount >= goal.targetAmount;
-                          const percent = Math.min(
-                            100,
-                            (goal.currentAmount / goal.targetAmount) * 100,
-                          ).toFixed(1);
-                          return (
-                            <div
-                              key={goal.id || `goal-${goalIdx}`}
-                              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl flex flex-col justify-between group shadow-sm hover:shadow-md transition-all h-full"
-                            >
-                              <div className="flex justify-between items-start mb-2 gap-1.5">
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="text-slate-900 dark:text-white font-black text-xs tracking-wider uppercase truncate">
-                                    {goal.name}
-                                  </h3>
-                                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
-                                    {formatDate(goal.targetDate)}
-                                  </p>
-                                </div>
-                                <div
-                                  className={`px-1.5 py-0.5 text-[8px] font-black rounded-lg border shrink-0 ${isCompleted ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-primary/10 text-primary border-primary/20"}`}
-                                >
-                                  {isCompleted ? "DONE" : `${percent}%`}
-                                </div>
-                              </div>
-
-                              <div className="space-y-1.5 my-auto py-1">
-                                <div className="flex justify-between items-baseline text-[9px] sm:text-[10px] font-black uppercase tracking-tight">
-                                  <span
-                                    className={
-                                      isCompleted
-                                        ? "text-emerald-500"
-                                        : "text-slate-900 dark:text-white"
-                                    }
-                                  >
-                                    ₹
-                                    {goal.currentAmount.toLocaleString("en-IN")}
-                                  </span>
-                                  <span className="text-slate-400 text-[8px]">
-                                    ₹{goal.targetAmount.toLocaleString("en-IN")}
-                                  </span>
-                                </div>
-                                <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-primary"}`}
-                                    style={{ width: `${percent}%` }}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-[7px] font-black uppercase tracking-wider text-slate-400">
-                                  <span className="truncate">
-                                    {isCompleted
-                                      ? "Achieved"
-                                      : `Gap: ₹${(goal.targetAmount - goal.currentAmount).toLocaleString("en-IN")}`}
-                                  </span>
-                                  {!isCompleted && (
-                                    <span className="text-orange-500 shrink-0 ml-1">
-                                      ₹
-                                      {reqMonthly.toLocaleString("en-IN", {
-                                        maximumFractionDigits: 0,
-                                      })}
-                                      /mo
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-50 dark:border-white/5">
-                                {!isCompleted && (
-                                  <button
-                                    onClick={() => {
-                                      setTopUpGoal(goal);
-                                      setIsTopUpModalOpen(true);
-                                    }}
-                                    className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary text-[8px] font-black uppercase py-1 px-1.5 rounded-lg transition-all truncate cursor-pointer"
-                                  >
-                                    Top Up
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => {
-                                    setEditingGoal(goal);
-                                    setIsGoalModalOpen(true);
-                                  }}
-                                  className="size-7 flex items-center justify-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-500 rounded-lg border border-slate-100 dark:border-white/5 transition-all shrink-0 ml-auto cursor-pointer"
-                                  title="Edit Goal"
-                                >
-                                  <Pencil className="size-3" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setGoalToDelete(goal);
-                                    setIsGoalDeleteModalOpen(true);
-                                  }}
-                                  className={`size-7 flex items-center justify-center rounded-lg border transition-all shrink-0 cursor-pointer ${isCompleted ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500 hover:text-white" : "bg-rose-50 dark:bg-rose-500/5 text-rose-500 border-rose-500/5 hover:bg-rose-500 hover:text-white"}`}
-                                  title={
-                                    isCompleted ? "Purge Goal" : "Delete Goal"
-                                  }
-                                >
-                                  {isCompleted ? (
-                                    <Zap className="size-3" />
-                                  ) : (
-                                    <Trash2 className="size-3" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {filteredGoals.map((goal: FinancialGoal) => (
+                          <GoalCard
+                            key={goal.id}
+                            goal={goal}
+                            onTopUp={(g) => {
+                              setTopUpGoal(g);
+                              setIsTopUpModalOpen(true);
+                            }}
+                            onEdit={(g) => {
+                              setEditingGoal(g);
+                              setIsGoalModalOpen(true);
+                            }}
+                            onDelete={(g) => {
+                              setGoalToDelete(g);
+                              setIsGoalDeleteModalOpen(true);
+                            }}
+                          />
+                        ))}
                       </div>
                     )}
                   </div>
@@ -917,7 +816,7 @@ function PlansDirectoryPageContent() {
               >
                 <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
                   {expiriesLoading || !expiriesFetched ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                       {Array.from({ length: 4 }).map((_, i) => (
                         <div
                           key={`expiry-skeleton-${i}`}
@@ -968,46 +867,52 @@ function PlansDirectoryPageContent() {
               >
                 <div className="px-3 pb-3 sm:p-3 sm:border sm:bg-white sm:dark:bg-slate-900 border-none bg-transparent shadow-none sm:shadow-sm sm:rounded-2xl rounded-none -mx-2 sm:mx-0 w-auto sm:w-full space-y-4 sm:space-y-3">
                   {yearlyBurdenByAccount.length > 0 && (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 pb-2.5 mb-2.5 border-b border-slate-100 dark:border-white/5 overflow-x-auto no-scrollbar">
                       {yearlyBurdenByAccount.length > 1 && (
-                        <YearlyBurdenCard
-                          key="all-accounts"
-                          name="All Accounts"
-                          monthlyAmount={totalYearlyBurden}
-                          count={yearlyExpenses.length}
-                          isAll={true}
-                          isSelected={effectiveAccountFilter === "all"}
-                          onClick={() => setYearlyAccountFilter("all")}
-                        />
+                        <div className="min-w-[190px] sm:min-w-0 shrink-0 sm:shrink">
+                          <YearlyBurdenCard
+                            key="all-accounts"
+                            name="All Accounts"
+                            monthlyAmount={totalYearlyBurden}
+                            count={yearlyExpenses.length}
+                            isAll={true}
+                            isSelected={effectiveAccountFilter === "all"}
+                            onClick={() => setYearlyAccountFilter("all")}
+                          />
+                        </div>
                       )}
                       {yearlyBurdenByAccount.map((group, idx) => (
-                        <YearlyBurdenCard
+                        <div
                           key={
                             group.accountId
                               ? `burden-${group.accountId}`
                               : `burden-${idx}`
                           }
-                          name={group.name}
-                          balance={group.balance}
-                          monthlyAmount={group.amount}
-                          count={group.expenses.length}
-                          isSelected={
-                            effectiveAccountFilter === group.accountId
-                          }
-                          onClick={() => {
-                            setYearlyAccountFilter((prev) =>
-                              prev === group.accountId
-                                ? "all"
-                                : group.accountId,
-                            );
-                          }}
-                        />
+                          className="min-w-[190px] sm:min-w-0 shrink-0 sm:shrink"
+                        >
+                          <YearlyBurdenCard
+                            name={group.name}
+                            balance={group.balance}
+                            monthlyAmount={group.amount}
+                            count={group.expenses.length}
+                            isSelected={
+                              effectiveAccountFilter === group.accountId
+                            }
+                            onClick={() => {
+                              setYearlyAccountFilter((prev) =>
+                                prev === group.accountId
+                                  ? "all"
+                                  : group.accountId,
+                              );
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
 
                   {yearlyLoading || !yearlyFetched ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                       {[1, 2, 3, 4].map((i) => (
                         <Skeleton key={i} className="h-32 w-full rounded-2xl" />
                       ))}
@@ -1083,7 +988,7 @@ function PlansDirectoryPageContent() {
                           </div>
 
                           {/* Account Commitments Grid */}
-                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                             <AnimatePresence mode="popLayout" initial={false}>
                               {group.expenses.map(
                                 (exp: YearlyExpense, expIdx) => (

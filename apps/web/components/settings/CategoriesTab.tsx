@@ -344,7 +344,7 @@ export function CategoriesTab() {
                               <Tag className="size-4 sm:size-4.5" />
                             </div>
                             <div className="min-w-0">
-                              <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                              <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight break-words leading-snug">
                                 {cat.name}
                               </h4>
                               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">

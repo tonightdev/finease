@@ -26,19 +26,14 @@ import { Account } from "@repo/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageContainer } from "@/components/ui/PageContainer";
 import { Skeleton } from "@/components/ui/Skeleton";
-import {
-  Trash2,
-  Edit2,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { Trash2, Edit2, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { StatCard } from "@/components/ui/StatCard";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default function PortfolioPageClient() {
   const { user, loading: authLoading } = useAuth();
@@ -246,66 +241,45 @@ export default function PortfolioPageClient() {
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={`skeleton-stat-${i}`}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm space-y-2"
-              >
-                <Skeleton className="h-2 w-12" />
-                <Skeleton className="h-5 w-24" />
-              </div>
-            ))
-          : [
-              {
-                label: "Net Worth",
-                value: netWorth,
-                color: "text-slate-900 dark:text-white",
-              },
-              {
-                label: "Total Invested",
-                value: totalCapitalInvested,
-                color: "text-slate-900 dark:text-white",
-              },
-              {
-                label: "Current Value",
-                value: investments
-                  .filter((a) => !a.excludeFromAnalytics)
-                  .reduce((sum, item) => sum + item.balance, 0),
-                color: "text-emerald-500",
-              },
-              {
-                label: "Total Liabilities",
-                value: liabilities,
-                color: "text-rose-500",
-              },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-2.5 rounded-2xl shadow-sm"
-              >
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                  {stat.label}
-                </div>
-                <div
-                  data-balance="true"
-                  className={`text-base font-black ${stat.color} mt-1 tracking-tighter truncate md:overflow-visible cloaked-balance`}
-                >
-                  ₹
-                  {stat.value.toLocaleString("en-IN", {
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
-            ))}
+        <StatCard
+          label="Net Worth"
+          description="Assets minus liabilities"
+          value={netWorth}
+          valueColor="text-slate-900 dark:text-white"
+          isLoading={loading}
+        />
+        <StatCard
+          label="Total Invested"
+          description="Capital deployed"
+          value={totalCapitalInvested}
+          valueColor="text-slate-900 dark:text-white"
+          isLoading={loading}
+        />
+        <StatCard
+          label="Current Value"
+          description="Portfolio market value"
+          value={investments
+            .filter((a) => !a.excludeFromAnalytics)
+            .reduce((sum, item) => sum + item.balance, 0)}
+          valueColor="text-emerald-500"
+          isLoading={loading}
+        />
+        <StatCard
+          label="Total Liabilities"
+          description="Outstanding loans"
+          value={liabilities}
+          valueColor="text-rose-500"
+          isLoading={loading}
+        />
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Investments
-        </h3>
-        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-center border-collapse">
+        <SectionHeader
+          title="Investments"
+          description={`${investments.length} Active Portfolio Holding${investments.length !== 1 ? "s" : ""}`}
+        />
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[700px] text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
@@ -451,7 +425,7 @@ export default function PortfolioPageClient() {
           </table>
         </div>
 
-        <div className="lg:hidden grid grid-cols-2 gap-3">
+        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div
@@ -501,7 +475,7 @@ export default function PortfolioPageClient() {
                         inv.assetType ||
                         "General"}
                     </span>
-                    <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate">
+                    <h4 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight leading-snug break-words">
                       {inv.name}
                     </h4>
                   </div>
@@ -566,41 +540,22 @@ export default function PortfolioPageClient() {
           )}
         </div>
 
-        {totalInvestmentPages > 1 && (
-          <div className="flex items-center justify-between px-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              {investmentPage} / {totalInvestmentPages}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setInvestmentPage((p) => Math.max(p - 1, 1))}
-                disabled={investmentPage === 1}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() =>
-                  setInvestmentPage((p) =>
-                    Math.min(p + 1, totalInvestmentPages),
-                  )
-                }
-                disabled={investmentPage === totalInvestmentPages}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={investmentPage}
+          totalPages={totalInvestmentPages}
+          totalEntries={investments.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setInvestmentPage}
+        />
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Other Assets
-        </h3>
-        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-center border-collapse">
+        <SectionHeader
+          title="Other Assets"
+          description={`${otherAssets.length} Fixed & Physical Wealth Node${otherAssets.length !== 1 ? "s" : ""}`}
+        />
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[600px] text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
@@ -694,7 +649,7 @@ export default function PortfolioPageClient() {
           </table>
         </div>
 
-        <div className="lg:hidden grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
           {loading ? (
             Array.from({ length: 2 }).map((_, i) => (
               <div
@@ -733,7 +688,7 @@ export default function PortfolioPageClient() {
                   {/* Middle: Asset Name */}
                   <div className="min-w-0 my-2">
                     <h4
-                      className="text-xs font-black text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary transition-colors uppercase leading-tight"
+                      className="text-xs font-black text-slate-900 dark:text-white tracking-tight group-hover:text-primary transition-colors uppercase leading-snug break-words"
                       title={asset.name}
                     >
                       {asset.name}
@@ -773,11 +728,12 @@ export default function PortfolioPageClient() {
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">
-          Loans & Liabilities
-        </h3>
-        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
-          <table className="w-full text-center border-collapse">
+        <SectionHeader
+          title="Loans & Liabilities"
+          description={`${debts.length} Active Debt Obligation${debts.length !== 1 ? "s" : ""}`}
+        />
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[760px] text-center border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                 <th className="px-4 py-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
@@ -1082,31 +1038,13 @@ export default function PortfolioPageClient() {
           )}
         </div>
 
-        {totalDebtPages > 1 && (
-          <div className="flex items-center justify-between px-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              {liabilityPage} / {totalDebtPages}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setLiabilityPage((p) => Math.max(p - 1, 1))}
-                disabled={liabilityPage === 1}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() =>
-                  setLiabilityPage((p) => Math.min(p + 1, totalDebtPages))
-                }
-                disabled={liabilityPage === totalDebtPages}
-                className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={liabilityPage}
+          totalPages={totalDebtPages}
+          totalEntries={debts.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setLiabilityPage}
+        />
       </div>
 
       <AddInvestmentModal

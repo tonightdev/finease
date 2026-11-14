@@ -594,7 +594,7 @@ export default function ReportsPageClient() {
             </div>
 
             {/* Account Rows */}
-            <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1 no-scrollbar">
+            <div className="space-y-1.5 sm:max-h-[380px] sm:overflow-y-auto pr-1 no-scrollbar">
               {displayedAccounts.map((acc) => {
                 const isDebt = acc.type === "debt" || acc.type === "card";
                 const share =
@@ -605,9 +605,9 @@ export default function ReportsPageClient() {
                 return (
                   <div
                     key={acc.id}
-                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all text-xs"
+                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 hover:border-primary/20 transition-all text-xs gap-2"
                   >
-                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <div className="flex items-center gap-2 min-w-0 pr-1">
                       <div
                         className={`size-6 rounded-lg flex items-center justify-center shrink-0 ${
                           isDebt
@@ -630,8 +630,8 @@ export default function ReportsPageClient() {
                         )}
                       </div>
 
-                      <div className="min-w-0 flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-xs">
+                      <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-slate-900 dark:text-white leading-tight break-words">
                           {acc.name}
                         </span>
                         {acc.institutionName && (

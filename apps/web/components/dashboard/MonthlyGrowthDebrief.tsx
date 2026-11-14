@@ -162,7 +162,7 @@ export function MonthlyGrowthDebrief({
                   • 30-Day Cash Flow
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-medium truncate">
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
                 {activeDebrief.insight ||
                   "Track how income and spending shape your monthly surplus"}
               </p>

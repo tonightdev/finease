@@ -100,7 +100,7 @@ export function LiquidCapitalCard({
             exit={{ opacity: 0, height: 0 }}
             className="border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-2.5 sm:p-4"
           >
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
               {sortedAccounts.map((acc) => (
                 <div
                   key={acc.id}

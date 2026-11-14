@@ -50,7 +50,7 @@ export function VaultItemCard({
               {item.title.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug break-words">
                 {item.title}
               </h4>
               <span className="text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 capitalize font-bold inline-block truncate mt-0.5">

@@ -496,7 +496,7 @@ export default function TacticalSimulationPage({
                       ) : (
                         <div className="flex items-center justify-between">
                           <div className="min-w-0 pr-2">
-                            <p className="text-xs font-black uppercase tracking-wider truncate">
+                            <p className="text-xs font-black uppercase tracking-wider leading-snug break-words">
                               {acc.name}
                             </p>
                             <p className="text-[10px] font-bold text-slate-400 font-mono">
@@ -698,7 +698,7 @@ export default function TacticalSimulationPage({
                         ) : (
                           <div className="flex items-center justify-between">
                             <div className="min-w-0 pr-2">
-                              <p className="text-xs font-black uppercase tracking-wider truncate">
+                              <p className="text-xs font-black uppercase tracking-wider leading-snug break-words">
                                 {exp.name}
                               </p>
                               <div className="flex gap-2 items-center mt-0.5">

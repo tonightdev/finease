@@ -39,10 +39,10 @@ export function PageHeader({
             </Link>
           )}
           <div className="flex flex-col min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight truncate">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               {title}
             </h1>
-            <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
               {subtitle}
             </p>
           </div>
